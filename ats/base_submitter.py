@@ -9,8 +9,8 @@ from typing import Dict, Optional, Union
 from playwright.sync_api import BrowserContext, Page, TimeoutError as PlaywrightTimeoutError
 from rich.console import Console
 
-# Import utils for common functionality
-import utils
+# from src.core import utils for common functionality
+from src.core import utils
 
 console = Console()
 

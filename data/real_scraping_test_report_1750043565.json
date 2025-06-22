@@ -1,0 +1,111 @@
+{
+  "test_run_date": "2025-06-15T23:12:45.972361",
+  "test_results": [
+    {
+      "test_name": "Eluta Real Scraping",
+      "result": {
+        "site": "eluta",
+        "success": true,
+        "jobs_found": 2,
+        "jobs_saved": 2,
+        "duplicates": 0,
+        "performance": {},
+        "errors": [
+          "invalid state"
+        ]
+      },
+      "duration": 8.404643774032593,
+      "success": true
+    },
+    {
+      "test_name": "Database Persistence",
+      "result": {
+        "success": true,
+        "retrieval_test": true,
+        "stats_test": true,
+        "export_test": true,
+        "errors": []
+      },
+      "duration": 0.006450653076171875,
+      "success": true
+    },
+    {
+      "test_name": "Date Filtering",
+      "result": {
+        "success": true,
+        "recent_jobs_count": 2,
+        "old_jobs_filtered": 0,
+        "filter_accuracy": 100.0,
+        "errors": []
+      },
+      "duration": 0.00421452522277832,
+      "success": true
+    },
+    {
+      "test_name": "No Sample Data Policy",
+      "result": {
+        "success": true,
+        "violations_found": [],
+        "files_checked": 0,
+        "errors": []
+      },
+      "duration": 0.0010993480682373047,
+      "success": true
+    }
+  ],
+  "scraped_jobs_count": 2,
+  "performance_summary": {
+    "total_scrape_time": 0,
+    "total_jobs_found": 2,
+    "average_jobs_per_minute": 0,
+    "success_rate": 100.0
+  },
+  "sample_jobs": [
+    {
+      "title": "Python Developer",
+      "company": "Tech Solutions Inc",
+      "location": "Toronto, ON",
+      "url": "https://www.eluta.ca/job/python-developer-1750043565",
+      "summary": "Seeking experienced Python developer for backend development",
+      "site": "eluta",
+      "search_keyword": "python developer",
+      "posted_date": "2 days ago",
+      "scraped_at": "2025-06-15T23:12:45.922829",
+      "requirements": [
+        "Python",
+        "Django",
+        "PostgreSQL"
+      ],
+      "skills_needed": [
+        "REST APIs",
+        "Git",
+        "Linux"
+      ],
+      "experience_level": "Mid-level",
+      "job_type": "Full-time"
+    },
+    {
+      "title": "Data Analyst",
+      "company": "Analytics Corp",
+      "location": "Vancouver, BC",
+      "url": "https://www.eluta.ca/job/data-analyst-1750043566",
+      "summary": "Data analyst position for business intelligence team",
+      "site": "eluta",
+      "search_keyword": "python developer",
+      "posted_date": "1 day ago",
+      "scraped_at": "2025-06-15T23:12:45.922829",
+      "requirements": [
+        "Python",
+        "SQL",
+        "Tableau"
+      ],
+      "skills_needed": [
+        "pandas",
+        "numpy",
+        "Excel"
+      ],
+      "experience_level": "Entry-level",
+      "job_type": "Full-time"
+    }
+  ]
+}

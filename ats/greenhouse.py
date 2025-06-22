@@ -40,6 +40,12 @@ class GreenhouseSubmitter(BaseSubmitter):
             console.print(f"[green]Navigating to job URL: {job['url']}[/green]")
             page.goto(job["url"], timeout=30000)
             self.wait_for_navigation(page)
+
+            # Handle login if needed
+            if self.handle_login(page, profile, job["url"]):
+                console.print("[green]Login completed[/green]")
+            else:
+                console.print("[yellow]Manual login may be required[/yellow]")
             
             # Check for CAPTCHA
             self.check_for_captcha(page)

@@ -1,0 +1,66 @@
+{
+  "test_run_date": "2025-06-15T23:11:36.475547",
+  "test_results": [
+    {
+      "test_name": "Eluta Real Scraping",
+      "result": {
+        "site": "eluta",
+        "success": false,
+        "jobs_found": 0,
+        "jobs_saved": 0,
+        "duplicates": 0,
+        "performance": {},
+        "errors": [
+          "invalid state"
+        ]
+      },
+      "duration": 8.371856689453125,
+      "success": false
+    },
+    {
+      "test_name": "Database Persistence",
+      "result": {
+        "success": false,
+        "retrieval_test": false,
+        "stats_test": false,
+        "export_test": false,
+        "errors": []
+      },
+      "duration": 0.0019998550415039062,
+      "success": false
+    },
+    {
+      "test_name": "Date Filtering",
+      "result": {
+        "success": false,
+        "recent_jobs_count": 0,
+        "old_jobs_filtered": 0,
+        "filter_accuracy": 0.0,
+        "errors": [
+          "No scraped jobs available for date filtering test"
+        ]
+      },
+      "duration": 0.0,
+      "success": false
+    },
+    {
+      "test_name": "No Sample Data Policy",
+      "result": {
+        "success": true,
+        "violations_found": [],
+        "files_checked": 0,
+        "errors": []
+      },
+      "duration": 0.001001596450805664,
+      "success": true
+    }
+  ],
+  "scraped_jobs_count": 0,
+  "performance_summary": {
+    "total_scrape_time": 0,
+    "total_jobs_found": 0,
+    "average_jobs_per_minute": 0,
+    "success_rate": 25.0
+  },
+  "sample_jobs": []
+}

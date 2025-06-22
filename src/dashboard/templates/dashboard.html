@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoJobAgent Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .metric-card {
+            transition: all 0.3s ease-in-out;
+            border: 1px solid transparent;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-active { background-color: #10b981; }
+        .status-paused { background-color: #f59e0b; }
+        .status-error { background-color: #ef4444; }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Enhanced animations and effects */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Enhanced table styling */
+        .enhanced-table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .enhanced-table tbody tr:hover {
+            background-color: #f8fafc;
+            transform: scale(1.001);
+            transition: all 0.2s ease;
+        }
+
+        /* Enhanced buttons */
+        .btn-enhanced {
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-enhanced:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-enhanced:active {
+            transform: translateY(0);
+        }
+
+        /* Loading states */
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Enhanced modals */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: scale(0.9) translateY(-20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .dark-mode-card {
+                background-color: #1f2937;
+                color: #f9fafb;
+            }
+        }
+
+        /* Responsive enhancements */
+        @media (max-width: 768px) {
+            .metric-card {
+                margin-bottom: 1rem;
+            }
+
+            .enhanced-table {
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Enhanced Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-robot text-3xl mr-3 pulse"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">AutoJobAgent Dashboard</h1>
+                        <p class="text-sm opacity-90" id="profileInfo">Profile: Loading...</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Enhanced System Status -->
+                    <div id="systemStatus" class="flex items-center bg-white bg-opacity-10 px-3 py-2 rounded-lg">
+                        <span class="status-indicator status-active pulse"></span>
+                        <span class="text-sm font-medium">System Active</span>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="hidden md:flex items-center space-x-4 text-sm">
+                        <div class="bg-white bg-opacity-10 px-3 py-2 rounded-lg">
+                            <i class="fas fa-briefcase mr-1"></i>
+                            <span id="headerJobCount">0</span> Jobs
+                        </div>
+                        <div class="bg-white bg-opacity-10 px-3 py-2 rounded-lg">
+                            <i class="fas fa-paper-plane mr-1"></i>
+                            <span id="headerAppCount">0</span> Applied
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center space-x-2">
+                        <button id="pauseBtn" class="btn-enhanced bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all duration-200">
+                            <i class="fas fa-pause mr-2"></i>Pause
+                        </button>
+                        <button id="refreshBtn" class="btn-enhanced bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all duration-200">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                        <button id="settingsBtn" class="btn-enhanced bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-2 rounded-lg transition-all duration-200" onclick="showSettings()">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Bar -->
+            <div class="mt-4 flex items-center justify-between border-t border-white border-opacity-20 pt-4">
+                <div class="flex items-center space-x-4">
+                    <button id="quickScrapeBtn" class="btn-enhanced bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm transition-all duration-200" onclick="quickScrape()">
+                        <i class="fas fa-search mr-2"></i>Quick Scrape
+                    </button>
+                    <button id="addTestDataBtn" class="btn-enhanced bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition-all duration-200" onclick="addTestData()">
+                        <i class="fas fa-plus mr-2"></i>Add Test Data
+                    </button>
+                </div>
+                <div class="flex items-center space-x-2 text-sm">
+                    <span class="opacity-75">Last updated:</span>
+                    <span id="lastUpdated" class="font-medium">Never</span>
+                    <div id="autoRefreshIndicator" class="flex items-center ml-4">
+                        <div class="w-2 h-2 bg-green-400 rounded-full mr-2 pulse"></div>
+                        <span class="text-xs opacity-75">Auto-refresh: ON</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Enhanced Key Metrics Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 fade-in">
+            <!-- Jobs Scraped -->
+            <div class="metric-card bg-white rounded-xl p-6 card-shadow cursor-pointer" onclick="filterJobsByStatus('all')">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <p class="text-gray-500 text-sm font-medium">Jobs Scraped</p>
+                        <p id="totalScraped" class="text-3xl font-bold text-gray-900 transition-all duration-300">0</p>
+                        <div class="flex items-center justify-between mt-2">
+                            <p class="text-blue-600 text-sm">
+                                <span id="uniqueJobs">0</span> available to apply
+                            </p>
+                            <div class="text-xs text-gray-400">
+                                <i class="fas fa-clock mr-1"></i>
+                                <span id="lastScrapedTime">Never</span>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="scrapedProgress" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full ml-4">
+                        <i class="fas fa-search text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Applications Submitted -->
+            <div class="metric-card bg-white rounded-xl p-6 card-shadow cursor-pointer" onclick="filterJobsByStatus('applied')">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <p class="text-gray-500 text-sm font-medium">Applications</p>
+                        <p id="totalApplications" class="text-3xl font-bold text-gray-900 transition-all duration-300">0</p>
+                        <div class="flex items-center justify-between mt-2">
+                            <p class="text-green-600 text-sm">
+                                <span id="successfulApplications">0</span> successful
+                            </p>
+                            <div class="text-xs text-gray-400">
+                                <span id="applicationRate">0%</span> success rate
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="applicationProgress" class="bg-green-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full ml-4">
+                        <i class="fas fa-paper-plane text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Failed Applications -->
+            <div class="metric-card bg-white rounded-xl p-6 card-shadow cursor-pointer hover:bg-red-50" onclick="showFailedApplications()">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <p class="text-gray-500 text-sm font-medium">Failed</p>
+                        <p id="failedApplications" class="text-3xl font-bold text-gray-900 transition-all duration-300">0</p>
+                        <div class="flex items-center justify-between mt-2">
+                            <p class="text-red-600 text-sm">
+                                <i class="fas fa-mouse-pointer mr-1"></i>Click to view details
+                            </p>
+                            <div class="text-xs text-gray-400">
+                                <span id="failureRate">0%</span> failure rate
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="failureProgress" class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-full ml-4">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Reviews -->
+            <div class="metric-card bg-white rounded-xl p-6 card-shadow cursor-pointer hover:bg-orange-50" onclick="showManualReviews()">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <p class="text-gray-500 text-sm font-medium">Manual Reviews</p>
+                        <p id="manualReviews" class="text-3xl font-bold text-gray-900 transition-all duration-300">0</p>
+                        <div class="flex items-center justify-between mt-2">
+                            <p class="text-orange-600 text-sm">
+                                <i class="fas fa-mouse-pointer mr-1"></i>Click to view details
+                            </p>
+                            <div class="text-xs text-gray-400">
+                                <span id="pendingReviews">0</span> pending
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="reviewProgress" class="bg-orange-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-full ml-4">
+                        <i class="fas fa-hand-paper text-orange-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Status Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Recent Applications -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-clock text-blue-500 mr-2"></i>
+                    Recent Applications
+                </h3>
+                <div id="recentApplicationsList" class="space-y-3 max-h-64 overflow-y-auto">
+                    <p class="text-gray-500 text-sm">No applications yet</p>
+                </div>
+            </div>
+
+            <!-- Application Issues -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i>
+                    Issues & Manual Reviews
+                </h3>
+                <div id="applicationIssues" class="space-y-3 max-h-64 overflow-y-auto">
+                    <p class="text-gray-500 text-sm">No issues found</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Jobs Viewer Section -->
+        <div class="mt-8 fade-in">
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <!-- Enhanced Header with Stats -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-briefcase text-blue-500 mr-2"></i>
+                            Scraped Jobs
+                        </h3>
+                        <div class="ml-4 flex items-center space-x-4 text-sm text-gray-500">
+                            <span id="jobsDisplayCount" class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">0 jobs</span>
+                            <span id="jobsFilterStatus" class="hidden">Filtered results</span>
+                        </div>
+                    </div>
+
+                    <!-- View Toggle -->
+                    <div class="flex items-center space-x-2">
+                        <div class="bg-gray-100 p-1 rounded-lg">
+                            <button id="tableViewBtn" class="px-3 py-1 text-sm rounded bg-white shadow-sm">
+                                <i class="fas fa-table mr-1"></i>Table
+                            </button>
+                            <button id="cardViewBtn" class="px-3 py-1 text-sm rounded text-gray-600">
+                                <i class="fas fa-th-large mr-1"></i>Cards
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Filters Bar -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <!-- Search -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Search Jobs</label>
+                            <div class="relative">
+                                <input type="text" id="searchInput" placeholder="Search by title, company, or keywords..."
+                                       class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+
+                        <!-- Site Filter -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Job Site</label>
+                            <select id="siteFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Sites</option>
+                            </select>
+                        </div>
+
+                        <!-- Applied Filter -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                            <select id="appliedFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Jobs</option>
+                                <option value="false">Not Applied</option>
+                                <option value="true">Applied</option>
+                            </select>
+                        </div>
+
+                        <!-- Date Filter -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Posted</label>
+                            <select id="dateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                <option value="">Any time</option>
+                                <option value="1">Last 24 hours</option>
+                                <option value="3">Last 3 days</option>
+                                <option value="7">Last week</option>
+                                <option value="30">Last month</option>
+                            </select>
+                        </div>
+
+                        <!-- Experience Level Filter -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Experience</label>
+                            <select id="experienceFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Levels</option>
+                                <option value="Entry">Entry-Level</option>
+                                <option value="Mid">Mid-Level</option>
+                                <option value="Senior">Senior-Level</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex items-center space-x-2">
+                            <button id="loadJobsBtn" class="btn-enhanced bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-all duration-200">
+                                <i class="fas fa-search mr-2"></i>Load Jobs
+                            </button>
+                            <button id="clearFiltersBtn" class="btn-enhanced bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition-all duration-200" onclick="clearFilters()">
+                                <i class="fas fa-eraser mr-2"></i>Clear Filters
+                            </button>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <button id="quickApplyBtn" class="btn-enhanced bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition-all duration-200" onclick="bulkApplyHighMatch()">
+                                <i class="fas fa-rocket mr-2"></i>Quick Apply
+                            </button>
+                            <button id="exportJobsBtn" class="btn-enhanced bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition-all duration-200" onclick="exportJobs()">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                            <button id="clearJobsBtn" class="btn-enhanced bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-all duration-200" onclick="clearAllJobs()">
+                                <i class="fas fa-trash mr-2"></i>Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Jobs Table with Detailed View -->
+                <div id="tableView" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 enhanced-table">
+                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                            <tr>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-2/5">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-briefcase mr-2 text-blue-500"></i>
+                                        Job Title & Description
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-building mr-2 text-green-500"></i>
+                                        Company
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/8">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-map-marker-alt mr-2 text-red-500"></i>
+                                        Location
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-globe mr-2 text-purple-500"></i>
+                                        Site
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-calendar mr-2 text-orange-500"></i>
+                                        Posted
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-user-tie mr-2 text-indigo-500"></i>
+                                        Experience
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-chart-line mr-2 text-blue-500"></i>
+                                        Match Score
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-check-circle mr-2 text-green-500"></i>
+                                        Status
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-cogs mr-2 text-gray-500"></i>
+                                        Actions
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobsTable" class="bg-white divide-y divide-gray-100">
+                            <tr>
+                                <td colspan="9" class="px-6 py-12 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-search text-6xl mb-4 text-gray-300"></i>
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Jobs Loaded</h3>
+                                        <p class="text-sm text-gray-500 mb-4">Click "Load Jobs" to view your scraped jobs</p>
+                                        <button onclick="loadJobs(0)" class="btn-enhanced bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                                            <i class="fas fa-search mr-2"></i>Load Jobs Now
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Card View (Hidden by default) -->
+                <div id="cardView" class="hidden">
+                    <div id="jobsCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Cards will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="jobsPagination" class="flex items-center justify-between mt-4 hidden">
+                    <div class="text-sm text-gray-700">
+                        Showing <span id="jobsStart">0</span> to <span id="jobsEnd">0</span> of <span id="jobsTotal">0</span> jobs
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="prevJobsBtn" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50">
+                            Previous
+                        </button>
+                        <button id="nextJobsBtn" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </main>
+
+    <!-- Modal for Manual Reviews -->
+    <div id="manualReviewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-hand-paper text-orange-500 mr-2"></i>
+                            Manual Review Queue
+                        </h3>
+                        <button onclick="closeModal('manualReviewModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="manualReviewContent" class="space-y-4">
+                        <p class="text-gray-500">Loading manual review items...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Failed Applications -->
+    <div id="failedApplicationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                            Failed Applications
+                        </h3>
+                        <button onclick="closeModal('failedApplicationModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="failedApplicationContent" class="space-y-4">
+                        <p class="text-gray-500">Loading failed applications...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Application Details -->
+    <div id="applicationDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-5xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                            Application Details
+                        </h3>
+                        <button onclick="closeModal('applicationDetailModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="applicationDetailContent" class="space-y-4">
+                        <p class="text-gray-500">Loading application details...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content bg-white rounded-lg max-w-2xl w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-cog text-blue-500 mr-2"></i>
+                            Dashboard Settings
+                        </h3>
+                        <button onclick="closeModal('settingsModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Auto-refresh Settings -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 mb-3">Auto-refresh Settings</h4>
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm text-gray-700">Enable auto-refresh</label>
+                                <input type="checkbox" id="autoRefreshToggle" class="toggle-switch" checked>
+                            </div>
+                            <div class="mt-3">
+                                <label class="block text-sm text-gray-700 mb-1">Refresh interval (seconds)</label>
+                                <input type="number" id="refreshInterval" value="30" min="10" max="300"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Display Settings -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 mb-3">Display Settings</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-sm text-gray-700">Jobs per page</label>
+                                    <select id="jobsPerPageSetting" class="px-3 py-1 border border-gray-300 rounded text-sm">
+                                        <option value="10">10</option>
+                                        <option value="20" selected>20</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-sm text-gray-700">Default view</label>
+                                    <select id="defaultViewSetting" class="px-3 py-1 border border-gray-300 rounded text-sm">
+                                        <option value="table" selected>Table</option>
+                                        <option value="cards">Cards</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notification Settings -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 mb-3">Notifications</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-sm text-gray-700">Show success notifications</label>
+                                    <input type="checkbox" id="successNotifications" checked>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-sm text-gray-700">Show error notifications</label>
+                                    <input type="checkbox" id="errorNotifications" checked>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                        <button onclick="closeModal('settingsModal')" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                            Cancel
+                        </button>
+                        <button onclick="saveSettings()" class="btn-enhanced bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Save Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-6">
+                    <p class="text-gray-500 text-sm">AutoJobAgent Dashboard - Real-time Job Application Monitoring</p>
+                    <div class="flex items-center space-x-4 text-xs text-gray-400">
+                        <span>Version 2.0</span>
+                        <span>•</span>
+                        <span id="connectionStatus">Connected</span>
+                        <span>•</span>
+                        <span id="systemUptime">Uptime: 0m</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <p class="text-gray-500 text-sm">Last updated: <span id="lastUpdatedFooter">Never</span></p>
+                    <button onclick="showSettings()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Enhanced Global variables
+        let ws;
+        let isPaused = false;
+        let currentJobsPage = 0;
+        let jobsPerPage = 20;
+        let currentView = 'table';
+        let autoRefreshEnabled = true;
+        let autoRefreshInterval = 30000; // 30 seconds
+        let autoRefreshTimer;
+        let systemStartTime = Date.now();
+        let currentProfile = 'Loading...';
+        let dashboardSettings = {
+            autoRefresh: true,
+            refreshInterval: 30,
+            jobsPerPage: 20,
+            defaultView: 'table',
+            successNotifications: true,
+            errorNotifications: true
+        };
+
+        // Enhanced Dashboard Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load settings first
+            loadSettings();
+
+            // Initialize connections and data
+            connectWebSocket();
+            loadInitialData();
+            loadAvailableSites();
+
+            // Auto-load jobs on startup
+            setTimeout(() => loadJobs(0), 1000);
+
+            // Set up enhanced event listeners
+            setupEventListeners();
+
+            // Initialize view toggles
+            initializeViewToggles();
+
+            // Start auto-refresh if enabled
+            if (dashboardSettings.autoRefresh) {
+                startAutoRefresh();
+            }
+
+            // Update system uptime every minute
+            setInterval(updateSystemUptime, 60000);
+
+            // Initialize animations
+            initializeAnimations();
+        });
+
+        // Setup all event listeners
+        function setupEventListeners() {
+            // Header buttons
+            document.getElementById('pauseBtn').addEventListener('click', togglePause);
+            document.getElementById('refreshBtn').addEventListener('click', refreshData);
+
+            // Jobs loading and pagination
+            document.getElementById('loadJobsBtn').addEventListener('click', () => loadJobs(0));
+            document.getElementById('prevJobsBtn')?.addEventListener('click', () => loadJobs(currentJobsPage - 1));
+            document.getElementById('nextJobsBtn')?.addEventListener('click', () => loadJobs(currentJobsPage + 1));
+
+            // Enhanced search functionality
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loadJobs(0);
+                }
+            });
+
+            // Real-time search with debouncing
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    if (this.value.length >= 3 || this.value.length === 0) {
+                        loadJobs(0);
+                    }
+                }, 500);
+            });
+
+            // Filter change listeners
+            document.getElementById('siteFilter').addEventListener('change', () => loadJobs(0));
+            document.getElementById('appliedFilter').addEventListener('change', () => loadJobs(0));
+            document.getElementById('dateFilter').addEventListener('change', () => loadJobs(0));
+            document.getElementById('experienceFilter').addEventListener('change', () => loadJobs(0));
+
+            // View toggle listeners
+            document.getElementById('tableViewBtn').addEventListener('click', () => switchView('table'));
+            document.getElementById('cardViewBtn').addEventListener('click', () => switchView('cards'));
+        }
+
+        // Initialize view toggles
+        function initializeViewToggles() {
+            currentView = dashboardSettings.defaultView;
+            switchView(currentView);
+        }
+
+        // Switch between table and card views
+        function switchView(view) {
+            currentView = view;
+
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+
+            if (view === 'table') {
+                tableView.classList.remove('hidden');
+                cardView.classList.add('hidden');
+                tableBtn.classList.add('bg-white', 'shadow-sm');
+                tableBtn.classList.remove('text-gray-600');
+                cardBtn.classList.remove('bg-white', 'shadow-sm');
+                cardBtn.classList.add('text-gray-600');
+            } else {
+                tableView.classList.add('hidden');
+                cardView.classList.remove('hidden');
+                cardBtn.classList.add('bg-white', 'shadow-sm');
+                cardBtn.classList.remove('text-gray-600');
+                tableBtn.classList.remove('bg-white', 'shadow-sm');
+                tableBtn.classList.add('text-gray-600');
+            }
+        }
+
+        // Initialize animations
+        function initializeAnimations() {
+            // Add fade-in animation to metric cards
+            const metricCards = document.querySelectorAll('.metric-card');
+            metricCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('fade-in');
+                }, index * 100);
+            });
+        }
+
+        // Auto-refresh management
+        function startAutoRefresh() {
+            if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+            }
+
+            autoRefreshTimer = setInterval(() => {
+                if (autoRefreshEnabled && !isPaused) {
+                    refreshData();
+                }
+            }, dashboardSettings.refreshInterval * 1000);
+
+            // Update indicator
+            const indicator = document.getElementById('autoRefreshIndicator');
+            if (indicator) {
+                indicator.innerHTML = `
+                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2 pulse"></div>
+                    <span class="text-xs opacity-75">Auto-refresh: ON (${dashboardSettings.refreshInterval}s)</span>
+                `;
+            }
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
+            }
+
+            // Update indicator
+            const indicator = document.getElementById('autoRefreshIndicator');
+            if (indicator) {
+                indicator.innerHTML = `
+                    <div class="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+                    <span class="text-xs opacity-75">Auto-refresh: OFF</span>
+                `;
+            }
+        }
+
+        // Load available sites for filter dropdown
+        async function loadAvailableSites() {
+            try {
+                const response = await fetch('/api/sites');
+                const data = await response.json();
+
+                const siteFilter = document.getElementById('siteFilter');
+                const currentValue = siteFilter.value;
+
+                // Clear existing options except "All Sites"
+                siteFilter.innerHTML = '<option value="">All Sites</option>';
+
+                // Add available sites
+                data.sites.forEach(site => {
+                    const option = document.createElement('option');
+                    option.value = site.value;
+                    option.textContent = site.label;
+                    if (site.value === currentValue) {
+                        option.selected = true;
+                    }
+                    siteFilter.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Error loading sites:', error);
+            }
+        }
+
+        // WebSocket connection
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = function() {
+                updateConnectionStatus(true);
+            };
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+
+            ws.onclose = function() {
+                updateConnectionStatus(false);
+                setTimeout(connectWebSocket, 5000);
+            };
+
+            ws.onerror = function() {
+                updateConnectionStatus(false);
+            };
+        }
+
+        // Handle WebSocket messages
+        function handleWebSocketMessage(data) {
+            if (data.type === 'stats') {
+                updateStats(data.data);
+            } else if (data.type === 'status') {
+                updateSystemStatus(data.paused);
+            }
+        }
+
+        // Load initial data
+        async function loadInitialData() {
+            try {
+                const response = await fetch('/api/comprehensive-stats');
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (error) {
+                console.error('Error loading initial data:', error);
+            }
+        }
+
+        // Refresh data
+        async function refreshData() {
+            try {
+                const response = await fetch('/api/comprehensive-stats');
+                const data = await response.json();
+                updateDashboard(data);
+
+                document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+            }
+        }
+
+        // Enhanced Dashboard Update with Animations
+        function updateDashboard(data) {
+            const jobStats = data.job_stats || {};
+            const appStats = data.application_stats || {};
+
+            // Update main metrics with animations
+            animateCounterUpdate('totalScraped', jobStats.total_scraped || 0);
+            animateCounterUpdate('uniqueJobs', jobStats.unapplied_jobs || 0);
+            animateCounterUpdate('totalApplications', appStats.Applied || 0);
+            animateCounterUpdate('successfulApplications', appStats.Applied || 0);
+            animateCounterUpdate('failedApplications', appStats.Failed || 0);
+            animateCounterUpdate('manualReviews', appStats.Manual || 0);
+
+            // Update header quick stats
+            animateCounterUpdate('headerJobCount', jobStats.total_scraped || 0);
+            animateCounterUpdate('headerAppCount', appStats.Applied || 0);
+
+            // Update progress bars
+            updateProgressBars(jobStats, appStats);
+
+            // Update profile info
+            if (data.profile) {
+                currentProfile = data.profile;
+                document.getElementById('profileInfo').textContent = `Profile: ${data.profile}`;
+            }
+
+            // Update recent applications
+            updateRecentApplications(appStats.recent_applications || []);
+
+            // Update application issues
+            updateApplicationIssues(appStats.manual_reasons || {}, appStats.failure_reasons || {});
+
+            // Update last updated time
+            const now = new Date().toLocaleString();
+            document.getElementById('lastUpdated').textContent = now;
+            document.getElementById('lastUpdatedFooter').textContent = now;
+        }
+
+        // Animate counter updates
+        function animateCounterUpdate(elementId, newValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            const currentValue = parseInt(element.textContent) || 0;
+            if (currentValue === newValue) return;
+
+            // Add animation class
+            element.classList.add('transition-all', 'duration-300');
+
+            // Animate the number change
+            const increment = newValue > currentValue ? 1 : -1;
+            const steps = Math.abs(newValue - currentValue);
+            const stepDuration = Math.min(300 / steps, 50);
+
+            let current = currentValue;
+            const timer = setInterval(() => {
+                current += increment;
+                element.textContent = current;
+
+                if (current === newValue) {
+                    clearInterval(timer);
+                    // Flash effect for significant changes
+                    if (Math.abs(newValue - currentValue) > 5) {
+                        element.classList.add('bg-yellow-100');
+                        setTimeout(() => {
+                            element.classList.remove('bg-yellow-100');
+                        }, 1000);
+                    }
+                }
+            }, stepDuration);
+        }
+
+        // Update progress bars
+        function updateProgressBars(jobStats, appStats) {
+            const totalJobs = jobStats.total_scraped || 0;
+            const appliedJobs = appStats.Applied || 0;
+            const failedJobs = appStats.Failed || 0;
+
+            // Scraped progress (based on target or recent activity)
+            const scrapedProgress = Math.min((totalJobs / 100) * 100, 100);
+            updateProgressBar('scrapedProgress', scrapedProgress);
+
+            // Application progress
+            const applicationProgress = totalJobs > 0 ? (appliedJobs / totalJobs) * 100 : 0;
+            updateProgressBar('applicationProgress', applicationProgress);
+            document.getElementById('applicationRate').textContent = `${Math.round(applicationProgress)}%`;
+
+            // Failure progress
+            const failureProgress = totalJobs > 0 ? (failedJobs / totalJobs) * 100 : 0;
+            updateProgressBar('failureProgress', failureProgress);
+            document.getElementById('failureRate').textContent = `${Math.round(failureProgress)}%`;
+
+            // Review progress (placeholder)
+            const reviewProgress = Math.min(failureProgress * 0.5, 100);
+            updateProgressBar('reviewProgress', reviewProgress);
+            document.getElementById('pendingReviews').textContent = appStats.Manual || 0;
+        }
+
+        // Update individual progress bar
+        function updateProgressBar(elementId, percentage) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.width = `${Math.max(percentage, 2)}%`;
+            }
+        }
+
+        // Settings Management
+        function loadSettings() {
+            const saved = localStorage.getItem('dashboardSettings');
+            if (saved) {
+                dashboardSettings = { ...dashboardSettings, ...JSON.parse(saved) };
+            }
+
+            // Apply loaded settings
+            jobsPerPage = dashboardSettings.jobsPerPage;
+            autoRefreshEnabled = dashboardSettings.autoRefresh;
+        }
+
+        function saveSettings() {
+            // Get values from settings modal
+            dashboardSettings.autoRefresh = document.getElementById('autoRefreshToggle').checked;
+            dashboardSettings.refreshInterval = parseInt(document.getElementById('refreshInterval').value);
+            dashboardSettings.jobsPerPage = parseInt(document.getElementById('jobsPerPageSetting').value);
+            dashboardSettings.defaultView = document.getElementById('defaultViewSetting').value;
+            dashboardSettings.successNotifications = document.getElementById('successNotifications').checked;
+            dashboardSettings.errorNotifications = document.getElementById('errorNotifications').checked;
+
+            // Save to localStorage
+            localStorage.setItem('dashboardSettings', JSON.stringify(dashboardSettings));
+
+            // Apply settings
+            jobsPerPage = dashboardSettings.jobsPerPage;
+            autoRefreshEnabled = dashboardSettings.autoRefresh;
+
+            // Restart auto-refresh with new interval
+            if (dashboardSettings.autoRefresh) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+
+            // Close modal
+            closeModal('settingsModal');
+
+            // Show success notification
+            showNotification('Settings saved successfully!', 'success');
+        }
+
+        function showSettings() {
+            // Populate settings modal with current values
+            document.getElementById('autoRefreshToggle').checked = dashboardSettings.autoRefresh;
+            document.getElementById('refreshInterval').value = dashboardSettings.refreshInterval;
+            document.getElementById('jobsPerPageSetting').value = dashboardSettings.jobsPerPage;
+            document.getElementById('defaultViewSetting').value = dashboardSettings.defaultView;
+            document.getElementById('successNotifications').checked = dashboardSettings.successNotifications;
+            document.getElementById('errorNotifications').checked = dashboardSettings.errorNotifications;
+
+            // Show modal
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        // Update recent applications
+        function updateRecentApplications(applications) {
+            const container = document.getElementById('recentApplicationsList');
+            container.innerHTML = '';
+
+            if (!applications || applications.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">No recent applications</p>';
+                return;
+            }
+
+            applications.slice(0, 5).forEach(app => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+
+                const status = app.Status || 'Unknown';
+                const statusClass = getStatusClass(status);
+
+                item.innerHTML = `
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-900">${app['Job Title'] || 'Unknown Job'}</div>
+                        <div class="text-xs text-gray-500">${app.Company || 'Unknown Company'}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${status}</span>
+                        <div class="text-xs text-gray-500 mt-1">${formatDate(app.Timestamp)}</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Update application issues
+        function updateApplicationIssues(manualReasons, failureReasons) {
+            const container = document.getElementById('applicationIssues');
+            container.innerHTML = '';
+
+            const allIssues = [];
+
+            // Add manual review reasons
+            Object.entries(manualReasons).forEach(([reason, count]) => {
+                allIssues.push({
+                    type: 'manual',
+                    reason: reason,
+                    count: count,
+                    class: 'bg-orange-50 border-orange-200 text-orange-800'
+                });
+            });
+
+            // Add failure reasons
+            Object.entries(failureReasons).forEach(([reason, count]) => {
+                allIssues.push({
+                    type: 'failure',
+                    reason: reason,
+                    count: count,
+                    class: 'bg-red-50 border-red-200 text-red-800'
+                });
+            });
+
+            if (allIssues.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">No issues found</p>';
+                return;
+            }
+
+            allIssues.forEach(issue => {
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between p-3 border rounded-lg ${issue.class}`;
+                item.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-${issue.type === 'manual' ? 'hand-paper' : 'exclamation-triangle'} mr-2"></i>
+                        <span class="text-sm font-medium">${issue.reason}</span>
+                    </div>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-50">${issue.count}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Helper function to format dates
+        function formatDate(dateString) {
+            if (!dateString) return 'Unknown';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+        // Get status badge class
+        function getStatusClass(status) {
+            if (!status) return 'bg-gray-100 text-gray-800';
+
+            const statusLower = status.toLowerCase();
+            if (statusLower.includes('applied')) return 'bg-green-100 text-green-800';
+            if (statusLower.includes('manual')) return 'bg-orange-100 text-orange-800';
+            if (statusLower.includes('failed')) return 'bg-red-100 text-red-800';
+            if (statusLower.includes('skipped')) return 'bg-gray-100 text-gray-800';
+            return 'bg-blue-100 text-blue-800';
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('systemStatus');
+            const indicator = statusElement.querySelector('.status-indicator');
+            const text = statusElement.querySelector('span:last-child');
+
+            if (connected) {
+                indicator.className = 'status-indicator status-active pulse';
+                text.textContent = 'System Active';
+            } else {
+                indicator.className = 'status-indicator status-error';
+                text.textContent = 'Connection Lost';
+            }
+        }
+
+        // Show manual reviews modal
+        async function showManualReviews() {
+            try {
+                const response = await fetch('/api/manual-reviews');
+                const data = await response.json();
+
+                const content = document.getElementById('manualReviewContent');
+
+                if (data.error) {
+                    content.innerHTML = `<p class="text-red-500">Error: ${data.error}</p>`;
+                } else if (data.reviews.length === 0) {
+                    content.innerHTML = '<p class="text-green-500"><i class="fas fa-check-circle mr-2"></i>No pending manual reviews!</p>';
+                } else {
+                    let html = '<div class="space-y-3">';
+
+                    data.reviews.forEach(review => {
+                        const priorityClass = review.priority >= 3 ? 'bg-red-100 border-red-300' : 'bg-orange-100 border-orange-300';
+                        const priorityText = review.priority >= 3 ? 'High Priority' : 'Medium Priority';
+
+                        html += `
+                            <div class="border rounded-lg p-4 ${priorityClass}">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900">${review.job_title}</h4>
+                                        <p class="text-sm text-gray-600">${review.company}</p>
+                                        <p class="text-sm text-gray-800 mt-2">${review.title}</p>
+                                        <p class="text-xs text-gray-500 mt-1">${review.description}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-white bg-opacity-50">${priorityText}</span>
+                                        <p class="text-xs text-gray-500 mt-1">${formatDate(review.created_at)}</p>
+                                        <button onclick="viewManualReviewDetails(${review.id})"
+                                                class="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">
+                                            View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+                    content.innerHTML = html;
+                }
+
+                document.getElementById('manualReviewModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading manual reviews:', error);
+            }
+        }
+
+        // Show failed applications modal
+        async function showFailedApplications() {
+            try {
+                const response = await fetch('/api/failed-applications');
+                const data = await response.json();
+
+                const content = document.getElementById('failedApplicationContent');
+
+                if (data.error) {
+                    content.innerHTML = `<p class="text-red-500">Error: ${data.error}</p>`;
+                } else if (data.failed_applications.length === 0) {
+                    content.innerHTML = '<p class="text-green-500"><i class="fas fa-check-circle mr-2"></i>No failed applications!</p>';
+                } else {
+                    let html = '<div class="space-y-3">';
+
+                    data.failed_applications.forEach(app => {
+                        const errorDetails = app.error_details || {};
+                        const errorMessage = errorDetails.error_message || app.manual_review_reason || 'Unknown error';
+
+                        html += `
+                            <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900">${app.title}</h4>
+                                        <p class="text-sm text-gray-600">${app.company}</p>
+                                        <p class="text-sm text-red-800 mt-2"><i class="fas fa-exclamation-triangle mr-1"></i>${errorMessage}</p>
+                                        <p class="text-xs text-gray-500 mt-1">Failed at: ${app.failure_point || 'Unknown step'}</p>
+                                        <p class="text-xs text-gray-500">Retry count: ${app.retry_count || 0}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-gray-500">${formatDate(app.applied_at)}</p>
+                                        <button onclick="viewApplicationDetails(${app.id})"
+                                                class="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">
+                                            View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+                    content.innerHTML = html;
+                }
+
+                document.getElementById('failedApplicationModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading failed applications:', error);
+            }
+        }
+
+        // View application details
+        async function viewApplicationDetails(applicationId) {
+            try {
+                const response = await fetch(`/api/application/${applicationId}`);
+                const data = await response.json();
+
+                const content = document.getElementById('applicationDetailContent');
+
+                if (data.error) {
+                    content.innerHTML = `<p class="text-red-500">Error: ${data.error}</p>`;
+                } else {
+                    let html = `
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-blue-900 mb-2">Job Information</h4>
+                                    <p><strong>Title:</strong> ${data.title}</p>
+                                    <p><strong>Company:</strong> ${data.company}</p>
+                                    <p><strong>Location:</strong> ${data.location || 'N/A'}</p>
+                                    <p><strong>URL:</strong> <a href="${data.url}" target="_blank" class="text-blue-600 hover:underline">View Job</a></p>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-gray-900 mb-2">Application Status</h4>
+                                    <p><strong>Status:</strong> <span class="px-2 py-1 rounded text-sm ${getStatusClass(data.status)}">${data.status}</span></p>
+                                    <p><strong>Applied At:</strong> ${formatDate(data.applied_at)}</p>
+                                    <p><strong>Duration:</strong> ${data.application_duration || 0} seconds</p>
+                                    <p><strong>ATS System:</strong> ${data.ats_system || 'Unknown'}</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                    `;
+
+                    // Add screening questions if available
+                    if (data.screening_questions && data.screening_questions.length > 0) {
+                        html += `
+                            <div class="bg-yellow-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-yellow-900 mb-2">Screening Questions</h4>
+                                <div class="space-y-2">
+                        `;
+
+                        data.screening_questions.forEach((question, index) => {
+                            const answer = data.screening_answers && data.screening_answers[index] ? data.screening_answers[index] : 'No answer recorded';
+                            html += `
+                                <div class="border-l-2 border-yellow-400 pl-3">
+                                    <p class="text-sm font-medium">${question}</p>
+                                    <p class="text-sm text-gray-600">Answer: ${answer}</p>
+                                </div>
+                            `;
+                        });
+
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // Add error details if available
+                    if (data.error_details) {
+                        html += `
+                            <div class="bg-red-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-red-900 mb-2">Error Details</h4>
+                                <p class="text-sm text-red-800">${JSON.stringify(data.error_details, null, 2)}</p>
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+
+                    content.innerHTML = html;
+                }
+
+                document.getElementById('applicationDetailModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading application details:', error);
+            }
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // View manual review details
+        async function viewManualReviewDetails(reviewId) {
+            try {
+                const response = await fetch(`/api/manual-review/${reviewId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(`Error: ${data.error}`);
+                } else {
+                    // For now, show in alert - could be enhanced with a dedicated modal
+                    const details = `
+Manual Review Details:
+
+Job: ${data.title} at ${data.company}
+Type: ${data.review_type}
+Priority: ${data.priority}
+Status: ${data.status}
+
+Issue: ${data.title}
+Description: ${data.description}
+
+Created: ${formatDate(data.created_at)}
+                    `;
+                    alert(details);
+                }
+            } catch (error) {
+                console.error('Error loading manual review details:', error);
+                alert('Error loading manual review details');
+            }
+        }
+
+        // Update system status (pause/resume)
+        function updateSystemStatus(paused) {
+            isPaused = paused;
+            const pauseBtn = document.getElementById('pauseBtn');
+            const statusElement = document.getElementById('systemStatus');
+            const indicator = statusElement.querySelector('.status-indicator');
+            const text = statusElement.querySelector('span:last-child');
+
+            if (paused) {
+                pauseBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Resume';
+                indicator.className = 'status-indicator status-paused pulse';
+                text.textContent = 'System Paused';
+            } else {
+                pauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+                indicator.className = 'status-indicator status-active pulse';
+                text.textContent = 'System Active';
+            }
+        }
+
+        // Toggle pause/resume
+        async function togglePause() {
+            try {
+                const endpoint = isPaused ? '/action/resume' : '/action/pause';
+                const response = await fetch(endpoint, { method: 'POST' });
+
+                if (response.ok) {
+                    updateSystemStatus(!isPaused);
+                } else {
+                    console.error('Failed to toggle pause status');
+                }
+            } catch (error) {
+                console.error('Error toggling pause status:', error);
+            }
+        }
+
+        // Load jobs with filters and pagination
+        async function loadJobs(page = 0) {
+            try {
+                currentJobsPage = page;
+                const offset = page * jobsPerPage;
+
+                // Get filter values
+                const site = document.getElementById('siteFilter').value;
+                const applied = document.getElementById('appliedFilter').value;
+                const search = document.getElementById('searchInput').value;
+                const experience = document.getElementById('experienceFilter').value;
+
+                // Build query parameters
+                const params = new URLSearchParams({
+                    limit: jobsPerPage,
+                    offset: offset
+                });
+
+                if (site) params.append('site', site);
+                if (applied) params.append('applied', applied);
+                if (search) params.append('search', search);
+                if (experience) params.append('experience', experience);
+
+                // Show loading state
+                const loadBtn = document.getElementById('loadJobsBtn');
+                const originalText = loadBtn.innerHTML;
+                loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+                loadBtn.disabled = true;
+
+                const response = await fetch(`/api/jobs-table?${params}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayJobs(data.jobs);
+                    updateJobsPagination(data.total, data.has_more);
+                } else {
+                    console.error('Failed to load jobs:', data.error);
+                    displayJobsError(data.error || 'Failed to load jobs');
+                }
+
+                // Restore button state
+                loadBtn.innerHTML = originalText;
+                loadBtn.disabled = false;
+
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                displayJobsError('Network error while loading jobs');
+
+                // Restore button state
+                const loadBtn = document.getElementById('loadJobsBtn');
+                loadBtn.innerHTML = '<i class="fas fa-search mr-2"></i>Load Jobs';
+                loadBtn.disabled = false;
+            }
+        }
+
+        // Display jobs in the table
+        function displayJobs(jobs) {
+            const tbody = document.getElementById('jobsTable');
+            tbody.innerHTML = '';
+
+            if (jobs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-2 block"></i>
+                            No jobs found matching your criteria
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            jobs.forEach(job => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+
+                // Enhanced applied badge with better styling
+                const appliedBadge = job.applied ?
+                    '<span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">✓ Applied</span>' :
+                    '<span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Not Applied</span>';
+
+                // Better date formatting
+                const postedDate = job.posted_date_display || job.posted_date || 'Unknown';
+                const scrapedDate = job.scraped_date_display || job.scraped_at || 'Unknown';
+
+                // Enhanced summary with longer descriptions for detailed view
+                const fullDescription = job.description_full || job.summary || 'No description available';
+                const truncatedSummary = fullDescription.length > 200 ?
+                    fullDescription.substring(0, 200) + '...' : fullDescription;
+
+                // Enhanced site display
+                const siteDisplay = job.site_display || job.site || 'Unknown';
+                const siteColor = getSiteColor(job.site);
+
+                // Enhanced company name (using the fixed company name from API)
+                const companyName = job.company || 'Unknown Company';
+
+                row.innerHTML = `
+                    <td class="px-4 py-4">
+                        <div class="text-sm font-medium text-gray-900 mb-1">${job.title || 'Unknown Job Title'}</div>
+                        <div class="text-xs text-gray-600 mb-2 leading-relaxed" title="${fullDescription}">${truncatedSummary}</div>
+                        <div class="flex flex-wrap gap-1 text-xs">
+                            ${job.search_keyword ? `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded">Found by: ${job.search_keyword}</span>` : ''}
+                            ${job.salary ? `<span class="px-2 py-1 bg-green-100 text-green-700 rounded">💰 ${job.salary}</span>` : ''}
+                            ${job.job_type ? `<span class="px-2 py-1 bg-purple-100 text-purple-700 rounded">📋 ${job.job_type}</span>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="text-sm font-medium text-gray-900">${companyName}</div>
+                        ${job.experience_level ? `<div class="text-xs text-gray-500 capitalize">${job.experience_level} level</div>` : ''}
+                    </td>
+                    <td class="px-4 py-4 text-sm text-gray-900">${job.location_display || job.location || 'Remote/Unspecified'}</td>
+                    <td class="px-4 py-4">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${siteColor}">
+                            ${siteDisplay}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="text-sm text-gray-900">${job.posted_formatted || postedDate}</div>
+                        <div class="text-xs text-gray-500">Scraped: ${scrapedDate.split(' ')[0]}</div>
+                    </td>
+                    <td class="px-4 py-4">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${job.experience_class || 'text-gray-600 bg-gray-100'}">
+                            ${job.experience_level || 'Not specified'}
+                        </span>
+                        ${job.skills_display ? `<div class="text-xs text-gray-500 mt-1">${job.skills_display}</div>` : ''}
+                    </td>
+                    <td class="px-4 py-4">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${job.match_class || 'text-gray-600 bg-gray-100'}">
+                            ${job.match_recommendation || '📊 Pending'}
+                        </span>
+                        ${job.match_score_display ? `<div class="text-xs text-gray-500 mt-1">${job.match_score_display}</div>` : ''}
+                    </td>
+                    <td class="px-4 py-4">${appliedBadge}</td>
+                    <td class="px-4 py-4 text-sm font-medium">
+                        <div class="flex flex-col space-y-1">
+                            <div class="flex space-x-1">
+                                <button onclick="viewJobDetails(${job.id})" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 rounded" title="View Details">
+                                    <i class="fas fa-eye mr-1"></i>View
+                                </button>
+                                ${job.url ? `<a href="${job.url}" target="_blank" class="px-2 py-1 text-xs bg-green-100 text-green-700 hover:bg-green-200 rounded" title="Open Job Page">
+                                    <i class="fas fa-external-link-alt mr-1"></i>Link
+                                </a>` : ''}
+                            </div>
+                            <div class="flex space-x-1">
+                                ${!job.applied ? `<button onclick="applyToJob(${job.id}, '${job.title}', '${companyName}')" class="px-2 py-1 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 rounded" title="Apply Now">
+                                    <i class="fas fa-paper-plane mr-1"></i>Apply
+                                </button>` : ''}
+                                <button onclick="deleteJob(${job.id}, '${job.title}')" class="px-2 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded" title="Delete Job">
+                                    <i class="fas fa-trash mr-1"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Display jobs loading error
+        function displayJobsError(error) {
+            const tbody = document.getElementById('jobsTable');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="px-6 py-8 text-center text-red-500">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-2 block"></i>
+                        Error loading jobs: ${error}
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Update jobs pagination
+        function updateJobsPagination(total, hasMore) {
+            const pagination = document.getElementById('jobsPagination');
+            const start = currentJobsPage * jobsPerPage + 1;
+            const end = Math.min((currentJobsPage + 1) * jobsPerPage, total);
+
+            document.getElementById('jobsStart').textContent = start;
+            document.getElementById('jobsEnd').textContent = end;
+            document.getElementById('jobsTotal').textContent = total;
+
+            const prevBtn = document.getElementById('prevJobsBtn');
+            const nextBtn = document.getElementById('nextJobsBtn');
+
+            prevBtn.disabled = currentJobsPage === 0;
+            nextBtn.disabled = !hasMore;
+
+            pagination.classList.remove('hidden');
+        }
+
+        // Get site-specific color classes
+        function getSiteColor(site) {
+            const siteColors = {
+                'eluta': 'bg-blue-100 text-blue-800',
+                'eluta_enhanced': 'bg-blue-100 text-blue-800',
+                'indeed': 'bg-green-100 text-green-800',
+                'indeed_enhanced': 'bg-green-100 text-green-800',
+                'workday': 'bg-purple-100 text-purple-800',
+                'jobbank': 'bg-red-100 text-red-800',
+                'linkedin': 'bg-indigo-100 text-indigo-800'
+            };
+            return siteColors[site] || 'bg-gray-100 text-gray-800';
+        }
+
+        // Apply to job
+        async function applyToJob(jobId, jobTitle, company) {
+            if (!confirm(`Apply to "${jobTitle}" at ${company}?\n\nThis will initiate the application process.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/job/${jobId}/apply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ ${data.message}`);
+                    // Refresh the jobs table to show updated status
+                    loadJobs(currentJobsPage);
+                } else {
+                    alert(`❌ Error: ${data.error}`);
+                }
+
+            } catch (error) {
+                console.error('Error applying to job:', error);
+                alert('❌ Network error while applying to job');
+            }
+        }
+
+        // View job details (enhanced modal)
+        async function viewJobDetails(jobId) {
+            try {
+                const response = await fetch(`/api/job/${jobId}`);
+                const job = await response.json();
+
+                if (response.ok) {
+                    // Show detailed job information in modal
+                    const modalContent = document.getElementById('applicationDetailContent');
+                    modalContent.innerHTML = `
+                        <div class="space-y-6">
+                            <div class="border-b pb-4">
+                                <h2 class="text-xl font-bold text-gray-900">${job.title || 'Unknown Job Title'}</h2>
+                                <p class="text-lg text-gray-600">${job.company || 'Unknown Company'}</p>
+                                <p class="text-sm text-gray-500">${job.location || 'Location not specified'}</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-gray-900 mb-2">Job Information</h4>
+                                    <p><strong>Site:</strong> ${job.site_display || job.site || 'Unknown'}</p>
+                                    <p><strong>Posted:</strong> ${job.posted_date || 'Unknown'}</p>
+                                    <p><strong>Scraped:</strong> ${job.scraped_at || 'Unknown'}</p>
+                                    <p><strong>Found by:</strong> ${job.search_keyword || 'Unknown'}</p>
+                                    <p><strong>Experience Level:</strong> ${job.experience_level || 'Not specified'}</p>
+                                    ${job.salary ? `<p><strong>Salary:</strong> ${job.salary}</p>` : ''}
+                                    ${job.job_type ? `<p><strong>Job Type:</strong> ${job.job_type}</p>` : ''}
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-gray-900 mb-2">Application Status</h4>
+                                    <p><strong>Applied:</strong> <span class="${job.applied ? 'text-green-600' : 'text-gray-600'}">${job.applied ? 'Yes' : 'No'}</span></p>
+                                    ${job.application_date ? `<p><strong>Applied Date:</strong> ${job.application_date}</p>` : ''}
+                                    ${job.application_status ? `<p><strong>Status:</strong> ${job.application_status}</p>` : ''}
+                                    ${job.notes ? `<p><strong>Notes:</strong> ${job.notes}</p>` : ''}
+                                </div>
+                            </div>
+
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-blue-900 mb-2">Job Description</h4>
+                                <div class="text-sm text-gray-700 whitespace-pre-wrap">${job.summary || job.full_description || 'No description available'}</div>
+                            </div>
+
+                            <div class="flex space-x-4 pt-4 border-t">
+                                ${job.url ? `<a href="${job.url}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                                    <i class="fas fa-external-link-alt mr-2"></i>Open Job Page
+                                </a>` : ''}
+                                ${!job.applied ? `<button onclick="applyToJob(${job.id}, '${job.title}', '${job.company}')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                                    <i class="fas fa-paper-plane mr-2"></i>Apply Now
+                                </button>` : ''}
+                                <button onclick="closeModal('applicationDetailModal')" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('applicationDetailModal').classList.remove('hidden');
+                } else {
+                    alert(`❌ Error loading job details: ${job.error}`);
+                }
+
+            } catch (error) {
+                console.error('Error loading job details:', error);
+                alert('❌ Network error while loading job details');
+            }
+        }
+
+        // Delete job function
+        async function deleteJob(jobId, jobTitle) {
+            if (!confirm(`Are you sure you want to delete "${jobTitle}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/job/${jobId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ Job "${jobTitle}" deleted successfully`);
+                    // Refresh the jobs table
+                    loadJobs(currentJobsPage);
+                } else {
+                    alert(`❌ Error: ${data.error}`);
+                }
+
+            } catch (error) {
+                console.error('Error deleting job:', error);
+                alert('❌ Network error while deleting job');
+            }
+        }
+
+        // Load available sites for filter dropdown
+        async function loadAvailableSites() {
+            try {
+                const response = await fetch('/api/sites');
+                const data = await response.json();
+
+                const siteFilter = document.getElementById('siteFilter');
+                const currentValue = siteFilter.value;
+
+                // Clear existing options except "All Sites"
+                siteFilter.innerHTML = '<option value="">All Sites</option>';
+
+                // Add available sites
+                data.sites.forEach(site => {
+                    const option = document.createElement('option');
+                    option.value = site.value;
+                    option.textContent = site.label;
+                    if (site.value === currentValue) {
+                        option.selected = true;
+                    }
+                    siteFilter.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Error loading sites:', error);
+            }
+        }
+
+        // New Enhanced Functions
+
+        // Update system uptime
+        function updateSystemUptime() {
+            const uptime = Date.now() - systemStartTime;
+            const minutes = Math.floor(uptime / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            let uptimeText;
+            if (days > 0) {
+                uptimeText = `${days}d ${hours % 24}h`;
+            } else if (hours > 0) {
+                uptimeText = `${hours}h ${minutes % 60}m`;
+            } else {
+                uptimeText = `${minutes}m`;
+            }
+
+            const element = document.getElementById('systemUptime');
+            if (element) {
+                element.textContent = `Uptime: ${uptimeText}`;
+            }
+        }
+
+        // Show notifications
+        function showNotification(message, type = 'info', duration = 3000) {
+            // Check if notifications are enabled
+            if (type === 'success' && !dashboardSettings.successNotifications) return;
+            if (type === 'error' && !dashboardSettings.errorNotifications) return;
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+
+            // Set colors based on type
+            const colors = {
+                success: 'bg-green-500 text-white',
+                error: 'bg-red-500 text-white',
+                warning: 'bg-yellow-500 text-white',
+                info: 'bg-blue-500 text-white'
+            };
+
+            notification.className += ` ${colors[type] || colors.info}`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+
+            // Auto-remove
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        // Quick scrape function
+        async function quickScrape() {
+            const btn = document.getElementById('quickScrapeBtn');
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Scraping...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/quick-scrape', { method: 'POST' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification(`Quick scrape completed! Found ${data.jobs_found || 0} new jobs.`, 'success');
+                    // Refresh data after scraping
+                    setTimeout(refreshData, 2000);
+                } else {
+                    showNotification(`Quick scrape failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showNotification('Network error during quick scrape', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Add test data function
+        async function addTestData() {
+            const btn = document.getElementById('addTestDataBtn');
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/test-data', { method: 'POST' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification(`Added ${data.jobs_added || 0} test jobs successfully!`, 'success');
+                    // Refresh data after adding
+                    setTimeout(refreshData, 1000);
+                } else {
+                    showNotification(`Failed to add test data: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showNotification('Network error while adding test data', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Clear filters function
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('siteFilter').value = '';
+            document.getElementById('appliedFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('experienceFilter').value = '';
+
+            // Reload jobs with cleared filters
+            loadJobs(0);
+
+            showNotification('Filters cleared', 'info', 2000);
+        }
+
+        // Export jobs function
+        async function exportJobs() {
+            try {
+                const response = await fetch('/api/export-jobs');
+                const blob = await response.blob();
+
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `jobs_export_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showNotification('Jobs exported successfully!', 'success');
+            } catch (error) {
+                showNotification('Failed to export jobs', 'error');
+            }
+        }
+
+        // Filter jobs by status (for metric card clicks)
+        function filterJobsByStatus(status) {
+            const appliedFilter = document.getElementById('appliedFilter');
+
+            switch(status) {
+                case 'applied':
+                    appliedFilter.value = 'true';
+                    break;
+                case 'not_applied':
+                    appliedFilter.value = 'false';
+                    break;
+                default:
+                    appliedFilter.value = '';
+            }
+
+            loadJobs(0);
+            showNotification(`Filtered jobs by ${status} status`, 'info', 2000);
+        }
+
+        // Bulk apply to high-match jobs
+        async function bulkApplyHighMatch() {
+            const btn = document.getElementById('quickApplyBtn');
+            const originalText = btn.innerHTML;
+
+            try {
+                // First, get high-match jobs
+                const response = await fetch('/api/jobs-table?limit=100&offset=0');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showNotification('Failed to load jobs for bulk apply', 'error');
+                    return;
+                }
+
+                // Filter for high-match, unapplied jobs
+                const highMatchJobs = data.jobs.filter(job =>
+                    !job.applied &&
+                    job.match_score &&
+                    job.match_score >= 0.6
+                );
+
+                if (highMatchJobs.length === 0) {
+                    showNotification('No high-match unapplied jobs found (60%+ match score)', 'warning');
+                    return;
+                }
+
+                // Confirm bulk apply
+                const confirmMessage = `Apply to ${highMatchJobs.length} high-match jobs?\n\n` +
+                    `Jobs with 60%+ match score:\n` +
+                    highMatchJobs.slice(0, 5).map(job => `• ${job.title} at ${job.company}`).join('\n') +
+                    (highMatchJobs.length > 5 ? `\n... and ${highMatchJobs.length - 5} more` : '');
+
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Applying...';
+                btn.disabled = true;
+
+                let successCount = 0;
+                let failCount = 0;
+
+                // Apply to each job with delay
+                for (let i = 0; i < highMatchJobs.length; i++) {
+                    const job = highMatchJobs[i];
+
+                    try {
+                        const applyResponse = await fetch(`/api/job/${job.id}/apply`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+
+                        if (applyResponse.ok) {
+                            successCount++;
+                            showNotification(`✅ Applied to ${job.title} at ${job.company}`, 'success', 2000);
+                        } else {
+                            failCount++;
+                            console.error(`Failed to apply to ${job.title}:`, await applyResponse.text());
+                        }
+                    } catch (error) {
+                        failCount++;
+                        console.error(`Error applying to ${job.title}:`, error);
+                    }
+
+                    // Update progress
+                    btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Applying... (${i + 1}/${highMatchJobs.length})`;
+
+                    // Small delay between applications
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+
+                // Show final results
+                const resultMessage = `Bulk apply completed!\n✅ Success: ${successCount}\n❌ Failed: ${failCount}`;
+                showNotification(resultMessage, successCount > 0 ? 'success' : 'warning', 5000);
+
+                // Refresh jobs table
+                setTimeout(() => loadJobs(currentJobsPage), 2000);
+
+            } catch (error) {
+                console.error('Error in bulk apply:', error);
+                showNotification('Network error during bulk apply', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

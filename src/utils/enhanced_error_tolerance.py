@@ -1,0 +1,331 @@
+#!/usr/bin/env python3
+"""
+Enhanced Error Handling System for AutoJobAgent
+Provides comprehensive error handling, retry mechanisms, fallback strategies, and detailed logging.
+"""
+
+import functools
+import time
+import traceback
+import logging
+import json
+from typing import Any, Callable, Dict, List, Optional, Union
+from datetime import datetime
+from pathlib import Path
+from rich.console import Console
+from rich.table import Table
+
+console = Console()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('error_logs.log'),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+
+class ErrorTracker:
+    """Track and analyze errors across the application."""
+    
+    def __init__(self):
+        self.errors = []
+        self.error_counts = {}
+        self.recovery_stats = {}
+        
+    def log_error(self, error: Exception, context: Dict, operation: str, recovery_attempted: bool = False):
+        """Log an error with context information."""
+        error_info = {
+            "timestamp": datetime.now().isoformat(),
+            "operation": operation,
+            "error_type": type(error).__name__,
+            "error_message": str(error),
+            "context": context,
+            "recovery_attempted": recovery_attempted,
+            "stack_trace": traceback.format_exc()
+        }
+        
+        self.errors.append(error_info)
+        
+        # Update error counts
+        error_key = f"{operation}:{type(error).__name__}"
+        self.error_counts[error_key] = self.error_counts.get(error_key, 0) + 1
+        
+        # Log to file
+        logger.error(f"Error in {operation}: {error}", extra={"context": context})
+        
+    def get_error_summary(self) -> Dict:
+        """Get summary of errors and patterns."""
+        return {
+            "total_errors": len(self.errors),
+            "error_counts": self.error_counts,
+            "recovery_stats": self.recovery_stats,
+            "recent_errors": self.errors[-10:] if self.errors else []
+        }
+    
+    def save_error_report(self, filepath: str = "error_report.json"):
+        """Save detailed error report to file."""
+        report = {
+            "generated_at": datetime.now().isoformat(),
+            "summary": self.get_error_summary(),
+            "all_errors": self.errors
+        }
+        
+        with open(filepath, 'w') as f:
+            json.dump(report, f, indent=2, default=str)
+        
+        console.print(f"[green]📊 Error report saved to {filepath}[/green]")
+
+
+# Global error tracker
+error_tracker = ErrorTracker()
+
+
+def with_retry(max_retries: int = 3, delay: float = 1.0, backoff: float = 2.0, 
+               exceptions: tuple = (Exception,), operation_name: str = "operation"):
+    """
+    Decorator for automatic retry with exponential backoff.
+    
+    Args:
+        max_retries: Maximum number of retry attempts
+        delay: Initial delay between retries in seconds
+        backoff: Multiplier for delay after each retry
+        exceptions: Tuple of exceptions to catch and retry
+        operation_name: Name of the operation for logging
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> Any:
+            last_exception = None
+            current_delay = delay
+            
+            for attempt in range(max_retries + 1):
+                try:
+                    result = func(*args, **kwargs)
+                    
+                    # Log successful recovery if this wasn't the first attempt
+                    if attempt > 0:
+                        console.print(f"[green]✅ {operation_name} succeeded after {attempt} retries[/green]")
+                        error_tracker.recovery_stats[operation_name] = error_tracker.recovery_stats.get(operation_name, 0) + 1
+                    
+                    return result
+                    
+                except exceptions as e:
+                    last_exception = e
+                    
+                    # Log error with context
+                    context = {
+                        "attempt": attempt + 1,
+                        "max_retries": max_retries,
+                        "function": func.__name__,
+                        "args": str(args)[:200],  # Truncate long args
+                        "kwargs": str(kwargs)[:200]
+                    }
+                    
+                    error_tracker.log_error(e, context, operation_name, recovery_attempted=attempt < max_retries)
+                    
+                    if attempt < max_retries:
+                        console.print(f"[yellow]🔄 {operation_name} failed (attempt {attempt + 1}/{max_retries + 1}), retrying in {current_delay:.1f}s...[/yellow]")
+                        time.sleep(current_delay)
+                        current_delay *= backoff
+                    else:
+                        console.print(f"[red]❌ {operation_name} failed after {max_retries + 1} attempts[/red]")
+            
+            # All retries exhausted, raise the last exception
+            raise last_exception
+        
+        return wrapper
+    return decorator
+
+
+def with_fallback(fallback_func: Callable, operation_name: str = "operation", 
+                  exceptions: tuple = (Exception,)):
+    """
+    Decorator to provide fallback functionality when primary function fails.
+    
+    Args:
+        fallback_func: Function to call if primary function fails
+        operation_name: Name of the operation for logging
+        exceptions: Tuple of exceptions to catch
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> Any:
+            try:
+                return func(*args, **kwargs)
+            except exceptions as e:
+                console.print(f"[yellow]⚠️ {operation_name} failed, attempting fallback...[/yellow]")
+                
+                # Log error
+                context = {
+                    "function": func.__name__,
+                    "fallback_function": fallback_func.__name__,
+                    "args": str(args)[:200],
+                    "kwargs": str(kwargs)[:200]
+                }
+                error_tracker.log_error(e, context, operation_name, recovery_attempted=True)
+                
+                try:
+                    result = fallback_func(*args, **kwargs)
+                    console.print(f"[green]✅ {operation_name} fallback succeeded[/green]")
+                    error_tracker.recovery_stats[f"{operation_name}_fallback"] = error_tracker.recovery_stats.get(f"{operation_name}_fallback", 0) + 1
+                    return result
+                except Exception as fallback_error:
+                    console.print(f"[red]❌ {operation_name} fallback also failed[/red]")
+                    
+                    # Log fallback failure
+                    fallback_context = {
+                        "original_error": str(e),
+                        "fallback_error": str(fallback_error),
+                        "function": func.__name__,
+                        "fallback_function": fallback_func.__name__
+                    }
+                    error_tracker.log_error(fallback_error, fallback_context, f"{operation_name}_fallback", recovery_attempted=False)
+                    
+                    # Raise the original exception
+                    raise e
+        
+        return wrapper
+    return decorator
+
+
+def safe_execute(func: Callable, *args, default_return: Any = None, 
+                operation_name: str = "operation", **kwargs) -> Any:
+    """
+    Safely execute a function with error handling.
+    
+    Args:
+        func: Function to execute
+        *args: Arguments for the function
+        default_return: Value to return if function fails
+        operation_name: Name of the operation for logging
+        **kwargs: Keyword arguments for the function
+    
+    Returns:
+        Function result or default_return if function fails
+    """
+    try:
+        return func(*args, **kwargs)
+    except Exception as e:
+        console.print(f"[yellow]⚠️ {operation_name} failed safely, returning default[/yellow]")
+        
+        # Log error
+        context = {
+            "function": func.__name__,
+            "args": str(args)[:200],
+            "kwargs": str(kwargs)[:200],
+            "default_return": str(default_return)
+        }
+        error_tracker.log_error(e, context, operation_name, recovery_attempted=False)
+        
+        return default_return
+
+
+class RobustOperations:
+    """Collection of robust operations with built-in error handling."""
+    
+    @staticmethod
+    @with_retry(max_retries=3, operation_name="file_read")
+    def read_file(filepath: Union[str, Path], encoding: str = 'utf-8') -> str:
+        """Robustly read a file with retry logic."""
+        with open(filepath, 'r', encoding=encoding) as f:
+            return f.read()
+    
+    @staticmethod
+    @with_retry(max_retries=3, operation_name="file_write")
+    def write_file(filepath: Union[str, Path], content: str, encoding: str = 'utf-8') -> bool:
+        """Robustly write to a file with retry logic."""
+        # Ensure directory exists
+        Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(filepath, 'w', encoding=encoding) as f:
+            f.write(content)
+        return True
+    
+    @staticmethod
+    @with_retry(max_retries=3, operation_name="json_load")
+    def load_json(filepath: Union[str, Path]) -> Dict:
+        """Robustly load JSON with retry logic."""
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    
+    @staticmethod
+    @with_retry(max_retries=3, operation_name="json_save")
+    def save_json(data: Dict, filepath: Union[str, Path]) -> bool:
+        """Robustly save JSON with retry logic."""
+        # Ensure directory exists
+        Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, default=str)
+        return True
+
+
+# Create global instance
+robust_ops = RobustOperations()
+
+
+def display_error_dashboard():
+    """Display error tracking dashboard."""
+    summary = error_tracker.get_error_summary()
+    
+    console.print("\n[bold blue]🚨 Error Tracking Dashboard[/bold blue]")
+    
+    # Summary table
+    summary_table = Table(title="Error Summary")
+    summary_table.add_column("Metric", style="cyan")
+    summary_table.add_column("Value", style="magenta")
+    
+    summary_table.add_row("Total Errors", str(summary["total_errors"]))
+    summary_table.add_row("Unique Error Types", str(len(summary["error_counts"])))
+    summary_table.add_row("Successful Recoveries", str(sum(summary["recovery_stats"].values())))
+    
+    console.print(summary_table)
+    
+    # Top errors table
+    if summary["error_counts"]:
+        error_table = Table(title="Most Common Errors")
+        error_table.add_column("Operation:Error", style="cyan")
+        error_table.add_column("Count", style="magenta")
+        
+        sorted_errors = sorted(summary["error_counts"].items(), key=lambda x: x[1], reverse=True)
+        for error_key, count in sorted_errors[:10]:
+            error_table.add_row(error_key, str(count))
+        
+        console.print(error_table)
+    
+    # Recent errors
+    if summary["recent_errors"]:
+        console.print("\n[bold yellow]📋 Recent Errors:[/bold yellow]")
+        for error in summary["recent_errors"][-5:]:
+            console.print(f"  • {error['timestamp']}: {error['operation']} - {error['error_type']}: {error['error_message']}")
+
+
+if __name__ == "__main__":
+    # Test the error handling system
+    console.print("[bold blue]🧪 Testing Enhanced Error Handling System[/bold blue]")
+    
+    @with_retry(max_retries=2, operation_name="test_retry")
+    def test_retry_function():
+        import random
+        if random.random() < 0.7:  # 70% chance of failure
+            raise ValueError("Random test error")
+        return "Success!"
+    
+    # Test retry mechanism
+    try:
+        result = test_retry_function()
+        console.print(f"[green]✅ Test result: {result}[/green]")
+    except Exception as e:
+        console.print(f"[red]❌ Test failed: {e}[/red]")
+    
+    # Display dashboard
+    display_error_dashboard()
+    
+    # Save error report
+    error_tracker.save_error_report()

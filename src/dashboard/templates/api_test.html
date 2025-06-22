@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard API Test - AutoJobAgent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .json-display {
+            background: #1f2937;
+            color: #f3f4f6;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">🧪 Dashboard API Test Center</h1>
+        
+        <!-- Quick Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">📊 Dashboard Numbers</h3>
+                <button onclick="testEndpoint('/api/dashboard-numbers')" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                    Test Numbers API
+                </button>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">🔍 System Status</h3>
+                <button onclick="testEndpoint('/api/system-status')" 
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                    Test System API
+                </button>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">⚡ Quick Test</h3>
+                <button onclick="testEndpoint('/api/quick-test')" 
+                        class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded">
+                    Test Quick API
+                </button>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">📈 Comprehensive Stats</h3>
+                <button onclick="testEndpoint('/api/comprehensive-stats')" 
+                        class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded">
+                    Test Stats API
+                </button>
+            </div>
+        </div>
+
+        <!-- API Response Display -->
+        <div class="bg-white rounded-lg shadow mb-8">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">API Response</h2>
+                <p class="text-gray-600">Click any button above to test the API endpoints</p>
+            </div>
+            <div class="p-6">
+                <div id="loading" class="hidden text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <p class="mt-2 text-gray-600">Loading...</p>
+                </div>
+                <div id="response" class="json-display p-4 rounded-lg min-h-32">
+                    Click a test button to see API response here...
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Test Options -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">🎯 Specific API Tests</h3>
+                <div class="space-y-2">
+                    <button onclick="testEndpoint('/api/job-stats')" 
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                        Job Statistics
+                    </button>
+                    <button onclick="testEndpoint('/api/application-stats')" 
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                        Application Statistics
+                    </button>
+                    <button onclick="testEndpoint('/api/sites')" 
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                        Available Sites
+                    </button>
+                    <button onclick="testEndpoint('/api/jobs?limit=5')" 
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                        Recent Jobs (5)
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">📋 API Endpoints</h3>
+                <div class="text-sm text-gray-600 space-y-1">
+                    <div><code class="bg-gray-100 px-2 py-1 rounded">/api/dashboard-numbers</code> - Real-time dashboard metrics</div>
+                    <div><code class="bg-gray-100 px-2 py-1 rounded">/api/system-status</code> - System health and resources</div>
+                    <div><code class="bg-gray-100 px-2 py-1 rounded">/api/quick-test</code> - Basic connectivity test</div>
+                    <div><code class="bg-gray-100 px-2 py-1 rounded">/api/comprehensive-stats</code> - Complete statistics</div>
+                    <div><code class="bg-gray-100 px-2 py-1 rounded">/api/jobs-table</code> - Jobs with table formatting</div>
+                    <div><code class="bg-gray-100 px-2 py-1 rounded">/api/job-stats</code> - Job scraping statistics</div>
+                    <div><code class="bg-gray-100 px-2 py-1 rounded">/api/application-stats</code> - Application statistics</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function testEndpoint(endpoint) {
+            const loadingEl = document.getElementById('loading');
+            const responseEl = document.getElementById('response');
+            
+            // Show loading
+            loadingEl.classList.remove('hidden');
+            responseEl.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                // Hide loading
+                loadingEl.classList.add('hidden');
+                
+                // Display formatted JSON
+                responseEl.textContent = JSON.stringify(data, null, 2);
+                
+                // Add status indicator
+                if (response.ok) {
+                    responseEl.className = 'json-display p-4 rounded-lg min-h-32 border-l-4 border-green-500';
+                } else {
+                    responseEl.className = 'json-display p-4 rounded-lg min-h-32 border-l-4 border-red-500';
+                }
+                
+            } catch (error) {
+                // Hide loading
+                loadingEl.classList.add('hidden');
+                
+                // Display error
+                responseEl.textContent = `Error: ${error.message}`;
+                responseEl.className = 'json-display p-4 rounded-lg min-h-32 border-l-4 border-red-500';
+            }
+        }
+
+        // Auto-test quick endpoint on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => testEndpoint('/api/quick-test'), 1000);
+        });
+    </script>
+</body>
+</html>

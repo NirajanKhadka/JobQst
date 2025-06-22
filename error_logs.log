@@ -1,0 +1,8 @@
+2025-06-21 00:36:31,704 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\Niraj\\miniconda3\\lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-06-21 00:36:31,704 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Niraj\miniconda3\lib\site-packages\comtypes\gen'
+2025-06-21 01:05:19,402 - src.scrapers.big_data_patterns - INFO - Stage 1 completed in 0.00s
+2025-06-21 01:05:19,402 - src.scrapers.big_data_patterns - INFO - Stage 2 completed in 0.00s
+2025-06-21 01:05:19,507 - src.scrapers.big_data_patterns - INFO - Stage 3 completed in 0.10s
+2025-06-21 01:06:32,325 - src.scrapers.big_data_patterns - INFO - Stage 1 completed in 0.00s
+2025-06-21 01:06:32,335 - src.scrapers.big_data_patterns - INFO - Stage 2 completed in 0.00s
+2025-06-21 01:06:32,446 - src.scrapers.big_data_patterns - INFO - Stage 3 completed in 0.11s
