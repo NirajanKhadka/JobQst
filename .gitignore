@@ -222,3 +222,6 @@ profiles/test_profile/
 
 # Test results
 eluta_test_results_*.json
+
+# PID files
+dashboard.pid

@@ -174,6 +174,9 @@ def main() -> int:
             return run_application_mode(profile, args)
         elif args.action == "dashboard":
             return run_dashboard_mode(profile, args)
+        elif args.action == "shutdown":
+            DashboardActions(profile).shutdown_dashboard_action()
+            return 0
         elif args.action == "status":
             return run_status_mode(profile, args)
         elif args.action == "setup":
@@ -185,7 +188,8 @@ def main() -> int:
             return 1
             
     except KeyboardInterrupt:
-        console.print("\n[yellow]⚠️ Operation cancelled by user[/yellow]")
+        console.print("\n[yellow]⚠️ Operation cancelled by user. Shutting down dashboard...[/yellow]")
+        DashboardActions({}).shutdown_dashboard_action()
         return 0
     except Exception as e:
         console.print(f"[red]❌ Unexpected error: {e}[/red]")

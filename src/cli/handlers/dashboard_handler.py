@@ -26,6 +26,7 @@ from rich.prompt import Prompt
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from src.core import utils
+import psutil
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -36,8 +37,19 @@ class DashboardHandler:
     
     def __init__(self, profile: Dict):
         self.profile = profile
-        # Initialize session data as empty dict for now
         self.session = {}
+        self.pid_file = Path("dashboard.pid")
+        self.port = 8002
+    
+    def _get_process_by_port(self) -> Optional[psutil.Process]:
+        """Find and return a process using the dashboard port."""
+        for conn in psutil.net_connections():
+            if conn.laddr and conn.laddr.port == self.port and conn.status == 'LISTEN':
+                try:
+                    return psutil.Process(conn.pid)
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+        return None
     
     def show_status_and_dashboard(self) -> None:
         """Show system status and launch dashboard."""
@@ -91,45 +103,89 @@ class DashboardHandler:
             console.print(recent_table)
     
     def auto_start_dashboard(self) -> bool:
-        """Automatically start the dashboard."""
-        console.print("[cyan]🚀 Starting dashboard...[/cyan]")
-        
+        """Automatically start the dashboard, killing any existing process on the port."""
+        console.print(f"[cyan]🚀 Starting dashboard on port {self.port}...[/cyan]")
+
+        existing_process = self._get_process_by_port()
+        if existing_process:
+            console.print(f"[yellow]⚠️ Port {self.port} is already in use by PID {existing_process.pid}. Terminating it...[/yellow]")
+            try:
+                existing_process.terminate()
+                existing_process.wait(timeout=3)
+                console.print(f"[green]✅ Process {existing_process.pid} terminated.[/green]")
+            except psutil.TimeoutExpired:
+                console.print(f"[red]❌ Failed to terminate process {existing_process.pid}. Killing it...[/red]")
+                existing_process.kill()
+                console.print(f"[green]✅ Process {existing_process.pid} killed.[/green]")
+            except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+                console.print(f"[yellow]⚠️ Could not terminate process {existing_process.pid}: {e}[/yellow]")
+
         try:
-            # Check if dashboard is already running
-            if self._check_dashboard_running():
-                console.print("[green]✅ Dashboard is already running[/green]")
-                console.print("[cyan]🌐 Dashboard URL: http://localhost:8000[/cyan]")
-                return True
-            
-            # Start dashboard process
             dashboard_process = subprocess.Popen(
-                ["python", "-m", "src.dashboard.api"],
+                ["python", "-m", "uvicorn", "src.dashboard.api:app", "--host", "0.0.0.0", "--port", str(self.port)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True
             )
             
-            # Wait for dashboard to start
+            self.pid_file.write_text(str(dashboard_process.pid))
+            
             console.print("[cyan]⏳ Waiting for dashboard to start...[/cyan]")
-            for _ in range(10):  # Wait up to 10 seconds
+            for _ in range(15):
                 time.sleep(1)
                 if self._check_dashboard_running():
                     console.print("[green]✅ Dashboard started successfully![/green]")
-                    console.print("[cyan]🌐 Dashboard URL: http://localhost:8000[/cyan]")
-                    console.print("[yellow]💡 Press Ctrl+C to stop the dashboard[/yellow]")
+                    console.print(f"[cyan]🌐 Dashboard URL: http://localhost:{self.port}[/cyan]")
+                    console.print("[yellow]💡 Use 'shutdown' action to stop the dashboard.[/yellow]")
                     return True
             
-            console.print("[red]❌ Dashboard failed to start[/red]")
+            console.print("[red]❌ Dashboard failed to start in time.[/red]")
+            self.stop_dashboard()
             return False
             
         except Exception as e:
             console.print(f"[red]❌ Error starting dashboard: {e}[/red]")
             return False
-    
+
+    def stop_dashboard(self) -> bool:
+        """Stop the running dashboard process."""
+        if not self.pid_file.exists():
+            proc = self._get_process_by_port()
+            if proc:
+                console.print(f"[yellow]⚠️ No PID file, but found process {proc.pid} on port {self.port}. Terminating it...[/yellow]")
+                try:
+                    proc.terminate()
+                    return True
+                except Exception as e:
+                    console.print(f"[red]❌ Error stopping process {proc.pid}: {e}[/red]")
+                    return False
+            console.print("[yellow]⚠️ Dashboard is not running (no PID file).[/yellow]")
+            return False
+        
+        try:
+            pid = int(self.pid_file.read_text())
+            process = psutil.Process(pid)
+            process.terminate()
+            process.wait(timeout=3)
+            console.print(f"[green]✅ Dashboard process {pid} terminated.[/green]")
+        except psutil.TimeoutExpired:
+            console.print(f"[red]❌ Process {pid} did not terminate gracefully. Killing it...[/red]")
+            psutil.Process(pid).kill()
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            console.print(f"[yellow]⚠️ Could not terminate process {pid}. It may have already been stopped.[/yellow]")
+        except Exception as e:
+            console.print(f"[red]❌ Error stopping dashboard: {e}[/red]")
+            return False
+        finally:
+            if self.pid_file.exists():
+                self.pid_file.unlink(missing_ok=True)
+            
+        return True
+
     def _check_dashboard_running(self) -> bool:
         """Check if dashboard is running."""
         try:
-            response = requests.get("http://localhost:8000/health", timeout=3)
+            response = requests.get(f"http://localhost:{self.port}/health", timeout=3)
             return response.status_code == 200
         except requests.exceptions.RequestException:
             return False

@@ -27,6 +27,10 @@ class DashboardActions:
         """Handle show status and dashboard action."""
         self.dashboard_handler.show_status_and_dashboard()
     
+    def shutdown_dashboard_action(self) -> None:
+        """Handle shutting down the dashboard."""
+        self.dashboard_handler.stop_dashboard()
+    
     def show_status_action(self) -> None:
         """Handle show status action."""
         self.dashboard_handler.show_status()

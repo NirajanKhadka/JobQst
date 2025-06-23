@@ -18,6 +18,7 @@ Examples:
   python main.py Nirajan --action scrape           # Scrape jobs only
   python main.py Nirajan --action apply            # Apply to scraped jobs
   python main.py Nirajan --action dashboard        # Launch dashboard
+  python main.py Nirajan --action shutdown         # Stop the dashboard
   python main.py Nirajan --action status           # Show status
         """
     )
@@ -27,7 +28,7 @@ Examples:
 
     # Action commands
     parser.add_argument("--action",
-                       choices=["interactive", "scrape", "apply", "apply-url", "apply-csv", "dashboard", "status", "setup", "process-queue"],
+                       choices=["interactive", "scrape", "apply", "apply-url", "apply-csv", "dashboard", "status", "setup", "process-queue", "shutdown"],
                        default="interactive",
                        help="Action to perform")
 
