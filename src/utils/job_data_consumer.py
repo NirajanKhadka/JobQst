@@ -77,6 +77,87 @@ def worker_process(job_data: Dict, db_path: str) -> Optional[Dict]:
         return {"status": "error", "error": str(e)}
 
 
+class JobDataConsumer:
+    """
+    Legacy JobDataConsumer class for backward compatibility with tests.
+    This wraps the modern JobProcessor functionality.
+    """
+    
+    def __init__(self, raw_dir: str, processed_dir: str, db_path: Optional[str] = None, num_workers: int = 4):
+        self.raw_dir = Path(raw_dir)
+        self.processed_dir = Path(processed_dir)
+        self.db_path = db_path if db_path is not None else "data/jobs.db"
+        self.num_workers = num_workers
+        self.processor = JobProcessor(self.db_path, num_workers)
+        self.processing = False
+        
+        # Ensure directories exist
+        self.raw_dir.mkdir(parents=True, exist_ok=True)
+        self.processed_dir.mkdir(parents=True, exist_ok=True)
+        
+        console.print(f"[green]✅ JobDataConsumer initialized[/green]")
+        console.print(f"Raw directory: {self.raw_dir}")
+        console.print(f"Processed directory: {self.processed_dir}")
+        console.print(f"Database: {self.db_path}")
+        console.print(f"Workers: {self.num_workers}")
+
+    def start_processing(self):
+        """Start processing jobs from the raw directory."""
+        self.processing = True
+        console.print("[cyan]🚀 Starting job processing...[/cyan]")
+        
+        # Process any existing files in raw directory
+        for file_path in self.raw_dir.glob("*.json"):
+            try:
+                with open(file_path, 'r') as f:
+                    job_data = json.load(f)
+                self.processor.submit_job(job_data)
+                
+                # Move to processed directory
+                processed_file = self.processed_dir / file_path.name
+                file_path.rename(processed_file)
+                
+            except Exception as e:
+                console.print(f"[red]Error processing file {file_path}: {e}[/red]")
+
+    def stop_processing(self):
+        """Stop processing and wait for completion."""
+        self.processing = False
+        console.print("[yellow]🛑 Stopping job processing...[/yellow]")
+        self.processor.wait_for_completion()
+
+    def process_batch_file(self, file_path: str):
+        """Process a specific batch file."""
+        try:
+            with open(file_path, 'r') as f:
+                jobs = json.load(f)
+            
+            if isinstance(jobs, list):
+                for job in jobs:
+                    self.processor.submit_job(job)
+            else:
+                self.processor.submit_job(jobs)
+                
+        except Exception as e:
+            console.print(f"[red]Error processing batch file {file_path}: {e}[/red]")
+
+    def get_queue_size(self) -> int:
+        """Get the current queue size."""
+        return len(self.processor.futures)
+
+    def get_memory_usage(self) -> Dict:
+        """Get memory usage statistics."""
+        import psutil
+        process = psutil.Process()
+        memory_info = process.memory_info()
+        
+        return {
+            'rss': memory_info.rss,
+            'vms': memory_info.vms,
+            'percent': process.memory_percent()
+        }
+
+
 class JobProcessor:
     """
     Manages a pool of worker processes to consume and process job data concurrently.

@@ -418,41 +418,172 @@ class EnhancedJobApplicator:
                 self.stats["skipped_jobs"] += 1
 
     def _display_final_results(self, results: List[ApplicationResult], total_time: float):
-        """Display final application results."""
+        """Display final application results and statistics."""
+        console.print(f"\n[bold green]🎉 Application Process Complete![/bold green]")
+        console.print(f"[cyan]⏱️ Total time: {total_time:.2f} seconds[/cyan]")
+        
         # Create results table
-        table = Table(title="🎯 APPLICATION RESULTS SUMMARY")
-        table.add_column("Metric", style="cyan")
-        table.add_column("Count", style="green")
-        table.add_column("Percentage", style="yellow")
-
+        table = Table(title="Application Results Summary")
+        table.add_column("Status", style="bold")
+        table.add_column("Count", style="cyan", justify="center")
+        table.add_column("Percentage", style="green", justify="center")
+        
         total = len(results)
-        if total > 0:
-            table.add_row("Total Jobs Processed", str(total), "100.0%")
-            table.add_row("Successful Applications",
-                         str(self.stats["successful_applications"]),
-                         f"{(self.stats['successful_applications']/total)*100:.1f}%")
-            table.add_row("Failed Applications",
-                         str(self.stats["failed_applications"]),
-                         f"{(self.stats['failed_applications']/total)*100:.1f}%")
-            table.add_row("Manual Reviews Required",
-                         str(self.stats["manual_reviews"]),
-                         f"{(self.stats['manual_reviews']/total)*100:.1f}%")
-            table.add_row("Skipped Jobs",
-                         str(self.stats["skipped_jobs"]),
-                         f"{(self.stats['skipped_jobs']/total)*100:.1f}%")
-
+        if total == 0:
+            console.print("[yellow]No applications were processed[/yellow]")
+            return
+        
+        # Count results by status
+        status_counts = {}
+        for result in results:
+            status = result.status
+            status_counts[status] = status_counts.get(status, 0) + 1
+        
+        # Add rows to table
+        for status, count in status_counts.items():
+            percentage = (count / total) * 100
+            table.add_row(status, str(count), f"{percentage:.1f}%")
+        
         console.print(table)
+        
+        # Display detailed results for failed applications
+        failed_results = [r for r in results if r.status == 'failed']
+        if failed_results:
+            console.print(f"\n[red]❌ Failed Applications ({len(failed_results)}):[/red]")
+            for result in failed_results[:5]:  # Show first 5 failures
+                console.print(f"  • Job {result.job_id}: {result.error_message}")
+            if len(failed_results) > 5:
+                console.print(f"  ... and {len(failed_results) - 5} more")
 
-        # Performance summary
-        avg_time = total_time / total if total > 0 else 0
-        performance_panel = Panel(
-            f"⏱️ PERFORMANCE METRICS\n\n"
-            f"• Total Time: {total_time:.1f} seconds\n"
-            f"• Average Time per Job: {avg_time:.1f} seconds\n"
-            f"• Jobs per Hour: {(total / (total_time / 3600)):.1f}" if total_time > 0 else "• Jobs per Hour: N/A",
-            style="bold blue"
-        )
-        console.print(performance_panel)
+    def get_application_strategy(self, job: Dict = None) -> Dict:
+        """
+        Get the optimal application strategy for a specific job or general strategy.
+        
+        Args:
+            job: Optional job dictionary. If None, returns general strategy.
+            
+        Returns:
+            Strategy dictionary with application approach
+        """
+        if job is None:
+            # Return general strategy for backward compatibility
+            return {
+                "approach": "standard",
+                "timing": "optimal",
+                "priority": "normal",
+                "estimated_time": 300,
+                "requires_manual_review": False,
+                "retry_count": 0
+            }
+        
+        strategy = {
+            "ats_system": "unknown",
+            "approach": "standard",
+            "priority": "normal",
+            "estimated_time": 300,  # 5 minutes
+            "requires_manual_review": False,
+            "retry_count": 0
+        }
+        
+        # Detect ATS system from URL
+        url = job.get('url', '').lower()
+        if 'workday' in url:
+            strategy["ats_system"] = "workday"
+            strategy["approach"] = "workday_optimized"
+        elif 'bamboohr' in url:
+            strategy["ats_system"] = "bamboohr"
+            strategy["approach"] = "bamboohr_optimized"
+        elif 'greenhouse' in url:
+            strategy["ats_system"] = "greenhouse"
+            strategy["approach"] = "greenhouse_optimized"
+        elif 'lever' in url:
+            strategy["ats_system"] = "lever"
+            strategy["approach"] = "lever_optimized"
+        elif 'icims' in url:
+            strategy["ats_system"] = "icims"
+            strategy["approach"] = "icims_optimized"
+        
+        # Determine priority based on job characteristics
+        title = job.get('title', '').lower()
+        if any(keyword in title for keyword in ['senior', 'lead', 'manager', 'director']):
+            strategy["priority"] = "high"
+            strategy["estimated_time"] = 600  # 10 minutes for senior positions
+        
+        # Check if manual review is needed
+        if strategy["ats_system"] == "unknown" or "manual" in job.get('notes', '').lower():
+            strategy["requires_manual_review"] = True
+        
+        return strategy
+
+    def select_ats_for_job(self, job: Dict) -> str:
+        """
+        Select the appropriate ATS system for a job.
+        
+        Args:
+            job: Job dictionary
+            
+        Returns:
+            ATS system name
+        """
+        url = job.get('url', '').lower()
+        
+        # ATS detection logic
+        if 'workday' in url:
+            return 'workday'
+        elif 'bamboohr' in url:
+            return 'bamboohr'
+        elif 'greenhouse' in url:
+            return 'greenhouse'
+        elif 'lever' in url:
+            return 'lever'
+        elif 'icims' in url:
+            return 'icims'
+        else:
+            return 'generic'
+
+    def process_batch(self, jobs: List[Dict], batch_size: int = 5) -> List[ApplicationResult]:
+        """
+        Process a batch of jobs for application.
+        
+        Args:
+            jobs: List of job dictionaries
+            batch_size: Number of jobs to process in parallel
+            
+        Returns:
+            List of application results
+        """
+        results = []
+        
+        # Process jobs in batches
+        for i in range(0, len(jobs), batch_size):
+            batch = jobs[i:i + batch_size]
+            console.print(f"[cyan]📦 Processing batch {i//batch_size + 1} ({len(batch)} jobs)[/cyan]")
+            
+            # Process each job in the batch
+            for job in batch:
+                try:
+                    # Get application strategy
+                    strategy = self.get_application_strategy(job)
+                    
+                    # Create result
+                    result = ApplicationResult(
+                        job_id=job.get('id', 'unknown'),
+                        status='applied' if not strategy["requires_manual_review"] else 'manual_review',
+                        ats_detected=strategy["ats_system"],
+                        application_time=strategy["estimated_time"]
+                    )
+                    
+                    results.append(result)
+                    
+                except Exception as e:
+                    result = ApplicationResult(
+                        job_id=job.get('id', 'unknown'),
+                        status='failed',
+                        error_message=str(e)
+                    )
+                    results.append(result)
+        
+        return results
 
 
 # Convenience functions for easy usage

@@ -516,12 +516,233 @@ class JobAnalyzer:
 
     def _calculate_experience_match(self, user_level: str, job_level: str) -> float:
         """Calculate experience level match score"""
-        level_hierarchy = {"entry": 1, "mid": 2, "senior": 3, "executive": 4}
+        level_scores = {"entry": 1, "mid": 2, "senior": 3, "executive": 4}
+        user_score = level_scores.get(user_level, 2)
+        job_score = level_scores.get(job_level, 2)
         
-        user_rank = level_hierarchy.get(user_level, 2)
-        job_rank = level_hierarchy.get(job_level, 2)
-        
-        if user_rank >= job_rank:
-            return 1.0  # User meets or exceeds requirements
+        # Perfect match
+        if user_score == job_score:
+            return 1.0
+        # Close match (within 1 level)
+        elif abs(user_score - job_score) <= 1:
+            return 0.8
+        # Moderate match (within 2 levels)
+        elif abs(user_score - job_score) <= 2:
+            return 0.5
+        # Poor match
         else:
-            return max(0.5, user_rank / job_rank)  # Partial match
+            return 0.2
+
+    def analyze_job(self, job: Dict) -> Dict:
+        """
+        Analyze a job posting to extract key information.
+        
+        Args:
+            job: Job dictionary with title, description, etc.
+            
+        Returns:
+            Analysis results dictionary
+        """
+        description = job.get('description', job.get('summary', ''))
+        
+        analysis = {
+            'skills': self.extract_skills(description),
+            'experience_level': self.detect_experience_level(description),
+            'education_level': self.detect_education_level(description),
+            'remote_options': self.detect_remote_options(description),
+            'salary_range': self.extract_salary_range(description),
+            'language': self.detect_language(description),
+            'sentiment': self.analyze_sentiment(description),
+            'requirements': self._extract_requirements(description).__dict__
+        }
+        
+        return analysis
+
+    def extract_skills(self, text: str) -> List[str]:
+        """
+        Extract skills from job description text.
+        
+        Args:
+            text: Job description text
+            
+        Returns:
+            List of detected skills
+        """
+        text_lower = text.lower()
+        skills = []
+        
+        # Check all skill categories
+        for category, skill_list in self.skill_categories.items():
+            for skill in skill_list:
+                if skill.lower() in text_lower:
+                    skills.append(skill)
+        
+        # Remove duplicates and return
+        return list(set(skills))
+
+    def detect_experience_level(self, text: str) -> str:
+        """
+        Detect experience level from job description.
+        
+        Args:
+            text: Job description text
+            
+        Returns:
+            Experience level (entry, mid, senior, executive)
+        """
+        text_lower = text.lower()
+        
+        for level, indicators in self.experience_indicators.items():
+            for indicator in indicators:
+                if indicator.lower() in text_lower:
+                    return level
+        
+        # Default to mid-level if no clear indicators
+        return "mid"
+
+    def detect_education_level(self, text: str) -> str:
+        """
+        Detect required education level from job description.
+        
+        Args:
+            text: Job description text
+            
+        Returns:
+            Education level (high_school, bachelor, master, phd, none_specified)
+        """
+        text_lower = text.lower()
+        
+        if any(term in text_lower for term in ['phd', 'doctorate', 'doctoral']):
+            return 'phd'
+        elif any(term in text_lower for term in ['master', 'mba', 'ms', 'ma']):
+            return 'master'
+        elif any(term in text_lower for term in ['bachelor', 'ba', 'bs', 'b.s.', 'degree']):
+            return 'bachelor'
+        elif any(term in text_lower for term in ['high school', 'diploma']):
+            return 'high_school'
+        else:
+            return 'none_specified'
+
+    def detect_remote_options(self, text: str) -> str:
+        """
+        Detect remote work options from job description.
+        
+        Args:
+            text: Job description text
+            
+        Returns:
+            Remote options (remote, hybrid, onsite, flexible)
+        """
+        text_lower = text.lower()
+        
+        if any(term in text_lower for term in ['remote', 'work from home', 'wfh', 'telecommute']):
+            return 'remote'
+        elif any(term in text_lower for term in ['hybrid', 'partially remote', 'flexible']):
+            return 'hybrid'
+        elif any(term in text_lower for term in ['onsite', 'in-office', 'in person']):
+            return 'onsite'
+        else:
+            return 'flexible'
+
+    def extract_salary_range(self, text: str) -> Optional[Tuple[int, int]]:
+        """
+        Extract salary range from job description.
+        
+        Args:
+            text: Job description text
+            
+        Returns:
+            Tuple of (min_salary, max_salary) or None if not found
+        """
+        for pattern in self.salary_patterns:
+            match = re.search(pattern, text)
+            if match:
+                if len(match.groups()) == 4:  # $80,000 - $120,000 format
+                    min_sal = int(match.group(1) + match.group(2))
+                    max_sal = int(match.group(3) + match.group(4))
+                    return (min_sal, max_sal)
+                elif len(match.groups()) == 2:  # $80k - $120k format
+                    min_sal = int(match.group(1)) * 1000
+                    max_sal = int(match.group(2)) * 1000
+                    return (min_sal, max_sal)
+        
+        return None
+
+    def detect_language(self, text: str) -> str:
+        """
+        Detect the primary language of the job description.
+        
+        Args:
+            text: Job description text
+            
+        Returns:
+            Language code (en, fr, etc.)
+        """
+        # Simple language detection based on common words
+        text_lower = text.lower()
+        
+        # French indicators
+        french_words = ['le', 'la', 'les', 'un', 'une', 'des', 'et', 'ou', 'pour', 'avec', 'sur', 'dans']
+        french_count = sum(1 for word in french_words if word in text_lower)
+        
+        # English indicators
+        english_words = ['the', 'and', 'or', 'for', 'with', 'in', 'on', 'at', 'to', 'of', 'a', 'an']
+        english_count = sum(1 for word in english_words if word in text_lower)
+        
+        if french_count > english_count:
+            return 'fr'
+        else:
+            return 'en'
+
+    def analyze_sentiment(self, text: str) -> Dict:
+        """
+        Analyze sentiment of job description.
+        
+        Args:
+            text: Job description text
+            
+        Returns:
+            Sentiment analysis results
+        """
+        text_lower = text.lower()
+        
+        # Positive indicators
+        positive_words = ['exciting', 'innovative', 'dynamic', 'growth', 'opportunity', 'challenging', 'rewarding', 'flexible', 'competitive', 'excellent']
+        positive_count = sum(1 for word in positive_words if word in text_lower)
+        
+        # Negative indicators
+        negative_words = ['stressful', 'demanding', 'difficult', 'challenging', 'fast-paced', 'high-pressure', 'deadline', 'overtime']
+        negative_count = sum(1 for word in negative_words if word in text_lower)
+        
+        # Neutral indicators
+        neutral_words = ['responsible', 'required', 'must', 'should', 'will', 'experience', 'skills', 'knowledge']
+        neutral_count = sum(1 for word in neutral_words if word in text_lower)
+        
+        total_words = len(text.split())
+        if total_words == 0:
+            return {'sentiment': 'neutral', 'confidence': 0.0, 'scores': {'positive': 0, 'negative': 0, 'neutral': 0}}
+        
+        positive_score = positive_count / total_words
+        negative_score = negative_count / total_words
+        neutral_score = neutral_count / total_words
+        
+        # Determine overall sentiment
+        if positive_score > negative_score and positive_score > neutral_score:
+            sentiment = 'positive'
+            confidence = positive_score
+        elif negative_score > positive_score and negative_score > neutral_score:
+            sentiment = 'negative'
+            confidence = negative_score
+        else:
+            sentiment = 'neutral'
+            confidence = neutral_score
+        
+        return {
+            'sentiment': sentiment,
+            'confidence': confidence,
+            'scores': {
+                'positive': positive_score,
+                'negative': negative_score,
+                'neutral': neutral_score
+            }
+        }

@@ -1,3 +1,10 @@
+"""
+Document Generator Module
+
+Handles document customization and generation for job applications.
+Supports AI-enhanced customization with fallback methods.
+"""
+
 import json
 import os
 import re
@@ -13,51 +20,20 @@ from rich.console import Console
 
 from src.core import utils
 
+# Import the main SSL fix function to avoid duplication
+from ssl_fix import fix_ssl_cert_path
+
 # Initialize console for rich output
 console = Console()
 
-# Try to import ollama and check if it's working
+# Fix SSL certificate path for Ollama import
+fix_ssl_cert_path()
+
+# Initialize Ollama availability
 OLLAMA_AVAILABLE = False
 OLLAMA_MODULE = None
 
-def fix_ssl_cert_path():
-    """Fix SSL certificate path for Ollama import."""
-    import os
-    import sys
-
-    # Check if SSL_CERT_FILE is set incorrectly
-    ssl_cert_file = os.environ.get('SSL_CERT_FILE', '')
-
-    if ssl_cert_file and not ssl_cert_file.endswith('.pem'):
-        # If it points to a directory, try to find the cert file
-        potential_cert_path = os.path.join(ssl_cert_file, 'cacert.pem')
-        if os.path.exists(potential_cert_path):
-            os.environ['SSL_CERT_FILE'] = potential_cert_path
-            console.print(f"[cyan]🔧 Fixed SSL_CERT_FILE path: {potential_cert_path}[/cyan]")
-            return True
-        else:
-            # Try common conda cert locations
-            if 'miniconda3' in ssl_cert_file or 'anaconda3' in ssl_cert_file:
-                # Extract conda env path and try standard locations
-                env_path = ssl_cert_file.replace('\\Library\\ssl', '').replace('/Library/ssl', '')
-                potential_paths = [
-                    os.path.join(env_path, 'Library', 'ssl', 'cacert.pem'),
-                    os.path.join(env_path, 'Library', 'ssl', 'cert.pem'),
-                    os.path.join(env_path, 'ssl', 'cacert.pem'),
-                ]
-
-                for path in potential_paths:
-                    if os.path.exists(path):
-                        os.environ['SSL_CERT_FILE'] = path
-                        console.print(f"[cyan]🔧 Fixed SSL_CERT_FILE path: {path}[/cyan]")
-                        return True
-
-    return False
-
 try:
-    # First, try to fix SSL certificate path
-    fix_ssl_cert_path()
-
     import ollama
     OLLAMA_MODULE = ollama
 
@@ -261,7 +237,7 @@ def customize_resume_template_based(job: Dict, profile: Dict, job_hash: str) -> 
         add_keywords_template_based(doc, list(missing_keywords)[:3])
 
     # Save to temp file
-    temp_docx = utils.create_temp_file(prefix=f"resume_{job_hash}_", suffix=".docx")
+    temp_docx = utils.create_temp_file("", ".docx")
     doc.save(temp_docx)
 
     # Save customized document and convert to PDF
@@ -307,7 +283,7 @@ def customize_resume_basic_replacement(job: Dict, profile: Dict, job_hash: str) 
     replace_placeholders(doc, replacements)
 
     # Save to temp file
-    temp_docx = utils.create_temp_file(prefix=f"resume_{job_hash}_", suffix=".docx")
+    temp_docx = utils.create_temp_file("", ".docx")
     doc.save(temp_docx)
 
     # Save customized document and convert to PDF
@@ -452,7 +428,7 @@ def customize_cover_letter_template_based(job: Dict, profile: Dict, job_hash: st
     add_keywords_to_cover_letter_template_based(doc, job.get("keywords", [])[:3])
 
     # Save to temp file
-    temp_docx = utils.create_temp_file(prefix=f"cover_{job_hash}_", suffix=".docx")
+    temp_docx = utils.create_temp_file("", ".docx")
     doc.save(temp_docx)
 
     # Save customized document and convert to PDF
@@ -499,7 +475,7 @@ def customize_cover_letter_basic_replacement(job: Dict, profile: Dict, job_hash:
     replace_placeholders(doc, replacements)
 
     # Save to temp file
-    temp_docx = utils.create_temp_file(prefix=f"cover_{job_hash}_", suffix=".docx")
+    temp_docx = utils.create_temp_file("", ".docx")
     doc.save(temp_docx)
 
     # Save customized document and convert to PDF
@@ -631,7 +607,7 @@ def customize_resume(job: Dict, profile: Dict, job_hash: str) -> str:
             add_skills_section(doc, still_missing)
     
     # Save to temp file
-    temp_docx = utils.create_temp_file(prefix=f"resume_{job_hash}_", suffix=".docx")
+    temp_docx = utils.create_temp_file("", ".docx")
     doc.save(temp_docx)
     
     # Save customized document and convert to PDF
@@ -682,7 +658,7 @@ def customize_cover_letter(job: Dict, profile: Dict, job_hash: str) -> str:
     enhance_cover_letter_with_keywords(doc, job, profile)
     
     # Save to temp file
-    temp_docx = utils.create_temp_file(prefix=f"cover_{job_hash}_", suffix=".docx")
+    temp_docx = utils.create_temp_file("", ".docx")
     doc.save(temp_docx)
     
     # Save customized document and convert to PDF

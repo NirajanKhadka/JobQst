@@ -269,37 +269,13 @@ class WorkingElutaScraper:
         console.print(f"\n[bold green]Success Rate: {successful}/{len(self.jobs_found)} ({success_rate:.1f}%)[/bold green]")
 
 def main():
-    """Main function to test the working scraper."""
-    console.print(Panel("🎯 Working Eluta Scraper", style="bold green"))
-    console.print("[cyan]This scraper uses the proven method discovered through analysis:[/cyan]")
-    console.print("[yellow]1. Find .organic-job containers[/yellow]")
-    console.print("[yellow]2. Extract job data from text content[/yellow]")
-    console.print("[yellow]3. Click on job title links[/yellow]")
-    console.print("[yellow]4. Use expect_popup() to capture new tab URLs[/yellow]")
-    console.print("[yellow]5. Extract real ATS application URLs[/yellow]")
-    
-    # Get user input
-    keyword = input("\nEnter job keyword (default: analyst): ").strip() or "analyst"
-    location = input("Enter location (default: Canada): ").strip() or "Canada"
-    max_jobs = input("Enter max jobs to scrape (default: 3): ").strip()
-    max_jobs = int(max_jobs) if max_jobs.isdigit() else 3
-    
-    # Create and run scraper
+    """Main function for testing."""
     scraper = WorkingElutaScraper()
-    jobs = scraper.scrape_jobs(keyword, location, max_jobs)
-    
-    # Display results
-    if jobs:
-        console.print(f"\n[bold green]🎉 Successfully scraped {len(jobs)} jobs![/bold green]")
-        scraper.display_results_table()
-        
-        # Show sample URLs
-        console.print(f"\n[bold cyan]📋 Sample Application URLs:[/bold cyan]")
-        for i, job in enumerate(jobs[:3]):
-            if job['scraped_successfully']:
-                console.print(f"{i+1}. {job['apply_url']}")
-    else:
-        console.print("\n[red]❌ No jobs were scraped successfully[/red]")
+    jobs = scraper.scrape_jobs("python developer", "Canada", max_jobs=3)
+    scraper.display_results_table()
 
 if __name__ == "__main__":
     main()
+
+# Backward compatibility alias for tests
+ElutaWorkingScraper = WorkingElutaScraper

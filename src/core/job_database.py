@@ -113,6 +113,7 @@ class ModernJobDatabase:
                             search_keyword TEXT,
                             site TEXT,
                             scraped_at TEXT,
+                            session_id TEXT,
                             raw_data TEXT,
                             analysis_data TEXT,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -182,6 +183,12 @@ class ModernJobDatabase:
                     if 'status' not in columns:
                         logger.info("🔄 Adding status column to existing database...")
                         conn.execute("ALTER TABLE jobs ADD COLUMN status TEXT DEFAULT 'new'")
+                        conn.commit()
+                    
+                    # Check if session_id column exists
+                    if 'session_id' not in columns:
+                        logger.info("🔄 Adding session_id column to existing database...")
+                        conn.execute("ALTER TABLE jobs ADD COLUMN session_id TEXT")
                         conn.commit()
                     
                     # Make job_hash nullable if it exists and is NOT NULL

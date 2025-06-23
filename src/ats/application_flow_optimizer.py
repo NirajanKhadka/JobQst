@@ -500,14 +500,10 @@ class ApplicationFlowOptimizer:
         }
 
     def save_optimization_data(self):
-        """Save optimization data for future use."""
+        """Save optimization data to persistent storage."""
         try:
-            data_dir = Path("output") / "optimization_data"
-            data_dir.mkdir(parents=True, exist_ok=True)
-
-            data_file = data_dir / f"{self.profile_name}_optimization.json"
-
-            optimization_data = {
+            data = {
+                "profile_name": self.profile_name,
                 "timestamp": datetime.now().isoformat(),
                 "metrics": {
                     "total_attempts": self.metrics.total_attempts,
@@ -518,18 +514,169 @@ class ApplicationFlowOptimizer:
                     "ats_detection_accuracy": self.metrics.ats_detection_accuracy,
                     "form_prefill_success_rate": self.metrics.form_prefill_success_rate
                 },
-                "ats_patterns": self.ats_patterns,
-                "form_field_mappings": self.form_field_mappings,
-                "success_patterns": self.success_patterns
+                "strategies": list(self.strategies.keys()),
+                "ats_patterns": list(self.ats_patterns.keys())
             }
-
-            with open(data_file, 'w', encoding='utf-8') as f:
-                json.dump(optimization_data, f, indent=2)
-
-            console.print(f"[green]💾 Optimization data saved to {data_file}[/green]")
-
+            
+            # Save to file (in a real implementation, this would go to a database)
+            output_dir = Path("data/optimization")
+            output_dir.mkdir(parents=True, exist_ok=True)
+            
+            filename = f"optimization_{self.profile_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            with open(output_dir / filename, 'w') as f:
+                json.dump(data, f, indent=2)
+            
+            console.print(f"[green]✅ Optimization data saved to {filename}[/green]")
+            
         except Exception as e:
-            console.print(f"[yellow]⚠️ Failed to save optimization data: {e}[/yellow]")
+            console.print(f"[red]❌ Error saving optimization data: {e}[/red]")
+
+    def get_optimization_rules(self) -> Dict:
+        """
+        Get the current optimization rules and strategies.
+        
+        Returns:
+            Dictionary with optimization rules
+        """
+        return {
+            "ats_detection_rules": {
+                "url_based": True,
+                "dom_based": True,
+                "text_based": True,
+                "form_based": True
+            },
+            "application_strategies": {
+                "workday": {
+                    "priority": "high",
+                    "confidence_threshold": 0.7,
+                    "retry_count": 2,
+                    "timeout": 300
+                },
+                "greenhouse": {
+                    "priority": "high",
+                    "confidence_threshold": 0.8,
+                    "retry_count": 2,
+                    "timeout": 240
+                },
+                "lever": {
+                    "priority": "medium",
+                    "confidence_threshold": 0.6,
+                    "retry_count": 1,
+                    "timeout": 180
+                },
+                "bamboohr": {
+                    "priority": "medium",
+                    "confidence_threshold": 0.7,
+                    "retry_count": 2,
+                    "timeout": 240
+                },
+                "generic": {
+                    "priority": "low",
+                    "confidence_threshold": 0.5,
+                    "retry_count": 1,
+                    "timeout": 120
+                }
+            },
+            "form_filling_rules": {
+                "auto_fill": True,
+                "validate_fields": True,
+                "handle_errors": True,
+                "retry_failed_fields": True
+            },
+            "performance_rules": {
+                "max_concurrent_applications": 3,
+                "delay_between_applications": 30,
+                "session_timeout": 1800,
+                "memory_limit": "2GB"
+            }
+        }
+
+    def get_performance_metrics(self) -> Dict:
+        """
+        Get current performance metrics.
+        
+        Returns:
+            Dictionary with performance metrics
+        """
+        total_applications = self.metrics.total_attempts
+        success_rate = (self.metrics.successful_applications / total_applications * 100) if total_applications > 0 else 0
+        
+        return {
+            "total_applications": total_applications,
+            "successful_applications": self.metrics.successful_applications,
+            "failed_applications": self.metrics.failed_applications,
+            "manual_reviews_required": self.metrics.manual_reviews_required,
+            "success_rate_percentage": round(success_rate, 2),
+            "average_application_time_seconds": round(self.metrics.average_application_time, 2),
+            "ats_detection_accuracy_percentage": round(self.metrics.ats_detection_accuracy * 100, 2),
+            "form_prefill_success_rate_percentage": round(self.metrics.form_prefill_success_rate * 100, 2),
+            "applications_per_hour": round(3600 / self.metrics.average_application_time, 2) if self.metrics.average_application_time > 0 else 0
+        }
+
+    def optimize_flow(self, job_data: Dict, profile_data: Dict) -> Dict:
+        """
+        Optimize the application flow for a specific job and profile.
+        
+        Args:
+            job_data: Job information
+            profile_data: User profile information
+            
+        Returns:
+            Optimized flow configuration
+        """
+        optimization = {
+            "ats_system": "unknown",
+            "confidence": 0.0,
+            "strategy": "generic",
+            "estimated_time": 300,
+            "priority": "normal",
+            "requires_manual_review": False,
+            "form_fields": [],
+            "optimization_level": "basic"
+        }
+        
+        # Detect ATS system from job URL
+        url = job_data.get('url', '').lower()
+        for ats_name, patterns in self.ats_patterns.items():
+            for url_pattern in patterns['url_patterns']:
+                if url_pattern in url:
+                    optimization["ats_system"] = ats_name
+                    optimization["confidence"] = 0.9
+                    optimization["strategy"] = ats_name
+                    break
+            if optimization["ats_system"] != "unknown":
+                break
+        
+        # Determine priority based on job characteristics
+        title = job_data.get('title', '').lower()
+        if any(keyword in title for keyword in ['senior', 'lead', 'manager', 'director']):
+            optimization["priority"] = "high"
+            optimization["estimated_time"] = 600
+        elif any(keyword in title for keyword in ['junior', 'entry', 'associate']):
+            optimization["priority"] = "normal"
+            optimization["estimated_time"] = 240
+        
+        # Check for remote opportunities
+        description = job_data.get('description', '').lower()
+        if any(keyword in description for keyword in ['remote', 'work from home', 'telecommute']):
+            optimization["priority"] = "high"
+        
+        # Determine form fields based on ATS system
+        if optimization["ats_system"] in self.form_field_mappings:
+            optimization["form_fields"] = list(self.form_field_mappings[optimization["ats_system"]].keys())
+        else:
+            optimization["form_fields"] = list(self.form_field_mappings["generic"].keys())
+        
+        # Set optimization level
+        if optimization["confidence"] > 0.8:
+            optimization["optimization_level"] = "advanced"
+        elif optimization["confidence"] > 0.5:
+            optimization["optimization_level"] = "intermediate"
+        else:
+            optimization["optimization_level"] = "basic"
+            optimization["requires_manual_review"] = True
+        
+        return optimization
 
 # Convenience function for easy integration
 def optimize_job_application(profile_name: str, job: Dict, profile: Dict, page) -> Dict:

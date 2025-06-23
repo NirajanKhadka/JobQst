@@ -362,7 +362,7 @@ def normalize_location(location: str) -> str:
     return get_utils().normalize_location(location)
 
 def generate_job_hash(job: Dict) -> str:
-    """Generate unique hash for job."""
+    """Generate hash for a job."""
     return get_utils().generate_job_hash(job)
 
 def is_duplicate_job(job1: Dict, job2: Dict) -> bool:
@@ -414,10 +414,6 @@ def load_profile(profile_name: str) -> Dict:
         logger.error(f"❌ Failed to load profile '{profile_name}': {e}")
         return {}
 
-def hash_job(job: Dict) -> str:
-    """Generate hash for a job."""
-    return get_utils().generate_job_hash(job)
-
 def convert_doc_to_pdf(docx_path: str, pdf_path: str) -> bool:
     """Convert DOCX to PDF using Word COM."""
     try:
@@ -442,10 +438,6 @@ def convert_doc_to_pdf(docx_path: str, pdf_path: str) -> bool:
     except Exception as e:
         logger.error(f"❌ Failed to convert DOCX to PDF: {e}")
         return False
-
-def save_document_as_pdf(docx_path: str, pdf_path: str) -> bool:
-    """Save document as PDF (alias for convert_doc_to_pdf)."""
-    return convert_doc_to_pdf(docx_path, pdf_path)
 
 def create_temp_file(content: str, extension: str = ".txt") -> str:
     """Create a temporary file with content."""

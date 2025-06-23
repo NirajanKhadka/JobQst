@@ -2,6 +2,15 @@
 
 ## Priority Items (Top of List)
 
+### ✅ COMPLETED: Redundancy Cleanup
+- [x] **Duplicate `load_profile` functions** - Removed duplicate from `src/core/app_runner.py`, now uses the one from `src/core/utils.py`
+- [x] **Duplicate error tolerance functions** - Removed duplicate `with_retry`, `with_fallback`, `safe_execute` from `src/utils/enhanced_error_tolerance.py`, now imports from `src/utils/error_tolerance_handler.py`
+- [x] **Duplicate ATS functions** - Removed duplicate `detect` and `get_submitter` from `src/ats/csv_applicator.py`, now imports from main ATS module
+- [x] **Duplicate SSL fix functions** - Removed duplicate `fix_ssl_cert_path` from `src/utils/document_generator.py`, now imports from main `ssl_fix.py` module
+- [x] **Duplicate PDF conversion functions** - Removed `save_document_as_pdf` alias, kept `convert_doc_to_pdf`
+- [x] **Duplicate hash functions** - Removed `hash_job` wrapper, kept `generate_job_hash`
+- [x] **Created Functions Overview** - Added `FUNCTIONS_OVERVIEW.md` to track all unique functions and identify future redundancies
+
 ### ✅ COMPLETED: Modular CLI Structure
 - [x] Created modular CLI structure under `src/cli/`
 - [x] Split large `src/app.py` into handlers, actions, and menu modules
@@ -34,6 +43,12 @@
 - [x] Implemented job detail scraping from URLs in queue
 - [x] Added proper session management for queue processing
 - [x] Tested CLI functionality
+
+### 🔄 IN PROGRESS: Remaining Redundancies to Fix
+- [ ] **Multiple job filtering functions** - `filter_job`, `filter_jobs_batch`, `filter_jobs_by_priority` have overlapping functionality
+- [ ] **Multiple document customization functions** - Several functions in `document_generator.py` have similar purposes
+- [ ] **Multiple scraper initialization functions** - Similar functions across different scraper modules
+- [ ] **Duplicate utility functions** - Functions like `get_job_stats` and similar statistics functions
 
 ### 🔄 IN PROGRESS: Remaining Large Files to Modularize
 - [ ] **src/scrapers/big_data_patterns.py** (603 lines) - Break into data processing modules
@@ -97,4 +112,5 @@
 - **Import Strategy**: Use `src.` prefix for imports in test files when needed
 - **Issue Tracking**: Update ISSUE_TRACKER.md with each completed modularization step
 - **Clean Termination**: Ensure all processes, browsers, and connections are properly closed when main program exits
-- **Queue Processing**: New feature allows processing jobs from queue by scraping details from URLs 
+- **Queue Processing**: New feature allows processing jobs from queue by scraping details from URLs
+- **Redundancy Cleanup**: Successfully removed 6 major function duplications, improving code maintainability 

@@ -24,17 +24,6 @@ from src.cli.actions.system_actions import SystemActions
 console = Console()
 
 
-def load_profile(profile_name: str) -> Dict[str, Any]:
-    """Load user profile."""
-    try:
-        profile = utils.load_profile(profile_name)
-        console.print(f"[green]✅ Profile loaded: {profile_name}[/green]")
-        return profile
-    except Exception as e:
-        console.print(f"[red]❌ Failed to load profile '{profile_name}': {e}[/red]")
-        sys.exit(1)
-
-
 def show_profile_info(profile: Dict[str, Any]) -> None:
     """Display profile information."""
     console.print(Panel(
@@ -159,7 +148,7 @@ def main() -> int:
         args = parse_args()
         
         # Load profile
-        profile = load_profile(args.profile)
+        profile = utils.load_profile(args.profile)
         
         # Run appropriate mode based on action
         if args.action == "interactive":

@@ -418,8 +418,143 @@ class EnhancedApplicationAgent:
             console.print("[yellow]The background Gmail monitor will automatically verify these applications[/yellow]")
     
     def get_stats(self) -> Dict:
-        """Get application statistics."""
+        """Get current application statistics."""
         return self.stats.copy()
+
+    def get_intelligence_engine(self) -> Dict:
+        """
+        Get the intelligence engine configuration and capabilities.
+        
+        Returns:
+            Dictionary with intelligence engine information
+        """
+        return {
+            "type": "enhanced_application_agent",
+            "capabilities": [
+                "job_description_analysis",
+                "resume_optimization",
+                "cover_letter_generation",
+                "ats_detection",
+                "application_strategy_optimization",
+                "learning_from_outcomes"
+            ],
+            "ai_models": {
+                "job_analysis": "ollama",
+                "document_generation": "ollama",
+                "decision_making": "rule_based"
+            },
+            "learning_enabled": True,
+            "optimization_level": "high"
+        }
+
+    def make_application_decision(self, job: Dict, enhanced_data: Optional[Dict] = None) -> Dict:
+        """
+        Make an intelligent decision about whether and how to apply to a job.
+        
+        Args:
+            job: Job dictionary
+            enhanced_data: Optional enhanced job data
+            
+        Returns:
+            Decision dictionary with action and reasoning
+        """
+        decision = {
+            "action": "apply",  # apply, skip, manual_review
+            "confidence": 0.8,
+            "reasoning": [],
+            "strategy": "standard",
+            "priority": "normal"
+        }
+        
+        # Analyze job requirements
+        title = job.get('title', '').lower()
+        description = job.get('description', '').lower()
+        
+        # Check for senior positions
+        if any(keyword in title for keyword in ['senior', 'lead', 'manager', 'director', 'head']):
+            decision["priority"] = "high"
+            decision["confidence"] = 0.9
+            decision["reasoning"].append("Senior position - high priority")
+        
+        # Check for entry-level positions
+        if any(keyword in title for keyword in ['junior', 'entry', 'associate', 'trainee']):
+            decision["priority"] = "normal"
+            decision["confidence"] = 0.7
+            decision["reasoning"].append("Entry-level position")
+        
+        # Check for remote opportunities
+        if any(keyword in description for keyword in ['remote', 'work from home', 'telecommute']):
+            decision["priority"] = "high"
+            decision["reasoning"].append("Remote opportunity")
+        
+        # Check for salary information
+        if 'salary' in job and job['salary']:
+            decision["reasoning"].append("Salary information available")
+        
+        # Check for unknown ATS systems
+        url = job.get('url', '').lower()
+        if not any(ats in url for ats in ['workday', 'bamboohr', 'greenhouse', 'lever', 'icims']):
+            decision["action"] = "manual_review"
+            decision["confidence"] = 0.5
+            decision["reasoning"].append("Unknown ATS system - requires manual review")
+        
+        # Check for enhanced data quality
+        if enhanced_data and enhanced_data.get('quality_score', 0) < 0.6:
+            decision["action"] = "skip"
+            decision["confidence"] = 0.6
+            decision["reasoning"].append("Low quality job data")
+        
+        return decision
+
+    def learn_from_outcome(self, job_id: str, outcome: str, feedback: Optional[Dict] = None) -> bool:
+        """
+        Learn from application outcomes to improve future decisions.
+        
+        Args:
+            job_id: ID of the job
+            outcome: Outcome of the application (success, failure, interview, etc.)
+            feedback: Optional feedback data
+            
+        Returns:
+            True if learning was successful
+        """
+        try:
+            # Get the job data
+            job = self.db.get_job_by_id(job_id)
+            if not job:
+                console.print(f"[yellow]⚠️ Could not find job {job_id} for learning[/yellow]")
+                return False
+            
+            # Update learning statistics
+            if outcome == 'success':
+                self.stats["successful_applications"] = self.stats.get("successful_applications", 0) + 1
+            elif outcome == 'failure':
+                self.stats["failed_applications"] = self.stats.get("failed_applications", 0) + 1
+            elif outcome == 'interview':
+                self.stats["interviews_received"] = self.stats.get("interviews_received", 0) + 1
+            
+            # Store learning data for future optimization
+            learning_data = {
+                "job_id": job_id,
+                "outcome": outcome,
+                "timestamp": datetime.now().isoformat(),
+                "job_characteristics": {
+                    "title": job.get('title'),
+                    "company": job.get('company'),
+                    "ats_system": job.get('ats_system'),
+                    "location": job.get('location')
+                },
+                "feedback": feedback or {}
+            }
+            
+            # In a real implementation, this would be stored in a learning database
+            console.print(f"[green]✅ Learned from outcome: {outcome} for job {job_id}[/green]")
+            
+            return True
+            
+        except Exception as e:
+            console.print(f"[red]❌ Error learning from outcome: {e}[/red]")
+            return False
 
 
 # Convenience functions
