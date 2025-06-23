@@ -21,6 +21,7 @@ from rich.console import Console
 from .base_scraper import BaseJobScraper
 from .human_behavior import HumanBehaviorMixin
 from .job_filters import UniversalJobFilter
+from src.scrapers.tab_manager import TabManager
 
 console = Console()
 
@@ -105,6 +106,8 @@ class ElutaWorkingScraper(HumanBehaviorMixin, BaseJobScraper):
 
         # Initialize universal job filter (14 days for Eluta, 0-2 years experience)
         self.job_filter = UniversalJobFilter("eluta")
+
+        self.tab_manager = TabManager(popup_wait=self.human_delays["popup_wait"])
 
         console.print(f"[green]✅ Working Eluta scraper initialized with enhanced filtering[/green]")
         console.print(f"[cyan]📅 Filtering jobs from last {self.max_age_days} days[/cyan]")
@@ -275,7 +278,7 @@ class ElutaWorkingScraper(HumanBehaviorMixin, BaseJobScraper):
             
             console.print(f"[cyan]📋 {job_data['title'][:40]}... at {job_data['company']}[/cyan]")
             
-            # Step 2: Get real URL using proven expect_popup method
+            # Step 2: Get real URL using TabManager click-and-popup method
             real_url = self._get_real_job_url(job_elem, page, job_number)
             if real_url:
                 job_data["apply_url"] = real_url
@@ -321,39 +324,30 @@ class ElutaWorkingScraper(HumanBehaviorMixin, BaseJobScraper):
             return None
     
     def _get_real_job_url(self, job_elem, page: Page, job_number: int) -> Optional[str]:
-        """Get real job URL using enhanced click-and-popup method with 3-second wait."""
+        """Get real job URL using TabManager click-and-popup method."""
         try:
-            # Find job title link with improved selection logic
             links = job_elem.query_selector_all("a")
             title_link = None
-
-            # Enhanced link selection - prioritize job title links
             for link in links:
                 link_text = link.inner_text().strip()
                 href = link.get_attribute("href") or ""
-
-                # Prioritize links that look like job titles (longer text, job-related href)
                 if link_text and len(link_text) > 10:
-                    # Check if this looks like a job title link
                     if ("/job/" in href or "/direct/" in href or
                         any(keyword in link_text.lower() for keyword in ["analyst", "developer", "engineer", "manager", "specialist"])):
                         title_link = link
                         break
-                    elif not title_link:  # Fallback to first decent link
+                    elif not title_link:
                         title_link = link
-
             if not title_link:
                 console.print(f"[yellow]⚠️ No title link found for job {job_number}[/yellow]")
                 return None
-
-            # Use enhanced human-like click-and-popup method
-            popup_url = self.human_click_with_popup(title_link, page, str(job_number))
+            # Use TabManager for popup/tab and URL extraction
+            popup_url = self.tab_manager.click_and_get_popup_url(title_link, page, str(job_number))
             if popup_url:
                 return popup_url
-
         except Exception as e:
             console.print(f"[yellow]⚠️ Could not get real URL for job {job_number}: {e}[/yellow]")
-            # Enhanced fallback - try to get href attribute
+            # Fallback to href
             try:
                 links = job_elem.query_selector_all("a")
                 if links:

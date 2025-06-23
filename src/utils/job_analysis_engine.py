@@ -11,12 +11,12 @@ from rich.console import Console
 from rich.prompt import Confirm, Prompt
 from playwright.sync_api import sync_playwright
 
-from user_profile_manager import UserProfileManager
-from test_experience_filter import ExperienceAnalyzer
-from scrapers.eluta_enhanced import ElutaEnhancedScraper
+from ..core.user_profile_manager import UserProfileManager
+from src.scrapers.working_eluta_scraper import WorkingElutaScraper
+from .job_analyzer import JobAnalyzer as ExperienceAnalyzer
 from scrapers.parallel_job_scraper import ParallelJobScraper
 from job_database import get_job_db
-import utils
+from src.core import utils
 
 console = Console()
 
@@ -305,7 +305,7 @@ class JobAnalysisEngine:
                     batch_profile["keywords"] = keyword_batch
                     
                     # Use enhanced scraper
-                    scraper = ElutaEnhancedScraper(batch_profile, browser_context=ctx)
+                    scraper = WorkingElutaScraper(batch_profile, browser_context=ctx)
                     
                     batch_jobs = []
                     for job in scraper.scrape_jobs():
@@ -483,16 +483,16 @@ class JobAnalysisEngine:
         console.print(f"[cyan]Getting scraper for {site_name}...[/cyan]")
 
         if site_name.lower() == 'eluta':
-            from scrapers.eluta_enhanced import ElutaEnhancedScraper
-            return ElutaEnhancedScraper(self.profile)
+            from src.scrapers.working_eluta_scraper import WorkingElutaScraper
+            return WorkingElutaScraper(self.profile)
         elif site_name.lower() == 'indeed':
             from scrapers.indeed_enhanced import EnhancedIndeedScraper
             return EnhancedIndeedScraper(self.profile)
         else:
             # Default to Eluta enhanced scraper
-            from scrapers.eluta_enhanced import ElutaEnhancedScraper
+            from src.scrapers.working_eluta_scraper import WorkingElutaScraper
             console.print(f"[yellow]Unknown site {site_name}, using Eluta scraper as fallback[/yellow]")
-            return ElutaEnhancedScraper(self.profile)
+            return WorkingElutaScraper(self.profile)
 
 
 def run_scraping(profile_name: str, sites: list = None, keywords: list = None, mode: str = "intelligent") -> List[Dict]:
@@ -566,16 +566,16 @@ def get_scraper_for_site(site_name: str, profile: Dict):
     console.print(f"[cyan]Getting scraper for {site_name}...[/cyan]")
 
     if site_name.lower() == 'eluta':
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
-        return ElutaEnhancedScraper(profile)
+        from src.scrapers.working_eluta_scraper import WorkingElutaScraper
+        return WorkingElutaScraper(profile)
     elif site_name.lower() == 'indeed':
         from scrapers.indeed_enhanced import EnhancedIndeedScraper
         return EnhancedIndeedScraper(profile)
     else:
         # Default to Eluta enhanced scraper
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.working_eluta_scraper import WorkingElutaScraper
         console.print(f"[yellow]Unknown site {site_name}, using Eluta scraper as fallback[/yellow]")
-        return ElutaEnhancedScraper(profile)
+        return WorkingElutaScraper(profile)
 
 def run_intelligent_scraping(profile_name: str, max_jobs: int = 20, auto_mode: bool = False) -> bool:
     """Run the complete intelligent scraping process."""

@@ -585,6 +585,23 @@ class ATSBasedApplicator:
 
     def _get_profile_data(self) -> Dict[str, str]:
         """Get profile data for form filling."""
+        # Check if profile is loaded
+        if not self.profile:
+            console.print("[yellow]⚠️ Profile not loaded, using fallback data[/yellow]")
+            return {
+                'first_name': 'Test',
+                'last_name': 'User',
+                'full_name': 'Test User',
+                'email': 'test@example.com',
+                'phone': '123-456-7890',
+                'address': '123 Test St',
+                'city': 'Test City',
+                'state': 'Test State',
+                'zip_code': '12345',
+                'linkedin': 'https://linkedin.com/in/testuser',
+                'website': 'https://testuser.com'
+            }
+        
         return {
             'first_name': self.profile.get('first_name', ''),
             'last_name': self.profile.get('last_name', ''),
@@ -633,8 +650,8 @@ class ATSBasedApplicator:
                             # Handle dropdown
                             await element.select_option(value)
                         else:
-                            # Handle text input
-                            await element.clear()
+                            # Handle text input - clear first, then fill
+                            await element.fill("")  # Clear the field
                             await element.fill(value)
 
                         return True

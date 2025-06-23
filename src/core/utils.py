@@ -15,40 +15,17 @@ import hashlib
 import shutil
 from dataclasses import dataclass, asdict
 
+# Import from new modular structure
+from .job_data import JobData
+from .text_utils import clean_text, extract_keywords, analyze_text
+from .job_filters import JobFilter, FilterCriteria, filter_jobs_by_priority, filter_duplicate_jobs
+from .session import SessionManager, RateLimiter, BrowserSession
+from .browser_utils import BrowserUtils, TabManager, PopupHandler
+from .exceptions import AutoJobAgentError, ScrapingError, DatabaseError
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-@dataclass
-class JobData:
-    """Simple job data structure."""
-    title: str
-    company: str
-    location: str = ""
-    url: str = ""
-    summary: str = ""
-    salary: str = ""
-    job_type: str = ""
-    posted_date: str = ""
-    site: str = ""
-    search_keyword: str = ""
-    scraped_at: str = ""
-    raw_data: Optional[Dict[str, Any]] = None
-    
-    def __post_init__(self):
-        if self.raw_data is None:
-            self.raw_data = {}
-        if not self.scraped_at:
-            self.scraped_at = datetime.now().isoformat()
-    
-    def to_dict(self) -> Dict:
-        """Convert to dictionary."""
-        return asdict(self)
-    
-    def get_hash(self) -> str:
-        """Generate hash for duplicate detection."""
-        content = f"{self.title.lower()}{self.company.lower()}{self.url}"
-        return hashlib.md5(content.encode()).hexdigest()
 
 class ModernUtils:
     """
@@ -156,16 +133,6 @@ class ModernUtils:
             logger.error(f"❌ Failed to save jobs to CSV: {e}")
             return ""
     
-    def clean_text(self, text: str) -> str:
-        """Clean and normalize text more gently."""
-        if not isinstance(text, str):
-            return ""
-        
-        # Replace non-breaking spaces and collapse all whitespace
-        text = re.sub(r'\s+', ' ', text.replace('\xa0', ' ')).strip()
-        
-        return text
-    
     def extract_company_from_url(self, url: str) -> str:
         """Extract company name from URL."""
         try:
@@ -200,39 +167,17 @@ class ModernUtils:
         # Convert to title case
         location = location.title()
         
-        # Standardize common abbreviations
-        replacements = {
-            'On': 'ON',
-            'Bc': 'BC',
-            'Ab': 'AB',
-            'Qc': 'QC',
-            'Ns': 'NS',
-            'Nb': 'NB',
-            'Pe': 'PE',
-            'Nl': 'NL',
-            'Sk': 'SK',
-            'Mb': 'MB',
-            'Yt': 'YT',
-            'Nt': 'NT',
-            'Nu': 'NU'
-        }
-        
-        for old, new in replacements.items():
-            location = location.replace(old, new)
+        # Remove extra whitespace
+        location = re.sub(r'\s+', ' ', location).strip()
         
         return location
     
     def generate_job_hash(self, job: Dict) -> str:
-        """Generate unique hash for job."""
+        """Generate hash for job duplicate detection."""
         try:
-            # Use title, company, and URL for hash
-            title = job.get('title', '').lower()
-            company = job.get('company', '').lower()
-            url = job.get('url', '')
-            
-            content = f"{title}{company}{url}"
-            return hashlib.md5(content.encode()).hexdigest()[:12]
-            
+            # Create a consistent string for hashing
+            content = f"{job.get('title', '').lower()}{job.get('company', '').lower()}{job.get('url', '')}"
+            return hashlib.md5(content.encode()).hexdigest()
         except Exception as e:
             logger.error(f"❌ Failed to generate job hash: {e}")
             return ""
@@ -240,37 +185,41 @@ class ModernUtils:
     def is_duplicate_job(self, job1: Dict, job2: Dict) -> bool:
         """Check if two jobs are duplicates."""
         try:
-            # Method 1: Same URL
-            if job1.get('url') and job2.get('url') and job1['url'] == job2['url']:
+            # Check exact matches first
+            if (job1.get('title') == job2.get('title') and 
+                job1.get('company') == job2.get('company')):
                 return True
             
-            # Method 2: Same title and company
-            title1 = job1.get('title', '').lower()
-            title2 = job2.get('title', '').lower()
-            company1 = job1.get('company', '').lower()
-            company2 = job2.get('company', '').lower()
-            
-            if title1 == title2 and company1 == company2:
+            # Check URL similarity
+            url1 = job1.get('url', '')
+            url2 = job2.get('url', '')
+            if url1 and url2 and url1 == url2:
                 return True
             
-            # Method 3: Similar title and same company (fuzzy match)
-            if company1 == company2 and self._similar_titles(title1, title2):
+            # Check title similarity
+            title1 = job1.get('title', '')
+            title2 = job2.get('title', '')
+            if self._similar_titles(title1, title2):
                 return True
             
             return False
             
         except Exception as e:
-            logger.error(f"❌ Failed to check duplicate: {e}")
+            logger.error(f"❌ Failed to check job duplicates: {e}")
             return False
     
     def _similar_titles(self, title1: str, title2: str, threshold: float = 0.8) -> bool:
-        """Check if two titles are similar using simple similarity."""
+        """Check if two titles are similar using simple string comparison."""
         if not title1 or not title2:
             return False
         
-        # Simple word overlap similarity
-        words1 = set(title1.split())
-        words2 = set(title2.split())
+        # Convert to lowercase and clean
+        t1 = re.sub(r'[^\w\s]', '', title1.lower())
+        t2 = re.sub(r'[^\w\s]', '', title2.lower())
+        
+        # Simple similarity check
+        words1 = set(t1.split())
+        words2 = set(t2.split())
         
         if not words1 or not words2:
             return False
@@ -281,80 +230,10 @@ class ModernUtils:
         similarity = len(intersection) / len(union)
         return similarity >= threshold
     
-    def filter_jobs(self, jobs: List[Dict], filters: Dict[str, Any]) -> List[Dict]:
-        """Filter jobs based on criteria."""
-        try:
-            filtered_jobs = []
-            
-            for job in jobs:
-                include_job = True
-                
-                # Filter by keyword in title or company
-                if 'keyword' in filters:
-                    keyword = filters['keyword'].lower()
-                    title = job.get('title', '').lower()
-                    company = job.get('company', '').lower()
-                    
-                    if keyword not in title and keyword not in company:
-                        include_job = False
-                
-                # Filter by location
-                if 'location' in filters and include_job:
-                    location_filter = filters['location'].lower()
-                    job_location = job.get('location', '').lower()
-                    
-                    if location_filter not in job_location:
-                        include_job = False
-                
-                # Filter by company
-                if 'company' in filters and include_job:
-                    company_filter = filters['company'].lower()
-                    job_company = job.get('company', '').lower()
-                    
-                    if company_filter not in job_company:
-                        include_job = False
-                
-                # Filter by site
-                if 'site' in filters and include_job:
-                    site_filter = filters['site'].lower()
-                    job_site = job.get('site', '').lower()
-                    
-                    if site_filter != job_site:
-                        include_job = False
-                
-                if include_job:
-                    filtered_jobs.append(job)
-            
-            logger.info(f"✅ Filtered {len(jobs)} jobs to {len(filtered_jobs)}")
-            return filtered_jobs
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to filter jobs: {e}")
-            return jobs
-    
     def sort_jobs(self, jobs: List[Dict], sort_by: str = "scraped_at", reverse: bool = True) -> List[Dict]:
         """Sort jobs by specified field."""
         try:
-            if not jobs:
-                return jobs
-            
-            # Define sort keys
-            sort_keys = {
-                'title': lambda x: x.get('title', '').lower(),
-                'company': lambda x: x.get('company', '').lower(),
-                'location': lambda x: x.get('location', '').lower(),
-                'scraped_at': lambda x: x.get('scraped_at', ''),
-                'posted_date': lambda x: x.get('posted_date', ''),
-                'salary': lambda x: x.get('salary', '')
-            }
-            
-            sort_key = sort_keys.get(sort_by, sort_keys['scraped_at'])
-            
-            sorted_jobs = sorted(jobs, key=sort_key, reverse=reverse)
-            
-            logger.info(f"✅ Sorted {len(jobs)} jobs by {sort_by}")
-            return sorted_jobs
-            
+            return sorted(jobs, key=lambda x: x.get(sort_by, ""), reverse=reverse)
         except Exception as e:
             logger.error(f"❌ Failed to sort jobs: {e}")
             return jobs
@@ -363,167 +242,105 @@ class ModernUtils:
         """Get statistics about jobs."""
         try:
             if not jobs:
-                return {'total_jobs': 0}
+                return {
+                    'total_jobs': 0,
+                    'unique_companies': 0,
+                    'locations': {},
+                    'job_types': {},
+                    'date_range': None
+                }
             
-            stats = {
+            companies = set()
+            locations = {}
+            job_types = {}
+            dates = []
+            
+            for job in jobs:
+                # Companies
+                company = job.get('company', 'Unknown')
+                companies.add(company)
+                
+                # Locations
+                location = job.get('location', 'Unknown')
+                locations[location] = locations.get(location, 0) + 1
+                
+                # Job types
+                job_type = job.get('job_type', 'Unknown')
+                job_types[job_type] = job_types.get(job_type, 0) + 1
+                
+                # Dates
+                scraped_at = job.get('scraped_at', '')
+                if scraped_at:
+                    try:
+                        date_obj = datetime.fromisoformat(scraped_at.replace('Z', '+00:00'))
+                        dates.append(date_obj)
+                    except:
+                        pass
+            
+            return {
                 'total_jobs': len(jobs),
-                'unique_companies': len(set(j.get('company', '') for j in jobs if j.get('company'))),
-                'unique_locations': len(set(j.get('location', '') for j in jobs if j.get('location'))),
-                'sites': {},
-                'recent_jobs': 0
+                'unique_companies': len(companies),
+                'locations': locations,
+                'job_types': job_types,
+                'date_range': {
+                    'earliest': min(dates).isoformat() if dates else None,
+                    'latest': max(dates).isoformat() if dates else None
+                }
             }
             
-            # Count by site
-            for job in jobs:
-                site = job.get('site', 'unknown')
-                stats['sites'][site] = stats['sites'].get(site, 0) + 1
-            
-            # Count recent jobs (last 24 hours)
-            yesterday = datetime.now() - timedelta(days=1)
-            for job in jobs:
-                try:
-                    scraped_at = datetime.fromisoformat(job.get('scraped_at', ''))
-                    if scraped_at > yesterday:
-                        stats['recent_jobs'] += 1
-                except:
-                    pass
-            
-            logger.info(f"✅ Generated stats for {len(jobs)} jobs")
-            return stats
-            
         except Exception as e:
-            logger.error(f"❌ Failed to generate job stats: {e}")
-            return {'total_jobs': 0}
+            logger.error(f"❌ Failed to get job stats: {e}")
+            return {}
     
     def backup_file(self, file_path: str, backup_dir: str = "backups") -> bool:
         """Create a backup of a file."""
         try:
-            source = Path(file_path)
-            if not source.exists():
-                logger.warning(f"⚠️ File not found: {file_path}")
+            source_path = Path(file_path)
+            if not source_path.exists():
+                logger.warning(f"⚠️ Source file does not exist: {file_path}")
                 return False
             
+            # Create backup directory
             backup_path = Path(backup_dir)
             backup_path.mkdir(parents=True, exist_ok=True)
             
+            # Create backup filename with timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_name = f"{source.stem}_backup_{timestamp}{source.suffix}"
-            backup_dest = backup_path / backup_name
+            backup_filename = f"{source_path.stem}_{timestamp}{source_path.suffix}"
+            backup_file_path = backup_path / backup_filename
             
-            shutil.copy2(source, backup_dest)
+            # Copy file
+            shutil.copy2(source_path, backup_file_path)
             
-            logger.info(f"✅ Created backup: {backup_name}")
+            logger.info(f"✅ Created backup: {backup_file_path}")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Failed to backup file: {e}")
+            logger.error(f"❌ Failed to create backup: {e}")
             return False
     
     def create_output_directory(self, name: str) -> Path:
-        """Create and return output directory path."""
+        """Create an output directory with the given name."""
         try:
-            output_path = self.output_dir / name
+            output_path = Path("output") / name
             output_path.mkdir(parents=True, exist_ok=True)
-            
             logger.info(f"✅ Created output directory: {output_path}")
             return output_path
-            
         except Exception as e:
             logger.error(f"❌ Failed to create output directory: {e}")
-            return self.output_dir
-    
-    def load_session(self, profile_name: str) -> Dict:
-        """Load session data for a profile."""
-        try:
-            session_file = Path(f"profiles/{profile_name}/session.json")
-            if session_file.exists():
-                with open(session_file, 'r', encoding='utf-8') as f:
-                    session_data = json.load(f)
-                logger.info(f"✅ Loaded session for profile: {profile_name}")
-                return session_data
-            else:
-                logger.warning(f"⚠️ No session file found for profile: {profile_name}")
-                return {}
-        except Exception as e:
-            logger.error(f"❌ Failed to load session for profile '{profile_name}': {e}")
-            return {}
-    
-    def save_session(self, profile_name: str, session_data: Dict) -> bool:
-        """Save session data for a profile."""
-        try:
-            session_file = Path(f"profiles/{profile_name}/session.json")
-            session_file.parent.mkdir(parents=True, exist_ok=True)
-            
-            with open(session_file, 'w', encoding='utf-8') as f:
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-            
-            logger.info(f"✅ Saved session for profile: {profile_name}")
-            return True
-        except Exception as e:
-            logger.error(f"❌ Failed to save session for profile '{profile_name}': {e}")
-            return False
-    
-    def detect_available_browsers(self) -> Dict[str, str]:
-        """Detect available browsers on the system."""
-        try:
-            browsers = {}
-            
-            # Check for Chrome
-            chrome_paths = [
-                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-                "/usr/bin/google-chrome",
-                "/usr/bin/chromium-browser"
-            ]
-            
-            for path in chrome_paths:
-                if Path(path).exists():
-                    browsers["chrome"] = path
-                    break
-            
-            # Check for Firefox
-            firefox_paths = [
-                r"C:\Program Files\Mozilla Firefox\firefox.exe",
-                r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe",
-                "/usr/bin/firefox"
-            ]
-            
-            for path in firefox_paths:
-                if Path(path).exists():
-                    browsers["firefox"] = path
-                    break
-            
-            # Check for Edge
-            edge_paths = [
-                r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-                r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
-            ]
-            
-            for path in edge_paths:
-                if Path(path).exists():
-                    browsers["edge"] = path
-                    break
-            
-            logger.info(f"✅ Detected browsers: {list(browsers.keys())}")
-            return browsers
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to detect browsers: {e}")
-            return {"chrome": "default"}  # Default fallback
+            return Path("output")
 
 # Global utils instance
-_utils = None
+_utils_instance = None
 
 def get_utils() -> ModernUtils:
     """Get global utils instance."""
-    global _utils
-    
-    if _utils is None:
-        _utils = ModernUtils()
-    
-    return _utils
+    global _utils_instance
+    if _utils_instance is None:
+        _utils_instance = ModernUtils()
+    return _utils_instance
 
-# Convenience functions for backward compatibility
+# Global convenience functions
 def save_jobs_to_json(jobs: List[Dict], filename: Optional[str] = None) -> str:
     """Save jobs to JSON file."""
     return get_utils().save_jobs_to_json(jobs, filename)
@@ -535,10 +352,6 @@ def load_jobs_from_json(file_path: str) -> List[Dict]:
 def save_jobs_to_csv(jobs: List[Dict], filename: Optional[str] = None) -> str:
     """Save jobs to CSV file."""
     return get_utils().save_jobs_to_csv(jobs, filename)
-
-def clean_text(text: str) -> str:
-    """Clean and normalize text."""
-    return get_utils().clean_text(text)
 
 def extract_company_from_url(url: str) -> str:
     """Extract company name from URL."""
@@ -556,10 +369,6 @@ def is_duplicate_job(job1: Dict, job2: Dict) -> bool:
     """Check if two jobs are duplicates."""
     return get_utils().is_duplicate_job(job1, job2)
 
-def filter_jobs(jobs: List[Dict], filters: Dict[str, Any]) -> List[Dict]:
-    """Filter jobs based on criteria."""
-    return get_utils().filter_jobs(jobs, filters)
-
 def sort_jobs(jobs: List[Dict], sort_by: str = "scraped_at", reverse: bool = True) -> List[Dict]:
     """Sort jobs by specified field."""
     return get_utils().sort_jobs(jobs, sort_by, reverse)
@@ -567,18 +376,6 @@ def sort_jobs(jobs: List[Dict], sort_by: str = "scraped_at", reverse: bool = Tru
 def get_job_stats(jobs: List[Dict]) -> Dict[str, Any]:
     """Get statistics about jobs."""
     return get_utils().get_job_stats(jobs)
-
-def load_session(profile_name: str) -> Dict:
-    """Load session data for a profile."""
-    return get_utils().load_session(profile_name)
-
-def save_session(profile_name: str, session_data: Dict) -> bool:
-    """Save session data for a profile."""
-    return get_utils().save_session(profile_name, session_data)
-
-def detect_available_browsers() -> Dict[str, str]:
-    """Detect available browsers on the system."""
-    return get_utils().detect_available_browsers()
 
 def get_available_profiles() -> List[str]:
     """Get list of available profile names."""
@@ -606,6 +403,9 @@ def load_profile(profile_name: str) -> Dict:
         
         with open(profile_file, 'r', encoding='utf-8') as f:
             profile = json.load(f)
+        
+        # Add profile_name field to the profile data
+        profile['profile_name'] = profile_name
         
         logger.info(f"✅ Loaded profile: {profile_name}")
         return profile
@@ -706,11 +506,22 @@ def ensure_profile_files(profile: Dict) -> bool:
         True if all files are ready, False otherwise
     """
     try:
-        profile_name = profile.get('profile_name', 'Unknown')
+        # Get profile name - use profile_name field or infer from profile data
+        profile_name = profile.get('profile_name')
+        if not profile_name:
+            # Try to infer from name field or other identifiers
+            if 'name' in profile:
+                # Extract first name from full name
+                profile_name = profile['name'].split()[0]
+            else:
+                # Fallback to 'Unknown' but this should be rare
+                profile_name = 'Unknown'
+        
         profile_dir = Path(f"profiles/{profile_name}")
         
         if not profile_dir.exists():
             logger.error(f"❌ Profile directory not found: {profile_dir}")
+            logger.error(f"💡 Profile data: {profile}")
             return False
         
         # Check for required files

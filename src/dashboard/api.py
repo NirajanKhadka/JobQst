@@ -75,6 +75,12 @@ class ConnectionManager:
 # Initialize connection manager
 manager = ConnectionManager()
 
+# Get default profile from environment variable
+DEFAULT_PROFILE = os.environ.get("AUTOJOBAGENT_PROFILE")
+if DEFAULT_PROFILE:
+    console.print(f"[blue]Dashboard starting with default profile context: {DEFAULT_PROFILE}[/blue]")
+else:
+    console.print("[yellow]No default profile context set. Dashboard will use the main database.[/yellow]")
 
 # Models
 class PauseRequest(BaseModel):
@@ -84,20 +90,15 @@ class PauseRequest(BaseModel):
 # Helper functions
 def get_comprehensive_stats() -> Dict:
     """
-    Get comprehensive job and application statistics.
-
-    Returns:
-        Dictionary with comprehensive statistics
+    Get comprehensive job and application statistics for all available profiles.
     """
     try:
         from src.core.job_database import get_job_db
         from src.core import utils
 
-        print("Getting comprehensive stats...")
-
-        # Get available profiles
+        console.print("Getting comprehensive stats for all profiles...")
         profiles = utils.get_available_profiles()
-        print(f"Available profiles for stats: {profiles}")
+        console.print(f"Available profiles for stats: {profiles}")
 
         comprehensive_stats = {
             "job_stats": {},
@@ -106,7 +107,7 @@ def get_comprehensive_stats() -> Dict:
             "performance_stats": {},
             "profile_stats": {},
             "recent_activity": [],
-            "realtime_cache": {}  # New section for real-time cache stats
+            "realtime_cache": {}
         }
 
         # Add real-time cache statistics if available
@@ -129,47 +130,26 @@ def get_comprehensive_stats() -> Dict:
         else:
             comprehensive_stats["realtime_cache"] = {"enabled": False}
 
-        # First, get stats from the default database
-        try:
-            print("Getting stats for default database")
-            default_db = get_job_db()  # Default database
-            default_stats = default_db.get_stats()
-            print(f"Default database stats: {default_stats}")
-            
-            # Add default database stats to totals
-            total_jobs = default_stats.get("total_jobs", 0)
-            total_applied = default_stats.get("applied_jobs", 0)
-            
-            # Store default database stats
-            comprehensive_stats["profile_stats"]["default"] = {
-                "jobs": default_stats,
-                "duplicates": {"duplicate_jobs": 0}
-            }
-            
-        except Exception as e:
-            print(f"Warning: Could not get stats for default database: {e}")
-
         # Aggregate stats across all profiles
         total_jobs = 0
         total_applied = 0
         total_duplicates = 0
         total_unique_companies = 0
 
+        if not profiles:
+            console.print("[yellow]No profiles found. Stats will be empty.[/yellow]")
+
         for profile_name in profiles:
             try:
-                print(f"Getting stats for profile: {profile_name}")
-
-                # Get job database stats
+                console.print(f"Getting stats for profile: {profile_name}")
                 db = get_job_db(profile_name)
                 job_stats = db.get_stats()
-                print(f"Job stats for {profile_name}: {job_stats}")
+                console.print(f"Job stats for {profile_name}: {job_stats}")
 
-                # Get duplicate information
                 duplicates = db.get_duplicates()
                 duplicate_count = len(duplicates)
-                print(f"Duplicate count for {profile_name}: {duplicate_count}")
+                console.print(f"Duplicate count for {profile_name}: {duplicate_count}")
 
-                # Store per-profile stats
                 comprehensive_stats["profile_stats"][profile_name] = {
                     "jobs": job_stats,
                     "duplicates": {"duplicate_jobs": duplicate_count}
@@ -182,18 +162,17 @@ def get_comprehensive_stats() -> Dict:
                 total_unique_companies += job_stats.get("unique_companies", 0)
 
             except Exception as e:
-                print(f"Warning: Could not get stats for profile {profile_name}: {e}")
+                console.print(f"[bold red]Error getting stats for profile {profile_name}: {e}[/bold red]")
 
-        # Overall job statistics
         comprehensive_stats["job_stats"] = {
-            "total_jobs": total_jobs,  # Fixed field name
+            "total_jobs": total_jobs,
             "total_scraped": total_jobs,
             "unique_jobs": total_jobs - total_duplicates,
             "duplicates_detected": total_duplicates,
             "applied_jobs": total_applied,
             "unapplied_jobs": total_jobs - total_applied,
-            "unique_companies": total_unique_companies,
-            "success_rate": round((total_applied / total_jobs * 100), 2) if total_jobs > 0 else 0
+            "total_profiles": len(profiles),
+            "unique_companies": total_unique_companies
         }
 
         # Get application statistics from Excel logs
@@ -229,13 +208,17 @@ def get_comprehensive_stats() -> Dict:
         }
 
 
-def get_application_stats() -> Dict:
+def get_application_stats(profile: str = None) -> Dict:
     """
     Get application statistics from the log file.
 
     Returns:
         Dictionary with application statistics
     """
+    profile_to_use = profile if profile else DEFAULT_PROFILE
+    if not profile_to_use:
+        return {"total_applied": 0, "total_failed": 0, "by_status": {}}
+
     stats = {
         "Applied": 0,
         "Skipped": 0,
@@ -307,16 +290,22 @@ def get_application_stats() -> Dict:
         return stats
 
 
-def get_recent_logs(limit: int = 100) -> List[Dict]:
+def get_recent_logs(limit: int = 100, profile: str = None) -> List[Dict]:
     """
     Get recent application logs.
     
     Args:
         limit: Maximum number of logs to return
+        profile: Profile name (optional)
         
     Returns:
         List of log entries
     """
+    profile_to_use = profile if profile else DEFAULT_PROFILE
+    if not profile_to_use:
+        console.print("[bold yellow]Warning: get_recent_logs called without a profile. Returning empty list.[/bold yellow]")
+        return []
+
     logs = []
     log_file = LOGS_DIR / "applications.xlsx"
     
@@ -479,9 +468,9 @@ async def profile_stats():
 
 
 @app.get("/api/health")
-async def health_check():
-    """Simple health check endpoint."""
-    return {"status": "healthy", "message": "Dashboard API is running"}
+def health_check():
+    """Health check endpoint to confirm the API is running."""
+    return {"status": "healthy", "message": "Dashboard API is running", "profile": app.state.profile_name}
 
 @app.get("/api/debug-dashboard")
 async def debug_dashboard():
@@ -624,35 +613,72 @@ async def get_jobs_enhanced(
     table_format: bool = False
 ):
     """
-    Enhanced endpoint to get jobs with filtering, searching, and pagination.
-    This version is more robust and handles missing data gracefully.
+    Enhanced job retrieval with better filtering and formatting.
+    Can return full JSON or HTML table rows.
     """
-    print(f"Dashboard API: get_jobs_enhanced called with limit={limit}, offset={offset}, profile={profile}, table_format={table_format}")
+    # Determine the profile to use, ensuring we have a context.
+    profile_to_use = profile if profile else DEFAULT_PROFILE
+    if not profile_to_use:
+        console.print("[bold yellow]Warning: get_jobs_enhanced called without a profile. Returning empty list.[/bold yellow]")
+        return [] if not table_format else ""
 
+    print(f"Dashboard API: get_jobs_enhanced called with limit={limit}, offset={offset}, profile={profile_to_use}, table_format={table_format}")
+    
     try:
-        from src.core.job_database import get_job_db
-        import utils
+        from src.core.job_database import get_job_db, close_job_db
+        from src.core import utils
 
-        profiles = utils.get_available_profiles()
-        print(f"Available profiles: {profiles}")
-        if not profiles:
-            return {"jobs": [], "total": 0}
+        # Determine which profile to use. If a profile is specified, use it.
+        # Otherwise, `profile` is None, and `get_job_db` will correctly
+        # fall back to the default database `data/jobs.db`.
+        # We no longer default to the first available profile.
+        profile_to_use = profile_to_use
+        
+        available_profiles = utils.get_available_profiles()
+        print(f"Available profiles: {available_profiles}")
 
-        profile_name = profile if profile and profile in profiles else profiles[0]
-        print(f"Using profile: {profile_name}")
+        if profile_to_use:
+            print(f"Using profile: {profile_to_use}")
+        else:
+            print("No profile specified by client, using default database.")
 
-        db = get_job_db(profile_name)
+        db = get_job_db(profile=profile_to_use)
         print(f"Database connected: {db.db_path}")
 
         db_stats = db.get_stats()
         print(f"Database stats: {db_stats}")
 
-        filters = {'site': site, 'applied': applied, 'experience': experience}
+        filters = {
+            "site": site,
+            "applied": applied,
+            "experience": experience
+        }
+        # Remove None values
+        filters = {k: v for k, v in filters.items() if v is not None}
         print(f"Filters: {filters}")
 
-        # This call should now work correctly with the updated get_jobs method
-        jobs = db.get_jobs(limit=limit, offset=offset, filters=filters, search_query=search)
-        
+        jobs = db.get_jobs(
+            limit=limit, 
+            offset=offset, 
+            filters=filters,
+            search_query=search
+        )
+        print(f"Retrieved {len(jobs)} jobs from database")
+
+        if not jobs:
+            # Return empty response if no jobs found
+            if table_format:
+                return HTMLResponse(content="")
+            else:
+                return {"jobs": [], "total_jobs": 0}
+
+        # For table format, return HTML rows
+        if table_format:
+            html_rows = ""
+            for job in jobs:
+                html_rows += f"<tr><td>{job['title']}</td><td>{job['company']}</td><td>{job['location']}</td><td>{job['url']}</td></tr>"
+            return HTMLResponse(content=html_rows)
+
         enhanced_jobs = []
         for job in jobs:
             enhanced_job = dict(job)
@@ -686,7 +712,7 @@ async def get_jobs_enhanced(
             "jobs": enhanced_jobs,
             "total": total_count,
             "has_more": len(jobs) > 0,
-            "profile": profile_name,
+            "profile": profile_to_use,
             "filters": {
                 "site": site,
                 "search": search,
@@ -2018,6 +2044,14 @@ async def get_filtered_jobs(
             "error": str(e),
             "filter_enabled": FILTER_AVAILABLE
         }
+
+def start_dashboard(profile_name: str, host: str, port: int):
+    console.print("[bold red]Error: Dashboard V2 failed to start. The fallback Dashboard V1 is not implemented.[/bold red]")
+    console.print("[yellow]Please check the logs for errors related to 'api_v2.py'.[/yellow]")
+
+def get_db_connection(profile_name=None):
+    # This function now uses the new database manager
+    return db_manager.get_connection(profile_name)
 
 # If this file is run directly, start the server
 if __name__ == "__main__":

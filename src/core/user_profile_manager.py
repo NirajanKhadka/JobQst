@@ -382,6 +382,34 @@ class ModernUserProfileManager:
         
         with open(settings_path, 'w', encoding='utf-8') as f:
             json.dump(settings, f, indent=2, ensure_ascii=False)
+    
+    def analyze_and_update_profile(self, name: str, jobs: list = None) -> bool:
+        """
+        Analyze jobs and update the profile's intelligence (keywords, skills, etc.).
+        This is a stub for robust operation. It logs the call and updates keywords/skills if jobs are provided.
+        """
+        try:
+            logger.info(f"🔍 Analyzing and updating profile '{name}' with {len(jobs) if jobs else 0} jobs...")
+            profile = self.get_profile(name)
+            if not profile:
+                logger.warning(f"⚠️ Profile '{name}' not found for analysis.")
+                return False
+            if jobs:
+                # Example: extract new keywords/skills from jobs
+                keywords = set(profile.skills or [])
+                for job in jobs:
+                    for word in (job.get('keywords', []) or []):
+                        keywords.add(word)
+                profile.skills = list(keywords)
+                profile.update_timestamp()
+                self._save_profile(name, profile)
+                logger.info(f"✅ Profile '{name}' updated with new skills/keywords.")
+            else:
+                logger.info(f"ℹ️ No jobs provided for analysis. No update performed.")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Error in analyze_and_update_profile for '{name}': {e}")
+            return False
 
 # Global profile manager instance
 _profile_manager = None

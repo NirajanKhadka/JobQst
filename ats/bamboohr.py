@@ -109,7 +109,7 @@ class BambooHRSubmitter(BaseSubmitter):
         """
         try:
             console.print("[bold blue]Starting interactive step-by-step application process[/bold blue]")
-            console.print("[yellow]Dashboard is running at http://localhost:8000 for monitoring[/yellow]")
+            console.print("[yellow]Dashboard is running at http://localhost:8002 for monitoring[/yellow]")
 
             # Wait for initial form to load
             page.wait_for_timeout(3000)

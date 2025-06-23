@@ -12,11 +12,12 @@ import sys
 import threading
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Generator, Optional
+from typing import Dict, List, Generator, Optional, Any
 from queue import Queue
 import urllib.parse
 import random
 import re
+import hashlib
 
 # Add the project root to the path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -25,33 +26,38 @@ from playwright.sync_api import sync_playwright, Page
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 
+# Import BeautifulSoup for real data extraction
+try:
+    from bs4 import BeautifulSoup
+    BEAUTIFULSOUP_AVAILABLE = True
+except ImportError:
+    BEAUTIFULSOUP_AVAILABLE = False
+    console.print("[yellow]⚠️ BeautifulSoup not available. Real data extraction will be limited.[/yellow]")
+
+# Import the new JobProcessor
+from src.utils.job_data_consumer import JobProcessor
+
 class FastElutaProducer:
     """
-    Fast Eluta scraper optimized for single browser context and DDR5-6400.
-    Producer role: Scrape and save raw data only.
-    Updated for single keyword testing with 9 pages and 14-day filtering.
+    Fast Eluta scraper optimized for single browser context.
+    Submits jobs directly to a JobProcessor.
     """
     
-    def __init__(self, profile: Dict, output_dir: str = "temp/raw_jobs"):
+    def __init__(self, profile: Dict, processor: Any):
         self.profile = profile
-        # Use all keywords for complete scraping
-        self.keywords = profile.get("keywords", ["software"])[:1]  # Test with just 1 keyword
-        self.output_dir = Path(output_dir)
+        self.keywords = profile.get("keywords", ["software"])
+        self.processor = processor
+        self.output_dir = Path("temp/raw_jobs") # For debug files
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-        # DDR5-6400 optimized settings
-        self.batch_size = 50  # Large batches with fast RAM
-        self.flush_threshold = 25  # Flush to SSD when buffer half full
-        self.write_buffer = []
-        self.buffer_lock = threading.Lock()
-        
-        # Scraping settings - Updated for complete scraping
+        # Scraping settings
         self.base_url = "https://www.eluta.ca/search"
-        self.max_pages_per_keyword = 1  # Test with just 1 page
-        self.max_jobs_per_keyword = 10  # Test with just 10 jobs
+        self.max_pages_per_keyword = profile.get("pages_to_scrape", 2)
+        self.max_jobs_per_keyword = 50 # Limit jobs per keyword
         
         # Date filtering for last 14 days
         self.min_date = datetime.now() - timedelta(days=14)
@@ -61,23 +67,19 @@ class FastElutaProducer:
             'keywords_processed': 0,
             'pages_scraped': 0,
             'jobs_scraped': 0,
-            'jobs_saved': 0,
+            'jobs_submitted': 0,
             'jobs_filtered_by_date': 0,
             'start_time': None,
             'end_time': None
         }
         
-        # File naming
-        self.file_counter = 0
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        console.print(Panel.fit("🚀 FAST ELUTA PRODUCER (COMPLETE MODE)", style="bold blue"))
-        console.print(f"[cyan]📁 Output: {self.output_dir}[/cyan]")
-        console.print(f"[cyan]🔍 Keywords: {len(self.keywords)}[/cyan]")
-        console.print(f"[cyan]📄 Max pages per keyword: {self.max_pages_per_keyword}[/cyan]")
-        console.print(f"[cyan]📅 Date filter: Last 14 days[/cyan]")
-        console.print(f"[cyan]💾 Batch size: {self.batch_size}[/cyan]")
-        console.print(f"[cyan]⚡ DDR5-6400 optimized[/cyan]")
+        console.print(Panel.fit("🚀 FAST ELUTA PRODUCER (PROCESSOR MODE)", style="bold blue"))
+        console.print(f"🔗 Processor: Attached")
+        console.print(f"🔍 Keywords: {len(self.keywords)}")
+        console.print(f"📄 Max pages per keyword: {self.max_pages_per_keyword}")
+        console.print(f"📅 Date filter: Last 14 days")
     
     def scrape_all_keywords(self) -> None:
         """Scrape all keywords and save raw data."""
@@ -129,9 +131,6 @@ class FastElutaProducer:
                     
                     # Small delay between keywords
                     time.sleep(2)
-                
-                # Flush remaining buffer
-                self._flush_buffer()
                 
         except Exception as e:
             console.print(f"[red]❌ Scraping error: {e}[/red]")
@@ -204,17 +203,13 @@ class FastElutaProducer:
                     if job_data:
                         # Check if job is within last 14 days
                         if self._is_job_within_date_range(job_data):
-                            self._add_to_buffer(job_data)
+                            self._submit_job_to_processor(job_data)
                             jobs_processed += 1
                             self.stats['jobs_scraped'] += 1
                         else:
                             self.stats['jobs_filtered_by_date'] += 1
                 
                 self.stats['pages_scraped'] += 1
-                
-                # Check if buffer needs flushing
-                if len(self.write_buffer) >= self.flush_threshold:
-                    self._flush_buffer()
                 
                 # Brief delay between pages
                 time.sleep(1)
@@ -248,7 +243,7 @@ class FastElutaProducer:
                     # For other patterns, assume it's recent enough
                     return True
             
-            # If no date found, assume it's recent (within 14 days)
+            # If no date found, assume it's recent
             return True
             
         except Exception as e:
@@ -256,141 +251,209 @@ class FastElutaProducer:
             return True  # Default to including the job
     
     def _extract_raw_job_data(self, job_elem, page, keyword: str, page_num: int, job_num: int) -> Optional[Dict]:
-        """Extract raw job data without processing."""
+        """Extracts raw job data from a single job element using the proven click-and-wait method."""
         try:
-            # Get basic text content
-            text = job_elem.inner_text().strip()
-            lines = [line.strip() for line in text.split('\n') if line.strip()]
+            with page.expect_popup(timeout=10000) as popup_info:
+                job_elem.click()
+                time.sleep(1) # Simple, reliable 1-second delay
+
+            popup = popup_info.value
+            popup.wait_for_load_state('domcontentloaded', timeout=15000)
             
-            if len(lines) < 2:
-                return None
+            real_url = popup.url
+            title = popup.title()
             
-            # Extract basic data
+            # Get the full HTML content for real data extraction
+            html_content = popup.content()
+            
+            popup.close()
+
+            # Extract basic data from the original listing
+            company_elem = job_elem.query_selector('.company-name')
+            company = company_elem.inner_text() if company_elem else ""
+            
+            location_elem = job_elem.query_selector('.location')
+            location = location_elem.inner_text() if location_elem else ""
+            
+            summary_elem = job_elem.query_selector('.summary')
+            summary = summary_elem.inner_text() if summary_elem else ""
+            
+            job_id_eluta = job_elem.get_attribute('data-job-id') or ""
+
+            # Extract real job data from the popup HTML if BeautifulSoup is available
+            if BEAUTIFULSOUP_AVAILABLE and html_content:
+                enhanced_data = self._extract_real_job_data_from_html(html_content, real_url, title, company, location)
+            else:
+                enhanced_data = {
+                    "title": title,
+                    "company_name": company,
+                    "location": location,
+                    "summary": summary,
+                    "job_description": summary
+                }
+
             job_data = {
-                "raw_text": text,
-                "lines": lines,
-                "title": lines[0] if lines else "",
-                "company": lines[1] if len(lines) > 1 else "",
-                "location": lines[2] if len(lines) > 2 else "",
-                "summary": " ".join(lines[3:]) if len(lines) > 3 else "",
+                "job_id": f"eluta_{job_id_eluta}",
+                "title": enhanced_data.get("title", title),
+                "company_name": enhanced_data.get("company_name", company),
+                "location": enhanced_data.get("location", location),
+                "summary": enhanced_data.get("summary", summary),
+                "job_description": enhanced_data.get("job_description", summary),
+                "job_url": real_url,
+                "scraped_at": datetime.now().isoformat(),
                 "search_keyword": keyword,
                 "page_number": page_num,
                 "job_number": job_num,
-                "scraped_at": datetime.now().isoformat(),
                 "session_id": self.session_id,
-                "job_id": f"eluta_{keyword}_{page_num}_{job_num}",
-                "url": ""  # Initialize empty URL
+                "raw_text": job_elem.inner_text(),
+                "html_content": html_content  # Store the full HTML for later processing
+            }
+            return job_data
+
+        except Exception as e:
+            console.print(f"[yellow]⚠️ Could not extract job data: {e}[/yellow]")
+            return None
+
+    def _extract_real_job_data_from_html(self, html_content: str, url: str, fallback_title: str, fallback_company: str, fallback_location: str) -> Dict:
+        """Extract real job data from HTML content using BeautifulSoup."""
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            # Extract job title
+            title = fallback_title
+            title_selectors = [
+                'h1', 'h2', '.job-title', '.title', '[data-testid="job-title"]',
+                '.position-title', '.role-title', 'title'
+            ]
+            for selector in title_selectors:
+                element = soup.select_one(selector)
+                if element:
+                    extracted_title = element.get_text(strip=True)
+                    if extracted_title and len(extracted_title) > 5 and extracted_title != fallback_title:
+                        title = extracted_title
+                        break
+            
+            # Extract company name
+            company = fallback_company
+            company_selectors = [
+                '.company-name', '.company', '.employer', '[data-testid="company-name"]',
+                '.organization', '.employer-name'
+            ]
+            for selector in company_selectors:
+                element = soup.select_one(selector)
+                if element:
+                    extracted_company = element.get_text(strip=True)
+                    if extracted_company and len(extracted_company) > 2:
+                        company = extracted_company
+                        break
+            
+            # Extract location
+            location = fallback_location
+            location_selectors = [
+                '.location', '.job-location', '[data-testid="location"]',
+                '.address', '.job-address'
+            ]
+            for selector in location_selectors:
+                element = soup.select_one(selector)
+                if element:
+                    extracted_location = element.get_text(strip=True)
+                    if extracted_location and len(extracted_location) > 3:
+                        location = extracted_location
+                        break
+            
+            # Extract job description/summary
+            description = ""
+            desc_selectors = [
+                '.job-description', '.description', '.job-summary',
+                '.job-details', '.content', '.job-content',
+                '[data-testid="job-description"]', '.summary'
+            ]
+            for selector in desc_selectors:
+                element = soup.select_one(selector)
+                if element:
+                    description = element.get_text(strip=True)
+                    if description and len(description) > 50:  # Make sure it's substantial
+                        break
+            
+            # If no description found, try to get main content
+            if not description:
+                main_content = soup.find('main') or soup.find('body')
+                if main_content:
+                    description = main_content.get_text(strip=True)[:2000]  # Limit length
+            
+            return {
+                "title": title,
+                "company_name": company,
+                "location": location,
+                "summary": description[:500] if description else "",  # Truncate summary
+                "job_description": description
             }
             
-            # Extract URL using popup method
-            try:
-                # Find the clickable link (job title link)
-                link = job_elem.query_selector("a[href]")
-                if link:
-                    console.print(f"[cyan]🔄 Extracting URL for: {job_data['title'][:50]}...[/cyan]")
-                    
-                    # Use popup method to get real URL
-                    with page.expect_popup(timeout=5000) as popup_info:
-                        link.click()
-                    
-                    popup = popup_info.value
-                    popup_url = popup.url
-                    
-                    # Close popup
-                    popup.close()
-                    
-                    # Set the real URL
-                    job_data["url"] = popup_url
-                    console.print(f"[green]✅ URL extracted: {popup_url[:60]}...[/green]")
-                    
-            except Exception as url_error:
-                # If popup method fails, try to get URL from href attribute
-                try:
-                    link = job_elem.query_selector("a[href]")
-                    if link:
-                        href = link.get_attribute("href")
-                        if href and href.startswith("http"):
-                            job_data["url"] = href
-                            console.print(f"[yellow]⚠️ Using href URL: {href[:60]}...[/yellow]")
-                except Exception as href_error:
-                    console.print(f"[red]❌ URL extraction failed: {href_error}[/red]")
-                    job_data["url"] = ""
-            
-            return job_data
-            
         except Exception as e:
-            console.print(f"[red]❌ Error extracting job data: {e}[/red]")
-            return None
-    
-    def _add_to_buffer(self, job_data: Dict) -> None:
-        """Add job to write buffer with thread safety."""
-        with self.buffer_lock:
-            self.write_buffer.append(job_data)
-    
-    def _flush_buffer(self) -> None:
-        """Flush buffer to SSD with DDR5-6400 optimized writes."""
-        with self.buffer_lock:
-            if not self.write_buffer:
-                return
-            
-            # Create batch file
-            self.file_counter += 1
-            filename = f"jobs_batch_{self.session_id}_{self.file_counter:04d}.json"
-            filepath = self.output_dir / filename
-            
-            try:
-                # Ensure directory exists
-                self.output_dir.mkdir(parents=True, exist_ok=True)
-                
-                # Write to SSD (fast with DDR5 buffer)
-                with open(filepath, 'w', encoding='utf-8') as f:
-                    json.dump({
-                        "batch_id": f"{self.session_id}_{self.file_counter:04d}",
-                        "created_at": datetime.now().isoformat(),
-                        "job_count": len(self.write_buffer),
-                        "jobs": self.write_buffer
-                    }, f, indent=2, ensure_ascii=False)
-                
-                self.stats['jobs_saved'] += len(self.write_buffer)
-                console.print(f"[green]💾 Saved {len(self.write_buffer)} jobs to {filename}[/green]")
-                
-                # Clear buffer
-                self.write_buffer.clear()
-                
-            except Exception as e:
-                console.print(f"[red]❌ Write error: {e}[/red]")
-                console.print(f"[red]❌ Filepath: {filepath.absolute()}[/red]")
+            console.print(f"[yellow]⚠️ Real data extraction failed: {e}[/yellow]")
+            return {
+                "title": fallback_title,
+                "company_name": fallback_company,
+                "location": fallback_location,
+                "summary": "",
+                "job_description": ""
+            }
+
+    def _submit_job_to_processor(self, job_data: Dict) -> None:
+        """Submits a job directly to the JobProcessor."""
+        self.processor.submit_job(job_data)
+        self.stats['jobs_submitted'] += 1
     
     def _print_final_stats(self) -> None:
-        """Print final scraping statistics."""
-        duration = self.stats['end_time'] - self.stats['start_time']
+        """Print final producer statistics."""
+        if not self.stats['start_time']:
+            return
+            
+        duration = (self.stats['end_time'] - self.stats['start_time']).total_seconds()
         
-        console.print(Panel.fit("📊 SCRAPING COMPLETE", style="bold green"))
-        console.print(f"[cyan]⏱️ Duration: {duration}[/cyan]")
-        console.print(f"[cyan]🔍 Keywords processed: {self.stats['keywords_processed']}[/cyan]")
-        console.print(f"[cyan]📄 Pages scraped: {self.stats['pages_scraped']}[/cyan]")
-        console.print(f"[cyan]📋 Jobs scraped: {self.stats['jobs_scraped']}[/cyan]")
-        console.print(f"[cyan]📅 Jobs filtered by date: {self.stats['jobs_filtered_by_date']}[/cyan]")
-        console.print(f"[cyan]💾 Jobs saved: {self.stats['jobs_saved']}[/cyan]")
-        console.print(f"[cyan]📁 Output directory: {self.output_dir}[/cyan]")
+        console.print(Panel.fit("📊 PRODUCER COMPLETE", style="bold green"))
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("Metric", style="dim")
+        table.add_column("Value", justify="right")
         
-        if self.stats['jobs_scraped'] > 0:
-            jobs_per_minute = (self.stats['jobs_scraped'] / duration.total_seconds()) * 60
-            console.print(f"[bold green]⚡ Performance: {jobs_per_minute:.1f} jobs/minute[/bold green]")
+        table.add_row("Keywords Processed", f"{self.stats['keywords_processed']}")
+        table.add_row("Pages Scraped", f"{self.stats['pages_scraped']}")
+        table.add_row("Jobs Scraped", f"[green]{self.stats['jobs_scraped']}[/green]")
+        table.add_row("Jobs Submitted to Processor", f"[cyan]{self.stats['jobs_submitted']}[/cyan]")
+        table.add_row("Jobs Filtered by Date", f"[yellow]{self.stats['jobs_filtered_by_date']}[/yellow]")
+        table.add_row("⏱️ Duration", f"{duration:.2f} seconds")
+        
+        console.print(table)
+
 
 def main():
-    """Main function for testing."""
-    # Load profile
-    try:
-        with open("profiles/Nirajan/Nirajan.json", "r") as f:
-            profile = json.load(f)
-    except Exception as e:
-        console.print(f"[red]❌ Error loading profile: {e}[/red]")
-        return
+    """Main function for testing the producer independently."""
+    console.print(Panel("Running FastElutaProducer Standalone Test", style="bold yellow"))
     
-    # Create and run producer
-    producer = FastElutaProducer(profile)
-    producer.scrape_all_keywords()
+    # Dummy profile for testing
+    test_profile = {
+        "keywords": ["software developer", "project manager"],
+        "pages_to_scrape": 1
+    }
+
+    # Dummy processor for testing
+    class DummyProcessor:
+        def __init__(self):
+            self.submitted_jobs = []
+        def submit_job(self, job_data):
+            self.submitted_jobs.append(job_data)
+            console.print(f"DummyProcessor received job: {job_data['title'][:30]}...")
+        def wait_for_completion(self):
+            console.print(f"DummyProcessor processed {len(self.submitted_jobs)} jobs.")
+
+    processor = DummyProcessor()
+    producer = FastElutaProducer(profile=test_profile, processor=processor)
+    
+    try:
+        producer.scrape_all_keywords()
+    finally:
+        console.print("\nStandalone test finished.")
+        console.print(f"Total jobs submitted to dummy processor: {len(processor.submitted_jobs)}")
 
 if __name__ == "__main__":
     main() 

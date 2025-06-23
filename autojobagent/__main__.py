@@ -69,7 +69,7 @@ Examples:
     # Dashboard command
     dashboard_parser = subparsers.add_parser("dashboard", help="Start the web dashboard")
     dashboard_parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
-    dashboard_parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
+    dashboard_parser.add_argument("--port", type=int, default=8002, help="Port to listen on")
     
     # Setup command
     setup_parser = subparsers.add_parser("setup", help="Run initial setup")

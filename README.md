@@ -5,10 +5,7 @@
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Playwright](https://img.shields.io/badge/Playwright-Enabled-green.svg)](https://playwright.dev/)
-[![Ollama AI](https://img.shields.io/badge/Ollama-AI%20Powered-orange.svg)](https://ollama.ai/)
-[![Integration Tests](https://img.shields.io/badge/Tests-100%25%20Passing-brightgreen.svg)](#system-integration-test)
-[![Opera Browser](https://img.shields.io/badge/Opera-Supported-red.svg)](https://www.opera.com/)
+[![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-green.svg)](https://github.com/yourusername/autojobagent)
 
 **The most comprehensive job application automation system ever built** - combining intelligent web scraping, AI-powered document customization, automated form filling, and real-time monitoring into a single, production-ready solution.
 
@@ -151,10 +148,10 @@
 - **User-Friendly**: Clear, structured JSON responses with helpful metadata
 
 #### **🌐 Access URLs**
-- **Main Dashboard**: `http://localhost:8001/`
-- **API Test Center**: `http://localhost:8001/api-test`
-- **Dashboard Numbers**: `http://localhost:8001/api/dashboard-numbers`
-- **System Status**: `http://localhost:8001/api/system-status`
+- **Main Dashboard**: `http://localhost:8002/`
+- **API Test Center**: `http://localhost:8002/api-test`
+- **Dashboard Numbers**: `http://localhost:8002/api/dashboard-numbers`
+- **System Status**: `http://localhost:8002/api/system-status`
 
 ---
 
@@ -417,7 +414,7 @@ python main.py your_name
 ### **📊 Enhanced Dashboard with Comprehensive API (MAJOR UPDATE)**
 The dashboard now features **comprehensive API system** with real-time monitoring and interactive testing!
 - 🚀 **Auto-starts** with every action - no manual launch needed
-- 🌐 **Available at** http://localhost:8001 (auto-detects port)
+- 🌐 **Available at** http://localhost:8002 (auto-detects port)
 - 📊 **Real-time metrics API** with live job statistics and system health monitoring
 - 🔍 **Interactive API test center** at `/api-test` for endpoint validation
 - 🗑️ **Data management** - clear recent applications with built-in cleanup tools

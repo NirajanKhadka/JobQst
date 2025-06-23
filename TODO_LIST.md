@@ -1,96 +1,100 @@
-# TODO LIST - AutoJobAgent
+# TODO List
 
-## 🔥 PRIORITY ITEMS (Top of List)
+## Priority Items (Top of List)
 
-### 1. **French & Montreal Job Filtering** ⭐ HIGH PRIORITY ✅ COMPLETED
-- [x] Create job filtering system to remove French language jobs
-- [x] Filter out Montreal-based jobs 
-- [x] Add penalty scoring for French/Montreal jobs
-- [x] Hook filtering into consumer pipeline
-- [x] Hook filtering into dashboard API
-- [x] Test filtering with real job data
+### ✅ COMPLETED: Modular CLI Structure
+- [x] Created modular CLI structure under `src/cli/`
+- [x] Split large `src/app.py` into handlers, actions, and menu modules
+- [x] Created `src/main_modular.py` as new entry point
+- [x] Fixed import paths and tested functionality
+- [x] All CLI commands working correctly
 
-**✅ STATUS: COMPLETE** - System successfully filters French jobs (score: 20.0), Montreal jobs (score: 0.0), and keeps English jobs (score: 120.0)
+### ✅ COMPLETED: Core Utils Modularization
+- [x] Split large `src/core/utils.py` (784 lines) into modular components:
+  - [x] `src/core/job_data.py` - JobData class and related utilities
+  - [x] `src/core/text_utils.py` - Text processing utilities (clean_text, extract_keywords, analyze_text, etc.)
+  - [x] `src/core/job_filters.py` - Job filtering utilities (JobFilter, FilterCriteria, etc.)
+  - [x] `src/core/session.py` - Session management utilities (SessionManager, RateLimiter, etc.)
+  - [x] `src/core/browser_utils.py` - Browser automation utilities (BrowserUtils, TabManager, etc.)
+  - [x] `src/core/exceptions.py` - Custom exceptions
+- [x] Updated imports and dependencies
+- [x] Tested all new modules for import compatibility
+- [x] Maintained backward compatibility with existing code
 
-### 2. **Real-Time Dashboard Cache** ⭐ HIGH PRIORITY ✅ COMPLETED
-- [x] Complete JobCache class implementation
-- [x] Hook cache into consumer (jobs added to cache when processed)
-- [x] Hook cache into dashboard API (instant job updates)
-- [x] Test real-time updates in dashboard
-- [x] Add cache statistics to dashboard
+### ✅ COMPLETED: Job Database Modularization (Partial)
+- [x] **src/core/job_record.py** - JobRecord dataclass and related utilities
+- [x] **src/core/db_engine.py** - Database connection pooling and initialization
+- [x] Updated imports and tested functionality
+- [x] Maintained backward compatibility
 
-**✅ STATUS: COMPLETE** - Cache system working with 2 jobs cached, instant retrieval, and statistics tracking
+### ✅ COMPLETED: CLI Queue Processing Feature
+- [x] Added `process_queue_action()` to ScrapingActions
+- [x] Added menu option "6" for processing jobs from queue
+- [x] Added CLI command `--action process-queue`
+- [x] Implemented job detail scraping from URLs in queue
+- [x] Added proper session management for queue processing
+- [x] Tested CLI functionality
 
-### 3. **Website Link Scraper Logic** ⭐ HIGH PRIORITY ✅ VERIFIED
-- [x] Verify URL extraction is working perfectly
-- [x] Test popup method for getting real job URLs
-- [x] Ensure all job links are properly extracted
-- [x] Add error handling for failed URL extraction
+### 🔄 IN PROGRESS: Remaining Large Files to Modularize
+- [ ] **src/scrapers/big_data_patterns.py** (603 lines) - Break into data processing modules
+- [ ] **src/scrapers/modern_job_pipeline.py** (612 lines) - Break into pipeline components
+- [ ] **src/scrapers/parallel_job_scraper.py** (520 lines) - Break into parallel processing modules
+- [ ] **src/core/job_database.py** (772 lines) - Complete modularization (CRUD operations, utilities)
+- [ ] **src/core/utils.py** (784 lines) - Further modularization if needed
 
-**✅ STATUS: VERIFIED** - URL extraction using popup method is working correctly in the producer
+### 🔄 IN PROGRESS: Clean Termination & Process Management
+- [ ] Implement proper PowerShell window management
+- [ ] Close old PowerShell windows when opening new ones
+- [ ] Avoid having multiple PowerShell windows running simultaneously
+- [ ] Ensure clean test environment for each test run
+- [ ] **CRITICAL**: When main program terminates, ensure all related processes terminate
+- [ ] Add signal handlers for graceful shutdown
+- [ ] Implement process cleanup on exit
+- [ ] Add browser cleanup and connection closing
+- [ ] Add database connection cleanup
 
-## 📋 REST OF LIST (Lower Priority)
+### 🔄 IN PROGRESS: Testing Protocol
+- [ ] **ALWAYS run tests after modularization** - to catch issues early
+- [ ] Find and fix all imports after each modularization step
+- [ ] Test CLI functionality after each change
+- [ ] Ensure no breaking changes to existing functionality
+- [ ] Add comprehensive test coverage for new modules
 
-### 4. **Producer-Consumer Optimization** 🔄 IN PROGRESS
-- [x] Optimize for 9 pages per keyword
-- [x] Implement 14-day job filtering
-- [ ] Add performance monitoring
-- [x] Optimize multi-process consumer
+## Regular Items (Rest of List)
 
-### 5. **Dashboard Enhancements** 🔄 IN PROGRESS
-- [x] Add real-time job counter
-- [x] Implement job filtering UI
-- [x] Add job scoring display
-- [ ] Create job analytics dashboard
+### Testing and Quality Assurance
+- [ ] Run comprehensive test suite after each modularization
+- [ ] Update test imports to use new modular structure
+- [ ] Ensure all tests pass with new modular architecture
+- [ ] Test CLI functionality with modular structure
+- [ ] Add integration tests for new queue processing feature
 
-### 6. **Job Analysis & Scoring** 🔄 IN PROGRESS
-- [x] Implement job relevance scoring
-- [x] Add keyword matching algorithm
-- [x] Create job ranking system
-- [ ] Add experience level detection
+### Documentation and Maintenance
+- [ ] Update documentation to reflect new modular structure
+- [ ] Update ISSUE_TRACKER.md with modularization progress
+- [ ] Create architecture documentation for new modules
+- [ ] Update README with new module structure
+- [ ] Document new CLI queue processing feature
 
-### 7. **Database Optimization**
-- [ ] Optimize database queries
-- [ ] Add database indexing
-- [ ] Implement connection pooling
-- [ ] Add database backup system
+### Performance and Optimization
+- [ ] Monitor performance impact of modularization
+- [ ] Optimize imports and dependencies
+- [ ] Ensure no circular dependencies in new modules
+- [ ] Profile memory usage with new structure
+- [ ] Optimize queue processing performance
 
-### 8. **Error Handling & Monitoring**
-- [ ] Add comprehensive error logging
-- [ ] Implement system health monitoring
-- [ ] Add automatic error recovery
-- [ ] Create error notification system
+### Code Quality
+- [ ] Ensure all new modules follow consistent coding standards
+- [ ] Add proper type hints to all new modules
+- [ ] Add comprehensive docstrings to all new functions
+- [ ] Run linter checks on all new modules
+- [ ] Add error handling for queue processing
 
-### 9. **Testing & Quality Assurance**
-- [x] Add unit tests for all components
-- [ ] Create integration tests
-- [ ] Add performance benchmarks
-- [ ] Implement automated testing
+## Notes
 
-### 10. **Documentation & Deployment**
-- [ ] Update API documentation
-- [ ] Create user guides
-- [ ] Add deployment scripts
-- [ ] Create maintenance procedures
-
----
-
-## 🎯 CURRENT STATUS
-**✅ Priority 1-3 items are COMPLETE!** The core system is fully functional with:
-- French/Montreal job filtering with penalty scoring
-- Real-time cache for instant dashboard updates  
-- Working producer-consumer system with URL extraction
-- Complete API integration
-
-## 🚀 READY FOR PRODUCTION
-The system is now ready to:
-1. **Run the producer-consumer** with your requirements (9 pages, 14-day filter, all keywords)
-2. **Start the dashboard** to see real-time job updates
-3. **Monitor filtering statistics** to see French/Montreal jobs being filtered out
-
-## 📝 NOTES
-- French/Montreal filtering is working perfectly (tested with real examples)
-- Real-time cache provides instant dashboard updates
-- URL extraction using popup method is reliable
-- All systems maintain backward compatibility
-- Test results: 4/4 systems working correctly ✅ 
+- **PowerShell Management**: When opening new PowerShell windows for testing, always close old ones first to avoid multiple windows running simultaneously
+- **Testing Protocol**: Run tests after each major change to ensure stability
+- **Import Strategy**: Use `src.` prefix for imports in test files when needed
+- **Issue Tracking**: Update ISSUE_TRACKER.md with each completed modularization step
+- **Clean Termination**: Ensure all processes, browsers, and connections are properly closed when main program exits
+- **Queue Processing**: New feature allows processing jobs from queue by scraping details from URLs 

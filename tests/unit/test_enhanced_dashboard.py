@@ -29,7 +29,7 @@ class EnhancedDashboardTest:
     """Test suite for enhanced dashboard functionality."""
     
     def __init__(self):
-        self.base_url = "http://localhost:8000"
+        self.base_url = "http://localhost:8002"
         self.test_results = []
         
     def test_api_endpoints(self) -> Dict:
@@ -422,7 +422,7 @@ def main():
 
     if success:
         console.print(f"\n[bold green]✅ Enhanced dashboard is fully functional![/bold green]")
-        console.print(f"[cyan]🌐 Access the dashboard at: http://localhost:8000[/cyan]")
+        console.print(f"[cyan]🌐 Access the dashboard at: http://localhost:8002[/cyan]")
         return 0
     else:
         console.print(f"\n[bold red]❌ Some dashboard tests failed. Check results above.[/bold red]")

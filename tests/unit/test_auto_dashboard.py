@@ -43,9 +43,9 @@ def test_dashboard_detection():
     try:
         # Test if we can detect if dashboard is running
         try:
-            response = requests.get("http://localhost:8000", timeout=2)
+            response = requests.get("http://localhost:8002", timeout=2)
             if response.status_code == 200:
-                console.print("[green]✅ Dashboard is currently running at http://localhost:8000[/green]")
+                console.print("[green]✅ Dashboard is currently running at http://localhost:8002[/green]")
                 console.print(f"[cyan]   Response status: {response.status_code}[/cyan]")
                 return True
             else:
@@ -279,14 +279,14 @@ def main():
         console.print("\n[cyan]💡 Benefits:[/cyan]")
         console.print("   ✅ Dashboard starts automatically with every action")
         console.print("   ✅ No need to manually launch dashboard")
-        console.print("   ✅ Always available at http://localhost:8000")
+        console.print("   ✅ Always available at http://localhost:8002")
         console.print("   ✅ Real-time job tracking and metrics")
         console.print("   ✅ Seamless user experience")
         
         console.print("\n[yellow]📝 Usage:[/yellow]")
         console.print("   python main.py Nirajan           # Dashboard auto-starts")
         console.print("   python main.py Nirajan --action scrape  # Dashboard auto-starts")
-        console.print("   # Then visit: http://localhost:8000")
+        console.print("   # Then visit: http://localhost:8002")
         
     elif success_rate >= 75:
         console.print("[bold yellow]⚠️ Auto-dashboard mostly ready with minor issues.[/bold yellow]")

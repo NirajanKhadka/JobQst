@@ -16,49 +16,16 @@ from contextlib import contextmanager
 import threading
 from queue import Queue
 import time
+from rich.console import Console
+
+# Import from new modular structure
+from .job_record import JobRecord
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@dataclass
-class JobRecord:
-    """Simple job record structure."""
-    title: str
-    company: str
-    location: str = ""
-    summary: str = ""
-    url: str = ""
-    search_keyword: str = ""
-    site: str = "unknown"
-    scraped_at: str = ""
-    job_id: str = ""
-    raw_data: Optional[Dict[str, Any]] = None
-    analysis_data: Optional[Dict[str, Any]] = None
-    
-    def __post_init__(self):
-        if self.raw_data is None:
-            self.raw_data = {}
-        if self.analysis_data is None:
-            self.analysis_data = {}
-        if not self.scraped_at:
-            self.scraped_at = datetime.now().isoformat()
-        if not self.job_id:
-            self.job_id = self._generate_job_id()
-    
-    def _generate_job_id(self) -> str:
-        """Generate a unique job ID."""
-        content = f"{self.title}{self.company}{self.url}{self.scraped_at}"
-        return hashlib.md5(content.encode()).hexdigest()[:12]
-    
-    def to_dict(self) -> Dict:
-        """Convert to dictionary."""
-        return asdict(self)
-    
-    def get_hash(self) -> str:
-        """Get hash for duplicate detection."""
-        content = f"{self.title.lower()}{self.company.lower()}"
-        return hashlib.md5(content.encode()).hexdigest()
+console = Console()
 
 class ModernJobDatabase:
     """
@@ -571,6 +538,42 @@ class ModernJobDatabase:
         """Get all jobs from the database."""
         return self.get_jobs(limit=limit)
     
+    def get_unapplied_jobs(self, limit: int = 100) -> List[Dict]:
+        """Get jobs that haven't been applied to yet."""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.execute("""
+                    SELECT * FROM jobs 
+                    WHERE applied = 0 OR applied IS NULL
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                """, (limit,))
+                
+                jobs = []
+                for row in cursor.fetchall():
+                    job_dict = dict(row)
+                    
+                    # Parse JSON fields
+                    if job_dict.get('raw_data'):
+                        try:
+                            job_dict['raw_data'] = json.loads(job_dict['raw_data'])
+                        except:
+                            job_dict['raw_data'] = {}
+                    
+                    if job_dict.get('analysis_data'):
+                        try:
+                            job_dict['analysis_data'] = json.loads(job_dict['analysis_data'])
+                        except:
+                            job_dict['analysis_data'] = {}
+                    
+                    jobs.append(job_dict)
+                
+                return jobs
+                
+        except Exception as e:
+            logger.error(f"Error getting unapplied jobs: {e}")
+            return []
+    
     def add_jobs_batch(self, jobs: List[Dict]) -> int:
         """Add multiple jobs in a more performant batch operation."""
         added_count = 0
@@ -722,43 +725,39 @@ class ModernJobDatabase:
             return None
 
 # Global database instance
-_job_db = None
+_job_db_instances = {}
 _db_lock = threading.Lock()
 
-def get_job_db(profile: str = None, db_path: str = None) -> ModernJobDatabase:
-    """
-    Get database instance for a specific profile or use default path.
-    
-    Args:
-        profile: Profile name (e.g., 'Nirajan', 'StressTest')
-        db_path: Direct database path (overrides profile)
-    
-    Returns:
-        ModernJobDatabase instance
-    """
-    global _job_db
-    
-    # Determine the database path
+def get_job_db(profile: Optional[str] = None, db_path: Optional[str] = None) -> "ModernJobDatabase":
+    """Get job database instance for a profile."""
     if db_path:
-        # Use provided path directly
-        final_db_path = db_path
-    elif profile:
-        # Use profile-specific database
-        final_db_path = f"profiles/{profile}/{profile}.db"
-    else:
-        # Use default database
-        final_db_path = "data/jobs.db"
+        return ModernJobDatabase(db_path)
     
-    # For now, always create a new instance to support multiple databases
-    # In the future, we could implement a database pool per profile
-    return ModernJobDatabase(final_db_path)
+    if profile:
+        profile_db_path = f"profiles/{profile}/{profile}.db"
+        return ModernJobDatabase(profile_db_path)
+    
+    # Default database
+    return ModernJobDatabase("data/jobs.db")
 
-def close_job_db():
+def close_job_db(profile: Optional[str] = None, db_path: Optional[str] = None):
     """Close the global job database connection."""
-    global _job_db
-    if _job_db:
-        _job_db.close()
-        _job_db = None
+    global _job_db_instances
+    
+    effective_db_path: Optional[str] = None
+    if db_path:
+        effective_db_path = db_path
+    elif profile:
+        effective_db_path = str(Path("profiles") / profile / f"{profile}.db")
+
+    if effective_db_path and effective_db_path in _job_db_instances:
+        _job_db_instances[effective_db_path].close()
+        del _job_db_instances[effective_db_path]
+    elif not profile and not db_path:
+        # If no specific profile/path is given, close all connections
+        for db_instance in list(_job_db_instances.values()):
+            db_instance.close()
+        _job_db_instances.clear()
 
 # Backward compatibility alias
 JobDatabase = ModernJobDatabase

@@ -151,7 +151,7 @@ def main():
         if test1_success and test2_success:
             console.print("\n[bold green]🎉 ALL TESTS PASSED! Database save fix is working![/bold green]")
             console.print("[cyan]💡 The scraped jobs should now appear in the dashboard[/cyan]")
-            console.print("[cyan]🌐 Visit http://localhost:8000 to see the jobs[/cyan]")
+            console.print("[cyan]🌐 Visit http://localhost:8002 to see the jobs[/cyan]")
         else:
             console.print("\n[bold red]❌ Some tests failed. Database save fix needs more work.[/bold red]")
     

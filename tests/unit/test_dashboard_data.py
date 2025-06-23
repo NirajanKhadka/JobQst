@@ -164,7 +164,7 @@ def add_sample_jobs():
     print(f"   Unique sites: {stats['unique_sites']}")
     
     print(f"\n🎉 Sample data added successfully!")
-    print(f"🌐 Visit http://localhost:8000 to see the enhanced dashboard")
+    print(f"🌐 Visit http://localhost:8002 to see the enhanced dashboard")
 
 if __name__ == "__main__":
     add_sample_jobs()
