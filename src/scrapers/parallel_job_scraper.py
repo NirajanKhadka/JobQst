@@ -23,31 +23,15 @@ from rich.table import Table
 from rich.panel import Panel
 from playwright.async_api import async_playwright
 
-from job_database import get_job_db
-import utils
+from src.core.job_database import get_job_db
+from src.core import utils
+from .parallel_job_scraper_core import (
+    create_scraping_tasks,
+    # ... (other methods to be imported after moving) ...
+)
+from src.scrapers.scraping_models import ScrapingTask, JobData
 
 console = Console()
-
-@dataclass
-class ScrapingTask:
-    """Individual scraping task."""
-    task_id: str
-    task_type: str  # 'basic_scrape', 'detail_scrape', 'url_extract'
-    keyword: str
-    page_number: int
-    priority: int = 1
-    retry_count: int = 0
-    max_retries: int = 3
-
-@dataclass
-class JobData:
-    """Enhanced job data structure."""
-    basic_info: Dict
-    detailed_info: Optional[Dict] = None
-    real_url: Optional[str] = None
-    experience_level: str = "Unknown"
-    confidence_score: float = 0.0
-    needs_detail_scraping: bool = False
 
 class ParallelJobScraper:
     """
