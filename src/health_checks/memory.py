@@ -29,3 +29,7 @@ def check_memory_usage(config: Dict) -> Dict:
             
     except Exception as e:
         return {"status": "error", "message": f"Memory check failed: {str(e)}"}
+
+def check_memory(config: Dict) -> Dict:
+    """Alias for check_memory_usage to match system health monitor expectations."""
+    return check_memory_usage(config)

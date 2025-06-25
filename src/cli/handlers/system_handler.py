@@ -19,8 +19,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.prompt import Prompt
-
-from src.utils import utils
+from src.utils import get_available_profiles
 
 console = Console()
 

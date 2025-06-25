@@ -19,6 +19,9 @@ class LeverSubmitter(BaseSubmitter):
     This is a stub implementation that will be developed in a future release.
     """
     
+    def __init__(self, browser_context=None):
+        self.browser_context = browser_context
+
     def submit(self, job: Dict, profile: Dict, resume_path: str, cover_letter_path: str) -> str:
         """
         Submit an application to Lever ATS.

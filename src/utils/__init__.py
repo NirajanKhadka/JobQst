@@ -15,6 +15,20 @@ from .error_tolerance_handler import RobustOperationManager, SystemHealthMonitor
 from .simple_gmail_checker import SimpleGmailChecker, create_gmail_checker
 from .profile_helpers import get_available_profiles
 
+# Export new modules
+from .job_analyzer import JobAnalyzer
+from .job_data_consumer import JobDataConsumer
+from .job_data_enhancer import JobDataEnhancer
+from .gmail_verifier import GmailVerifier
+
+# Export profile and job helpers
+from .profile_helpers import load_profile
+from .job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from .file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+
+# Export job filters
+from .job_filters import JobFilter, JobDateFilter, ExperienceLevelFilter, UniversalJobFilter
+
 __all__ = [
     'customize',
     'JobAnalysisEngine',
@@ -29,5 +43,20 @@ __all__ = [
     'SystemHealthMonitor',
     'SimpleGmailChecker',
     'create_gmail_checker',
-    'get_available_profiles'
+    'get_available_profiles',
+    'JobAnalyzer',
+    'JobDataConsumer',
+    'JobDataEnhancer',
+    'GmailVerifier',
+    'load_profile',
+    'generate_job_hash',
+    'is_duplicate_job',
+    'sort_jobs',
+    'save_jobs_to_json',
+    'load_jobs_from_json',
+    'save_jobs_to_csv',
+    'JobFilter',
+    'JobDateFilter',
+    'ExperienceLevelFilter',
+    'UniversalJobFilter'
 ]

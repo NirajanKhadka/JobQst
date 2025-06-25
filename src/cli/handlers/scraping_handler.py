@@ -73,13 +73,13 @@ class ScrapingHandler:
             return False
     
     def run_scraping(self, sites: Optional[List[str]] = None, keywords: Optional[List[str]] = None, 
-                    mode: str = "automated") -> bool:
-        """Run job scraping with specified parameters.
+                    mode: str = "simple") -> bool:
+        """Run job scraping with simplified architecture.
 
         Args:
             sites: List of sites to scrape (default: ['eluta'])
             keywords: List of keywords to search (default: from profile)
-            mode: Scraping mode ('automated', 'parallel', 'basic')
+            mode: Scraping mode ('simple', 'multi_worker')
 
         Returns:
             bool: True if scraping was successful, False otherwise
@@ -101,12 +101,13 @@ class ScrapingHandler:
             return False
 
         try:
-            if mode == "automated":
-                return self._run_automated_scraping()
-            elif mode == "parallel":
-                return self._run_parallel_scraping(sites)
-            else:  # basic mode
-                return self._run_basic_scraping()
+            if mode == "simple":
+                return self._run_simple_scraping(sites, keywords or [])
+            elif mode == "multi_worker":
+                return self._run_multi_worker_scraping(sites, keywords or [])
+            else:
+                console.print(f"[red]❌ Unknown scraping mode: {mode}[/red]")
+                return False
 
         except Exception as e:
             console.print(f"[red]❌ Error during scraping: {e}[/red]")
@@ -114,122 +115,133 @@ class ScrapingHandler:
             traceback.print_exc()
             return False
     
-    def _run_automated_scraping(self) -> bool:
-        """Run automated scraping with AI filtering."""
-        console.print("[cyan]🧠 Using automated scraping with AI filtering[/cyan]")
-        success = run_intelligent_scraping(self.profile['profile_name'], max_jobs=15)
+    def _run_simple_scraping(self, sites: List[str], keywords: List[str]) -> bool:
+        """Run simple sequential scraping for reliability."""
+        from src.scrapers.comprehensive_eluta_scraper import run_comprehensive_scraping
+        import asyncio
 
-        if success:
-            console.print("[bold green]✅ Automated scraping completed successfully![/bold green]")
-            return True
-        else:
-            console.print("[yellow]⚠️ Automated scraping completed with limited results[/yellow]")
+        console.print("[cyan]🔄 Using simple sequential scraping for reliability[/cyan]")
+
+        try:
+            profile_name = self.profile.get('profile_name', 'default')
+            jobs = asyncio.run(run_comprehensive_scraping(profile_name, max_jobs_per_keyword=10))
+
+            if jobs:
+                # Save jobs to session
+                self.session["scraped_jobs"] = jobs
+                self._save_session(self.profile.get('profile_name', 'default'), self.session)
+
+                console.print(f"[bold green]✅ Simple scraping found {len(jobs)} jobs![/bold green]")
+                return True
+            else:
+                console.print("[yellow]⚠️ Simple scraping found no jobs[/yellow]")
+                return False
+        except Exception as e:
+            console.print(f"[red]❌ Error in simple scraping: {e}[/red]")
             return False
     
-    def _run_parallel_scraping(self, sites: List[str]) -> bool:
-        """Run parallel scraping for speed."""
-        from src.scrapers.parallel_job_scraper import run_parallel_scraping
+    def _run_multi_worker_scraping(self, sites: List[str], keywords: List[str]) -> bool:
+        """Run multi-worker scraping with master worker controlling other workers."""
+        from src.core.job_processor_queue import create_job_processor_queue
+        from src.scrapers.comprehensive_eluta_scraper import run_comprehensive_scraping
+        import asyncio
 
-        console.print("[cyan]⚡ Using parallel scraping for speed[/cyan]")
+        console.print("[cyan]⚡ Using multi-worker scraping with master worker coordination[/cyan]")
         
-        # Run parallel scraping asynchronously
-        profile_name = self.profile.get('profile_name', 'default')
-        jobs = asyncio.run(run_parallel_scraping(profile_name, num_workers=3, max_jobs_per_keyword=20))
-
-        if jobs:
-            # Save jobs to session
-            self.session["scraped_jobs"] = jobs
-            self._save_session(self.profile.get('profile_name', 'default'), self.session)
-
-            console.print(f"[bold green]✅ Parallel scraping found {len(jobs)} jobs![/bold green]")
-            return True
-        else:
-            console.print("[yellow]⚠️ Parallel scraping found no jobs[/yellow]")
+        try:
+            profile_name = self.profile.get('profile_name', 'default')
+            
+            # First, scrape jobs using the comprehensive scraper
+            scraped_jobs = asyncio.run(run_comprehensive_scraping(profile_name, max_jobs_per_keyword=20))
+            
+            if not scraped_jobs:
+                console.print("[yellow]⚠️ No jobs found to process with multi-worker system[/yellow]")
+                return False
+            
+            # Create multi-worker queue (2 workers by default)
+            def multi_worker_dashboard_callback(data):
+                if data.get('type') == 'job_processing_stats':
+                    stats = data.get('stats', {})
+                    queue_size = data.get('queue_size', 0)
+                    console.print(f"[cyan]📊 Multi-Worker Stats: {stats.get('successful', 0)}/{stats.get('total_processed', 0)} successful, Queue: {queue_size}[/cyan]")
+            
+            queue = create_job_processor_queue(
+                profile_name=profile_name,
+                num_workers=2,
+                dashboard_callback=multi_worker_dashboard_callback
+            )
+            
+            # Start the multi-worker system
+            queue.start()
+            
+            # Add scraped jobs to the queue for processing
+            queue.add_jobs_from_scraping(scraped_jobs)
+            
+            # Wait for completion
+            queue.wait_for_completion(timeout=300)  # 5 minutes timeout
+            
+            # Stop the queue
+            queue.stop()
+            
+            # Get final statistics
+            stats = queue.get_stats()
+            
+            if stats.get('total_processed', 0) > 0:
+                console.print(f"[bold green]✅ Multi-worker processing completed! Processed {stats.get('total_processed', 0)} jobs[/bold green]")
+                return True
+            else:
+                console.print("[yellow]⚠️ Multi-worker processing completed with no successful jobs[/yellow]")
+                return False
+                
+        except Exception as e:
+            console.print(f"[red]❌ Error in multi-worker scraping: {e}[/red]")
             return False
-    
-    def _run_basic_scraping(self) -> bool:
-        """Run basic scraping using working scraper."""
-        from src.scrapers.eluta_working import ElutaWorkingScraper
-        from playwright.sync_api import sync_playwright
-
-        console.print("[cyan]🔍 Using working Eluta scraper[/cyan]")
-
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
-            context = browser.new_context()
-            scraper = ElutaWorkingScraper(self.profile, browser_context=context)
-            jobs = list(scraper.scrape_jobs())
-            browser.close()
-
-        if jobs:
-            # Save jobs to session
-            self.session["scraped_jobs"] = jobs
-            self._save_session(self.profile.get('profile_name', 'default'), self.session)
-
-            console.print(f"[bold green]✅ Basic scraping found {len(jobs)} jobs![/bold green]")
-            return True
-        else:
-            console.print("[yellow]⚠️ Basic scraping found no jobs[/yellow]")
-            return False
-    
-    def eluta_parallel_scrape(self) -> List[Dict]:
-        """Run Eluta parallel scraping."""
-        from src.scrapers.eluta_optimized_parallel import ElutaOptimizedParallelScraper
-        
-        console.print("[cyan]⚡ Running Eluta parallel scraping...[/cyan]")
-        
-        scraper = ElutaOptimizedParallelScraper(self.profile)
-        jobs = list(scraper.scrape_jobs())
-        
-        if jobs:
-            self.session["scraped_jobs"] = jobs
-            self._save_session(self.profile.get('profile_name', 'default'), self.session)
-            console.print(f"[bold green]✅ Found {len(jobs)} jobs![/bold green]")
-        
-        return jobs
     
     def eluta_enhanced_click_popup_scrape(self) -> List[Dict]:
         """Run Eluta enhanced click-popup scraping."""
-        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.comprehensive_eluta_scraper import run_comprehensive_scraping
+        import asyncio
         
         console.print("[cyan]🖱️ Running Eluta enhanced click-popup scraping...[/cyan]")
         
-        scraper = ElutaEnhancedScraper(self.profile)
-        jobs = list(scraper.scrape_jobs())
-        
-        if jobs:
-            self.session["scraped_jobs"] = jobs
-            self._save_session(self.profile.get('profile_name', 'default'), self.session)
-            console.print(f"[bold green]✅ Found {len(jobs)} jobs![/bold green]")
-        
-        return jobs
+        try:
+            profile_name = self.profile.get('profile_name', 'default')
+            jobs = asyncio.run(run_comprehensive_scraping(profile_name, max_jobs_per_keyword=10))
+            
+            if jobs:
+                self.session["scraped_jobs"] = jobs
+                self._save_session(self.profile.get('profile_name', 'default'), self.session)
+                console.print(f"[bold green]✅ Found {len(jobs)} jobs![/bold green]")
+            
+            return jobs
+        except Exception as e:
+            console.print(f"[red]❌ Error in enhanced scraping: {e}[/red]")
+            return []
     
     def _validate_scraping_mode(self, mode: str) -> str:
         """Validate and normalize scraping mode."""
         valid_modes = {
-            "automated": "automated",
-            "parallel": "parallel", 
-            "basic": "basic",
-            "intelligent": "automated",
-            "fast": "parallel",
-            "simple": "basic"
+            "simple": "simple",
+            "multi_worker": "multi_worker",
+            "multi-worker": "multi_worker",
+            "multiworker": "multi_worker"
         }
         
         normalized_mode = valid_modes.get(mode.lower(), mode.lower())
         
-        if normalized_mode not in ["automated", "parallel", "basic"]:
-            raise ValueError(f"Invalid scraping mode: {mode}. Valid modes: {list(valid_modes.keys())}")
+        if normalized_mode not in ["simple", "multi_worker"]:
+            raise ValueError(f"Invalid scraping mode: {mode}. Valid modes: simple, multi_worker")
         
         return normalized_mode
     
     def _get_scraping_mode_description(self, mode: str) -> str:
         """Get human-readable description of scraping mode."""
         descriptions = {
-            "automated": "Intelligent scraping with AI filtering and analysis",
-            "parallel": "High-speed parallel scraping with multiple workers",
-            "basic": "Simple, reliable scraping with basic filtering"
+            "simple": "Simple Sequential (Reliable, one-at-a-time processing)",
+            "multi_worker": "Multi-Worker (High-performance, parallel processing)"
         }
-        return descriptions.get(mode, "Unknown mode")
+        
+        return descriptions.get(mode, f"Unknown mode: {mode}")
     
     def display_job_summary(self, jobs: List[Dict], operation_name: str = "Job Scraping") -> None:
         """Display a professional summary of scraped jobs."""

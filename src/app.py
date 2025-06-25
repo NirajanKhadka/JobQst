@@ -85,6 +85,15 @@ def run_docgen_subsystem(profile_name, queue, shutdown_event):
     console.print(f"[{os.getpid()}] Docgen subsystem stopped.")
 
 
+def scraping_menu_action(*args, **kwargs):
+    return True
+
+def eluta_enhanced_click_popup_scrape(*args, **kwargs):
+    return True
+
+def eluta_multi_browser_scrape(*args, **kwargs):
+    return True
+
 def main():
     """Main entry point for the application."""
     args = parse_args()

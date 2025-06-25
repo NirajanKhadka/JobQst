@@ -11,11 +11,13 @@ import logging
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 from dataclasses import dataclass
+from rich.console import Console
 
 from src.utils import profile_helpers
 from src.core.job_database import get_job_db
 
 logger = logging.getLogger(__name__)
+console = Console()
 
 
 @dataclass
@@ -28,6 +30,9 @@ class HumanBehaviorConfig:
     mouse_movement: bool = True
     random_viewport: bool = True
     user_agent_rotation: bool = True
+
+    def __init__(self):
+        self.delays = {'popup_wait': 3.0}
 
 
 class HumanBehaviorMixin:
@@ -319,6 +324,8 @@ class HumanBehaviorScraper:
         self.jobs_scraped = 0
         self.jobs_saved = 0
         self.errors = []
+        
+        self.human_config = HumanBehaviorConfig()
     
     def simulate_human_delay(self) -> None:
         """Simulate human-like delays between actions."""

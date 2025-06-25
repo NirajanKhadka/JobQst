@@ -26,3 +26,7 @@ def check_browser_processes(config: Dict) -> Dict:
             
     except Exception as e:
         return {"status": "error", "message": f"Browser process check failed: {str(e)}"}
+
+def check_browser(config: Dict) -> Dict:
+    """Alias for check_browser_processes to match system health monitor expectations."""
+    return check_browser_processes(config)

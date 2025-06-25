@@ -19,6 +19,10 @@ class BambooHRSubmitter(BaseSubmitter):
     Handles automation of job applications on BambooHR-based portals.
     """
     
+    def __init__(self, browser_context=None):
+        self.browser_context = browser_context
+        super().__init__()
+
     def submit(self, job: Dict, profile: Dict, resume_path: str, cover_letter_path: str) -> str:
         """
         Submit an application to BambooHR ATS.

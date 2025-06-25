@@ -105,4 +105,9 @@ class TabManagementError(AutoJobAgentError):
 
 class PopupHandlingError(AutoJobAgentError):
     """Exception raised when popup handling fails."""
+    pass
+
+
+class NeedsHumanException(AutoJobAgentError):
+    """Exception raised when human intervention is required."""
     pass 

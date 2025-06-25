@@ -19,6 +19,9 @@ class ICIMSSubmitter(BaseSubmitter):
     Handles automation of job applications on iCIMS-based portals.
     """
     
+    def __init__(self, browser_context=None):
+        super().__init__(browser_context)
+    
     def submit(self, job: Dict, profile: Dict, resume_path: str, cover_letter_path: str) -> str:
         """
         Submit an application to iCIMS ATS.

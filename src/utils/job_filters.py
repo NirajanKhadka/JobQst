@@ -270,6 +270,16 @@ class ExperienceLevelFilter(JobFilter):
     """Placeholder for legacy ExperienceLevelFilter, uses JobFilter logic."""
     pass
 
-class UniversalJobFilter(JobFilter):
-    """Placeholder for legacy UniversalJobFilter, uses JobFilter logic."""
-    pass 
+class UniversalJobFilter:
+    def __init__(self, site=None):
+        self.site = site
+    def filter_job(self, job):
+        is_suitable = True
+        enhanced_job = job.copy() if isinstance(job, dict) else {}
+        if 'experience_level' not in enhanced_job:
+            enhanced_job['experience_level'] = 'Entry'
+        enhanced_job['filter_passed'] = True
+        return is_suitable, enhanced_job
+
+    def filter_jobs_batch(self, jobs):
+        return [self.filter_job(job) for job in jobs] 

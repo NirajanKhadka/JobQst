@@ -21,6 +21,10 @@ console = Console()
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
+utils = object()
+scrapers = object()
+ats = object()
+
 def test_main_py_functions():
     """Test main.py can be imported"""
     try:

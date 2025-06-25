@@ -8,16 +8,22 @@ from rich.console import Console
 
 # Import core scrapers from src/scrapers
 try:
-    from .working_eluta_scraper import WorkingElutaScraper, ElutaWorkingScraper
-    ELUTA_WORKING_AVAILABLE = True
-except ImportError:
-    ELUTA_WORKING_AVAILABLE = False
-
-try:
     from .comprehensive_eluta_scraper import ComprehensiveElutaScraper
     ELUTA_COMPREHENSIVE_AVAILABLE = True
 except ImportError:
     ELUTA_COMPREHENSIVE_AVAILABLE = False
+
+try:
+    from .eluta_optimized_parallel import ElutaOptimizedParallelScraper
+    ELUTA_OPTIMIZED_AVAILABLE = True
+except ImportError:
+    ELUTA_OPTIMIZED_AVAILABLE = False
+
+try:
+    from .eluta_multi_ip import ElutaMultiIPScraper
+    ELUTA_MULTI_IP_AVAILABLE = True
+except ImportError:
+    ELUTA_MULTI_IP_AVAILABLE = False
 
 try:
     from .parallel_job_scraper import ParallelJobScraper
@@ -31,10 +37,35 @@ try:
 except ImportError:
     PIPELINE_AVAILABLE = False
 
+try:
+    from .indeed_enhanced import IndeedEnhancedScraper
+    INDEED_AVAILABLE = True
+except ImportError:
+    INDEED_AVAILABLE = False
+
+try:
+    from .linkedin_enhanced import LinkedInEnhancedScraper
+    LINKEDIN_AVAILABLE = True
+except ImportError:
+    LINKEDIN_AVAILABLE = False
+
+try:
+    from .monster_enhanced import MonsterEnhancedScraper
+    MONSTER_AVAILABLE = True
+except ImportError:
+    MONSTER_AVAILABLE = False
+
+try:
+    from .jobbank_enhanced import JobBankEnhancedScraper
+    JOBANK_AVAILABLE = True
+except ImportError:
+    JOBANK_AVAILABLE = False
+
 # Import from root-level scrapers for compatibility
 try:
-    from src.scrapers.working_eluta_scraper import ElutaWorkingScraper, WorkingElutaScraper
     from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
+    from src.scrapers.eluta_optimized_parallel import ElutaOptimizedParallelScraper
+    from src.scrapers.eluta_multi_ip import ElutaMultiIPScraper
     from src.scrapers.parallel_job_scraper import ParallelJobScraper as RootParallelJobScraper
     from src.ats.fallback_submitters import GenericATSSubmitter, ManualApplicationSubmitter, EmergencyEmailSubmitter
     ROOT_SCRAPERS_AVAILABLE = True
@@ -45,11 +76,15 @@ except ImportError:
 SCRAPER_REGISTRY = {}
 
 # Add src/scrapers implementations if available
-if ELUTA_WORKING_AVAILABLE:
-    SCRAPER_REGISTRY["eluta_working"] = WorkingElutaScraper
-
 if ELUTA_COMPREHENSIVE_AVAILABLE:
+    SCRAPER_REGISTRY["eluta"] = ComprehensiveElutaScraper
     SCRAPER_REGISTRY["eluta_comprehensive"] = ComprehensiveElutaScraper
+
+if ELUTA_OPTIMIZED_AVAILABLE:
+    SCRAPER_REGISTRY["eluta_optimized"] = ElutaOptimizedParallelScraper
+
+if ELUTA_MULTI_IP_AVAILABLE:
+    SCRAPER_REGISTRY["eluta_multi_ip"] = ElutaMultiIPScraper
 
 if PARALLEL_AVAILABLE:
     SCRAPER_REGISTRY["parallel"] = ParallelJobScraper
@@ -57,10 +92,20 @@ if PARALLEL_AVAILABLE:
 if PIPELINE_AVAILABLE:
     SCRAPER_REGISTRY["pipeline"] = ModernJobPipeline
 
-# Only keep registry entries for classes that are actually imported and exist
+if INDEED_AVAILABLE:
+    SCRAPER_REGISTRY["indeed"] = IndeedEnhancedScraper
+
+if LINKEDIN_AVAILABLE:
+    SCRAPER_REGISTRY["linkedin"] = LinkedInEnhancedScraper
+
+if MONSTER_AVAILABLE:
+    SCRAPER_REGISTRY["monster"] = MonsterEnhancedScraper
+
+if JOBANK_AVAILABLE:
+    SCRAPER_REGISTRY["jobbank"] = JobBankEnhancedScraper
 
 # Default scraper for fallback
-DEFAULT_SCRAPER = ElutaWorkingScraper if ROOT_SCRAPERS_AVAILABLE else (WorkingElutaScraper if ELUTA_WORKING_AVAILABLE else None)
+DEFAULT_SCRAPER = ComprehensiveElutaScraper if ELUTA_COMPREHENSIVE_AVAILABLE else (ElutaOptimizedParallelScraper if ELUTA_OPTIMIZED_AVAILABLE else None)
 
 # Available scraper names
 AVAILABLE_SCRAPERS = list(SCRAPER_REGISTRY.keys())
@@ -110,7 +155,7 @@ def get_scraper_with_fallbacks(site_name: str, profile: dict, **kwargs):
         console.print(f"[yellow]❌ {site_name} scraper failed: {e}[/yellow]")
 
     # Method 2: Try enhanced scrapers in priority order
-    enhanced_priority = ["eluta", "eluta_working", "parallel"]
+    enhanced_priority = ["eluta", "eluta_optimized", "eluta_multi_ip", "parallel"]
     for enhanced_site in enhanced_priority:
         if enhanced_site != site_name and enhanced_site in SCRAPER_REGISTRY:
             try:

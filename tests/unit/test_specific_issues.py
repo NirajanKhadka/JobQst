@@ -10,7 +10,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from src.core.job_database import JobDatabase
+from src.core.job_database import ModernJobDatabase
 
 console = Console()
 

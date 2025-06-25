@@ -1,315 +1,320 @@
-# Enhanced Click-and-Popup Troubleshooting Guide
+# AutoJobAgent Troubleshooting Guide
 
-## Common Issues and Solutions
+## Overview
+This guide provides solutions to common issues encountered when using AutoJobAgent. If you encounter an issue not covered here, please check the logs or create an issue report.
 
-### 🖱️ Click-and-Popup Issues
+## 🚨 Common Issues and Solutions
 
-#### Issue: "Popup timeout" or "Could not get real URL" messages
-**Symptoms**: 
-- Jobs are found but URLs cannot be extracted
-- Timeout errors during popup handling
-- "No popup detected" messages
+### 1. **Import Errors**
 
-**Solutions**:
-1. **Check Internet Connection**
-   ```bash
-   # Test connectivity to job sites
-   ping eluta.ca
-   ping indeed.ca
-   ```
+#### Issue: `ImportError: cannot import name 'utils' from 'src.utils'`
+**Solution**: This has been fixed in v2.0. Update your imports to use specific functions:
+```python
+# ❌ Old way (no longer works)
+from src.utils import utils
 
-2. **Increase Popup Timeout**
-   ```python
-   # In scraper configuration
-   popup_timeout = 10000  # Increase to 10 seconds
-   ```
-
-3. **Use Single Browser Context**
-   ```bash
-   # Select option 4: Basic Click-and-Popup (single-threaded)
-   # This reduces load and improves reliability
-   ```
-
-4. **Verify Site Accessibility**
-   - Manually visit the job site in your browser
-   - Check if the site structure has changed
-   - Ensure no CAPTCHA or blocking is present
-
-#### Issue: 3-Second Wait Seems Too Long
-**Symptoms**:
-- Scraping feels slow
-- Impatience with popup wait times
-
-**Solutions**:
-1. **Understand the Purpose**
-   - 3-second waits ensure reliable job URL extraction
-   - Prevents missed jobs due to incomplete page loading
-   - Reduces bot detection risk
-
-2. **Use Multi-Browser Mode for Speed**
-   ```bash
-   # Select option 2: Multi-Browser Click-and-Popup
-   # This processes multiple keywords simultaneously
-   ```
-
-3. **Don't Reduce Wait Times**
-   - The 3-second wait is optimized based on testing
-   - Shorter waits lead to missed job URLs
-   - Longer waits don't improve reliability significantly
-
-### 🤖 Bot Detection Issues
-
-#### Issue: CAPTCHA pages or blocked requests
-**Symptoms**:
-- CAPTCHA challenges appear
-- Empty results despite jobs being visible
-- "Access denied" or similar messages
-
-**Solutions**:
-1. **Use Ultra-Conservative Settings**
-   ```python
-   # Maximum stealth configuration
-   scraper = ElutaWorkingScraper(
-       profile,
-       max_workers=1,  # Single browser context
-       human_delays={"between_jobs": (3.0, 5.0)}  # Longer delays
-   )
-   ```
-
-2. **Enable Cookie Persistence**
-   ```python
-   # Maintain session state
-   human_config = HumanBehaviorConfig(
-       save_cookies=True,
-       cookie_file="scrapers/cookies.json"
-   )
-   ```
-
-3. **Take Breaks Between Sessions**
-   - Wait 30-60 minutes between scraping sessions
-   - Don't run multiple scrapers simultaneously
-   - Use different keywords in different sessions
-
-4. **Manual Browser Test**
-   - Open the job site manually in your browser
-   - Complete any CAPTCHA challenges
-   - Save cookies for the scraper to use
-
-### 📅 Job Filtering Issues
-
-#### Issue: No jobs found despite visible listings
-**Symptoms**:
-- Scraper completes but finds 0 jobs
-- Dashboard shows 0 jobs after filtering
-
-**Solutions**:
-1. **Check Date Filter Settings**
-   ```python
-   # Verify date filter configuration
-   # Eluta: 14 days maximum
-   # Other sites: 124 days maximum
-   ```
-
-2. **Review Experience Level Filter**
-   ```python
-   # Check if jobs are being filtered out for experience level
-   # Target: 0-2 years experience only
-   ```
-
-3. **Use Verbose Logging**
-   ```bash
-   python main.py Nirajan --verbose
-   # This shows why jobs are being filtered out
-   ```
-
-4. **Check Keywords**
-   - Ensure keywords are not too specific
-   - Try broader terms like "developer" instead of "senior python developer"
-   - Use multiple related keywords
-
-#### Issue: Senior jobs marked as entry-level
-**Symptoms**:
-- Jobs requiring 5+ years experience appear in results
-- Experience level classification seems incorrect
-
-**Solutions**:
-1. **Check Confidence Score**
-   - Low confidence scores (< 0.6) need manual review
-   - Use dashboard to see confidence levels
-
-2. **Review Job Description**
-   - Some jobs have misleading titles
-   - Check full job description for actual requirements
-
-3. **Update Filter Keywords**
-   ```python
-   # Add site-specific senior keywords if needed
-   senior_keywords = ["5+ years", "senior", "lead", "manager"]
-   ```
-
-### 🌐 Multi-Browser Context Issues
-
-#### Issue: Browser contexts crash or hang
-**Symptoms**:
-- Scraper stops responding
-- Browser windows remain open after completion
-- Memory usage increases significantly
-
-**Solutions**:
-1. **Reduce Browser Contexts**
-   ```python
-   # Use fewer contexts
-   max_workers = 1  # Single context for stability
-   ```
-
-2. **Increase System Resources**
-   - Close other applications
-   - Ensure sufficient RAM (8GB+ recommended)
-   - Use SSD storage for better performance
-
-3. **Monitor Resource Usage**
-   ```bash
-   # Check system resources during scraping
-   htop  # Linux/Mac
-   taskmgr  # Windows
-   ```
-
-4. **Clean Browser Data**
-   ```python
-   # Clear browser cache and cookies periodically
-   scraper.cleanup_tabs()
-   ```
-
-### 📊 Dashboard Issues
-
-#### Issue: Dashboard not auto-launching
-**Symptoms**:
-- Dashboard doesn't open automatically
-- Cannot access dashboard at localhost:8002
-
-**Solutions**:
-1. **Check Port Availability**
-   ```bash
-   # Check if port 8002 is in use
-   netstat -an | grep 8002
-   ```
-
-2. **Manual Dashboard Launch**
-   ```bash
-   # Start dashboard manually
-   python dashboard/app.py
-   ```
-
-3. **Check Firewall Settings**
-   - Ensure localhost connections are allowed
-   - Check antivirus software blocking
-
-4. **Use Alternative Port**
-   ```python
-   # Change dashboard port if needed
-   app.run(host='127.0.0.1', port=8003)
-   ```
-
-### 🔧 Performance Issues
-
-#### Issue: Scraping is very slow
-**Symptoms**:
-- Takes hours to complete
-- Very few jobs processed per minute
-
-**Solutions**:
-1. **Use Multi-Browser Mode**
-   ```bash
-   # Select option 2: Multi-Browser Click-and-Popup
-   # Processes multiple keywords simultaneously
-   ```
-
-2. **Optimize Keywords**
-   - Use fewer, broader keywords
-   - Remove very specific or rare terms
-   - Focus on high-volume keywords
-
-3. **Adjust Page Limits**
-   ```python
-   # Reduce pages per keyword if needed
-   max_pages_per_keyword = 3  # Instead of 5
-   ```
-
-4. **Check System Performance**
-   - Ensure adequate RAM and CPU
-   - Close unnecessary applications
-   - Use wired internet connection
-
-#### Issue: High memory usage
-**Symptoms**:
-- System becomes slow during scraping
-- Out of memory errors
-
-**Solutions**:
-1. **Reduce Concurrent Operations**
-   ```python
-   max_workers = 1  # Single browser context
-   max_jobs_per_keyword = 20  # Lower limit
-   ```
-
-2. **Enable Garbage Collection**
-   ```python
-   import gc
-   gc.collect()  # Force garbage collection
-   ```
-
-3. **Process in Batches**
-   - Scrape fewer keywords at once
-   - Take breaks between scraping sessions
-
-## Debug Mode
-
-### Enable Verbose Logging
-```bash
-python main.py Nirajan --verbose
+# ✅ New way
+from src.utils.job_helpers import generate_job_hash
+from src.utils.profile_helpers import get_available_profiles
+from src.utils.file_operations import save_jobs_to_json
 ```
 
-### Check Log Files
-```bash
-# View recent logs
-tail -f logs/scraping.log
-tail -f logs/application.log
+#### Issue: `ModuleNotFoundError: No module named 'src.core.utils'`
+**Solution**: The `src.core.utils` module doesn't exist. Use the correct modules:
+```python
+# ❌ Wrong
+import src.core.utils
+
+# ✅ Correct
+import src.core.system_utils
+import src.core.file_utils
+import src.core.text_utils
 ```
 
-### Test Individual Components
-```bash
-# Test click-popup framework
-python -m pytest tests/test_click_popup_framework.py -v
+### 2. **Database Issues**
 
-# Test job filtering
-python -m pytest tests/test_job_filters.py -v
+#### Issue: `JobDatabase` class not found
+**Solution**: Use `ModernJobDatabase` instead:
+```python
+# ❌ Old way
+from src.core.job_database import JobDatabase
+db = JobDatabase()
 
-# Test complete integration
-python -m pytest tests/test_comprehensive_scraping.py -v
+# ✅ New way
+from src.core.job_database import ModernJobDatabase
+db = ModernJobDatabase()
 ```
 
-## Getting Help
+#### Issue: Database connection errors
+**Solution**: 
+1. Check if the database file exists
+2. Ensure write permissions to the data directory
+3. Create the data directory if it doesn't exist:
+```bash
+mkdir -p data
+mkdir -p profiles/default
+```
 
-### Before Reporting Issues
-1. ✅ Check this troubleshooting guide
-2. ✅ Enable verbose logging
-3. ✅ Test with single browser context
-4. ✅ Verify internet connectivity
-5. ✅ Check dashboard for error messages
+### 3. **Dashboard Issues**
 
-### Information to Include
-- Operating system and version
-- Python version
-- Error messages (full text)
-- Steps to reproduce the issue
-- Screenshots of dashboard (if applicable)
-- Log file excerpts
+#### Issue: Dashboard fails to start
+**Solution**: 
+1. Check if port 8002 is already in use:
+```bash
+# Windows
+netstat -ano | findstr :8002
 
-### Performance Expectations
-- **Speed**: 20-30 jobs per minute (with human delays)
-- **Success Rate**: 95%+ job extraction success
-- **Filtering Accuracy**: 80%+ relevant jobs after filtering
-- **Memory Usage**: 500MB-1GB typical
-- **CPU Usage**: 20-40% during active scraping
+# Linux/Mac
+lsof -i :8002
+```
 
-Remember: The enhanced click-and-popup system prioritizes reliability and human-like behavior over raw speed. The 3-second popup waits and human delays are essential for consistent results and avoiding bot detection.
+2. Kill the existing process or use a different port:
+```bash
+# Kill process on Windows
+taskkill /PID <process_id> /F
+
+# Kill process on Linux/Mac
+kill -9 <process_id>
+```
+
+3. Start dashboard manually:
+```bash
+python -m uvicorn src.dashboard.api:app --port 8002 --host 0.0.0.0
+```
+
+#### Issue: Dashboard shows "Cannot connect" error
+**Solution**:
+1. Check if the dashboard is running: `http://localhost:8002/api/health`
+2. Verify firewall settings
+3. Check if antivirus is blocking the connection
+
+### 4. **Scraper Issues**
+
+#### Issue: No scrapers available
+**Solution**: The scraper registry has been updated. Available scrapers:
+- `eluta` - Comprehensive Eluta scraper
+- `eluta_optimized` - Optimized parallel scraper
+- `eluta_multi_ip` - Multi-IP scraper
+- `indeed` - Indeed enhanced scraper
+- `linkedin` - LinkedIn enhanced scraper
+- `monster` - Monster enhanced scraper
+- `jobbank` - JobBank enhanced scraper
+
+#### Issue: Scraper fails with "No module named" error
+**Solution**: Install missing dependencies:
+```bash
+pip install beautifulsoup4 python-docx pandas
+```
+
+### 5. **Test Issues**
+
+#### Issue: Tests fail to collect
+**Solution**: 
+1. Ensure all dependencies are installed
+2. Check Python version (3.8+ required)
+3. Run tests with verbose output:
+```bash
+pytest --collect-only -v
+```
+
+#### Issue: Specific test failures
+**Solution**: 
+1. Check test logs for specific error messages
+2. Ensure test data files exist
+3. Verify database is properly initialized
+
+### 6. **Profile Issues**
+
+#### Issue: Profile not found
+**Solution**: 
+1. Create a default profile:
+```python
+from src.core.user_profile_manager import UserProfileManager
+pm = UserProfileManager()
+pm.create_profile('default', {
+    'email': 'your@email.com',
+    'location': 'Your City, State',
+    'skills': ['Python', 'JavaScript', 'SQL']
+})
+```
+
+2. Check available profiles:
+```python
+from src.utils import get_available_profiles
+profiles = get_available_profiles()
+print(profiles)
+```
+
+### 7. **Email Integration Issues**
+
+#### Issue: Gmail verification fails
+**Solution**:
+1. Enable 2-factor authentication on your Gmail account
+2. Generate an App Password (not your regular password)
+3. Use the App Password in your profile configuration
+
+#### Issue: Email sending fails
+**Solution**:
+1. Check Gmail settings for "Less secure app access"
+2. Verify SMTP settings
+3. Check if Gmail is blocking the connection
+
+### 8. **Browser Automation Issues**
+
+#### Issue: Browser fails to start
+**Solution**:
+1. Install Playwright browsers:
+```bash
+playwright install
+```
+
+2. Check if Chrome/Chromium is installed
+3. Verify browser permissions
+
+#### Issue: CAPTCHA detection
+**Solution**:
+1. The system will automatically detect CAPTCHAs
+2. Manual intervention may be required
+3. Consider using different IP addresses or proxies
+
+### 9. **Performance Issues**
+
+#### Issue: Slow job processing
+**Solution**:
+1. Check system resources (CPU, memory)
+2. Reduce batch sizes
+3. Use parallel processing where available
+4. Optimize database queries
+
+#### Issue: Memory usage high
+**Solution**:
+1. Process jobs in smaller batches
+2. Clear job cache periodically
+3. Monitor memory usage with system tools
+
+### 10. **Configuration Issues**
+
+#### Issue: Configuration file not found
+**Solution**:
+1. Create a default configuration:
+```python
+config = {
+    'database_path': 'data/jobs.db',
+    'dashboard_port': 8002,
+    'max_concurrent_jobs': 5,
+    'retry_attempts': 3
+}
+```
+
+2. Save configuration to file:
+```python
+import json
+with open('config.json', 'w') as f:
+    json.dump(config, f, indent=2)
+```
+
+## 🔧 Debugging Tools
+
+### 1. **Logging**
+Enable verbose logging:
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+```
+
+### 2. **Health Checks**
+Run system health checks:
+```python
+from src.agents.system_health_monitor import SystemHealthMonitor
+monitor = SystemHealthMonitor()
+status = monitor.run_health_checks()
+print(status)
+```
+
+### 3. **Database Diagnostics**
+Check database status:
+```python
+from src.core.job_database import ModernJobDatabase
+db = ModernJobDatabase()
+stats = db.get_job_stats()
+print(stats)
+```
+
+## 📋 System Requirements
+
+### Minimum Requirements:
+- **Python**: 3.8+
+- **RAM**: 4GB
+- **Storage**: 1GB free space
+- **OS**: Windows 10+, macOS 10.14+, Ubuntu 18.04+
+
+### Recommended Requirements:
+- **Python**: 3.11+
+- **RAM**: 8GB+
+- **Storage**: 5GB free space
+- **CPU**: 4+ cores
+
+## 🆘 Getting Help
+
+### 1. **Check Logs**
+Look for error messages in:
+- Console output
+- Log files in `logs/` directory
+- System logs
+
+### 2. **Common Commands**
+```bash
+# Check system status
+python -c "from src.agents.system_health_monitor import SystemHealthMonitor; SystemHealthMonitor().run_health_checks()"
+
+# Test dashboard
+curl http://localhost:8002/api/health
+
+# Check available profiles
+python -c "from src.utils import get_available_profiles; print(get_available_profiles())"
+
+# Run tests
+pytest tests/ -v
+```
+
+### 3. **Create Issue Report**
+When creating an issue report, include:
+- Error message
+- Steps to reproduce
+- System information
+- Log files
+- Configuration files (without sensitive data)
+
+## 🎯 Prevention Tips
+
+### 1. **Regular Maintenance**
+- Update dependencies regularly
+- Clear old log files
+- Backup important data
+- Monitor system resources
+
+### 2. **Best Practices**
+- Use virtual environments
+- Keep Python and packages updated
+- Test changes in development environment
+- Document custom configurations
+
+### 3. **Monitoring**
+- Set up system monitoring
+- Check logs regularly
+- Monitor database size
+- Track performance metrics
+
+## 📞 Support
+
+For additional support:
+1. Check the documentation
+2. Search existing issues
+3. Create a new issue with detailed information
+4. Contact the development team
+
+---
+
+**Last Updated**: June 2025  
+**Version**: 2.0  
+**Maintainer**: Development Team

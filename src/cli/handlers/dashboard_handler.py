@@ -25,7 +25,7 @@ from rich.table import Table
 from rich.prompt import Prompt
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from src.utils import utils
+from src.utils.job_helpers import generate_job_hash
 import psutil
 
 logger = logging.getLogger(__name__)

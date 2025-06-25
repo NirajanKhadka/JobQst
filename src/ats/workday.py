@@ -16,6 +16,9 @@ class WorkdaySubmitter(BaseSubmitter):
     Handles automation of job applications on Workday-based portals.
     """
     
+    def __init__(self, browser_context=None):
+        self.browser_context = browser_context
+
     def submit(self, job: Dict, profile: Dict, resume_path: str, cover_letter_path: str) -> str:
         page = self.ctx.new_page()
         try:

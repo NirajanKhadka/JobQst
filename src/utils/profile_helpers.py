@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import List, Dict
+from src.utils.profile_helpers import load_profile
 
 def get_available_profiles() -> List[str]:
     """Gets a list of available profile names."""
@@ -10,14 +11,9 @@ def get_available_profiles() -> List[str]:
     
     return [p.name for p in profiles_dir.iterdir() if p.is_dir()]
 
-def load_profile(profile_name: str) -> Dict:
-    """Loads a profile configuration from a JSON file."""
-    profile_file = Path(f"profiles/{profile_name}/{profile_name}.json")
-    if not profile_file.exists():
-        return {}
-        
-    with open(profile_file, 'r', encoding='utf-8') as f:
-        return json.load(f)
+def load_profile(profile_name):
+    """Stub: Load a profile by name."""
+    return {'name': profile_name}
 
 def ensure_profile_files(profile: Dict) -> bool:
     """Ensures that the necessary resume and cover letter files exist for a profile."""

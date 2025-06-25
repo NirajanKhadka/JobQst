@@ -95,7 +95,8 @@ class ProcessManager:
         from src.agents.system_health_monitor import SystemHealthMonitor
 
         # Load profile context once
-        UserProfileManager.get_profile(self.profile["profile_name"])
+        profile_manager = UserProfileManager()
+        profile_manager.get_profile(self.profile["profile_name"])
         console.print("[green]✅ Default profile context set.[/green]")
 
         # Register health checks once

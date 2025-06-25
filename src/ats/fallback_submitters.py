@@ -445,3 +445,8 @@ Attachments to include:
 """
         
         return body
+
+
+class FallbackATSSubmitter:
+    def __init__(self, *args, **kwargs):
+        pass

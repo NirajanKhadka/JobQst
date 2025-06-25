@@ -26,3 +26,7 @@ def check_file_permissions(config: Dict) -> Dict:
             
     except Exception as e:
         return {"status": "error", "message": f"Permission check failed: {str(e)}"}
+
+def check_permissions(config: Dict) -> Dict:
+    """Alias for check_file_permissions to match system health monitor expectations."""
+    return check_file_permissions(config)

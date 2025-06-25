@@ -139,8 +139,8 @@ class SystemIntegrationTest:
                 "scraped_at": time.time()
             }
             
-            result = db.add_jobs_batch([test_job])
-            console.print(f"  ✅ Database test: {result} jobs added")
+            result = db.add_job(test_job)
+            console.print(f"  \u2705 Database test: {result} job added")
             
             return True
             
@@ -153,10 +153,6 @@ class SystemIntegrationTest:
         try:
             from src.scrapers import get_scraper, get_available_sites
             import traceback
-from src.utils.profile_helpers import load_profile, get_available_profiles
-from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
-from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
-from src.utils.document_generator import customize, DocumentGenerator
             
             # Test getting available sites
             sites = get_available_sites()
@@ -166,7 +162,7 @@ from src.utils.document_generator import customize, DocumentGenerator
             if sites:
                 first_site = sites[0]
                 try:
-                    scraper = get_scraper(first_site, self.profile.get('profile_name') if self.profile else "default")
+                    scraper = get_scraper(first_site, self.profile if self.profile else {'profile_name': 'default'})
                     console.print(f"  ✅ Scraper creation successful for {first_site}")
                 except Exception as e:
                     console.print(f"  ❌ Exception during scraper creation for {first_site}: {e}")

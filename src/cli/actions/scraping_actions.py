@@ -72,21 +72,18 @@ class ScrapingActions:
         
         console.print(f"\n[bold]Selected Site:[/bold] {selected_site.upper()}")
         
-        # Show bot detection methods
-        console.print(f"\n[bold]Bot Detection Methods:[/bold]")
+        # Show simplified scraping methods
+        console.print(f"\n[bold]Scraping Methods:[/bold]")
         bot_methods = {
-            "1": "🛡️ Enhanced Anti-Bot (Recommended)",
-            "2": "⚡ Fast Parallel (High Speed)",
-            "3": "🔍 Detailed Scraping (Thorough)",
-            "4": "🖱️ Click-Popup Method (Interactive)",
-            "5": "🔄 Basic Method (Simple)"
+            "1": "🔄 Simple Sequential (Reliable, one-at-a-time)",
+            "2": "⚡ Multi-Worker (High-performance, parallel)"
         }
         
         for key, value in bot_methods.items():
             console.print(f"  [bold cyan]{key}[/bold cyan]: {value}")
         
         console.print()
-        bot_choice = Prompt.ask("Select bot detection method", choices=list(bot_methods.keys()), default="1")
+        bot_choice = Prompt.ask("Select scraping method", choices=list(bot_methods.keys()), default="1")
         
         # Execute scraping based on site and method
         if selected_site == "eluta":
@@ -97,98 +94,41 @@ class ScrapingActions:
             self._execute_eluta_scraping(bot_choice)
     
     def multi_site_scrape_action(self, args, bot_method: str = "2") -> None:
-        """Handle multi-site parallel scraping action."""
-        console.print(Panel("⚡ Multi-Site Parallel Scraping", style="bold blue"))
-        console.print("[cyan]🚀 Running parallel scraping across all sites...[/cyan]")
+        """Handle multi-site parallel scraping action using simplified architecture."""
+        console.print(Panel("⚡ Multi-Site Scraping (Simplified Architecture)", style="bold blue"))
+        console.print("[cyan]🚀 Running multi-site scraping with simplified architecture...[/cyan]")
         
-        # Execute parallel scraping
-        jobs = self.scraping_handler.eluta_parallel_scrape()
-        
-        if jobs:
-            self.scraping_handler.display_job_summary(jobs, "Multi-Site Parallel Scraping")
-        else:
-            console.print("[yellow]⚠️ No jobs found in multi-site scraping[/yellow]")
-    
-    def _execute_eluta_scraping(self, bot_method: str) -> None:
-        """Execute Eluta scraping with specified method."""
-        method_map = {
-            "1": self._eluta_enhanced_anti_bot,
-            "2": self._eluta_fast_parallel,
-            "3": self._eluta_detailed_scraping,
-            "4": self._eluta_click_popup,
-            "5": self._eluta_basic
-        }
-        
-        method = method_map.get(bot_method, self._eluta_enhanced_anti_bot)
-        method()
-    
-    def _eluta_enhanced_anti_bot(self) -> None:
-        """Execute Eluta enhanced anti-bot scraping."""
-        console.print(Panel("🛡️ Eluta Enhanced Anti-Bot Scraping", style="bold blue"))
-        console.print("[cyan]🛡️ Using advanced anti-bot detection methods...[/cyan]")
-        
-        jobs = self.scraping_handler.eluta_enhanced_click_popup_scrape()
-        
-        if jobs:
-            self.scraping_handler.display_job_summary(jobs, "Enhanced Anti-Bot Scraping")
-        else:
-            console.print("[yellow]⚠️ No jobs found with enhanced anti-bot method[/yellow]")
-    
-    def _eluta_fast_parallel(self) -> None:
-        """Execute Eluta fast parallel scraping."""
-        console.print(Panel("⚡ Eluta Fast Parallel Scraping", style="bold blue"))
-        console.print("[cyan]⚡ Using high-speed parallel processing...[/cyan]")
-        
-        jobs = self.scraping_handler.eluta_parallel_scrape()
-        
-        if jobs:
-            self.scraping_handler.display_job_summary(jobs, "Fast Parallel Scraping")
-        else:
-            console.print("[yellow]⚠️ No jobs found with fast parallel method[/yellow]")
-    
-    def _eluta_detailed_scraping(self) -> None:
-        """Execute Eluta detailed scraping."""
-        console.print(Panel("🔍 Eluta Detailed Scraping", style="bold blue"))
-        console.print("[cyan]🔍 Using thorough detailed scraping...[/cyan]")
-        
-        # Use automated scraping with detailed mode
-        success = self.scraping_handler.run_scraping(mode="automated")
+        # Use the simplified multi-worker method
+        success = self.scraping_handler.run_scraping(mode="multi_worker")
         
         if success:
-            console.print("[green]✅ Detailed scraping completed successfully![/green]")
+            console.print("[green]✅ Multi-site scraping completed successfully![/green]")
         else:
-            console.print("[yellow]⚠️ Detailed scraping completed with limited results[/yellow]")
+            console.print("[yellow]⚠️ Multi-site scraping completed with limited results[/yellow]")
     
-    def _eluta_click_popup(self) -> None:
-        """Execute Eluta click-popup scraping."""
-        console.print(Panel("🖱️ Eluta Click-Popup Scraping", style="bold blue"))
-        console.print("[cyan]🖱️ Using interactive click-popup method...[/cyan]")
-        
-        jobs = self.scraping_handler.eluta_enhanced_click_popup_scrape()
-        
-        if jobs:
-            self.scraping_handler.display_job_summary(jobs, "Click-Popup Scraping")
+    def _execute_eluta_scraping(self, method_choice: str) -> None:
+        """Execute Eluta scraping with the selected method."""
+        if method_choice == "1":
+            # Simple sequential method
+            console.print("[cyan]🔄 Using simple sequential scraping...[/cyan]")
+            success = self.scraping_handler.run_scraping(mode="simple")
         else:
-            console.print("[yellow]⚠️ No jobs found with click-popup method[/yellow]")
-    
-    def _eluta_basic(self) -> None:
-        """Execute Eluta basic scraping."""
-        console.print(Panel("🔄 Eluta Basic Scraping", style="bold blue"))
-        console.print("[cyan]🔄 Using simple basic scraping...[/cyan]")
-        
-        success = self.scraping_handler.run_scraping(mode="basic")
+            # Multi-worker method
+            console.print("[cyan]⚡ Using multi-worker scraping...[/cyan]")
+            success = self.scraping_handler.run_scraping(mode="multi_worker")
         
         if success:
-            console.print("[green]✅ Basic scraping completed successfully![/green]")
+            console.print("[green]✅ Scraping completed successfully![/green]")
         else:
-            console.print("[yellow]⚠️ Basic scraping completed with limited results[/yellow]")
+            console.print("[yellow]⚠️ Scraping completed with limited results[/yellow]")
     
     def automated_scrape_action(self, args=None) -> None:
-        """Execute automated scraping action."""
-        console.print(Panel("🤖 Automated Scraping", style="bold blue"))
-        console.print("[cyan]🤖 Using AI-powered intelligent scraping...[/cyan]")
+        """Execute automated scraping action using simplified architecture."""
+        console.print(Panel("🧠 Automated Scraping (Simplified)", style="bold blue"))
+        console.print("[cyan]🧠 Using simplified automated scraping...[/cyan]")
         
-        success = self.scraping_handler.run_scraping(mode="automated")
+        # Use simple sequential method for automated scraping
+        success = self.scraping_handler.run_scraping(mode="simple")
         
         if success:
             console.print("[green]✅ Automated scraping completed successfully![/green]")
@@ -196,11 +136,12 @@ class ScrapingActions:
             console.print("[yellow]⚠️ Automated scraping completed with limited results[/yellow]")
     
     def parallel_scrape_action(self, args=None) -> None:
-        """Execute parallel scraping action."""
-        console.print(Panel("⚡ Parallel Scraping", style="bold blue"))
-        console.print("[cyan]⚡ Using high-speed parallel processing...[/cyan]")
+        """Execute parallel scraping action using simplified architecture."""
+        console.print(Panel("⚡ Parallel Scraping (Simplified)", style="bold blue"))
+        console.print("[cyan]⚡ Using simplified parallel processing...[/cyan]")
         
-        success = self.scraping_handler.run_scraping(mode="parallel")
+        # Use multi-worker method for parallel scraping
+        success = self.scraping_handler.run_scraping(mode="multi_worker")
         
         if success:
             console.print("[green]✅ Parallel scraping completed successfully![/green]")
@@ -208,11 +149,12 @@ class ScrapingActions:
             console.print("[yellow]⚠️ Parallel scraping completed with limited results[/yellow]")
     
     def detailed_scrape_action(self, args=None) -> None:
-        """Execute detailed scraping action."""
-        console.print(Panel("🔍 Detailed Scraping", style="bold blue"))
-        console.print("[cyan]🔍 Using thorough detailed analysis...[/cyan]")
+        """Execute detailed scraping action using simplified architecture."""
+        console.print(Panel("🔍 Detailed Scraping (Simplified)", style="bold blue"))
+        console.print("[cyan]🔍 Using simplified detailed analysis...[/cyan]")
         
-        success = self.scraping_handler.run_scraping(mode="basic")
+        # Use multi-worker method for detailed scraping
+        success = self.scraping_handler.run_scraping(mode="multi_worker")
         
         if success:
             console.print("[green]✅ Detailed scraping completed successfully![/green]")
@@ -220,16 +162,17 @@ class ScrapingActions:
             console.print("[yellow]⚠️ Detailed scraping completed with limited results[/yellow]")
     
     def anti_bot_scrape_action(self, args) -> None:
-        """Execute anti-bot scraping action."""
-        console.print(Panel("🛡️ Anti-Bot Scraping", style="bold blue"))
-        console.print("[cyan]🛡️ Using advanced anti-bot detection...[/cyan]")
+        """Execute anti-bot scraping action using simplified architecture."""
+        console.print(Panel("🛡️ Anti-Bot Scraping (Simplified)", style="bold blue"))
+        console.print("[cyan]🛡️ Using simplified anti-bot detection...[/cyan]")
         
-        jobs = self.scraping_handler.eluta_enhanced_click_popup_scrape()
+        # Use simple sequential method for anti-bot scraping
+        success = self.scraping_handler.run_scraping(mode="simple")
         
-        if jobs:
-            self.scraping_handler.display_job_summary(jobs, "Anti-Bot Scraping")
+        if success:
+            console.print("[green]✅ Anti-bot scraping completed successfully![/green]")
         else:
-            console.print("[yellow]⚠️ No jobs found with anti-bot method[/yellow]")
+            console.print("[yellow]⚠️ Anti-bot scraping completed with limited results[/yellow]")
     
     def process_queue_action(self, args=None) -> None:
         """Process jobs from queue - scrape from links in the queue."""

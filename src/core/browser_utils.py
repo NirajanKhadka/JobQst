@@ -217,16 +217,15 @@ class NavigationUtils:
 
 
 class FormUtils:
-    """Utilities for form handling."""
+    """Utilities for form handling and file uploads."""
     
     @staticmethod
     def fill_form(page: Page, form_data: Dict[str, str]) -> bool:
-        """Fill a form with provided data."""
+        """Fill a form with data."""
         try:
-            for field_name, value in form_data.items():
-                selector = f'[name="{field_name}"], [id="{field_name}"], [data-field="{field_name}"]'
-                if not BrowserUtils.fill_input_safely(page, selector, value):
-                    return False
+            for selector, value in form_data.items():
+                if page.is_visible(selector):
+                    page.fill(selector, value)
             return True
         except Exception:
             return False
@@ -234,17 +233,45 @@ class FormUtils:
     @staticmethod
     def submit_form(page: Page, submit_selector: str = 'input[type="submit"], button[type="submit"]') -> bool:
         """Submit a form."""
-        return BrowserUtils.click_element_safely(page, submit_selector)
+        try:
+            page.click(submit_selector)
+            return True
+        except Exception:
+            return False
     
     @staticmethod
     def clear_form(page: Page, form_selector: str = 'form'):
         """Clear all form fields."""
         try:
-            page.evaluate(f"""
-                document.querySelector('{form_selector}').reset();
-            """)
+            page.evaluate(f"document.querySelector('{form_selector}').reset()")
         except Exception:
             pass
+    
+    @staticmethod
+    def fill_if_empty(page: Page, selector: str, value: str) -> bool:
+        """Fill a field only if it's empty."""
+        try:
+            element = page.query_selector(selector)
+            if element:
+                current_value = element.input_value() or ""
+                if not current_value.strip():
+                    page.fill(selector, value)
+                    return True
+        except Exception:
+            pass
+        return False
+    
+    @staticmethod
+    def smart_attach(page: Page, selectors: List[str], file_path: str) -> bool:
+        """Smart file attachment that tries multiple selectors."""
+        for selector in selectors:
+            try:
+                if page.is_visible(selector):
+                    page.set_input_files(selector, file_path)
+                    return True
+            except Exception:
+                continue
+        return False
 
 
 def create_browser_utils() -> BrowserUtils:

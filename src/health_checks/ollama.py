@@ -17,3 +17,7 @@ def check_ollama_service(config: Dict) -> Dict:
             
     except Exception as e:
         return {"status": "warning", "message": f"Ollama service check failed: {str(e)}"}
+
+def check_ollama(config: Dict) -> Dict:
+    """Alias for check_ollama_service to match system health monitor expectations."""
+    return check_ollama_service(config)

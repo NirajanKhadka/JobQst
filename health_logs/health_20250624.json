@@ -1,0 +1,113 @@
+[
+  {
+    "timestamp": "2025-06-24T21:39:57.571036",
+    "results": {
+      "database": {
+        "status": "warning",
+        "message": "Database file not found"
+      },
+      "disk": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.disk' has no attribute 'check_disk'"
+      },
+      "memory": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.memory' has no attribute 'check_memory'"
+      },
+      "browser": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.browser' has no attribute 'check_browser'"
+      },
+      "network": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.network' has no attribute 'check_network'"
+      },
+      "ollama": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.ollama' has no attribute 'check_ollama'"
+      },
+      "permissions": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.permissions' has no attribute 'check_permissions'"
+      },
+      "dependencies": {
+        "status": "critical",
+        "message": "Missing dependencies: beautifulsoup4, python-docx, pandas"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-06-24T21:40:34.959698",
+    "results": {
+      "database": {
+        "status": "warning",
+        "message": "Database file not found"
+      },
+      "disk": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.disk' has no attribute 'check_disk'"
+      },
+      "memory": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.memory' has no attribute 'check_memory'"
+      },
+      "browser": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.browser' has no attribute 'check_browser'"
+      },
+      "network": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.network' has no attribute 'check_network'"
+      },
+      "ollama": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.ollama' has no attribute 'check_ollama'"
+      },
+      "permissions": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.permissions' has no attribute 'check_permissions'"
+      },
+      "dependencies": {
+        "status": "critical",
+        "message": "Missing dependencies: beautifulsoup4, python-docx, pandas"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-06-24T21:44:22.132556",
+    "results": {
+      "database": {
+        "status": "warning",
+        "message": "Database file not found"
+      },
+      "disk": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.disk' has no attribute 'check_disk'"
+      },
+      "memory": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.memory' has no attribute 'check_memory'"
+      },
+      "browser": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.browser' has no attribute 'check_browser'"
+      },
+      "network": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.network' has no attribute 'check_network'"
+      },
+      "ollama": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.ollama' has no attribute 'check_ollama'"
+      },
+      "permissions": {
+        "status": "error",
+        "message": "Health check failed: module 'src.health_checks.permissions' has no attribute 'check_permissions'"
+      },
+      "dependencies": {
+        "status": "critical",
+        "message": "Missing dependencies: beautifulsoup4, python-docx, pandas"
+      }
+    }
+  }
+]

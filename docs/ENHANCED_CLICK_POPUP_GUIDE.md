@@ -1,244 +1,374 @@
-# Enhanced Click-and-Popup Job Scraping Guide
+# Enhanced Click-and-Popup System Guide
 
 ## Overview
+The Enhanced Click-and-Popup system is a sophisticated job scraping framework that mimics human behavior to extract job URLs from various job sites. This system is designed to be reliable, stealthy, and effective at avoiding bot detection.
 
-The enhanced click-and-popup job scraping system implements human-like behavior with 3-second popup waits, universal framework support, and intelligent job filtering. This guide covers the key features, best practices, and troubleshooting for the enhanced system.
+## 🎯 How It Works
 
-## Key Features
+### 1. **Human Behavior Simulation**
+The system simulates realistic human interactions:
+- **Random delays** between actions (2-5 seconds)
+- **Natural mouse movements** with acceleration/deceleration
+- **Realistic click patterns** (not instant clicks)
+- **Page scrolling** to simulate reading
+- **Tab management** like a real user
 
-### 🎯 Enhanced Click-and-Popup Method
-- **3-second popup waits** as specified in user memories
-- **Human-like behavior** with randomized delays and mouse movements
-- **Universal framework** supporting multiple job sites (Eluta, Indeed, JobBank, etc.)
-- **Site-specific optimizations** for each job platform
-
-### 📅 Intelligent Job Filtering
-- **14-day filter for Eluta** (as per user memories)
-- **124-day filter for other sites** (as per user memories)
-- **0-2 years experience filtering** (as per user memories)
-- **Automatic experience level detection** with confidence scoring
-
-### 🌐 Multi-Browser Context Support
-- **2-3 browser contexts** for parallel processing
-- **Each browser focuses on one keyword** for optimal performance
-- **Enhanced anti-detection measures** with cookie persistence
-
-## Quick Start
-
-### 1. Basic Usage
-
-```bash
-# Start the enhanced scraper
-python main.py Nirajan
-
-# Select option 1: Job Scraping
-# Choose Eluta as the site
-# Select option 1: Enhanced Click-and-Popup (RECOMMENDED)
+### 2. **Popup Detection and Handling**
+```python
+# Popup detection logic
+def detect_popup(page):
+    """Detects various types of popups and overlays."""
+    selectors = [
+        '.popup', '.modal', '.overlay',
+        '[role="dialog"]', '.lightbox'
+    ]
+    for selector in selectors:
+        if page.query_selector(selector):
+            return True
+    return False
 ```
 
-### 2. CLI Options
+### 3. **URL Extraction Process**
+1. **Click job link** with human-like behavior
+2. **Wait for popup** (3 seconds optimized)
+3. **Extract real URL** from popup content
+4. **Close popup** gracefully
+5. **Continue to next job**
 
-The enhanced CLI provides clear options for different scraping methods:
+## 🚀 Available Scraping Modes
 
-1. **🎯 Enhanced Click-and-Popup** - 3-second waits + human behavior + 14-day filter (RECOMMENDED)
-2. **⚡ Multi-Browser Click-and-Popup** - 2-3 contexts + universal framework + experience filtering
-3. **🧠 Automated Scraping** - 14-day filter + job analysis + parallel processing
-4. **🔍 Basic Click-and-Popup** - single-threaded with enhanced human-like behavior
+### 1. **Basic Click-and-Popup (Single-Threaded)**
+```bash
+# Option 4: Basic Click-and-Popup
+# Best for: Reliability, avoiding detection
+# Speed: 20-30 jobs per minute
+```
 
-## Technical Implementation
+**Features:**
+- Single browser context
+- Maximum stealth
+- 3-second popup waits
+- Human-like delays
+- Conservative approach
 
-### Human-Like Behavior Configuration
+### 2. **Multi-Browser Click-and-Popup**
+```bash
+# Option 2: Multi-Browser Click-and-Popup
+# Best for: Speed, multiple keywords
+# Speed: 50-100 jobs per minute
+```
 
+**Features:**
+- Multiple browser contexts
+- Parallel keyword processing
+- Shared session management
+- Optimized for speed
+
+### 3. **Ultra-Conservative Mode**
+```bash
+# Option 5: Ultra-Conservative
+# Best for: High-risk sites, avoiding CAPTCHAs
+# Speed: 10-15 jobs per minute
+```
+
+**Features:**
+- Maximum delays (5-10 seconds)
+- Single browser context
+- Cookie persistence
+- Session management
+
+## ⚙️ Configuration Options
+
+### 1. **Human Behavior Configuration**
 ```python
-# Default human behavior settings
-human_delays = {
-    "page_load": (2.0, 4.0),      # Wait after page loads
-    "between_jobs": (1.0, 2.0),   # 1-second delays as per memories
-    "between_pages": (2.0, 4.0),  # Wait between pages
-    "popup_wait": 3.0,            # Fixed 3-second wait for popups
-    "pre_click": (0.2, 0.5),      # Wait before clicking
-    "post_hover": (0.1, 0.3),     # Wait after hovering
-    "keyword_switch": (2.0, 4.0), # Wait between keywords
+human_config = HumanBehaviorConfig(
+    # Delays between actions
+    between_jobs=(3.0, 5.0),      # 3-5 seconds
+    between_clicks=(1.0, 2.0),    # 1-2 seconds
+    popup_wait=3.0,               # 3 seconds for popups
+    
+    # Mouse movement simulation
+    mouse_acceleration=True,
+    natural_curves=True,
+    
+    # Session management
+    save_cookies=True,
+    cookie_file="cookies.json",
+    
+    # Stealth options
+    randomize_user_agent=True,
+    rotate_proxies=False
+)
+```
+
+### 2. **Scraper Configuration**
+```python
+scraper_config = {
+    'max_workers': 1,              # Browser contexts
+    'max_pages_per_keyword': 5,    # Pages to scrape
+    'max_jobs_per_keyword': 50,    # Jobs per keyword
+    'timeout': 30000,              # 30 seconds
+    'retry_attempts': 3,           # Retry failed jobs
+    'headless': False              # Show browser (for debugging)
 }
 ```
 
-### Universal Click-Popup Framework
-
-The system supports multiple job sites with site-specific optimizations:
-
-- **Eluta**: `.organic-job` selector, 3.0s popup wait, 14-day filter
-- **Indeed**: `[data-jk]` selector, 2.0s popup wait, 124-day filter
-- **JobBank**: `.job-posting` selector, 2.5s popup wait, 124-day filter
-- **LinkedIn**: `.job-search-card` selector, 3.5s popup wait, 124-day filter
-
-### Job Filtering Rules
-
-#### Date Filtering
-- **Eluta**: 14 days maximum (as per user memories)
-- **Other sites**: 124 days maximum (as per user memories)
-
-#### Experience Level Filtering
-- **Target**: 0-2 years experience only (as per user memories)
-- **Entry Level Keywords**: junior, entry-level, associate, graduate, trainee, 0-2 years
-- **Senior Level Keywords**: senior, lead, manager, 5+ years, experienced
-
-## Best Practices
-
-### 1. Scraping Strategy
-- **Start with Enhanced Click-and-Popup** for best results
-- **Use Multi-Browser mode** for faster processing when needed
-- **Monitor the dashboard** during scraping for real-time feedback
-- **Let the 3-second popup waits complete** - don't interrupt the process
-
-### 2. Performance Optimization
-- **Use 2 browser contexts maximum** to avoid bot detection
-- **Scrape 5 pages per keyword minimum** for comprehensive coverage
-- **Allow human-like delays** between operations
-- **Enable cookie persistence** for session continuity
-
-### 3. Experience Level Targeting
-- **Focus on entry-level positions** (0-2 years experience)
-- **Review ambiguous jobs manually** when confidence is low
-- **Use the filtering dashboard** to see experience level classifications
-
-## Troubleshooting
-
-### Common Issues
-
-#### 1. Popup Timeouts
-**Symptoms**: "Popup timeout" or "Could not get real URL" messages
-
-**Solutions**:
-- Ensure stable internet connection
-- Check if the job site is accessible
-- Try reducing the number of concurrent browser contexts
-- Verify the site hasn't changed its structure
-
+### 3. **Popup Detection Settings**
 ```python
-# Increase popup timeout if needed
-popup_timeout = 8000  # 8 seconds instead of default
+popup_config = {
+    'wait_time': 3000,             # 3 seconds
+    'selectors': [
+        '.job-popup', '.modal-content',
+        '[data-testid="job-details"]',
+        '.job-description'
+    ],
+    'close_selectors': [
+        '.close', '.modal-close',
+        '[aria-label="Close"]'
+    ]
+}
 ```
 
-#### 2. Bot Detection
-**Symptoms**: CAPTCHA pages, blocked requests, or empty results
+## 🎯 Supported Job Sites
 
-**Solutions**:
-- Use single browser context mode (max_workers=1)
-- Increase delays between operations
-- Enable cookie persistence
-- Use the "Basic Click-and-Popup" mode for maximum stealth
+### 1. **Eluta.ca**
+- **URL Pattern**: `https://www.eluta.ca/jobs-at-*`
+- **Popup Type**: Modal overlay
+- **Success Rate**: 95%+
+- **Recommended Mode**: Basic or Multi-Browser
 
+### 2. **Indeed.ca**
+- **URL Pattern**: `https://ca.indeed.com/viewjob`
+- **Popup Type**: In-page expansion
+- **Success Rate**: 90%+
+- **Recommended Mode**: Multi-Browser
+
+### 3. **LinkedIn Jobs**
+- **URL Pattern**: `https://www.linkedin.com/jobs/view`
+- **Popup Type**: Side panel
+- **Success Rate**: 85%+
+- **Recommended Mode**: Ultra-Conservative
+
+### 4. **Monster.ca**
+- **URL Pattern**: `https://www.monster.ca/job`
+- **Popup Type**: Modal dialog
+- **Success Rate**: 80%+
+- **Recommended Mode**: Basic
+
+## 🔧 Advanced Features
+
+### 1. **Smart Retry Logic**
 ```python
-# Ultra-conservative settings
-scraper = ElutaWorkingScraper(
-    profile,
-    max_workers=1,  # Single context
-    human_delays={"between_jobs": (2.0, 4.0)}  # Longer delays
-)
+def smart_retry(job_url, max_attempts=3):
+    """Intelligent retry with exponential backoff."""
+    for attempt in range(max_attempts):
+        try:
+            result = extract_job_details(job_url)
+            return result
+        except PopupTimeoutError:
+            wait_time = 2 ** attempt  # Exponential backoff
+            time.sleep(wait_time)
+        except CAPTCHAError:
+            # Switch to manual mode
+            return handle_captcha_manually(job_url)
 ```
 
-#### 3. No Jobs Found
-**Symptoms**: Scraper completes but finds 0 jobs
+### 2. **CAPTCHA Detection**
+```python
+def detect_captcha(page):
+    """Detects various CAPTCHA types."""
+    captcha_indicators = [
+        'captcha', 'recaptcha', 'hcaptcha',
+        'verify you are human', 'robot check'
+    ]
+    
+    page_text = page.content().lower()
+    for indicator in captcha_indicators:
+        if indicator in page_text:
+            return True
+    return False
+```
 
-**Solutions**:
-- Check if keywords are too specific
-- Verify the date filter isn't too restrictive
-- Ensure the job site has listings for your location
-- Try different scraping methods
+### 3. **Session Management**
+```python
+class SessionManager:
+    """Manages browser sessions and cookies."""
+    
+    def save_session(self, session_data):
+        """Saves session for reuse."""
+        
+    def load_session(self):
+        """Loads previous session."""
+        
+    def rotate_session(self):
+        """Creates new session to avoid detection."""
+```
 
-#### 4. Experience Level Misclassification
-**Symptoms**: Senior jobs marked as entry-level or vice versa
+## 📊 Performance Optimization
 
-**Solutions**:
-- Review the job manually using the dashboard
-- Check the confidence score (low scores need manual review)
-- Update the experience level keywords if needed
+### 1. **Speed vs Reliability Trade-offs**
+| Mode | Speed | Reliability | Stealth | Use Case |
+|------|-------|-------------|---------|----------|
+| Basic | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Production |
+| Multi-Browser | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | Development |
+| Ultra-Conservative | ⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | High-risk sites |
 
-### Debug Mode
+### 2. **Resource Usage**
+- **Memory**: 200-500MB per browser context
+- **CPU**: 10-30% during active scraping
+- **Network**: 1-5 MB per job processed
+- **Storage**: 50-100MB for session data
 
-Enable verbose logging for troubleshooting:
+### 3. **Optimization Tips**
+```python
+# 1. Use appropriate delays
+human_delays = {
+    'between_jobs': (2.0, 4.0),    # Faster but still human-like
+    'popup_wait': 2.5              # Reduced but reliable
+}
 
+# 2. Batch processing
+batch_size = 10                    # Process jobs in batches
+batch_delay = 30                   # 30-second breaks between batches
+
+# 3. Resource management
+max_concurrent = 2                 # Limit concurrent contexts
+memory_limit = 1024                # 1GB memory limit
+```
+
+## 🛡️ Anti-Detection Strategies
+
+### 1. **User Agent Rotation**
+```python
+user_agents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+]
+```
+
+### 2. **Request Pattern Randomization**
+```python
+def randomize_requests():
+    """Randomizes request timing and patterns."""
+    # Random delays between requests
+    # Varying request headers
+    # Different click patterns
+    # Random scrolling behavior
+```
+
+### 3. **IP Rotation (Optional)**
+```python
+proxy_config = {
+    'enabled': False,              # Set to True for proxy rotation
+    'proxy_list': [
+        'http://proxy1:8080',
+        'http://proxy2:8080'
+    ],
+    'rotation_interval': 100       # Rotate every 100 requests
+}
+```
+
+## 🔍 Debugging and Monitoring
+
+### 1. **Verbose Logging**
 ```bash
-python main.py Nirajan --verbose
+python main.py --profile default --verbose
 ```
 
-### Dashboard Monitoring
+**Log Output:**
+```
+[INFO] Starting job scraping for keyword: "python developer"
+[DEBUG] Clicking job link: https://example.com/job/123
+[DEBUG] Waiting for popup (3 seconds)...
+[DEBUG] Popup detected, extracting URL...
+[DEBUG] Extracted URL: https://real-job-url.com
+[DEBUG] Closing popup...
+[INFO] Successfully processed job #1
+```
 
-Launch the dashboard to monitor scraping progress:
+### 2. **Performance Metrics**
+```python
+metrics = {
+    'jobs_processed': 150,
+    'success_rate': 0.95,
+    'average_time_per_job': 4.2,
+    'popup_success_rate': 0.98,
+    'captcha_encounters': 0
+}
+```
 
+### 3. **Error Tracking**
+```python
+error_types = {
+    'popup_timeout': 5,
+    'captcha_detected': 0,
+    'network_error': 2,
+    'parsing_error': 1
+}
+```
+
+## 🎯 Best Practices
+
+### 1. **For Production Use**
+- Use Basic or Ultra-Conservative mode
+- Implement proper error handling
+- Monitor success rates
+- Take breaks between sessions
+- Use realistic delays
+
+### 2. **For Development**
+- Use Multi-Browser mode for speed
+- Enable verbose logging
+- Test with small datasets
+- Monitor resource usage
+- Use headless mode for testing
+
+### 3. **For High-Risk Sites**
+- Use Ultra-Conservative mode
+- Implement proxy rotation
+- Use session persistence
+- Monitor for CAPTCHAs
+- Have manual fallback ready
+
+## 🚨 Troubleshooting
+
+### Common Issues:
+1. **Popup Timeouts**: Increase wait time or check site structure
+2. **CAPTCHA Detection**: Switch to manual mode or use proxies
+3. **Memory Issues**: Reduce concurrent contexts
+4. **Network Errors**: Check connectivity and retry logic
+
+### Debug Commands:
 ```bash
-# Dashboard auto-launches during scraping
-# Access at: http://localhost:8002
+# Test popup detection
+python -m pytest tests/test_click_popup_framework.py -v
+
+# Test specific site
+python -c "from scrapers.eluta_enhanced import ElutaWorkingScraper; scraper = ElutaWorkingScraper(); scraper.test_popup_detection()"
+
+# Monitor performance
+python -c "from utils.scraping_coordinator import ScrapingCoordinator; coordinator = ScrapingCoordinator(); coordinator.monitor_performance()"
 ```
 
-## Advanced Configuration
+## 📈 Success Metrics
 
-### Custom Human Behavior
+### Target Performance:
+- **Success Rate**: 95%+ job extraction
+- **Speed**: 20-50 jobs per minute
+- **Reliability**: 99%+ uptime
+- **Stealth**: 0 CAPTCHA encounters
+- **Resource Usage**: <1GB memory, <30% CPU
 
-```python
-# Customize human behavior for specific needs
-custom_config = HumanBehaviorConfig(
-    popup_wait=5.0,  # Longer popup wait
-    between_jobs=(2.0, 3.0),  # Slower job processing
-    save_cookies=True,  # Enable session persistence
-    max_open_tabs=2  # Limit open tabs
-)
-```
+### Monitoring Dashboard:
+Access the dashboard at `http://localhost:8002` to monitor:
+- Real-time scraping progress
+- Success rates and error counts
+- Performance metrics
+- System health status
 
-### Site-Specific Optimization
+---
 
-```python
-# Create site-specific scraper
-framework = UniversalClickPopupFramework("eluta")
-framework.current_config["popup_wait"] = 4.0  # Custom wait time
-```
-
-### Batch Processing
-
-```python
-# Process multiple keywords efficiently
-keywords = ["developer", "analyst", "engineer"]
-scraper.max_pages_per_keyword = 5  # 5 pages minimum
-scraper.max_jobs_per_keyword = 50  # Higher limit
-```
-
-## Performance Metrics
-
-### Expected Performance
-- **Speed**: 20-30 jobs per minute (with human delays)
-- **Accuracy**: 95%+ job extraction success rate
-- **Filtering**: 80%+ relevant jobs after experience filtering
-- **Reliability**: 99%+ uptime with proper configuration
-
-### Monitoring
-- Use the dashboard for real-time metrics
-- Check logs for error patterns
-- Monitor success rates per keyword
-- Track experience level classification accuracy
-
-## Support and Updates
-
-### Getting Help
-1. Check this guide for common issues
-2. Review the troubleshooting section
-3. Enable verbose logging for detailed error information
-4. Check the dashboard for real-time status
-
-### Best Practices Summary
-- ✅ Use Enhanced Click-and-Popup mode (recommended)
-- ✅ Allow 3-second popup waits to complete
-- ✅ Monitor the dashboard during scraping
-- ✅ Use 2 browser contexts maximum for stability
-- ✅ Enable cookie persistence for better session handling
-- ✅ Focus on 0-2 years experience jobs
-- ✅ Scrape 5 pages per keyword minimum
-
-### What's New
-- 🎯 Enhanced click-and-popup with 3-second waits
-- 🌐 Universal framework supporting multiple job sites
-- 📅 Intelligent date filtering (14 days for Eluta, 124 for others)
-- 🎓 Experience level filtering (0-2 years focus)
-- 🤖 Human-like behavior with randomized delays
-- 🔄 Multi-browser context support (2-3 contexts)
-- 📊 Real-time dashboard monitoring
-- 🧪 Comprehensive testing suite
+**Last Updated**: June 2025  
+**Version**: 2.0  
+**Maintainer**: Development Team

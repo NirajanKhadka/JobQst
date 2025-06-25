@@ -112,21 +112,23 @@ class DocumentGenerator:
         """Format document content for the given type (stub)."""
         return f"[{doc_type.upper()}]\n{content}"
 
-    def generate_cover_letter(self, job_data: dict, language: str = 'en') -> str:
-        """Generate a cover letter for the given job data and language (stub)."""
-        company = job_data.get('company', 'Company')
-        title = job_data.get('title', 'Job Title')
-        return f"Cover letter for {title} at {company} in {language}"
+    def generate_cover_letter(self, job, profile):
+        """Generate a cover letter for the given job and profile (stub)."""
+        company = job.get('company', 'Company')
+        title = job.get('title', 'Job Title')
+        profile_name = profile.get('name', 'Profile') if isinstance(profile, dict) else str(profile)
+        return f"Cover letter for {title} at {company} for profile {profile_name}"
 
     def use_custom_template(self, template: str, context: dict) -> str:
         """Apply a custom template with context (stub)."""
         return template.format(**context)
 
-    def generate_resume(self, job_data: dict) -> str:
-        """Generate a resume for the given job data (stub)."""
-        company = job_data.get('company', 'Company')
-        title = job_data.get('title', 'Job Title')
-        return f"Resume for {title} at {company}"
+    def generate_resume(self, job, profile):
+        """Generate a resume for the given job and profile (stub)."""
+        company = job.get('company', 'Company')
+        title = job.get('title', 'Job Title')
+        profile_name = profile.get('name', 'Profile') if isinstance(profile, dict) else str(profile)
+        return f"Resume for {title} at {company} for profile {profile_name}"
 
 
 # Convenience function

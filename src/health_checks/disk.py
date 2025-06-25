@@ -29,3 +29,7 @@ def check_disk_space(config: Dict) -> Dict:
             
     except Exception as e:
         return {"status": "error", "message": f"Disk check failed: {str(e)}"}
+
+def check_disk(config: Dict) -> Dict:
+    """Alias for check_disk_space to match system health monitor expectations."""
+    return check_disk_space(config)

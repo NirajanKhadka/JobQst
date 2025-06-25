@@ -19,7 +19,7 @@ class TestUniversalClickPopupFramework:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.framework = UniversalClickPopupFramework()
+        self.framework = UniversalClickPopupFramework("eluta")
     
     def test_framework_instantiation(self):
         """Test that the framework can be instantiated and has expected attributes."""
@@ -60,7 +60,7 @@ class TestIntegration:
     
     def test_framework_integration_with_human_behavior(self):
         """Test integration between framework and human behavior."""
-        framework = UniversalClickPopupFramework()
+        framework = UniversalClickPopupFramework("eluta")
         
         # Mock page and elements
         mock_page = Mock()

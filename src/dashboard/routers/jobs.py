@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Request
 from typing import Dict, List
 
 from src.core.job_database import get_job_db
-from src.utils import utils
+from src.utils import get_available_profiles
 
 router = APIRouter()
 

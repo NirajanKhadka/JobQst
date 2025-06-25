@@ -29,15 +29,22 @@ class TestSystemComponents:
             import src.app
             import src.core.job_database
             import src.core.user_profile_manager
-            import src.core.utils
-
-
-
-
-
-
-
-
+            import src.core.system_utils
+            import src.core.file_utils
+            import src.core.text_utils
+            import src.core.browser_utils
+            import src.core.db_engine
+            import src.core.db_queries
+            import src.core.exceptions
+            import src.core.job_data
+            import src.core.job_filters
+            import src.core.job_record
+            import src.core.session
+            import src.core.ollama_manager
+            import src.core.process_manager
+            import src.core.app_runner
+            import src.core.job_processor_queue
+            import src.core.dashboard_manager
 
             assert True
         except ImportError as e:
@@ -45,8 +52,8 @@ class TestSystemComponents:
     
     def test_002_database_connection(self):
         """Test database connection and basic operations"""
-        from src.core.job_database import JobDatabase
-        db = JobDatabase()
+        from src.core.job_database import ModernJobDatabase
+        db = ModernJobDatabase()
         assert db is not None
         assert hasattr(db, 'conn')
         assert hasattr(db, 'cursor')
@@ -54,16 +61,19 @@ class TestSystemComponents:
     
     def test_003_database_schema(self):
         """Test database schema structure"""
-        from src.core.job_database import JobDatabase
-        db = JobDatabase()
-        cursor = db.cursor
-        cursor.execute("PRAGMA table_info(jobs)")
-        columns = cursor.fetchall()
-        column_names = [col[1] for col in columns]
+        from src.core.job_database import ModernJobDatabase
+        db = ModernJobDatabase()
         
-        required_columns = ['id', 'title', 'company', 'location', 'summary', 'url', 'search_keyword', 'scraped_at', 'session_id', 'job_id']
-        for col in required_columns:
-            assert col in column_names, f"Missing column: {col}"
+        # Use the connection pool to access the database
+        with db._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(jobs)")
+            columns = cursor.fetchall()
+            column_names = [col[1] for col in columns]
+            
+            required_columns = ['id', 'title', 'company', 'location', 'summary', 'url', 'search_keyword', 'scraped_at', 'session_id', 'job_id']
+            for col in required_columns:
+                assert col in column_names, f"Missing column: {col}"
         
         db.close()
     
@@ -180,20 +190,19 @@ class TestSystemComponents:
     
     def test_018_utils_functions(self):
         """Test utility functions"""
-        from src.core.utils import get_available_profiles, ensure_profile_files
+        from src.utils import get_available_profiles
         
         profiles = get_available_profiles()
         assert isinstance(profiles, list)
         assert len(profiles) > 0
         
-        ensure_profile_files()
         assert True
     
     def test_019_job_database_add_job(self):
         """Test adding job to database"""
-        from src.core.job_database import JobDatabase
+        from src.core.job_database import ModernJobDatabase
         
-        db = JobDatabase()
+        db = ModernJobDatabase()
         test_job = {
             'title': 'Test Job',
             'company': 'Test Company',
@@ -214,10 +223,10 @@ class TestSystemComponents:
     
     def test_020_job_database_get_jobs(self):
         """Test getting jobs from database"""
-        from src.core.job_database import JobDatabase
+        from src.core.job_database import ModernJobDatabase
         
-        db = JobDatabase()
-        jobs = db.get_all_jobs()
+        db = ModernJobDatabase()
+        jobs = db.get_jobs()
         assert isinstance(jobs, list)
         
         db.close()

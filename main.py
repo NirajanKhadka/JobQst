@@ -18,21 +18,44 @@ sync_playwright = None
 
 # Import the main application
 try:
-    from cli.actions.scraping_actions import ScrapingActions
-    from app import main
+    from src.cli.actions.scraping_actions import ScrapingActions
+    from src.cli.actions.dashboard_actions import DashboardActions
+    from src.utils.profile_helpers import load_profile
+    from src.app import main
 except ImportError as e:
     print(f"ImportError: {e}")
     # Fallback: try direct import
     sys.path.insert(0, 'src')
-    from cli.actions.scraping_actions import ScrapingActions
-    from app import main
+    from src.cli.actions.scraping_actions import ScrapingActions
+    from src.cli.actions.dashboard_actions import DashboardActions
+    from src.utils.profile_helpers import load_profile
+    from src.app import main
 
 
 if __name__ == "__main__":
-    # Call the main function from src.app
-    # main()
-    # For now, let's test the scraping menu action directly
-    # This will be integrated into the main app flow later
-    profile = {"keywords": ["software engineer"], "profile_name": "default"}
+    # Get profile name from command line argument
+    profile_name = sys.argv[1] if len(sys.argv) > 1 else "Nirajan"
+    
+    # Load the actual profile
+    profile = load_profile(profile_name)
+    if not profile:
+        console.print(f"[red]❌ Profile '{profile_name}' not found![/red]")
+        console.print(f"[yellow]Available profiles: {', '.join(['Nirajan', 'default', 'test_profile'])}[/yellow]")
+        sys.exit(1)
+    
+    # Add profile_name to the profile dict
+    profile['profile_name'] = profile_name
+    
+    console.print(f"[green]✅ Loaded profile: {profile.get('name', profile_name)}[/green]")
+    console.print(f"[cyan]Keywords: {profile.get('keywords', [])}[/cyan]")
+    
+    # Start dashboard automatically after profile load
+    dashboard_actions = DashboardActions(profile)
+    dashboard_started = dashboard_actions.auto_start_dashboard_action()
+    if dashboard_started:
+        import webbrowser
+        webbrowser.open(f"http://localhost:8002/")
+    
+    # Create actions with the loaded profile
     actions = ScrapingActions(profile)
     actions.show_scraping_menu(None)

@@ -2,6 +2,7 @@ from src.utils.profile_helpers import load_profile, get_available_profiles
 from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
 from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
 from src.utils.document_generator import customize, DocumentGenerator
+from src.core.exceptions import NeedsHumanException
 
 """
 Base submitter class for ATS integrations.
@@ -14,8 +15,11 @@ from typing import Dict, Optional, Union
 from playwright.sync_api import BrowserContext, Page, TimeoutError as PlaywrightTimeoutError
 from rich.console import Console
 
-#  for common functionality
-from src.utils import utils
+# Import specific functions for common functionality
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job
+from src.utils.document_generator import customize
+from src.core.browser_utils import FormUtils
 
 console = Console()
 
@@ -93,7 +97,7 @@ class BaseSubmitter(ABC):
         for selector in captcha_selectors:
             if page.is_visible(selector):
                 console.print("[bold red]CAPTCHA detected![/bold red]")
-                raise utils.NeedsHumanException("CAPTCHA detected, human intervention required")
+                raise NeedsHumanException("CAPTCHA detected, human intervention required")
         
         return False
     
@@ -112,7 +116,7 @@ class BaseSubmitter(ABC):
         
         for selector, value in field_mappings.items():
             try:
-                if utils.fill_if_empty(page, selector, value):
+                if FormUtils.fill_if_empty(page, selector, value):
                     fields_filled += 1
             except Exception as e:
                 console.print(f"[yellow]Failed to fill field {selector}: {e}[/yellow]")
@@ -144,7 +148,7 @@ class BaseSubmitter(ABC):
             "input[type=file][accept*=docx]"
         ]
         
-        return utils.smart_attach(page, resume_selectors, resume_path)
+        return FormUtils.smart_attach(page, resume_selectors, resume_path)
     
     def upload_cover_letter(self, page: Page, cover_letter_path: str) -> bool:
         """
@@ -167,8 +171,8 @@ class BaseSubmitter(ABC):
         ]
         
         try:
-            return utils.smart_attach(page, cover_letter_selectors, cover_letter_path)
-        except utils.NeedsHumanException:
+            return FormUtils.smart_attach(page, cover_letter_selectors, cover_letter_path)
+        except NeedsHumanException:
             # Cover letter is often optional, so don't raise an exception
             console.print("[yellow]Could not upload cover letter automatically[/yellow]")
             return False
@@ -273,3 +277,7 @@ class BaseSubmitter(ABC):
         console.print(f"[bold yellow]Human intervention required: {message}[/bold yellow]")
         console.print("[bold yellow]Press Enter when ready to continue...[/bold yellow]")
         input()
+
+class TestBaseSubmitter(BaseSubmitter):
+    def submit(self, job_data):
+        return True

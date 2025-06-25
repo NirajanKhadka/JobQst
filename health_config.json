@@ -1,0 +1,15 @@
+{
+  "check_interval_seconds": 300,
+  "max_recovery_attempts": 3,
+  "auto_recovery_enabled": true,
+  "components_to_monitor": [
+    "database",
+    "disk",
+    "memory",
+    "browser",
+    "network",
+    "ollama",
+    "permissions",
+    "dependencies"
+  ]
+}
