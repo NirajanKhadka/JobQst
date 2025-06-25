@@ -1,0 +1,3 @@
+# AI Code Quality Policy
+always_use_best_model: true
+reason: "Minimize errors, maximize code quality, avoid regressions." 

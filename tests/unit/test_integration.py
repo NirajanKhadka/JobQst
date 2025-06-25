@@ -7,6 +7,10 @@ Tests that all modules import correctly and basic functionality works.
 import os
 import sys
 import traceback
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 from pathlib import Path
 
 # Add the current directory to the path to ensure imports work
@@ -48,11 +52,11 @@ def test_profile_loading():
     print("\n=== Testing Profile Loading ===")
     
     try:
-        import utils
+        
         
         # Check if Nirajan profile exists
         profile_name = "Nirajan"
-        profile = utils.load_profile(profile_name)
+        profile = load_profile(profile_name)
         
         if profile and isinstance(profile, dict):
             print(f"✅ Successfully loaded profile: {profile_name}")
@@ -74,7 +78,7 @@ def test_ats_detection():
     print("\n=== Testing ATS Detection ===")
     
     try:
-        from ats import detect
+        from src.ats import detect
         
         test_urls = {
             "https://company.workday.com/careers/job/12345": "workday",
@@ -106,7 +110,7 @@ def test_job_hash():
     print("\n=== Testing Job Hashing ===")
     
     try:
-        import utils
+        
         
         # Test job
         job = {
@@ -117,13 +121,13 @@ def test_job_hash():
         }
         
         # Hash the job
-        job_hash = utils.hash_job(job)
+        job_hash = generate_job_hash(job)
         
         if job_hash and isinstance(job_hash, str) and len(job_hash) > 0:
             print(f"✅ Successfully hashed job: {job_hash}")
             
             # Test hash consistency
-            job_hash2 = utils.hash_job(job)
+            job_hash2 = generate_job_hash(job)
             if job_hash == job_hash2:
                 print("✅ Hash is consistent for the same job")
                 return True
@@ -144,7 +148,7 @@ def test_pdf_conversion():
     print("\n=== Testing PDF Conversion ===")
     
     try:
-        import utils
+        
         
         # Check if Word COM is available
         try:
@@ -176,7 +180,12 @@ def test_pdf_conversion():
                 return False
         
         # Try to convert to PDF
-        success = utils.convert_doc_to_pdf(str(test_docx), str(test_pdf))
+        try:
+            import pywintypes
+            success = convert_doc_to_pdf(str(test_docx), str(test_pdf))
+        except (ImportError, pywintypes.com_error):
+            print("⚠️ PDF conversion not available on this system.")
+            success = False
         
         if success:
             print(f"✅ Successfully converted DOCX to PDF: {test_pdf}")

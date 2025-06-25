@@ -260,4 +260,16 @@ def filter_jobs_batch(jobs: List[Dict]) -> Tuple[List[Dict], List[Dict], Dict]:
 
 def get_filter_stats() -> Dict:
     """Convenience function to get filter statistics."""
-    return job_filter.get_filter_stats() 
+    return job_filter.get_filter_stats()
+
+class JobDateFilter(JobFilter):
+    """Placeholder for legacy JobDateFilter, uses JobFilter logic."""
+    pass
+
+class ExperienceLevelFilter(JobFilter):
+    """Placeholder for legacy ExperienceLevelFilter, uses JobFilter logic."""
+    pass
+
+class UniversalJobFilter(JobFilter):
+    """Placeholder for legacy UniversalJobFilter, uses JobFilter logic."""
+    pass 

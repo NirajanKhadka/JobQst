@@ -6,6 +6,10 @@ Tests additional modules and functions that might have issues.
 
 import time
 import traceback
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
@@ -35,8 +39,6 @@ class AdditionalModuleTester:
         console.print("[bold blue]🔍 Testing Resume Modifier Functions[/bold blue]")
         
         try:
-            import document_generator
-            
             # Test main functions
             functions_to_test = [
                 ('customize', 'Main document customization function'),
@@ -62,8 +64,8 @@ class AdditionalModuleTester:
             
             # Test with sample data
             try:
-                import utils
-                profile = utils.load_profile("Nirajan")
+                
+                profile = load_profile("Nirajan")
                 test_job = {
                     'title': 'Python Developer',
                     'company': 'Test Company',
@@ -99,7 +101,7 @@ class AdditionalModuleTester:
                 'DOC-MODULE-001',
                 'document_generator',
                 'HIGH',
-                'Failed to import document_generator module',
+                'Failed to .document_generator module',
                 'Check document_generator.py for syntax errors and import issues',
                 e
             )
@@ -110,11 +112,11 @@ class AdditionalModuleTester:
         console.print("[bold blue]🔍 Testing Scraper Functionality[/bold blue]")
         
         try:
-            from scrapers.eluta_enhanced import ElutaEnhancedScraper
-            import utils
+            from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
+            
             
             # Test scraper initialization and basic methods
-            profile = utils.load_profile("Nirajan")
+            profile = load_profile("Nirajan")
             test_profile = profile.copy()
             test_profile["keywords"] = ["Python"]  # Single keyword for testing
             
@@ -176,7 +178,7 @@ class AdditionalModuleTester:
         console.print("[bold blue]🔍 Testing Utility Functions in Detail[/bold blue]")
         
         try:
-            import utils
+            
             
             # Test critical utility functions
             functions_to_test = [
@@ -202,7 +204,7 @@ class AdditionalModuleTester:
                     if func_name == 'hash_job':
                         try:
                             test_job = {'title': 'Test', 'url': 'https://test.com', 'company': 'Test Co'}
-                            job_hash = utils.hash_job(test_job)
+                            job_hash = generate_job_hash(test_job)
                             if len(job_hash) >= 8:  # Should be a reasonable hash length
                                 console.print(f"[cyan]  ✓ Hash generated: {job_hash[:8]}...[/cyan]")
                             else:
@@ -212,7 +214,7 @@ class AdditionalModuleTester:
                     
                     elif func_name == 'detect_available_browsers':
                         try:
-                            browsers = utils.detect_available_browsers()
+                            browsers = detect_available_browsers()
                             console.print(f"[cyan]  ✓ Detected {len(browsers)} browsers[/cyan]")
                         except Exception as e:
                             console.print(f"[yellow]  ⚠️ Browser detection failed: {e}[/yellow]")
@@ -246,7 +248,7 @@ class AdditionalModuleTester:
         console.print("[bold blue]🔍 Testing Dashboard Functionality[/bold blue]")
         
         try:
-            import dashboard_api
+            import src.dashboard_api
             
             # Test FastAPI components
             components_to_test = [
@@ -300,10 +302,10 @@ class AdditionalModuleTester:
         console.print("[bold blue]🔍 Testing Profile System in Detail[/bold blue]")
         
         try:
-            import utils
+            
             
             # Test profile loading
-            profile = utils.load_profile("Nirajan")
+            profile = load_profile("Nirajan")
             
             # Check required profile fields
             required_fields = [

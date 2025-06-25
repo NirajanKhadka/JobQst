@@ -35,7 +35,7 @@ class TestCookieSessionManager:
     def test_session_manager_initialization(self):
         """Test that session manager initializes correctly."""
         # This test will fail until we implement the SessionManager class
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         manager = CookieSessionManager(
             cookie_file=self.cookie_file,
@@ -51,7 +51,7 @@ class TestCookieSessionManager:
         
     def test_save_cookies_to_file(self):
         """Test saving cookies to file."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         manager = CookieSessionManager(cookie_file=self.cookie_file, site_name="eluta")
         
@@ -91,7 +91,7 @@ class TestCookieSessionManager:
         
     def test_load_cookies_from_file(self):
         """Test loading cookies from file."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         # Create test cookie file
         test_data = {
@@ -116,7 +116,7 @@ class TestCookieSessionManager:
         
     def test_load_cookies_file_not_exists(self):
         """Test loading cookies when file doesn't exist."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         manager = CookieSessionManager(cookie_file="nonexistent.json", site_name="eluta")
         
@@ -126,7 +126,7 @@ class TestCookieSessionManager:
         
     def test_cookies_expiration_check(self):
         """Test that expired cookies are filtered out."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         # Create test data with expired and valid cookies
         expired_time = (datetime.now() - timedelta(hours=1)).timestamp()
@@ -157,7 +157,7 @@ class TestCookieSessionManager:
         
     def test_session_data_management(self):
         """Test session data save/load functionality."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         manager = CookieSessionManager(session_file=self.session_file, site_name="eluta")
         
@@ -180,7 +180,7 @@ class TestCookieSessionManager:
         
     def test_session_cleanup(self):
         """Test cleaning up old session data."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         manager = CookieSessionManager(
             cookie_file=self.cookie_file,
@@ -209,7 +209,7 @@ class TestCookieSessionManager:
                 
     def test_browser_context_integration(self):
         """Test integration with browser context."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         manager = CookieSessionManager(cookie_file=self.cookie_file, site_name="eluta")
         
@@ -230,7 +230,7 @@ class TestCookieSessionManager:
         
     def test_anti_detection_features(self):
         """Test anti-detection features."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         manager = CookieSessionManager(cookie_file=self.cookie_file, site_name="eluta")
         
@@ -250,7 +250,7 @@ class TestCookieSessionManager:
         
     def test_session_persistence_across_restarts(self):
         """Test that sessions persist across application restarts."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         # First session
         manager1 = CookieSessionManager(
@@ -282,7 +282,7 @@ class TestCookieSessionManager:
         
     def test_error_handling(self):
         """Test error handling for various failure scenarios."""
-        from scrapers.session_manager import CookieSessionManager
+        from src.scrapers.session_manager import CookieSessionManager
         
         # Test with invalid file paths (use Windows-style invalid path)
         import platform

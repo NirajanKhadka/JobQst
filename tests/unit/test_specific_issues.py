@@ -10,6 +10,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+from src.core.job_database import JobDatabase
 
 console = Console()
 
@@ -36,7 +37,7 @@ class SpecificIssueTester:
         console.print("[bold blue]🔍 Testing CSV Applicator Function Issue[/bold blue]")
         
         try:
-            import csv_applicator
+            import src.ats.csv_applicator
             
             # Check for the expected function name
             if hasattr(csv_applicator, 'apply_from_csv'):
@@ -115,7 +116,7 @@ class SpecificIssueTester:
         
         # Test base_submitter class name issue
         try:
-            from ats.base_submitter import BaseSubmitter
+            from src.ats.base_submitter import BaseSubmitter
             console.print("[green]✅ BaseSubmitter class found (correct name)[/green]")
         except ImportError as e:
             console.print(f"[red]❌ BaseSubmitter import failed: {e}[/red]")
@@ -171,7 +172,7 @@ class SpecificIssueTester:
         console.print("[bold blue]🔍 Testing BaseJobScraper Abstract Class Issue[/bold blue]")
         
         try:
-            from scrapers.base_scraper import BaseJobScraper
+            from src.scrapers.base_scraper import BaseJobScraper
             
             # This should fail because it's abstract
             try:
@@ -212,7 +213,7 @@ class SpecificIssueTester:
         console.print("[bold blue]🔍 Testing Database Table Creation Issue[/bold blue]")
         
         try:
-            from job_database import JobDatabase
+            from src.core.job_database import JobDatabase
             
             # Test with in-memory database
             db = JobDatabase(":memory:")

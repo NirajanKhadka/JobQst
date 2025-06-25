@@ -20,7 +20,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.prompt import Prompt
 
-from src.core import utils
+from src.utils import utils
 
 console = Console()
 
@@ -224,7 +224,7 @@ class SystemHandler:
     
     def show_available_profiles(self) -> None:
         """Show all available profiles."""
-        profiles = utils.get_available_profiles()
+        profiles = get_available_profiles()
         
         if profiles:
             console.print(f"\n[bold]📁 Available Profiles ({len(profiles)}):[/bold]")
@@ -318,4 +318,14 @@ class SystemHandler:
             console.print("[green]✅ Profile is complete and ready for automation[/green]")
         else:
             console.print(f"[yellow]⚠️ Missing fields: {', '.join(completeness['missing_fields'])}[/yellow]")
-            console.print("[yellow]💡 Complete your profile for better automation results[/yellow]") 
+            console.print("[yellow]💡 Complete your profile for better automation results[/yellow]")
+
+def summarize_docs_command(args=None):
+    """Summarize and update all core documentation files."""
+    import subprocess
+    result = subprocess.run(["python", "scripts/update_docs.py"], capture_output=True, text=True)
+    if result.returncode == 0:
+        print("[CLI] Documentation updated successfully.")
+    else:
+        print("[CLI] Documentation update failed:")
+        print(result.stderr) 

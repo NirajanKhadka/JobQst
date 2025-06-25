@@ -17,7 +17,7 @@ import json
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from src.utils.job_analyzer import JobAnalyzer, JobRequirements
+from src.utils.job_analysis_engine import JobAnalysisEngine
 
 console = Console()
 
@@ -27,7 +27,7 @@ def test_job_analysis():
     console.print(Panel.fit("🔍 Testing Enhanced Job Analysis", style="bold blue"))
     
     # Initialize analyzer
-    analyzer = JobAnalyzer(use_ai=False)  # Disable AI for testing
+    analyzer = JobAnalysisEngine(profile_name="test")  # Disable AI for testing
     
     # Sample job descriptions
     sample_jobs = [
@@ -120,7 +120,7 @@ def test_job_analysis():
         
         # Analyze job
         enhanced_job = analyzer.analyze_job_deep(job)
-        requirements = JobRequirements(**enhanced_job["requirements"])
+        requirements = enhanced_job["requirements"]
         
         # Calculate match score
         match_score = analyzer.calculate_job_match_score(requirements, user_profile)
@@ -140,7 +140,7 @@ def test_job_analysis():
     
     return results
 
-def display_job_analysis(job: dict, requirements: JobRequirements, match_score: float):
+def display_job_analysis(job: dict, requirements: dict, match_score: float):
     """Display detailed analysis for a single job"""
     
     # Create analysis table
@@ -242,7 +242,7 @@ def test_skill_extraction():
     
     console.print(Panel.fit("🔧 Testing Skill Extraction", style="bold green"))
     
-    analyzer = JobAnalyzer(use_ai=False)
+    analyzer = JobAnalysisEngine(profile_name="test")
     
     test_descriptions = [
         "Looking for Python developer with Django, PostgreSQL, and AWS experience",

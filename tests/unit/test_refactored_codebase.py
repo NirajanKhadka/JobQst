@@ -92,7 +92,7 @@ def test_scraper_registry():
     console.print("\n[bold blue]📋 Testing Scraper Registry[/bold blue]")
     
     try:
-        from scrapers import SCRAPER_REGISTRY, DEFAULT_SCRAPER, AVAILABLE_SCRAPERS
+        from src.scrapers import SCRAPER_REGISTRY, DEFAULT_SCRAPER, AVAILABLE_SCRAPERS
         
         console.print(f"[green]✅ Scraper registry imported successfully[/green]")
         console.print(f"[cyan]Available scrapers: {AVAILABLE_SCRAPERS}[/cyan]")
@@ -220,7 +220,7 @@ def test_performance_benchmark():
         }
         
         start_time = time.time()
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
         scraper = ElutaEnhancedScraper(test_profile)
         scraper_time = time.time() - start_time
         

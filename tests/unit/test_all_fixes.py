@@ -11,6 +11,10 @@ import pytest
 from unittest.mock import patch, MagicMock
 import sys
 import os
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 
 console = Console()
 
@@ -23,43 +27,35 @@ def test_main_py_functions():
         # Test that main.py can be imported
         import main
         assert main is not None
-        return True
     except Exception as e:
-        print(f"Error testing main.py: {e}")
-        return False
+        pytest.fail(f"Error testing main.py: {e}")
 
 def test_utils_py_functions():
     """Test utils.py can be imported"""
     try:
         # Test that utils.py can be imported
-        import utils
+        
         assert utils is not None
-        return True
     except Exception as e:
-        print(f"Error testing utils.py: {e}")
-        return False
+        pytest.fail(f"Error testing utils.py: {e}")
 
 def test_intelligent_scraper_functions():
     """Test scraper modules can be imported"""
     try:
         # Test basic scraper imports
-        import scrapers
+        import src.scrapers
         assert scrapers is not None
-        return True
     except Exception as e:
-        print(f"Error testing scraper functions: {e}")
-        return False
+        pytest.fail(f"Error testing scraper functions: {e}")
 
 def test_csv_applicator_functions():
     """Test ATS modules can be imported"""
     try:
         # Test basic ATS imports
-        import ats
+        import src.ats
         assert ats is not None
-        return True
     except Exception as e:
-        print(f"Error testing ATS functions: {e}")
-        return False
+        pytest.fail(f"Error testing ATS functions: {e}")
 
 def test_dashboard_api_functions():
     """Test dashboard modules can be imported"""
@@ -67,10 +63,8 @@ def test_dashboard_api_functions():
         # Test basic dashboard imports
         from src import dashboard
         assert dashboard is not None
-        return True
     except Exception as e:
-        print(f"Error testing dashboard functions: {e}")
-        return False
+        pytest.fail(f"Error testing dashboard functions: {e}")
 
 def main():
     """Main test function."""

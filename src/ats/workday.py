@@ -1,67 +1,67 @@
-#!/usr/bin/env python3
-"""
-Workday ATS Submitter
-Handles job applications to Workday-based systems.
-"""
+from typing import Dict
 
-from typing import Dict, Any
+from playwright.sync_api import Page
+from rich.console import Console
+
 from .base_submitter import BaseSubmitter
-import time
-from datetime import datetime
+from .workday_login import WorkdayLogin
+from .workday_form_filler import WorkdayFormFiller
+import utils
+
+console = Console()
 
 class WorkdaySubmitter(BaseSubmitter):
-    """Workday ATS submitter implementation."""
+    """
+    Submitter for Workday ATS.
+    Handles automation of job applications on Workday-based portals.
+    """
     
-    def __init__(self, profile_name: str = "default"):
-        super().__init__(profile_name)
-        self.ats_name = 'Workday'
-        self.supported_fields = ['first_name', 'last_name', 'email', 'phone', 'resume']
-
-    def get_field_mapping(self) -> Dict[str, Dict[str, str]]:
-        """Get Workday-specific field mapping."""
-        return {
-            'personal_info': {
-                'first_name': 'First Name',
-                'last_name': 'Last Name',
-                'email': 'Email',
-                'phone': 'Phone'
-            },
-            'experience': {
-                'years': 'Years of Experience',
-                'skills': 'Skills',
-                'education': 'Education'
-            }
-        }
-
-    def submit_application(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Submit application to Workday."""
+    def submit(self, job: Dict, profile: Dict, resume_path: str, cover_letter_path: str) -> str:
+        page = self.ctx.new_page()
         try:
-            if not self.validate_application_data(data):
-                return {'success': False, 'error': 'Invalid application data'}
+            console.print(f"[green]Navigating to job URL: {job['url']}[/green]")
+            page.goto(job["url"], timeout=30000)
+            self.wait_for_navigation(page)
+            self.check_for_captcha(page)
+
+            login_handler = WorkdayLogin(page)
+            if not login_handler.handle_login(profile, job["url"]):
+                console.print("[yellow]Manual login may be required[/yellow]")
+
+            page.wait_for_timeout(3000)
+
+            if not self._click_apply_button_enhanced(page):
+                console.print("[yellow]Could not find Apply button[/yellow]")
+                return "Manual"
+
+            form_filler = WorkdayFormFiller(page, profile, resume_path, cover_letter_path)
+            return form_filler.fill_form()
             
-            transformed_data = self.transform_data(data)
-            result = self._submit_to_ats(transformed_data)
-            self.track_submission(data, result)
-            return result
-            
+        except utils.NeedsHumanException:
+            console.print("[yellow]Human intervention required[/yellow]")
+            self.wait_for_human(page, "Please complete the application manually")
+            return "Manual"
+        
         except Exception as e:
-            self.handle_error(e)
-            return {'success': False, 'error': str(e)}
+            console.print(f"[bold red]Workday submission error: {e}[/bold red]")
+            return "Failed"
+        
+        finally:
+            page.close()
 
-    def detect_application_form(self, page_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Detect Workday application form."""
-        return {
-            'detected': True,
-            'form_type': 'workday',
-            'fields_found': ['first_name', 'last_name', 'email', 'phone'],
-            'confidence': 0.9
-        }
-
-    def _submit_to_ats(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Submit data to Workday ATS."""
-        return {
-            'success': True,
-            'application_id': f'workday_{int(time.time())}',
-            'submitted_at': datetime.now().isoformat(),
-            'ats_name': 'Workday'
-        } 
+    def _click_apply_button_enhanced(self, page: Page) -> bool:
+        """Enhanced Apply button detection and clicking."""
+        apply_selectors = [
+            "button:has-text('Apply')", "a:has-text('Apply')",
+            "button:has-text('Apply Now')", "a:has-text('Apply Now')",
+            "[data-automation-id*='apply']"
+        ]
+        for selector in apply_selectors:
+            try:
+                if page.is_visible(selector):
+                    page.click(selector)
+                    page.wait_for_timeout(3000)
+                    return True
+            except Exception:
+                continue
+        return False

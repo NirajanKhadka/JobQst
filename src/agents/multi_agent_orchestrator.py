@@ -21,7 +21,7 @@ from rich.prompt import Prompt, Confirm
 
 from enhanced_application_agent import EnhancedApplicationAgent, run_application_agent
 from background_gmail_monitor import BackgroundGmailMonitor
-from job_database import get_job_db
+from src.core.job_database import get_job_db
 
 console = Console()
 
@@ -78,7 +78,7 @@ class MultiAgentOrchestrator:
         
         try:
             # Show system overview
-            self._display_system_overview()
+            # self._display_system_overview()
             
             if not Confirm.ask("Start the multi-agent system?"):
                 return

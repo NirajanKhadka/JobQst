@@ -16,8 +16,8 @@ def test_imports():
     console.print("[bold blue]🧪 Testing New Feature Imports[/bold blue]")
     
     tests = [
-        ("Parallel Job Scraper", "from scrapers.parallel_job_scraper import ParallelJobScraper"),
-        ("Enhanced Eluta Scraper", "from scrapers.eluta_enhanced import ElutaEnhancedScraper"),
+        ("Parallel Job Scraper", "from src.scrapers.parallel_job_scraper import ParallelJobScraper"),
+        ("Enhanced Eluta Scraper", "from src.scrapers.eluta_enhanced import ElutaEnhancedScraper"),
         ("Debug Dashboard", "import debug_dashboard_issue"),
         ("Main Menu Functions", "from main import ultra_fast_scrape_action, deep_scrape_action, debug_dashboard_action"),
     ]
@@ -58,7 +58,7 @@ def test_enhanced_scraper_features():
     console.print("\n[bold blue]🔍 Testing Enhanced Scraper Features[/bold blue]")
     
     try:
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
         
         # Create a test profile
         test_profile = {
@@ -88,7 +88,7 @@ def test_ultra_parallel_scraper():
     console.print("\n[bold blue]⚡ Testing Ultra Parallel Scraper[/bold blue]")
     
     try:
-        from scrapers.parallel_job_scraper import ParallelJobScraper
+        from src.scrapers.parallel_job_scraper import ParallelJobScraper
 
         # Create a test profile
         test_profile = {

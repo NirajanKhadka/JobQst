@@ -327,7 +327,7 @@ if __name__ == "__main__":
     import utils
     
     try:
-        profile = utils.load_profile("Nirajan")
+        profile = load_profile("Nirajan")
         analyzer = ResumeAnalyzer()
         analysis = analyzer.analyze_resume(profile)
         

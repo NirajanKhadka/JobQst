@@ -5,7 +5,7 @@ Quick test to verify Eluta scraping works without location parameter.
 
 import json
 from rich.console import Console
-from scrapers.eluta_multi_browser import ElutaMultiBrowserScraper
+from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
 
 console = Console()
 
@@ -36,7 +36,7 @@ def test_no_location_scraping():
     
     try:
         # Create scraper with single browser context for maximum stealth
-        scraper = ElutaMultiBrowserScraper(
+        scraper = ComprehensiveElutaScraper(
             profile,
             max_workers=1,  # Single browser context for stealth
             max_jobs_per_keyword=5,  # Small limit for testing

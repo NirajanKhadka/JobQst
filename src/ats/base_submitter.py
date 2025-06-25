@@ -1,439 +1,275 @@
-#!/usr/bin/env python3
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
+
 """
-Base ATS Submitter - Comprehensive base class for all ATS implementations
-Provides common functionality and interface for job application submissions.
+Base submitter class for ATS integrations.
+All ATS-specific submitters should inherit from this class.
 """
 
-from typing import Dict, List, Optional, Any
 from abc import ABC, abstractmethod
-import time
-import json
-from datetime import datetime
-from pathlib import Path
+from typing import Dict, Optional, Union
+
+from playwright.sync_api import BrowserContext, Page, TimeoutError as PlaywrightTimeoutError
+from rich.console import Console
+
+#  for common functionality
+from src.utils import utils
+
+console = Console()
 
 class BaseSubmitter(ABC):
     """
     Base class for all ATS submitters.
-    Provides common functionality and interface for job application submissions.
+    Defines the common interface and utility methods for ATS automation.
     """
     
-    def __init__(self, profile_name: str = "default"):
-        self.profile_name = profile_name
-        self.ats_name = 'Base'
-        self.supported_fields = ['first_name', 'last_name', 'email', 'phone']
-        self.session_data = {}
-        self.rate_limits = {}
-        self.error_count = 0
-        self.success_count = 0
+    def __init__(self, browser_context: BrowserContext):
+        """
+        Initialize the submitter with a browser context.
         
-    # ATS Registry Methods
-    def get_ats_registry(self) -> Dict[str, Any]:
-        """Get the ATS registry with all available submitters."""
-        return {
-            'BambooHR': 'src.ats.bamboohr.BambooHRSubmitter',
-            'Greenhouse': 'src.ats.greenhouse.GreenhouseSubmitter',
-            'iCIMS': 'src.ats.icims.ICIMSSubmitter',
-            'Lever': 'src.ats.lever.LeverSubmitter',
-            'Workday': 'src.ats.workday.WorkdaySubmitter',
-            'Fallback': 'src.ats.fallback_submitters.FallbackSubmitter'
-        }
+        Args:
+            browser_context: Playwright browser context
+        """
+        self.ctx = browser_context
     
-    def get_submitter_for_ats(self, ats_name: str) -> Optional['BaseSubmitter']:
-        """Get a submitter instance for a specific ATS."""
-        registry = self.get_ats_registry()
-        if ats_name in registry:
-            try:
-                module_path, class_name = registry[ats_name].rsplit('.', 1)
-                module = __import__(module_path, fromlist=[class_name])
-                submitter_class = getattr(module, class_name)
-                return submitter_class(self.profile_name)
-            except Exception:
-                return None
-        return None
-    
-    def list_available_submitters(self) -> List[str]:
-        """List all available ATS submitters."""
-        return list(self.get_ats_registry().keys())
-    
-    def get_default_submitter(self) -> 'BaseSubmitter':
-        """Get the default submitter (Fallback)."""
-        return self.get_submitter_for_ats('Fallback') or self
-    
-    # Field Mapping Methods
-    def get_field_mapping(self) -> Dict[str, Dict[str, str]]:
-        """Get field mapping for this ATS."""
-        return {
-            'personal_info': {
-                'first_name': 'First Name',
-                'last_name': 'Last Name',
-                'email': 'Email',
-                'phone': 'Phone'
-            },
-            'experience': {
-                'years': 'Years of Experience',
-                'skills': 'Skills',
-                'education': 'Education'
-            }
-        }
-    
-    # Application Methods
-    def submit_application(self, application_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Submit an application to the ATS."""
-        try:
-            # Validate application data
-            if not self.validate_application_data(application_data):
-                return {'success': False, 'error': 'Invalid application data'}
-            
-            # Transform data for this ATS
-            transformed_data = self.transform_data(application_data)
-            
-            # Submit the application
-            result = self._submit_to_ats(transformed_data)
-            
-            # Track the submission
-            self.track_submission(application_data, result)
-            
-            return result
-            
-        except Exception as e:
-            self.handle_error(e)
-            return {'success': False, 'error': str(e)}
-    
-    def detect_application_form(self, page_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Detect if an application form is present on the page."""
-        return {
-            'detected': True,
-            'form_type': 'standard',
-            'fields_found': ['first_name', 'last_name', 'email'],
-            'confidence': 0.8
-        }
-    
-    # Validation Methods
-    def validate_application_data(self, data: Dict[str, Any]) -> bool:
-        """Validate application data before submission."""
-        required_fields = ['first_name', 'last_name', 'email']
-        return all(field in data and data[field] for field in required_fields)
-    
-    def validate_form_structure(self, form_data: Dict[str, Any]) -> bool:
-        """Validate form structure."""
-        return True
-    
-    def get_field_validation_rules(self) -> Dict[str, Any]:
-        """Get field validation rules."""
-        return {
-            'email': r'^[^@]+@[^@]+\.[^@]+$',
-            'phone': r'^\+?[\d\s\-\(\)]+$',
-            'required': ['first_name', 'last_name', 'email']
-        }
-    
-    # Data Processing Methods
-    def extract_form_fields(self, page_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Extract form fields from page data."""
-        return [
-            {'name': 'first_name', 'type': 'text', 'required': True},
-            {'name': 'last_name', 'type': 'text', 'required': True},
-            {'name': 'email', 'type': 'email', 'required': True}
-        ]
-    
-    def transform_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform data for this ATS format."""
-        return data.copy()
-    
-    # Tracking and Monitoring Methods
-    def track_submission(self, application_data: Dict[str, Any], result: Dict[str, Any]) -> None:
-        """Track application submission."""
-        self.success_count += 1 if result.get('success') else 0
-        self.error_count += 1 if not result.get('success') else 0
-    
-    def handle_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle ATS response."""
-        return response
-    
-    def track_application(self, application_id: str) -> Dict[str, Any]:
-        """Track application status."""
-        return {
-            'application_id': application_id,
-            'status': 'submitted',
-            'timestamp': datetime.now().isoformat()
-        }
-    
-    def monitor_application_status(self, application_id: str) -> Dict[str, Any]:
-        """Monitor application status."""
-        return {
-            'application_id': application_id,
-            'status': 'pending',
-            'last_checked': datetime.now().isoformat()
-        }
-    
-    # Error Handling Methods
-    def handle_error(self, error: Exception) -> None:
-        """Handle errors during submission."""
-        self.error_count += 1
-    
-    def get_error_handler(self) -> Dict[str, Any]:
-        """Get error handler configuration."""
-        return {
-            'max_retries': 3,
-            'retry_delay': 5,
-            'error_threshold': 10
-        }
-    
-    def recover_from_error(self, error: Exception) -> bool:
-        """Recover from an error."""
-        return True
-    
-    # Rate Limiting and Session Management
-    def get_rate_limit(self) -> Dict[str, Any]:
-        """Get rate limiting configuration."""
-        return {
-            'requests_per_minute': 10,
-            'requests_per_hour': 100,
-            'cooldown_period': 60
-        }
-    
-    def get_session(self) -> Dict[str, Any]:
-        """Get current session data."""
-        return self.session_data
-    
-    def authenticate(self, credentials: Dict[str, str]) -> bool:
-        """Authenticate with the ATS."""
-        return True
-    
-    # Anti-Detection Methods
-    def handle_captcha(self, captcha_data: Dict[str, Any]) -> bool:
-        """Handle CAPTCHA challenges."""
-        return True
-    
-    def avoid_bot_detection(self) -> Dict[str, Any]:
-        """Avoid bot detection."""
-        return {
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'delay_between_actions': 2,
-            'random_mouse_movements': True
-        }
-    
-    def simulate_human_behavior(self) -> Dict[str, Any]:
-        """Simulate human behavior."""
-        return {
-            'typing_speed': 'variable',
-            'mouse_movements': 'natural',
-            'page_scroll_behavior': 'realistic'
-        }
-    
-    # Form Filling Methods
-    def get_form_filling_strategy(self) -> Dict[str, Any]:
-        """Get form filling strategy."""
-        return {
-            'fill_order': ['personal_info', 'experience', 'education'],
-            'validation_mode': 'real_time',
-            'auto_save': True
-        }
-    
-    def handle_file_upload(self, file_path: str, field_name: str) -> bool:
-        """Handle file uploads."""
-        return True
-    
-    # Document Processing Methods
-    def parse_resume(self, resume_path: str) -> Dict[str, Any]:
-        """Parse resume content."""
-        return {
-            'skills': [],
-            'experience': [],
-            'education': [],
-            'contact_info': {}
-        }
-    
-    def generate_cover_letter(self, job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> str:
-        """Generate cover letter content."""
-        return "Dear Hiring Manager,\n\nI am writing to express my interest..."
-    
-    # Communication Methods
-    def manage_follow_up(self, application_id: str) -> Dict[str, Any]:
-        """Manage follow-up communications."""
-        return {
-            'application_id': application_id,
-            'follow_up_sent': False,
-            'next_follow_up_date': None
-        }
-    
-    def schedule_interview(self, application_id: str, interview_data: Dict[str, Any]) -> bool:
-        """Schedule an interview."""
-        return True
-    
-    def track_communication(self, application_id: str, communication_data: Dict[str, Any]) -> None:
-        """Track communication history."""
-        pass
-    
-    # Response Handling Methods
-    def handle_rejection(self, application_id: str, rejection_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle job rejection."""
-        return {
-            'application_id': application_id,
-            'status': 'rejected',
-            'feedback': rejection_data.get('feedback', ''),
-            'next_steps': 'apply_to_other_positions'
-        }
-    
-    def handle_acceptance(self, application_id: str, acceptance_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle job acceptance."""
-        return {
-            'application_id': application_id,
-            'status': 'accepted',
-            'next_steps': 'prepare_for_onboarding'
-        }
-    
-    # Negotiation Methods
-    def support_negotiation(self, application_id: str) -> Dict[str, Any]:
-        """Support salary/benefits negotiation."""
-        return {
-            'application_id': application_id,
-            'negotiation_supported': True,
-            'strategies': ['salary_negotiation', 'benefits_negotiation']
-        }
-    
-    def negotiate_salary(self, application_id: str, salary_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Negotiate salary."""
-        return {
-            'application_id': application_id,
-            'negotiation_type': 'salary',
-            'status': 'pending'
-        }
-    
-    def negotiate_benefits(self, application_id: str, benefits_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Negotiate benefits."""
-        return {
-            'application_id': application_id,
-            'negotiation_type': 'benefits',
-            'status': 'pending'
-        }
-    
-    # Analytics and Performance Methods
-    def get_application_analytics(self) -> Dict[str, Any]:
-        """Get application analytics."""
-        return {
-            'total_applications': self.success_count + self.error_count,
-            'success_rate': self.success_count / (self.success_count + self.error_count) if (self.success_count + self.error_count) > 0 else 0,
-            'error_rate': self.error_count / (self.success_count + self.error_count) if (self.success_count + self.error_count) > 0 else 0
-        }
-    
-    def get_performance_metrics(self) -> Dict[str, Any]:
-        """Get performance metrics."""
-        return {
-            'submissions_per_hour': 0,
-            'average_response_time': 0,
-            'success_rate': 0
-        }
-    
-    # Optimization Methods
-    def get_optimization_suggestions(self) -> List[str]:
-        """Get optimization suggestions."""
-        return ['Improve form detection', 'Optimize submission timing']
-    
-    def optimize_application_strategy(self) -> Dict[str, Any]:
-        """Optimize application strategy."""
-        return {'strategy': 'optimized', 'changes': []}
-    
-    def optimize_timing(self) -> Dict[str, Any]:
-        """Optimize submission timing."""
-        return {'optimal_times': ['9:00 AM', '2:00 PM']}
-    
-    def optimize_frequency(self) -> Dict[str, Any]:
-        """Optimize submission frequency."""
-        return {'max_per_day': 10, 'max_per_week': 50}
-    
-    def optimize_targeting(self) -> Dict[str, Any]:
-        """Optimize job targeting."""
-        return {'target_companies': [], 'target_positions': []}
-    
-    def optimize_message(self) -> Dict[str, Any]:
-        """Optimize application messages."""
-        return {'message_templates': [], 'personalization': True}
-    
-    def optimize_profile(self) -> Dict[str, Any]:
-        """Optimize user profile."""
-        return {'profile_improvements': []}
-    
-    def optimize_resume(self) -> Dict[str, Any]:
-        """Optimize resume."""
-        return {'resume_improvements': []}
-    
-    def optimize_cover_letter(self) -> Dict[str, Any]:
-        """Optimize cover letter."""
-        return {'cover_letter_improvements': []}
-    
-    def optimize_application_tracking(self) -> Dict[str, Any]:
-        """Optimize application tracking."""
-        return {'tracking_improvements': []}
-    
-    def optimize_follow_up(self) -> Dict[str, Any]:
-        """Optimize follow-up strategy."""
-        return {'follow_up_improvements': []}
-    
-    def optimize_interview_preparation(self) -> Dict[str, Any]:
-        """Optimize interview preparation."""
-        return {'preparation_improvements': []}
-    
-    def optimize_negotiation(self) -> Dict[str, Any]:
-        """Optimize negotiation strategy."""
-        return {'negotiation_improvements': []}
-    
-    def optimize_learning(self) -> Dict[str, Any]:
-        """Optimize learning from outcomes."""
-        return {'learning_improvements': []}
-    
-    def optimize_adaptation(self) -> Dict[str, Any]:
-        """Optimize adaptation to changes."""
-        return {'adaptation_improvements': []}
-    
-    def optimize_personalization(self) -> Dict[str, Any]:
-        """Optimize personalization."""
-        return {'personalization_improvements': []}
-    
-    def optimize_automation(self) -> Dict[str, Any]:
-        """Optimize automation."""
-        return {'automation_improvements': []}
-    
-    def optimize_integration(self) -> Dict[str, Any]:
-        """Optimize system integration."""
-        return {'integration_improvements': []}
-    
-    def optimize_security(self) -> Dict[str, Any]:
-        """Optimize security."""
-        return {'security_improvements': []}
-    
-    def optimize_compliance(self) -> Dict[str, Any]:
-        """Optimize compliance."""
-        return {'compliance_improvements': []}
-    
-    def optimize_scalability(self) -> Dict[str, Any]:
-        """Optimize scalability."""
-        return {'scalability_improvements': []}
-    
-    def optimize_reliability(self) -> Dict[str, Any]:
-        """Optimize reliability."""
-        return {'reliability_improvements': []}
-    
-    def test_integration(self) -> Dict[str, Any]:
-        """Test system integration."""
-        return {'integration_test': 'passed'}
-    
-    # Abstract methods that subclasses must implement
     @abstractmethod
-    def _submit_to_ats(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Submit data to the specific ATS. Must be implemented by subclasses."""
+    def submit(self, job: Dict, profile: Dict, resume_path: str, cover_letter_path: str) -> str:
+        """
+        Submit an application to an ATS.
+        Must be implemented by subclasses.
+        
+        Args:
+            job: Job dictionary with details
+            profile: User profile dictionary
+            resume_path: Path to the resume file
+            cover_letter_path: Path to the cover letter file
+            
+        Returns:
+            Status string (e.g., "Applied", "Failed", "Manual")
+        """
         pass
-
-# Backward compatibility alias
-BaseATSSubmitter = BaseSubmitter
-
-class TestBaseSubmitter(BaseSubmitter):
-    """Concrete implementation of BaseSubmitter for testing purposes."""
     
-    def _submit_to_ats(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Submit data to ATS for testing."""
-        return {
-            'success': True,
-            'application_id': f'test_{int(time.time())}',
-            'submitted_at': datetime.now().isoformat(),
-            'ats_name': 'Test'
-        } 
+    def wait_for_navigation(self, page: Page, timeout: int = 30000) -> bool:
+        """
+        Wait for page navigation to complete.
+        
+        Args:
+            page: Playwright page
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            True if navigation completed, False otherwise
+        """
+        try:
+            page.wait_for_load_state("networkidle", timeout=timeout)
+            return True
+        except PlaywrightTimeoutError:
+            console.print("[yellow]Navigation timeout, continuing anyway[/yellow]")
+            return False
+    
+    def check_for_captcha(self, page: Page) -> bool:
+        """
+        Check if a CAPTCHA is present on the page.
+        
+        Args:
+            page: Playwright page
+            
+        Returns:
+            True if CAPTCHA detected, False otherwise
+            
+        Raises:
+            NeedsHumanException: If CAPTCHA is detected
+        """
+        captcha_selectors = [
+            "iframe[src*=captcha]",
+            "iframe[src*=recaptcha]",
+            "div.g-recaptcha",
+            "div[class*=captcha]",
+            "input[name*=captcha]"
+        ]
+        
+        for selector in captcha_selectors:
+            if page.is_visible(selector):
+                console.print("[bold red]CAPTCHA detected![/bold red]")
+                raise utils.NeedsHumanException("CAPTCHA detected, human intervention required")
+        
+        return False
+    
+    def fill_form_fields(self, page: Page, field_mappings: Dict[str, str]) -> int:
+        """
+        Fill form fields based on mappings.
+        
+        Args:
+            page: Playwright page
+            field_mappings: Dictionary mapping selectors to values
+            
+        Returns:
+            Number of fields successfully filled
+        """
+        fields_filled = 0
+        
+        for selector, value in field_mappings.items():
+            try:
+                if utils.fill_if_empty(page, selector, value):
+                    fields_filled += 1
+            except Exception as e:
+                console.print(f"[yellow]Failed to fill field {selector}: {e}[/yellow]")
+        
+        return fields_filled
+    
+    def upload_resume(self, page: Page, resume_path: str) -> bool:
+        """
+        Upload a resume to the ATS.
+        
+        Args:
+            page: Playwright page
+            resume_path: Path to the resume file
+            
+        Returns:
+            True if successful, False otherwise
+            
+        Raises:
+            NeedsHumanException: If upload fails
+        """
+        # Common resume upload selectors
+        resume_selectors = [
+            "input[type=file][name*=resume]",
+            "input[type=file][name*=cv]",
+            "input[type=file]:below(:text('Resume'))",
+            "input[type=file]:below(:text('CV'))",
+            "input[type=file]:below(:text('Upload'))",
+            "input[type=file][accept*=pdf]",
+            "input[type=file][accept*=docx]"
+        ]
+        
+        return utils.smart_attach(page, resume_selectors, resume_path)
+    
+    def upload_cover_letter(self, page: Page, cover_letter_path: str) -> bool:
+        """
+        Upload a cover letter to the ATS.
+        
+        Args:
+            page: Playwright page
+            cover_letter_path: Path to the cover letter file
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        # Common cover letter upload selectors
+        cover_letter_selectors = [
+            "input[type=file][name*=cover]",
+            "input[type=file][name*=letter]",
+            "input[type=file]:below(:text('Cover'))",
+            "input[type=file]:below(:text('Letter'))",
+            "input[type=file]:nth-of-type(2)"
+        ]
+        
+        try:
+            return utils.smart_attach(page, cover_letter_selectors, cover_letter_path)
+        except utils.NeedsHumanException:
+            # Cover letter is often optional, so don't raise an exception
+            console.print("[yellow]Could not upload cover letter automatically[/yellow]")
+            return False
+    
+    def fill_personal_info(self, page: Page, profile: Dict) -> int:
+        """
+        Fill common personal information fields.
+        
+        Args:
+            page: Playwright page
+            profile: User profile dictionary
+            
+        Returns:
+            Number of fields successfully filled
+        """
+        # Map profile fields to common form field selectors
+        field_mappings = {
+            "input[name*=firstName]": profile.get("name", "").split()[0] if profile.get("name") else "",
+            "input[name*=lastName]": profile.get("name", "").split()[-1] if profile.get("name") else "",
+            "input[name*=first_name]": profile.get("name", "").split()[0] if profile.get("name") else "",
+            "input[name*=last_name]": profile.get("name", "").split()[-1] if profile.get("name") else "",
+            "input[type=email]": profile.get("email", ""),
+            "input[name*=email]": profile.get("email", ""),
+            "input[name*=phone]": profile.get("phone", ""),
+            "input[name*=telephone]": profile.get("phone", ""),
+            "input[name*=location]": profile.get("location", ""),
+            "input[name*=address]": profile.get("location", "")
+        }
+        
+        return self.fill_form_fields(page, field_mappings)
+    
+    def click_next_button(self, page: Page) -> bool:
+        """
+        Click the next/continue button.
+        
+        Args:
+            page: Playwright page
+            
+        Returns:
+            True if button was clicked, False otherwise
+        """
+        next_button_selectors = [
+            "button:has-text('Next')",
+            "button:has-text('Continue')",
+            "button:has-text('Save & Continue')",
+            "input[type=submit][value*=Next]",
+            "input[type=submit][value*=Continue]",
+            "a:has-text('Next')",
+            "a:has-text('Continue')"
+        ]
+        
+        for selector in next_button_selectors:
+            try:
+                if page.is_visible(selector):
+                    page.click(selector)
+                    self.wait_for_navigation(page)
+                    return True
+            except Exception:
+                continue
+        
+        return False
+    
+    def click_submit_button(self, page: Page) -> bool:
+        """
+        Click the final submit button.
+        
+        Args:
+            page: Playwright page
+            
+        Returns:
+            True if button was clicked, False otherwise
+        """
+        submit_button_selectors = [
+            "button:has-text('Submit')",
+            "button:has-text('Apply')",
+            "button:has-text('Send Application')",
+            "input[type=submit][value*=Submit]",
+            "input[type=submit][value*=Apply]",
+            "a:has-text('Submit')",
+            "a:has-text('Apply')"
+        ]
+        
+        for selector in submit_button_selectors:
+            try:
+                if page.is_visible(selector):
+                    page.click(selector)
+                    self.wait_for_navigation(page)
+                    return True
+            except Exception:
+                continue
+        
+        return False
+    
+    def wait_for_human(self, page: Page, message: str) -> None:
+        """
+        Wait for human intervention.
+        
+        Args:
+            page: Playwright page
+            message: Message to display
+        """
+        console.print(f"[bold yellow]Human intervention required: {message}[/bold yellow]")
+        console.print("[bold yellow]Press Enter when ready to continue...[/bold yellow]")
+        input()

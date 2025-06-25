@@ -5,26 +5,19 @@ Provides utility functions for document generation, job analysis, and other core
 
 # Import key functions for easy access
 from .document_generator import customize
-from .job_analyzer import JobAnalyzer, JobRequirements
-from .job_data_enhancer import JobDataEnhancer, JobEnhancement
-from .dynamic_gmail_verifier import DynamicGmailVerifier, verify_applications_with_gmail, EmailMatch
+from .job_analysis_engine import JobAnalysisEngine
 from .enhanced_error_tolerance import ErrorTracker, RobustOperations
 from .enhanced_database_manager import DatabaseManager
 from .scraping_coordinator import OptimizedScrapingCoordinator, ScrapingMetrics
 from .resume_analyzer import ResumeAnalyzer
 from .manual_review_manager import ManualReviewManager
 from .error_tolerance_handler import RobustOperationManager, SystemHealthMonitor
-from .gmail_verifier import GmailVerifier, ApplicationConfirmation
+from .simple_gmail_checker import SimpleGmailChecker, create_gmail_checker
+from .profile_helpers import get_available_profiles
 
 __all__ = [
     'customize',
-    'JobAnalyzer',
-    'JobRequirements', 
-    'JobDataEnhancer',
-    'JobEnhancement',
-    'DynamicGmailVerifier',
-    'verify_applications_with_gmail',
-    'EmailMatch',
+    'JobAnalysisEngine',
     'ErrorTracker',
     'RobustOperations',
     'DatabaseManager',
@@ -34,6 +27,7 @@ __all__ = [
     'ManualReviewManager',
     'RobustOperationManager',
     'SystemHealthMonitor',
-    'GmailVerifier',
-    'ApplicationConfirmation'
+    'SimpleGmailChecker',
+    'create_gmail_checker',
+    'get_available_profiles'
 ]

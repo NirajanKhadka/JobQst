@@ -5,6 +5,10 @@ This test specifically checks that canadastop100.com URLs are properly filtered 
 """
 
 import sys
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 from rich.console import Console
 from rich.panel import Panel
 
@@ -17,13 +21,13 @@ def test_review_url_filtering():
     
     try:
         # Import required modules
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
         from playwright.sync_api import sync_playwright
-        import utils
+        
         
         # Load test profile
         console.print("[cyan]📋 Loading test profile...[/cyan]")
-        profile = utils.load_profile("Nirajan")
+        profile = load_profile("Nirajan")
         console.print(f"[green]✅ Profile loaded: {profile['profile_name']}[/green]")
         
         # Test configuration - limit to just 1 job for quick testing

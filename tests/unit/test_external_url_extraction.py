@@ -14,7 +14,7 @@ def test_external_url_extraction():
     """Test the external URL extraction functionality."""
     try:
         # Import the enhanced scraper
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
         
         # Create a test profile
         test_profile = {

@@ -6,6 +6,10 @@ This tests the core functionality of clicking on job postings and extracting rea
 
 import sys
 import time
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from rich.console import Console
@@ -13,8 +17,8 @@ from rich.console import Console
 # Add the project root to the path
 sys.path.append(str(Path(__file__).parent))
 
-from scrapers.eluta_enhanced import ElutaEnhancedScraper
-import utils
+from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
+
 
 console = Console()
 
@@ -25,7 +29,7 @@ def test_click_and_wait_functionality():
     
     try:
         # Load profile
-        profile = utils.load_profile("Nirajan")
+        profile = load_profile("Nirajan")
         console.print(f"[green]✅ Loaded profile: {profile['name']}[/green]")
         
         # Create a simple test profile with minimal keywords
@@ -40,7 +44,7 @@ def test_click_and_wait_functionality():
             console.print("[green]🌐 Browser launched for testing[/green]")
             
             # Create enhanced scraper
-            scraper = ElutaEnhancedScraper(test_profile, browser_context=context)
+            scraper = ComprehensiveElutaScraper(test_profile, browser_context=context)
             
             console.print("[cyan]🔍 Starting test scraping with click-and-wait...[/cyan]")
             
@@ -95,7 +99,7 @@ def test_simple_job_extraction():
     
     try:
         # Load profile
-        profile = utils.load_profile("Nirajan")
+        profile = load_profile("Nirajan")
         
         # Create a minimal test profile
         test_profile = {

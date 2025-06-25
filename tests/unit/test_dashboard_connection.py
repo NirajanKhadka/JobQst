@@ -5,7 +5,12 @@ Simple test to verify dashboard connection to database.
 
 import sys
 import sqlite3
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 from rich.console import Console
+from src.core.job_database import get_job_db
 
 console = Console()
 
@@ -48,8 +53,6 @@ def test_job_database_module():
     console.print("\n[bold blue]🧪 Testing Job Database Module[/bold blue]")
     
     try:
-        from job_database import get_job_db
-        
         db = get_job_db('Nirajan')
         console.print(f"✅ Database instance created: {db.db_path}")
         
@@ -79,7 +82,7 @@ def test_dashboard_api_direct():
     
     try:
         # Test get_comprehensive_stats
-        from dashboard_api import get_comprehensive_stats
+        from src.dashboard.api import get_comprehensive_stats
         
         stats = get_comprehensive_stats()
         console.print(f"✅ Comprehensive stats retrieved")
@@ -89,7 +92,7 @@ def test_dashboard_api_direct():
         
         # Test the jobs endpoint function directly
         import asyncio
-        from dashboard_api import get_jobs
+        from src.dashboard.api import get_jobs
         
         # Since get_jobs is async, we need to run it properly
         async def test_get_jobs():
@@ -119,13 +122,13 @@ def test_profile_loading():
     console.print("\n[bold blue]⚙️ Testing Profile Loading[/bold blue]")
     
     try:
-        import utils
         
-        profiles = utils.get_available_profiles()
+        
+        profiles = get_available_profiles()
         console.print(f"✅ Available profiles: {profiles}")
         
         if 'Nirajan' in profiles:
-            profile = utils.load_profile('Nirajan')
+            profile = load_profile('Nirajan')
             console.print(f"✅ Nirajan profile loaded: {profile.get('name')}")
             return True
         else:

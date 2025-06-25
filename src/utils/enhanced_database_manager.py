@@ -316,7 +316,7 @@ class DatabaseManager:
         console.print(f"[bold blue]🔄 Creating Unified Database for {profile_name}[/bold blue]")
 
         try:
-            from job_database import get_job_db
+            from src.core.job_database import get_job_db
 
             # Create new unified database
             unified_db = get_job_db(profile_name)

@@ -3,7 +3,7 @@
 Test script to demonstrate SQLite database capabilities for job scraping.
 """
 
-from job_database import get_job_db
+from src.core.job_database import get_job_db
 from rich.console import Console
 from rich.table import Table
 

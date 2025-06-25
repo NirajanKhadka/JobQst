@@ -15,7 +15,7 @@ from rich.panel import Panel
 from src.cli.arg_parser import parse_args, validate_args
 from src.core.ollama_manager import setup_ollama_if_needed
 from src.core.system_utils import setup_signal_handlers, fix_ssl_cert_issue
-from src.core import utils
+from src.utils import utils
 from src.cli.actions.scraping_actions import ScrapingActions
 from src.cli.actions.application_actions import ApplicationActions
 from src.cli.actions.dashboard_actions import DashboardActions
@@ -148,7 +148,7 @@ def main() -> int:
         args = parse_args()
         
         # Load profile
-        profile = utils.load_profile(args.profile)
+        profile = load_profile(args.profile)
         
         # Run appropriate mode based on action
         if args.action == "interactive":

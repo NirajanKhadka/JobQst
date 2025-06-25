@@ -89,10 +89,10 @@ def auto_start_dashboard() -> bool:
         # Check if dashboard is already running
         import requests
         try:
-            response = requests.get("http://localhost:8000/", timeout=2)
+            response = requests.get("http://localhost:8002/", timeout=2)
             if response.status_code == 200:
                 console.print("[green]✅ Dashboard is already running[/green]")
-                webbrowser.open("http://localhost:8000/")
+                webbrowser.open("http://localhost:8002/")
                 return True
         except requests.exceptions.RequestException:
             pass
@@ -112,10 +112,10 @@ def auto_start_dashboard() -> bool:
         for _ in range(10):
             time.sleep(1)
             try:
-                response = requests.get("http://localhost:8000/", timeout=2)
+                response = requests.get("http://localhost:8002/", timeout=2)
                 if response.status_code == 200:
                     console.print("[green]✅ Dashboard started successfully[/green]")
-                    webbrowser.open("http://localhost:8000/")
+                    webbrowser.open("http://localhost:8002/")
                     return True
             except requests.exceptions.RequestException:
                 continue

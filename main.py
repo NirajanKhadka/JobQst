@@ -18,12 +18,21 @@ sync_playwright = None
 
 # Import the main application
 try:
-    from app import main, scraping_menu_action
-except ImportError:
+    from cli.actions.scraping_actions import ScrapingActions
+    from app import main
+except ImportError as e:
+    print(f"ImportError: {e}")
     # Fallback: try direct import
     sys.path.insert(0, 'src')
-    from app import main, scraping_menu_action
+    from cli.actions.scraping_actions import ScrapingActions
+    from app import main
+
 
 if __name__ == "__main__":
     # Call the main function from src.app
-    main() 
+    # main()
+    # For now, let's test the scraping menu action directly
+    # This will be integrated into the main app flow later
+    profile = {"keywords": ["software engineer"], "profile_name": "default"}
+    actions = ScrapingActions(profile)
+    actions.show_scraping_menu(None)

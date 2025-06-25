@@ -6,6 +6,10 @@ Tests the latest anti-detection techniques and scraping methods.
 
 import sys
 import time
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from rich.console import Console
@@ -14,8 +18,8 @@ from rich.table import Table
 # Add project root to path
 sys.path.append(str(Path(__file__).parent))
 
-import utils
-from scrapers.indeed_enhanced import EnhancedIndeedScraper
+
+from src.scrapers.indeed_enhanced import EnhancedIndeedScraper
 
 console = Console()
 
@@ -28,7 +32,7 @@ def test_indeed_enhanced():
     
     # Load profile
     try:
-        profile = utils.load_profile("Nirajan")
+        profile = load_profile("Nirajan")
         console.print(f"[green]✅ Loaded profile: {profile['name']}[/green]")
     except Exception as e:
         console.print(f"[red]❌ Error loading profile: {e}[/red]")
@@ -40,7 +44,7 @@ def test_indeed_enhanced():
     with sync_playwright() as p:
         try:
             # Create enhanced browser context
-            ctx = utils.create_browser_context(p, profile)
+            ctx = create_browser_context(p, profile)
             console.print("[green]✅ Browser context created successfully[/green]")
             
             # Initialize enhanced scraper
@@ -196,7 +200,7 @@ def test_browser_detection():
     """Test browser detection capabilities."""
     console.print("\n[bold]🔍 Browser Detection Test[/bold]")
     
-    browsers = utils.detect_available_browsers()
+    browsers = detect_available_browsers()
     
     table = Table(show_header=True, header_style="bold green")
     table.add_column("Browser", style="cyan")

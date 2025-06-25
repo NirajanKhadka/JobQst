@@ -8,7 +8,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from scrapers import AVAILABLE_SCRAPERS, get_scraper
+from src.scrapers import AVAILABLE_SCRAPERS, get_scraper
 from rich.console import Console
 
 console = Console()

@@ -3,7 +3,7 @@
 Test script to add sample jobs to the database for dashboard testing.
 """
 
-from job_database import get_job_db
+from src.core.job_database import get_job_db
 from datetime import datetime, timedelta
 import random
 

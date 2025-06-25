@@ -19,7 +19,6 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
-from src.core import utils
 from src.core.session import SessionManager
 from src.utils.job_analysis_engine import run_intelligent_scraping
 
@@ -150,7 +149,7 @@ class ScrapingHandler:
     
     def _run_basic_scraping(self) -> bool:
         """Run basic scraping using working scraper."""
-        from scrapers.eluta_working import ElutaWorkingScraper
+        from src.scrapers.eluta_working import ElutaWorkingScraper
         from playwright.sync_api import sync_playwright
 
         console.print("[cyan]🔍 Using working Eluta scraper[/cyan]")
@@ -175,7 +174,7 @@ class ScrapingHandler:
     
     def eluta_parallel_scrape(self) -> List[Dict]:
         """Run Eluta parallel scraping."""
-        from scrapers.eluta_optimized_parallel import ElutaOptimizedParallelScraper
+        from src.scrapers.eluta_optimized_parallel import ElutaOptimizedParallelScraper
         
         console.print("[cyan]⚡ Running Eluta parallel scraping...[/cyan]")
         
@@ -191,7 +190,7 @@ class ScrapingHandler:
     
     def eluta_enhanced_click_popup_scrape(self) -> List[Dict]:
         """Run Eluta enhanced click-popup scraping."""
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
         
         console.print("[cyan]🖱️ Running Eluta enhanced click-popup scraping...[/cyan]")
         

@@ -18,9 +18,9 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
-from src.core import utils
+from src.utils.job_helpers import generate_job_hash
 from src.ats.csv_applicator import CSVJobApplicator
-from ats import detect, get_submitter
+from src.ats import detect, get_submitter
 
 console = Console()
 
@@ -79,7 +79,7 @@ class ApplicationHandler:
                 done_jobs = self.session.get("done", [])
 
                 # Filter out already processed jobs
-                pending_jobs = [job for job in scraped_jobs if utils.hash_job(job) not in done_jobs]
+                pending_jobs = [job for job in scraped_jobs if generate_job_hash(job) not in done_jobs]
 
                 if not pending_jobs:
                     console.print("[yellow]No jobs in queue to apply to[/yellow]")
@@ -124,7 +124,7 @@ class ApplicationHandler:
             return 1
         
         # Filter out already processed jobs
-        pending_jobs = [job for job in scraped_jobs if utils.hash_job(job) not in done_jobs]
+        pending_jobs = [job for job in scraped_jobs if generate_job_hash(job) not in done_jobs]
         
         if not pending_jobs:
             console.print("[yellow]All jobs in queue have been processed[/yellow]")
@@ -175,7 +175,7 @@ class ApplicationHandler:
                         success_count += 1
                         
                         # Mark as done
-                        job_hash = utils.hash_job(job)
+                        job_hash = generate_job_hash(job)
                         done_jobs.append(job_hash)
                         self.session["done"] = done_jobs
                         self._save_session(self.profile.get('profile_name', 'default'), self.session)

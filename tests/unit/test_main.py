@@ -68,21 +68,21 @@ try:
     
     # Test core module
     try:
-        from core import utils
+        from src import utils
         print("✅ core.utils imported")
     except ImportError as e:
         print(f"⚠️ core.utils import failed: {e}")
     
     # Test ats module
     try:
-        from ats import detect, get_submitter
+        from src.ats import detect, get_submitter
         print("✅ ats module imported")
     except ImportError as e:
         print(f"⚠️ ats module import failed: {e}")
     
     # Test job database
     try:
-        from core.job_database import JobDatabase
+        from src.core.job_database import JobDatabase
         print("✅ job_database imported")
     except ImportError as e:
         print(f"⚠️ job_database import failed: {e}")

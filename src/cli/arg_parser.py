@@ -5,6 +5,7 @@ CLI Argument Parser for AutoJobAgent
 
 import argparse
 from typing import Dict, Any
+from src.cli.handlers.system_handler import summarize_docs_command
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -52,6 +53,10 @@ Examples:
     parser.add_argument("--headless", action="store_true", help="Run browser in headless mode")
     parser.add_argument("--delay", type=int, default=30, help="Delay between applications in seconds")
     parser.add_argument("--preview", action="store_true", help="Preview jobs without applying")
+
+    subparsers = parser.add_subparsers(dest='subcommand')
+    parser_summarize_docs = subparsers.add_parser('summarize-docs', help='Summarize and update all core documentation files (README, ISSUE_TRACKER, STATUS).')
+    parser_summarize_docs.set_defaults(func=summarize_docs_command)
 
     return parser
 

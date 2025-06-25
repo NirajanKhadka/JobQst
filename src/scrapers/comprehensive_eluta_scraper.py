@@ -18,8 +18,8 @@ from rich.table import Table
 from rich.panel import Panel
 from playwright.async_api import async_playwright
 
-from job_database import get_job_db
-import utils
+from src.core.job_database import get_job_db
+from src.utils.profile_helpers import load_profile
 
 console = Console()
 
@@ -31,7 +31,7 @@ class ComprehensiveElutaScraper:
     def __init__(self, profile_name: str = "Nirajan"):
         """Initialize the comprehensive scraper."""
         self.profile_name = profile_name
-        self.profile = utils.load_profile(profile_name)
+        self.profile = load_profile(profile_name)
         self.db = get_job_db(profile_name)
         
         # Get ALL keywords and skills from profile
@@ -272,87 +272,19 @@ class ComprehensiveElutaScraper:
                         job_data["salary"] = line
                         break
             
-            # Extract real URL by clicking and handling new tab
-            try:
-                title_link = await job_element.query_selector('a')
-                if title_link:
-                    console.print(f"[cyan]🖱️ Clicking job {job_number} to get real URL...[/cyan]")
-
-                    # Get current number of pages
-                    initial_pages = len(page.context.pages)
-
-                    # Click the link (this will open a new tab)
-                    await title_link.click()
-
-                    # Wait for new tab to open
-                    await asyncio.sleep(2)
-
-                    # Get all pages and find the new one
-                    current_pages = page.context.pages
-                    if len(current_pages) > initial_pages:
-                        # New tab opened, get the last page (newest tab)
-                        new_tab = current_pages[-1]
-
-                        try:
-                            # Wait for the new tab to load
-                            await new_tab.wait_for_load_state("domcontentloaded", timeout=10000)
-
-                            # Get the real URL from the new tab
-                            real_url = new_tab.url
-
-                            job_data["url"] = real_url
-                            job_data["apply_url"] = real_url
-                            job_data["ats_system"] = self._detect_ats_system(real_url)
-                            job_data["scraped_successfully"] = True
-
-                            console.print(f"[green]✅ Got real URL: {real_url[:60]}...[/green]")
-
-                            # Close the new tab immediately
-                            await new_tab.close()
-                            console.print(f"[cyan]🗙 Closed tab for job {job_number}[/cyan]")
-
-                        except Exception as tab_error:
-                            console.print(f"[yellow]⚠️ Error processing new tab for job {job_number}: {tab_error}[/yellow]")
-
-                            # Try to get URL anyway and close tab
-                            try:
-                                real_url = new_tab.url if new_tab else ""
-                                if real_url:
-                                    job_data["url"] = real_url
-                                    job_data["apply_url"] = real_url
-                                    job_data["ats_system"] = self._detect_ats_system(real_url)
-                                    console.print(f"[yellow]📎 Got partial URL: {real_url[:60]}...[/yellow]")
-
-                                # Close tab
-                                if new_tab and not new_tab.is_closed():
-                                    await new_tab.close()
-                                    console.print(f"[cyan]🗙 Closed tab for job {job_number}[/cyan]")
-
-                            except:
-                                pass
-                    else:
-                        # No new tab opened, try to get href
-                        href = await title_link.get_attribute('href')
-                        if href:
-                            job_data["url"] = href
-                            job_data["apply_url"] = href
-                            job_data["ats_system"] = "Eluta Redirect"
-                            console.print(f"[yellow]📎 Using href (no new tab): {href[:60]}...[/yellow]")
-                        else:
-                            console.print(f"[yellow]⚠️ No new tab and no href for job {job_number}[/yellow]")
-                else:
-                    # No link found
-                    job_data["url"] = ""
-                    job_data["apply_url"] = ""
-                    job_data["ats_system"] = "Unknown"
-                    console.print(f"[yellow]⚠️ No link element found for job {job_number}[/yellow]")
-
-            except Exception as e:
-                console.print(f"[red]❌ Could not get URL for job {job_number}: {e}[/red]")
-                # Set basic job data without URL
-                job_data["url"] = ""
-                job_data["apply_url"] = ""
-                job_data["ats_system"] = "Unknown"
+            # Get real application URL using proven method
+            real_url = await self._get_real_job_url(job_element, page, job_number)
+            if real_url:
+                job_data["apply_url"] = real_url
+                job_data["url"] = real_url
+                job_data["scraped_successfully"] = True
+                job_data["ats_system"] = self._detect_ats_system(real_url)
+                console.print(f"[green]✅ Got real URL: {real_url[:60]}...[/green]")
+                console.print(f"[cyan]🏢 ATS System: {job_data['ats_system']}[/cyan]")
+            else:
+                job_data["url"] = page.url
+                job_data["apply_url"] = page.url
+                console.print(f"[yellow]⚠️ Using fallback URL[/yellow]")
             
             return job_data
             
@@ -360,28 +292,56 @@ class ComprehensiveElutaScraper:
             console.print(f"[red]❌ Error extracting job data: {e}[/red]")
             return None
     
+    async def _get_real_job_url(self, job_elem, page, job_number):
+        """Get real job URL using the proven expect_popup method."""
+        try:
+            links = job_elem.query_selector_all("a")
+            title_link = None
+            for link in links:
+                href = await link.get_attribute("href")
+                if href and "job" in href:
+                    title_link = link
+                    break
+            if not title_link:
+                console.print(f"[yellow]⚠️ Job {job_number}: No clickable job link found[/yellow]")
+                return None
+
+            async with page.expect_popup() as popup_info:
+                await title_link.click()
+                await asyncio.sleep(1)
+            popup = await popup_info.value
+            real_url = popup.url
+            await popup.close()
+            return real_url
+        except Exception as e:
+            console.print(f"[red]❌ Error in popup scraping for job {job_number}: {e}[/red]")
+            return None
+
     def _detect_ats_system(self, url: str) -> str:
-        """Detect ATS system from URL."""
-        url_lower = url.lower()
+        """Detect the ATS system from URL."""
+        if not url:
+            return "Unknown"
         
-        if 'workday' in url_lower:
-            return 'Workday'
-        elif 'greenhouse' in url_lower:
-            return 'Greenhouse'
-        elif 'lever' in url_lower:
-            return 'Lever'
-        elif 'bamboohr' in url_lower:
-            return 'BambooHR'
-        elif 'smartrecruiters' in url_lower:
-            return 'SmartRecruiters'
-        elif 'jobvite' in url_lower:
-            return 'Jobvite'
-        elif 'icims' in url_lower:
-            return 'iCIMS'
-        elif 'taleo' in url_lower:
-            return 'Taleo'
-        else:
-            return 'Company Website'
+        ats_systems = {
+            "workday": "Workday",
+            "myworkday": "Workday",
+            "ultipro": "UltiPro",
+            "greenhouse": "Greenhouse",
+            "lever.co": "Lever",
+            "icims": "iCIMS",
+            "bamboohr": "BambooHR",
+            "smartrecruiters": "SmartRecruiters",
+            "jobvite": "Jobvite",
+            "taleo": "Taleo",
+            "successfactors": "SuccessFactors"
+        }
+        
+        url_lower = url.lower()
+        for keyword, system in ats_systems.items():
+            if keyword in url_lower:
+                return system
+        
+        return "Company Website"
     
     def _filter_entry_level_jobs(self, jobs: List[Dict], keyword: str) -> List[Dict]:
         """Filter jobs to only include entry-level positions (0-2 years experience)."""

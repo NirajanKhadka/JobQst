@@ -5,12 +5,16 @@ Test the improved job filtering logic.
 
 import sys
 import os
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from rich.console import Console
 from rich.panel import Panel
-from job_database import get_job_db
-import utils
+from src.core.job_database import get_job_db
+
 
 console = Console()
 
@@ -21,7 +25,7 @@ def test_improved_filtering():
     
     try:
         # Load profile
-        profile = utils.load_profile('Nirajan')
+        profile = load_profile('Nirajan')
         if not profile:
             console.print("[red]❌ Could not load Nirajan profile[/red]")
             return False
@@ -36,7 +40,7 @@ def test_improved_filtering():
         # Test scraping with a completely new keyword
         console.print("[cyan]🔍 Testing with new keyword 'Software Engineer'...[/cyan]")
         
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
         from playwright.sync_api import sync_playwright
         
         with sync_playwright() as p:

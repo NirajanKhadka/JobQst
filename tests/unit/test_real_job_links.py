@@ -20,7 +20,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
 
 # Import modules with correct paths
-from src.ats.enhanced_application_agent import EnhancedApplicationAgent
+# from src.ats.enhanced_application_agent import EnhancedApplicationAgent
 from src.core.job_database import get_job_db
 
 console = Console()
@@ -33,10 +33,10 @@ async def test_job_link_filtering():
     profile_name = "Nirajan"
     
     # Initialize agent
-    agent = EnhancedApplicationAgent(profile_name)
-    if not await agent.initialize():
-        console.print("[red]❌ Failed to initialize agent[/red]")
-        return
+    # agent = EnhancedApplicationAgent(profile_name)
+    # if not await agent.initialize():
+    #     console.print("[red]❌ Failed to initialize agent[/red]")
+    #     return
     
     # Get all jobs from database
     db = get_job_db(profile_name)

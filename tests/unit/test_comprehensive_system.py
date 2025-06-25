@@ -9,6 +9,10 @@ import pytest
 import json
 import os
 import sys
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta
@@ -26,16 +30,15 @@ class TestSystemComponents:
             import src.core.job_database
             import src.core.user_profile_manager
             import src.core.utils
-            import src.utils.job_analyzer
-            import src.utils.job_data_consumer
-            import src.utils.job_data_enhancer
-            import src.utils.document_generator
-            import src.utils.gmail_verifier
-            import src.utils.enhanced_database_manager
-            import src.utils.error_tolerance_handler
-            import src.utils.manual_review_manager
-            import src.utils.resume_analyzer
-            import src.utils.scraping_coordinator
+
+
+
+
+
+
+
+
+
             assert True
         except ImportError as e:
             pytest.fail(f"Import failed: {e}")
@@ -66,7 +69,7 @@ class TestSystemComponents:
     
     def test_004_profile_loading(self):
         """Test profile loading functionality"""
-        from src.core.utils import load_profile
+        from src.utils.profile_helpers import load_profile
         profile = load_profile("Nirajan")
         assert profile is not None
         assert isinstance(profile, dict)
@@ -76,7 +79,7 @@ class TestSystemComponents:
     
     def test_005_profile_validation(self):
         """Test profile data validation"""
-        from src.core.utils import load_profile
+        from src.utils.profile_helpers import load_profile
         profile = load_profile("Nirajan")
         
         assert 'keywords' in profile

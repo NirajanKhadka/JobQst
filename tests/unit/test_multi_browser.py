@@ -6,7 +6,7 @@ Tests 2 browser contexts, then can be modified to test 3.
 
 import json
 from rich.console import Console
-from scrapers.eluta_multi_browser import ElutaMultiBrowserScraper
+from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
 
 console = Console()
 
@@ -36,7 +36,7 @@ def test_multi_browser_scraper(max_workers=2):
     
     try:
         # Create multi-browser scraper with anti-detection
-        scraper = ElutaMultiBrowserScraper(
+        scraper = ComprehensiveElutaScraper(
             profile,
             max_workers=max_workers,
             max_jobs_per_keyword=10,  # Reasonable limit for testing

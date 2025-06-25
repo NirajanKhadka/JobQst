@@ -9,7 +9,7 @@ import os
 import time
 import requests
 from rich.console import Console
-from typing import Optional
+from typing import Optional, List, Dict
 
 console = Console()
 
@@ -158,4 +158,53 @@ def check_ollama_status() -> bool:
 
 def setup_ollama_if_needed() -> bool:
     """Setup Ollama if not already configured."""
-    return check_ollama_status() 
+    return check_ollama_status()
+
+
+class OllamaManager:
+    """Manager class for Ollama operations."""
+    
+    def __init__(self):
+        """Initialize the Ollama manager."""
+        self.base_url = "http://localhost:11434"
+    
+    def get_available_models(self) -> List[Dict]:
+        """
+        Get list of available Ollama models.
+        
+        Returns:
+            List of model dictionaries with name and other metadata
+        """
+        try:
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                return data.get("models", [])
+            else:
+                console.print(f"[red]❌ Failed to get models: {response.status_code}[/red]")
+                return []
+        except requests.exceptions.RequestException as e:
+            console.print(f"[red]❌ Error getting models: {e}[/red]")
+            return []
+        except Exception as e:
+            console.print(f"[red]❌ Unexpected error getting models: {e}[/red]")
+            return []
+    
+    def is_service_running(self) -> bool:
+        """Check if Ollama service is running."""
+        return check_ollama_service()
+    
+    def start_service(self) -> bool:
+        """Start Ollama service."""
+        return start_ollama_service()
+    
+    def check_model(self, model_name: str) -> bool:
+        """Check if a specific model is available."""
+        try:
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            if response.status_code == 200:
+                models = response.json().get("models", [])
+                return any(model_name in model.get("name", "") for model in models)
+        except requests.exceptions.RequestException:
+            pass
+        return False 

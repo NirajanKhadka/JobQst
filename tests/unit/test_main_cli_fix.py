@@ -4,6 +4,10 @@ Test script to verify the main.py CLI functions fix.
 """
 
 import time
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -39,8 +43,8 @@ def test_main_cli_functions():
         
         # Test show_menu
         try:
-            import utils
-            profile = utils.load_profile("Nirajan")
+            
+            profile = load_profile("Nirajan")
             
             # Test show_menu (should not crash)
             console.print("[cyan]Testing show_menu function...[/cyan]")

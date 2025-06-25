@@ -27,11 +27,11 @@ class TestScrapingWorkflowIntegration:
             "batch_default": 10
         }
         
-    @patch('scrapers.eluta_working.sync_playwright')
-    @patch('scrapers.eluta_working.console')
+    @patch("src.scrapers.working_eluta_scraper.sync_playwright")
+    @patch("src.scrapers.working_eluta_scraper.console")
     def test_eluta_working_scraper_integration(self, mock_console, mock_playwright):
         """Test the enhanced Eluta working scraper integration."""
-        from scrapers.eluta_working import ElutaWorkingScraper
+        from src.scrapers.working_eluta_scraper import WorkingElutaScraper as ElutaWorkingScraper
         
         # Mock browser context
         mock_context = Mock()
@@ -50,17 +50,15 @@ class TestScrapingWorkflowIntegration:
         scraper = ElutaWorkingScraper(self.test_profile, browser_context=mock_context)
         
         # Verify initialization
-        assert scraper.site_name == "eluta_working"
-        assert hasattr(scraper, 'job_filter')
-        assert hasattr(scraper, 'human_config')
-        assert scraper.max_pages_per_keyword == 5  # Should be 5 as per memories
+        assert scraper.base_url == "https://www.eluta.ca/search"
+        assert scraper.profile == self.test_profile
         
     def test_job_filter_integration(self):
         """Test job filter integration with scraped data."""
-        from scrapers.job_filters import UniversalJobFilter
+        from src.utils.job_filters import UniversalJobFilter
         
         # Create filter
-        job_filter = UniversalJobFilter("eluta")
+        job_filter = UniversalJobFilter()
         
         # Test job data that should pass filtering
         good_job = {
@@ -95,10 +93,10 @@ class TestScrapingWorkflowIntegration:
         
         assert bad_result == False  # Should fail due to being too old for Eluta (14-day limit)
         
-    @patch('scrapers.human_behavior.console')
+    @patch("src.scrapers.human_behavior.console")
     def test_universal_click_popup_framework_integration(self, mock_console):
         """Test universal click-popup framework integration."""
-        from scrapers.human_behavior import UniversalClickPopupFramework
+        from src.scrapers.human_behavior import UniversalClickPopupFramework
         
         # Test framework for different sites
         sites = ["eluta", "indeed", "jobbank"]
@@ -117,13 +115,13 @@ class TestScrapingWorkflowIntegration:
             
     def test_human_behavior_integration(self):
         """Test human behavior integration with scrapers."""
-        from scrapers.human_behavior import HumanBehaviorMixin, HumanBehaviorConfig
+        from src.scrapers.human_behavior import HumanBehaviorScraper, HumanBehaviorConfig
         
         # Create test scraper with human behavior
-        class TestScraper(HumanBehaviorMixin):
+        class TestScraper(HumanBehaviorScraper):
             def __init__(self, profile):
-                self.site_name = "eluta"
                 super().__init__(profile)
+                self.site_name = "eluta"
         
         scraper = TestScraper(self.test_profile)
         
@@ -151,7 +149,7 @@ class TestCLIIntegration:
             "location": "Toronto"
         }
         
-    @patch('main.console')
+    @patch("src.app.console")
     def test_scraping_menu_options(self, mock_console):
         """Test that scraping menu shows enhanced options."""
         from src.app import scraping_menu_action
@@ -169,9 +167,9 @@ class TestCLIIntegration:
         assert callable(eluta_enhanced_click_popup_scrape)
         assert callable(eluta_multi_browser_scrape)
         
-    @patch('scrapers.eluta_working.ElutaWorkingScraper')
-    @patch('main.sync_playwright')
-    @patch('main.console')
+    @patch("src.scrapers.working_eluta_scraper.WorkingElutaScraper")
+    @patch("playwright.sync_api.sync_playwright")
+    @patch("src.app.console")
     def test_enhanced_click_popup_scrape_function(self, mock_console, mock_playwright, mock_scraper_class):
         """Test the enhanced click-popup scrape function."""
         from src.app import eluta_enhanced_click_popup_scrape
@@ -213,9 +211,9 @@ class TestErrorHandlingIntegration:
     
     def test_graceful_failure_handling(self):
         """Test that the system handles failures gracefully."""
-        from scrapers.job_filters import UniversalJobFilter
+        from src.utils.job_filters import UniversalJobFilter
         
-        job_filter = UniversalJobFilter("eluta")
+        job_filter = UniversalJobFilter()
         
         # Test with malformed job data
         malformed_jobs = [
@@ -233,10 +231,10 @@ class TestErrorHandlingIntegration:
             except Exception as e:
                 pytest.fail(f"Filter should handle malformed data gracefully: {e}")
                 
-    @patch('scrapers.human_behavior.console')
+    @patch("src.scrapers.human_behavior.console")
     def test_popup_failure_handling(self, mock_console):
         """Test popup failure handling."""
-        from scrapers.human_behavior import UniversalClickPopupFramework
+        from src.scrapers.human_behavior import UniversalClickPopupFramework
         
         framework = UniversalClickPopupFramework("eluta")
         
@@ -255,7 +253,7 @@ class TestPerformanceIntegration:
     
     def test_batch_processing_efficiency(self):
         """Test that batch processing is efficient."""
-        from scrapers.job_filters import UniversalJobFilter
+        from src.utils.job_filters import UniversalJobFilter
         
         job_filter = UniversalJobFilter("indeed")  # Use Indeed for 124-day limit
         

@@ -185,7 +185,7 @@ def test_background_process_logic():
         
         # Test that dashboard_api module exists
         try:
-            import dashboard_api
+            import src.dashboard_api
             console.print("[green]✅ dashboard_api module available[/green]")
         except ImportError:
             console.print("[red]❌ dashboard_api module not available[/red]")

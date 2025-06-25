@@ -14,7 +14,7 @@ def test_review_page_avoidance():
     """Test that the scraper avoids review pages."""
     try:
         # Import the enhanced scraper
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
         
         # Create a test profile with SQL developer (as mentioned by user)
         test_profile = {

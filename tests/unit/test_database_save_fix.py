@@ -4,7 +4,7 @@ Test script to verify that the database save fix is working.
 This script simulates the scraping process and tests database saving.
 """
 
-from job_database import get_job_db
+from src.core.job_database import get_job_db
 from rich.console import Console
 
 console = Console()

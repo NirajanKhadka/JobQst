@@ -25,7 +25,7 @@ from rich.table import Table
 from rich.prompt import Prompt
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from src.core import utils
+from src.utils import utils
 import psutil
 
 logger = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ class DashboardHandler:
         # Load session data
         scraped_jobs = self.session.get("scraped_jobs", [])
         done_jobs = self.session.get("done", [])
-        pending_jobs = [job for job in scraped_jobs if utils.hash_job(job) not in done_jobs]
+        pending_jobs = [job for job in scraped_jobs if generate_job_hash(job) not in done_jobs]
         
         # Create status table
         table = Table(title="System Status")
@@ -92,7 +92,7 @@ class DashboardHandler:
             recent_table.add_column("Status", style="green")
             
             for job in scraped_jobs[-5:]:  # Show last 5 jobs
-                job_hash = utils.hash_job(job)
+                job_hash = generate_job_hash(job)
                 status = "✅ Applied" if job_hash in done_jobs else "⏳ Pending"
                 recent_table.add_row(
                     job.get('title', 'Unknown')[:30],

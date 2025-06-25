@@ -6,6 +6,10 @@ Test the dashboard API endpoints to verify they're working correctly.
 import requests
 import json
 import sys
+from src.utils.profile_helpers import load_profile, get_available_profiles
+from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+from src.utils.document_generator import customize, DocumentGenerator
 from rich.console import Console
 
 console = Console()
@@ -150,13 +154,17 @@ def test_profile_loading():
     try:
         import sys
         sys.path.append('.')
-        import utils
         
-        profiles = utils.get_available_profiles()
+        from src.utils.profile_helpers import load_profile, get_available_profiles
+        from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
+        from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
+        from src.utils.document_generator import customize, DocumentGenerator
+        
+        profiles = get_available_profiles()
         console.print(f"✅ Available profiles: {profiles}")
         
         if 'Nirajan' in profiles:
-            profile = utils.load_profile('Nirajan')
+            profile = load_profile('Nirajan')
             console.print(f"✅ Nirajan profile loaded: {profile.get('name')}")
             return True
         else:

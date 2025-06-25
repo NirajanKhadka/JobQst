@@ -411,7 +411,7 @@ health_monitor = SystemHealthMonitor()
 def check_database_connection() -> bool:
     """Check if database connection is working."""
     try:
-        from job_database import get_job_db
+        from src.core.job_database import get_job_db
         db = get_job_db("health_check")
         # Try a simple query
         _ = db.get_job_stats()  # Just check if it works

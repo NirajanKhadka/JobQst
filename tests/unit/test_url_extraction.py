@@ -13,7 +13,7 @@ def test_url_extraction():
     """Test the URL extraction functionality."""
     try:
         # Import the enhanced scraper
-        from scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
         
         # Create a test profile
         test_profile = {

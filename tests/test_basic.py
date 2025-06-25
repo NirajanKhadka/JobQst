@@ -15,7 +15,7 @@ import pytest
 def test_basic_imports():
     """Test that basic modules can be imported."""
     try:
-        from core import utils
+        from src import utils
         assert utils is not None
     except ImportError:
         pytest.skip("core.utils not available")
@@ -27,7 +27,7 @@ def test_basic_imports():
         pytest.skip("document_generator not available")
     
     try:
-        from ats import detect, get_submitter
+        from src.ats import detect, get_submitter
         assert detect is not None
         assert get_submitter is not None
     except ImportError:
@@ -36,8 +36,8 @@ def test_basic_imports():
 def test_profile_loading():
     """Test loading a user profile."""
     try:
-        from core import utils
-        profile = utils.load_profile("Nirajan")
+        from src import utils
+        profile = load_profile("Nirajan")
         if profile:
             assert "name" in profile
             assert "keywords" in profile
@@ -49,7 +49,7 @@ def test_profile_loading():
 def test_job_database():
     """Test job database functionality."""
     try:
-        from core.job_database import JobDatabase
+        from src.core.job_database import JobDatabase
         db = JobDatabase("Nirajan")
         stats = db.get_stats()
         assert isinstance(stats, dict)

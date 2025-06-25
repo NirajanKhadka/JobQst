@@ -78,6 +78,10 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--ignore=test_import_errors.txt --ignore=test_results.txt --ignore=test_results2.txt --ignore=test_results3.txt --ignore=test_results_after_stub_methods.txt --ignore=test_results_eluta_scraper.txt"
+
 [project.urls]
 "Homepage" = "https://github.com/NirajanKhadka/automate_job_idea001"
 "Bug Tracker" = "https://github.com/NirajanKhadka/automate_job_idea001/issues"
