@@ -12,6 +12,8 @@ env/
 ENV/
 .env
 .python-version
+env.bak/
+venv.bak/
 
 # Generated documents and logs
 output/
@@ -41,6 +43,32 @@ profiles/*/playwright/
 profiles/*/session.json
 ipc.json
 
+# Personal info files
+Nirajan
+Nirajan Khadka
+*.personal
+personal_*
+user_*
+my_*
+
+# Project-specific markdown files to ignore (development notes)
+TODO.md
+TODO_LIST.md
+ISSUE_TRACKER.md
+CORE_WORKING_LOGIC.md
+FUNCTION_REGISTRY.md
+CODEBASE_ANALYSIS.md
+ARCHITECTURE_DIAGRAM.md
+ANALYSIS_DISCREPANCIES.md
+CURRENT_STATUS_SUMMARY.md
+REFACTORING_PLAN.md
+README_CORRECTED.md
+BUILD_GUIDE.md
+ELUTA_SCRAPING_REPORT.md
+FINAL_CLEANUP_SUMMARY.md
+FUNCTIONS_OVERVIEW.md
+SUCCESSFUL_METHODS.md
+
 # System files
 .DS_Store
 Thumbs.db
@@ -58,6 +86,7 @@ desktop.ini
 .ropeproject
 .project
 .pydevproject
+workspace.code-workspace
 
 # Distribution / packaging
 dist/
@@ -200,28 +229,114 @@ venv.bak/
 # mypy
 .mypy_cache/
 .dmypy.json
+dmypy.json
 
 # Pyre type checker
 .pyre/
 
-# VS Code
-.vscode/
+# Backup files
+*.backup
+*.bak
+*.backup.*
+*.bak.*
 
-# Node
-node_modules/
+# Test results and reports
+test_results.txt
+test_results2.txt
+test_results3.txt
+test_results_*.txt
+test_import_errors.txt
+test_imports.py
+test_basic_imports.py
+import_errors_summary.txt
 
-# Backup
-backups/
+# Fix scripts (temporary)
+fix_*.py
+migrate_*.py
+*.backup.*
 
-# Exclude data and output
-output/
-data/
+# Database files (except structure)
+*.db
+*.sqlite
+*.sqlite3
+test_*.db
 
-# Exclude test profile
-profiles/test_profile/
+# AI and code quality files
+.ai_code_quality
 
-# Test results
-eluta_test_results_*.json
+# Dashboard responses
+dashboard_api_response.json
+
+# File size reports
+file_size_report.txt
+
+# Error logs
+error_logs.log
+*.log
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Browser data
+playwright/
+browser_data/
+user_data/
+
+# Application data
+app_data/
+application_data/
+user_settings/
+
+# Cache directories
+.cache/
+cache/
+__pycache__/
+
+# Temporary test files
+temp/
+tmp/
+*.tmp
+.temp/
+.tmp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+*.lnk
+desktop.ini
+
+# Linux
+*~
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
 
 # PID files
 dashboard.pid
+*.pid
