@@ -33,6 +33,21 @@ except ImportError as e:
 
 
 if __name__ == "__main__":
+    # Check for help argument
+    if len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h', 'help']:
+        console.print("[bold blue]AutoJobAgent - Job Automation System[/bold blue]")
+        console.print("\n[cyan]Usage:[/cyan]")
+        console.print("  python main.py [profile_name]")
+        console.print("\n[cyan]Available Profiles:[/cyan]")
+        console.print("  - Nirajan (default)")
+        console.print("  - default")
+        console.print("  - test_profile")
+        console.print("\n[cyan]Examples:[/cyan]")
+        console.print("  python main.py Nirajan")
+        console.print("  python main.py default")
+        console.print("  python main.py --help")
+        sys.exit(0)
+    
     # Get profile name from command line argument
     profile_name = sys.argv[1] if len(sys.argv) > 1 else "Nirajan"
     
@@ -41,6 +56,7 @@ if __name__ == "__main__":
     if not profile:
         console.print(f"[red]❌ Profile '{profile_name}' not found![/red]")
         console.print(f"[yellow]Available profiles: {', '.join(['Nirajan', 'default', 'test_profile'])}[/yellow]")
+        console.print("[cyan]Use 'python main.py --help' for usage information[/cyan]")
         sys.exit(1)
     
     # Add profile_name to the profile dict

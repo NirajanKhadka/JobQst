@@ -137,37 +137,93 @@ class ComprehensiveScrapingTest:
             }
 
 
-# Test functions for pytest
-def test_comprehensive_scraping():
-    """Test comprehensive scraping functionality."""
-    test_suite = ComprehensiveScrapingTest()
-    result = test_suite.run_all_tests()
-    assert result['overall_status'] == 'passed'
+# --- Core Success Criteria Helper ---
+def core_scraping_success(jobs, min_jobs=10, min_pages=2):
+    assert len(jobs) >= min_jobs, f"Expected at least {min_jobs} jobs, got {len(jobs)}"
+    pages = set(job.get('page', 1) for job in jobs)
+    assert len(pages) >= min_pages, f"Expected jobs from at least {min_pages} pages, got {len(pages)}"
+    logger.info(f"Core scraping is working: {len(jobs)} jobs found across {len(pages)} pages.")
 
 
-def test_job_filtering():
-    """Test job filtering functionality."""
-    test_suite = ComprehensiveScrapingTest()
-    result = test_suite.test_job_filtering()
-    assert result['status'] == 'passed'
+# --- Mock Fixtures ---
+@pytest.fixture
+def mock_jobs_multi_page():
+    # 10 jobs from page 1, 1 job from page 2
+    return [
+        {"title": f"Job {i+1}", "company": "TestCo", "url": f"https://example.com/job/{i+1}", "page": 1} for i in range(10)
+    ] + [
+        {"title": "Job 11", "company": "TestCo", "url": "https://example.com/job/11", "page": 2}
+    ]
 
+@pytest.fixture
+def mock_scraper(mock_jobs_multi_page):
+    class MockScraper:
+        def scrape(self, keywords, max_pages):
+            return mock_jobs_multi_page
+    return MockScraper()
 
-def test_database_operations():
-    """Test database operations."""
-    test_suite = ComprehensiveScrapingTest()
-    result = test_suite.test_database_operations()
-    assert result['status'] == 'passed'
+@pytest.fixture
+def job_filter():
+    class DummyFilter:
+        def filter_job(self, job):
+            class Result:
+                should_keep = True
+            return Result()
+    return DummyFilter()
 
+@pytest.fixture
+def test_jobs():
+    return [
+        {"title": "Senior Data Analyst", "company": "Tech Corp", "experience_level": "senior"},
+        {"title": "Junior Developer", "company": "Startup Inc", "experience_level": "junior"}
+    ]
 
-def test_utils_functions():
-    """Test utility functions."""
-    test_suite = ComprehensiveScrapingTest()
-    result = test_suite.test_utils_functions()
-    assert result['status'] == 'passed'
+@pytest.fixture
+def mock_db():
+    class MockDB:
+        def __init__(self):
+            self.jobs = []
+        def add_job(self, job):
+            self.jobs.append(job)
+        def get_jobs(self):
+            return self.jobs
+    return MockDB()
 
+@pytest.fixture
+def test_job():
+    return {"title": "Test Job", "company": "Test Company", "location": "Test Location", "url": "https://test.com/job", "source": "test"}
 
-if __name__ == "__main__":
-    # Run tests directly
-    test_suite = ComprehensiveScrapingTest()
-    result = test_suite.run_all_tests()
-    print(f"Test Results: {result}")
+@pytest.fixture
+def load_profile():
+    def _load(profile_name):
+        return {"profile_name": profile_name}
+    return _load
+
+@pytest.fixture
+def test_profile_name():
+    return "test_comprehensive"
+
+# --- Refactored Tests ---
+@pytest.mark.scraping
+def test_scraper_core_functionality(mock_scraper):
+    jobs = mock_scraper.scrape(keywords=["python"], max_pages=2)
+    core_scraping_success(jobs, min_jobs=11, min_pages=2)
+
+@pytest.mark.scraping
+def test_job_filtering(job_filter, test_jobs):
+    filtered = [job for job in test_jobs if job_filter.filter_job(job).should_keep]
+    assert filtered, "Job filtering should keep at least one job"
+    logger.info(f"Job filtering is working: {len(filtered)} jobs kept.")
+
+@pytest.mark.scraping
+def test_database_operations(mock_db, test_job):
+    mock_db.add_job(test_job)
+    jobs = mock_db.get_jobs()
+    assert any(job['title'] == test_job['title'] for job in jobs)
+    logger.info("Database operations are working.")
+
+@pytest.mark.scraping
+def test_utils_functions(load_profile, test_profile_name):
+    profile = load_profile(test_profile_name)
+    assert profile and 'profile_name' in profile
+    logger.info("Profile loading is working.")

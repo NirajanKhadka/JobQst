@@ -8,7 +8,7 @@ from .document_generator import customize
 from .job_analysis_engine import JobAnalysisEngine
 from .enhanced_error_tolerance import ErrorTracker, RobustOperations
 from .enhanced_database_manager import DatabaseManager
-from .scraping_coordinator import OptimizedScrapingCoordinator, ScrapingMetrics
+from .scraping_coordinator import OptimizedScrapingCoordinator, ScrapingMetrics, ScrapingCoordinator
 from .resume_analyzer import ResumeAnalyzer
 from .manual_review_manager import ManualReviewManager
 from .error_tolerance_handler import RobustOperationManager, SystemHealthMonitor
@@ -37,6 +37,7 @@ __all__ = [
     'DatabaseManager',
     'OptimizedScrapingCoordinator',
     'ScrapingMetrics',
+    'ScrapingCoordinator',
     'ResumeAnalyzer',
     'ManualReviewManager',
     'RobustOperationManager',

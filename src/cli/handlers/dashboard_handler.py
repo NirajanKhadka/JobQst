@@ -185,7 +185,7 @@ class DashboardHandler:
     def _check_dashboard_running(self) -> bool:
         """Check if dashboard is running."""
         try:
-            response = requests.get(f"http://localhost:{self.port}/health", timeout=3)
+            response = requests.get(f"http://localhost:{self.port}/api/health", timeout=3)
             return response.status_code == 200
         except requests.exceptions.RequestException:
             return False

@@ -99,9 +99,119 @@ class ModernJobDatabase:
             conn.commit()
             return True
 
+    # Backward compatibility methods for tests
+    def delete_job(self, job_id: int) -> bool:
+        """Delete job by ID. Returns True if successful, False if not found."""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+                conn.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            logger.error(f"Error deleting job {job_id}: {e}")
+            return False
+
+    def get_job_by_id(self, job_id: int) -> Optional[Dict]:
+        """Get job by ID."""
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_jobs_by_company(self, company: str) -> List[Dict]:
+        """Get jobs by company name."""
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM jobs WHERE company LIKE ?", (f"%{company}%",))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_jobs_by_location(self, location: str) -> List[Dict]:
+        """Get jobs by location."""
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM jobs WHERE location LIKE ?", (f"%{location}%",))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_jobs_by_keyword(self, keyword: str) -> List[Dict]:
+        """Get jobs by search keyword."""
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM jobs WHERE search_keyword LIKE ?", (f"%{keyword}%",))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_jobs_by_date_range(self, start_date: str, end_date: str) -> List[Dict]:
+        """Get jobs by date range."""
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM jobs WHERE created_at BETWEEN ? AND ?", 
+                (start_date, end_date)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_job_count(self) -> int:
+        """Get total number of jobs."""
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT COUNT(*) FROM jobs")
+            return cursor.fetchone()[0]
+
+    def get_companies(self) -> List[str]:
+        """Get list of unique companies."""
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT DISTINCT company FROM jobs WHERE company IS NOT NULL")
+            return [row[0] for row in cursor.fetchall()]
+
+    def get_locations(self) -> List[str]:
+        """Get list of unique locations."""
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT DISTINCT location FROM jobs WHERE location IS NOT NULL")
+            return [row[0] for row in cursor.fetchall()]
+
+    def get_keywords(self) -> List[str]:
+        """Get list of unique search keywords."""
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT DISTINCT search_keyword FROM jobs WHERE search_keyword IS NOT NULL")
+            return [row[0] for row in cursor.fetchall()]
+
+    def clear_all_jobs(self) -> bool:
+        """Clear all jobs from database."""
+        try:
+            with self._get_connection() as conn:
+                conn.execute("DELETE FROM jobs")
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error clearing jobs: {e}")
+            return False
+
+    def backup_database(self, backup_path: str) -> bool:
+        """Backup database to specified path."""
+        try:
+            import shutil
+            shutil.copy2(self.db_path, backup_path)
+            return True
+        except Exception as e:
+            logger.error(f"Error backing up database: {e}")
+            return False
+
+    def restore_database(self, backup_path: str) -> bool:
+        """Restore database from backup."""
+        try:
+            import shutil
+            shutil.copy2(backup_path, self.db_path)
+            return True
+        except Exception as e:
+            logger.error(f"Error restoring database: {e}")
+            return False
+
+    def get_all_jobs(self) -> List[Dict]:
+        """Get all jobs from database."""
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM jobs")
+            return [dict(row) for row in cursor.fetchall()]
+
     def close(self):
         while not self._connection_pool.empty():
             self._connection_pool.get_nowait().close()
+
+# Backward compatibility alias for tests
+JobDatabase = ModernJobDatabase
 
 def get_job_db(profile: Optional[str] = None) -> "ModernJobDatabase":
     db_path = f"profiles/{profile}/{profile}.db" if profile else "data/jobs.db"

@@ -93,7 +93,7 @@ class DashboardManager:
             console.print("[yellow]⏳ Waiting for dashboard to start...[/yellow]")
             for i in range(30):  # Wait up to 30 seconds
                 try:
-                    response = requests.get(f"{self.dashboard_url}/api/quick-test", timeout=2)
+                    response = requests.get(f"{self.dashboard_url}/api/health", timeout=2)
                     if response.status_code == 200:
                         console.print(f"[green]✅ Dashboard started successfully on {self.dashboard_url}[/green]")
                         return True
@@ -125,7 +125,7 @@ class DashboardManager:
                 status["pid"] = self.dashboard_process.pid
                 
             # Check if port is responding
-            response = requests.get(f"{self.dashboard_url}/api/quick-test", timeout=5)
+            response = requests.get(f"{self.dashboard_url}/api/health", timeout=5)
             if response.status_code == 200:
                 status["health"] = "healthy"
             else:
