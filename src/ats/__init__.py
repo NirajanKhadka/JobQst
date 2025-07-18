@@ -1,5 +1,9 @@
 import warnings
-warnings.warn("[DEPRECATED] Use 'src.ats' instead of root-level 'ats' module. This module will be removed.", DeprecationWarning)
+
+warnings.warn(
+    "[DEPRECATED] Use 'src.ats' instead of root-level 'ats' module. This module will be removed.",
+    DeprecationWarning,
+)
 
 """
 ATS package initialization.
@@ -15,68 +19,50 @@ from playwright.sync_api import BrowserContext
 from .base_submitter import BaseSubmitter
 
 # Import fallback submitters
-from .fallback_submitters import GenericATSSubmitter, ManualApplicationSubmitter, EmergencyEmailSubmitter
+from .fallback_submitters import (
+    GenericATSSubmitter,
+    ManualApplicationSubmitter,
+    EmergencyEmailSubmitter,
+)
+
+# Import shared utilities
+from .ats_utils import detect_ats_system, ATS_PATTERNS
 
 # Import available submitters (some may be stubs)
 try:
     from .workday import WorkdaySubmitter
+
     WORKDAY_AVAILABLE = True
 except ImportError:
     WORKDAY_AVAILABLE = False
 
 try:
     from .icims import ICIMSSubmitter
+
     ICIMS_AVAILABLE = True
 except ImportError:
     ICIMS_AVAILABLE = False
 
 try:
     from .greenhouse import GreenhouseSubmitter
+
     GREENHOUSE_AVAILABLE = True
 except ImportError:
     GREENHOUSE_AVAILABLE = False
 
 try:
     from .bamboohr import BambooHRSubmitter
+
     BAMBOOHR_AVAILABLE = True
 except ImportError:
     BAMBOOHR_AVAILABLE = False
 
 try:
     from .lever import LeverSubmitter
+
     LEVER_AVAILABLE = True
 except ImportError:
     LEVER_AVAILABLE = False
-
-# URL patterns for ATS detection
-ATS_PATTERNS = {
-    "workday": [
-        r"myworkdayjobs\.com",
-        r"workday\.com",
-        r"wd3\.myworkdayjobs\.com",
-        r"workdayjobs\.com"
-    ],
-    "icims": [
-        r"icims\.com",
-        r"jobs\.icims\.com",
-        r"careers\.icims\.com"
-    ],
-    "greenhouse": [
-        r"greenhouse\.io",
-        r"boards\.greenhouse\.io",
-        r"app\.greenhouse\.io"
-    ],
-    "lever": [
-        r"lever\.co",
-        r"jobs\.lever\.co",
-        r"careers\.lever\.co"
-    ],
-    "bamboohr": [
-        r"bamboohr\.com",
-        r"\.bamboohr\.com",
-        r"careers\.bamboohr\.com"
-    ]
-}
 
 # Registry of ATS submitters - only include available ones
 ATS_SUBMITTERS = {}
@@ -101,24 +87,14 @@ if LEVER_AVAILABLE:
 def detect(url: str) -> str:
     """
     Detect the ATS system from a job URL.
-    
+
     Args:
         url: Job posting URL
-        
+
     Returns:
         ATS system name or "unknown"
     """
-    if not url:
-        return "unknown"
-    
-    url = url.lower()
-    
-    for ats_name, patterns in ATS_PATTERNS.items():
-        for pattern in patterns:
-            if re.search(pattern, url):
-                return ats_name
-    
-    return "unknown"
+    return detect_ats_system(url)
 
 
 def get_submitter(ats_name: str, browser_context: BrowserContext) -> BaseSubmitter:
@@ -161,6 +137,7 @@ def get_submitter_with_fallbacks(ats_name: str, browser_context: BrowserContext)
         ATS submitter instance (never fails)
     """
     from rich.console import Console
+
     console = Console()
 
     # Method 1: Try specific ATS submitter
@@ -190,8 +167,13 @@ def get_submitter_with_fallbacks(ats_name: str, browser_context: BrowserContext)
     return EmergencyEmailSubmitter(browser_context)
 
 
-def submit_application_with_fallbacks(job: dict, profile: dict, resume_path: str,
-                                    cover_letter_path: str, browser_context: BrowserContext) -> str:
+def submit_application_with_fallbacks(
+    job: dict,
+    profile: dict,
+    resume_path: str,
+    cover_letter_path: str,
+    browser_context: BrowserContext,
+) -> str:
     """
     Submit job application with comprehensive fallback methods.
 
@@ -206,9 +188,8 @@ def submit_application_with_fallbacks(job: dict, profile: dict, resume_path: str
         Application status string
     """
     from rich.console import Console
-    console = Console()
 
-    console.print(f"[bold]🚀 Starting application with fallbacks for: {job.get('title', 'Unknown')}[/bold]")
+    console = Console()
 
     # Detect ATS system
     ats_name = detect(job.get("url", ""))
@@ -219,31 +200,29 @@ def submit_application_with_fallbacks(job: dict, profile: dict, resume_path: str
 
     # Submit application
     try:
-        status = submitter.submit(job, profile, resume_path, cover_letter_path)
-        console.print(f"[bold green]✅ Application result: {status}[/bold green]")
-        return status
+        result = submitter.submit(job, profile, resume_path, cover_letter_path)
+        console.print(f"[green]✅ Application submitted: {result}[/green]")
+        return result
     except Exception as e:
-        console.print(f"[red]❌ All application methods failed: {e}[/red]")
-        return f"Failed - {str(e)}"
+        console.print(f"[red]❌ Application failed: {e}[/red]")
+        return f"Failed: {str(e)}"
 
-
-# Additional helper functions
 
 def register_submitter(ats_name: str, submitter_class) -> None:
     """
-    Register a new ATS submitter.
-    
+    Register a custom ATS submitter.
+
     Args:
-        ats_name: ATS system name
-        submitter_class: Submitter class
+        ats_name: Name of the ATS system
+        submitter_class: Submitter class to register
     """
     ATS_SUBMITTERS[ats_name] = submitter_class
 
 
 def get_supported_ats() -> list:
     """
-    Get a list of supported ATS systems.
-    
+    Get list of supported ATS systems.
+
     Returns:
         List of supported ATS system names
     """

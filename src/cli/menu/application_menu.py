@@ -15,13 +15,13 @@ console = Console()
 
 class ApplicationMenu:
     """Handles the application menu."""
-    
+
     def __init__(self, profile: Dict):
         self.profile = profile
         self.application_actions = ApplicationActions(profile)
-    
+
     def show_menu(self, args) -> None:
         """Show the application menu."""
         console.print(Panel("📝 Application Menu", style="bold blue"))
         # Implementation for application menu
-        pass 
+        pass

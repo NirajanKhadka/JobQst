@@ -12,4 +12,4 @@ from .actions import *
 from .menu import *
 
 __version__ = "2.0.0"
-__author__ = "AutoJobAgent Team" 
+__author__ = "AutoJobAgent Team"

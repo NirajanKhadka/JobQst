@@ -6,6 +6,7 @@ router = APIRouter()
 
 IPC_FILE = Path("output/ipc.json")
 
+
 def get_pause_status() -> bool:
     if not IPC_FILE.exists():
         return False
@@ -15,6 +16,7 @@ def get_pause_status() -> bool:
     except (json.JSONDecodeError, FileNotFoundError):
         return False
 
+
 def set_pause_status(pause: bool) -> bool:
     try:
         with open(IPC_FILE, "w") as f:
@@ -23,9 +25,11 @@ def set_pause_status(pause: bool) -> bool:
     except Exception:
         return False
 
+
 @router.get("/api/health")
 def health_check():
     return {"status": "healthy"}
+
 
 @router.get("/api/system-status")
 async def get_system_status():
@@ -33,8 +37,9 @@ async def get_system_status():
     return {
         "overall_health": {"status": "Healthy"},
         "databases": {"status": "Connected"},
-        "system_resources": {"cpu": {"percent_used": 0}}
+        "system_resources": {"cpu": {"percent_used": 0}},
     }
+
 
 @router.post("/action/pause")
 async def pause():
@@ -42,11 +47,13 @@ async def pause():
         return {"status": "paused"}
     return {"status": "error"}
 
+
 @router.post("/action/resume")
 async def resume():
     if set_pause_status(False):
         return {"status": "resumed"}
     return {"status": "error"}
+
 
 @router.get("/status")
 async def status():

@@ -15,6 +15,7 @@ from .db_queries import DBQueries
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class ModernJobDatabase:
     def __init__(self, db_path: str = "data/jobs.db"):
         self.db_path = Path(db_path)
@@ -41,32 +42,101 @@ class ModernJobDatabase:
 
     def _init_database(self):
         with self._get_connection() as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS jobs (
-                    id INTEGER PRIMARY KEY, job_id TEXT UNIQUE, title TEXT, company TEXT, 
-                    location TEXT, summary TEXT, url TEXT, search_keyword TEXT, site TEXT, 
-                    scraped_at TEXT, applied INTEGER DEFAULT 0, status TEXT DEFAULT 'new',
-                    raw_data TEXT, analysis_data TEXT,
+                    id INTEGER PRIMARY KEY, 
+                    job_id TEXT UNIQUE, 
+                    title TEXT, 
+                    company TEXT, 
+                    location TEXT, 
+                    summary TEXT, 
+                    url TEXT, 
+                    search_keyword TEXT, 
+                    site TEXT, 
+                    scraped_at TEXT, 
+                    applied INTEGER DEFAULT 0, 
+                    status TEXT DEFAULT 'scraped',
+                    experience_level TEXT,
+                    keywords TEXT,
+                    job_description TEXT,
+                    salary_range TEXT,
+                    job_type TEXT,
+                    remote_option TEXT,
+                    requirements TEXT,
+                    benefits TEXT,
+                    match_score REAL DEFAULT 0,
+                    processing_notes TEXT,
+                    application_date TEXT,
+                    application_status TEXT DEFAULT 'not_applied',
+                    raw_data TEXT, 
+                    analysis_data TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
             conn.commit()
 
     def add_job(self, job_data: Union[Dict, JobRecord]) -> bool:
         if isinstance(job_data, dict):
-            job_record = JobRecord(**{k: v for k, v in job_data.items() if k in JobRecord.__annotations__})
+            job_record = JobRecord(
+                **{k: v for k, v in job_data.items() if k in JobRecord.__annotations__}
+            )
         else:
             job_record = job_data
 
         with self._get_connection() as conn:
             if self._is_duplicate(conn, job_record):
                 return False
-            
-            conn.execute(
-                "INSERT INTO jobs (job_id, title, company, location, url) VALUES (?, ?, ?, ?, ?)",
-                (job_record.job_id, job_record.title, job_record.company, job_record.location, job_record.url)
-            )
+
+            # Prepare all fields for insertion
+            fields = [
+                "job_id",
+                "title",
+                "company",
+                "location",
+                "url",
+                "summary",
+                "search_keyword",
+                "site",
+                "scraped_at",
+                "status",
+                "experience_level",
+                "keywords",
+                "job_description",
+                "salary_range",
+                "job_type",
+                "remote_option",
+                "requirements",
+                "benefits",
+                "match_score",
+                "processing_notes",
+                "application_date",
+                "application_status",
+                "raw_data",
+                "analysis_data",
+            ]
+
+            # Create placeholders for SQL
+            placeholders = ", ".join(["?" for _ in fields])
+            field_names = ", ".join(fields)
+
+            # Prepare values
+            values = []
+            for field in fields:
+                if hasattr(job_record, field):
+                    value = getattr(job_record, field)
+                    # Convert lists/dicts to JSON strings
+                    if isinstance(value, (list, dict)):
+                        import json
+
+                        value = json.dumps(value)
+                    values.append(value)
+                else:
+                    values.append(None)
+
+            conn.execute(f"INSERT INTO jobs ({field_names}) VALUES ({placeholders})", values)
             conn.commit()
             return True
 
@@ -88,7 +158,7 @@ class ModernJobDatabase:
     def search_jobs(self, query: str, limit: int = 50) -> List[Dict]:
         with self._get_connection() as conn:
             return DBQueries(conn).search_jobs(query, limit)
-            
+
     def get_unapplied_jobs(self, limit: int = 100) -> List[Dict]:
         with self._get_connection() as conn:
             return DBQueries(conn).get_unapplied_jobs(limit)
@@ -98,6 +168,26 @@ class ModernJobDatabase:
             conn.execute("UPDATE jobs SET applied = 1 WHERE url = ?", (job_url,))
             conn.commit()
             return True
+
+    def update_application_status(self, job_id: int, status: str, notes: str = None) -> bool:
+        """Update application status for a job."""
+        try:
+            with self._get_connection() as conn:
+                if notes:
+                    conn.execute(
+                        "UPDATE jobs SET application_status = ?, processing_notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                        (status, notes, job_id)
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE jobs SET application_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                        (status, job_id)
+                    )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error updating application status: {e}")
+            return False
 
     # Backward compatibility methods for tests
     def delete_job(self, job_id: int) -> bool:
@@ -133,15 +223,16 @@ class ModernJobDatabase:
     def get_jobs_by_keyword(self, keyword: str) -> List[Dict]:
         """Get jobs by search keyword."""
         with self._get_connection() as conn:
-            cursor = conn.execute("SELECT * FROM jobs WHERE search_keyword LIKE ?", (f"%{keyword}%",))
+            cursor = conn.execute(
+                "SELECT * FROM jobs WHERE search_keyword LIKE ?", (f"%{keyword}%",)
+            )
             return [dict(row) for row in cursor.fetchall()]
 
     def get_jobs_by_date_range(self, start_date: str, end_date: str) -> List[Dict]:
         """Get jobs by date range."""
         with self._get_connection() as conn:
             cursor = conn.execute(
-                "SELECT * FROM jobs WHERE created_at BETWEEN ? AND ?", 
-                (start_date, end_date)
+                "SELECT * FROM jobs WHERE created_at BETWEEN ? AND ?", (start_date, end_date)
             )
             return [dict(row) for row in cursor.fetchall()]
 
@@ -166,7 +257,9 @@ class ModernJobDatabase:
     def get_keywords(self) -> List[str]:
         """Get list of unique search keywords."""
         with self._get_connection() as conn:
-            cursor = conn.execute("SELECT DISTINCT search_keyword FROM jobs WHERE search_keyword IS NOT NULL")
+            cursor = conn.execute(
+                "SELECT DISTINCT search_keyword FROM jobs WHERE search_keyword IS NOT NULL"
+            )
             return [row[0] for row in cursor.fetchall()]
 
     def clear_all_jobs(self) -> bool:
@@ -184,6 +277,7 @@ class ModernJobDatabase:
         """Backup database to specified path."""
         try:
             import shutil
+
             shutil.copy2(self.db_path, backup_path)
             return True
         except Exception as e:
@@ -206,12 +300,42 @@ class ModernJobDatabase:
             cursor = conn.execute("SELECT * FROM jobs")
             return [dict(row) for row in cursor.fetchall()]
 
+    def update_job_status(self, job_id: int, new_status: str) -> bool:
+        """Update job status by ID."""
+        try:
+            with self._get_connection() as conn:
+                conn.execute(
+                    "UPDATE jobs SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                    (new_status, job_id),
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error updating job status: {e}")
+            return False
+
+    def update_job_url(self, job_id: int, new_url: str) -> bool:
+        """Update job URL by ID."""
+        try:
+            with self._get_connection() as conn:
+                conn.execute(
+                    "UPDATE jobs SET url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                    (new_url, job_id),
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error updating job URL: {e}")
+            return False
+
     def close(self):
         while not self._connection_pool.empty():
             self._connection_pool.get_nowait().close()
 
+
 # Backward compatibility alias for tests
 JobDatabase = ModernJobDatabase
+
 
 def get_job_db(profile: Optional[str] = None) -> "ModernJobDatabase":
     db_path = f"profiles/{profile}/{profile}.db" if profile else "data/jobs.db"

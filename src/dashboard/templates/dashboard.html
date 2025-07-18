@@ -1063,7 +1063,12 @@
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <a href="${job.url}" target="_blank" class="text-indigo-600 hover:text-indigo-900 mr-4">View</a>
+                    <a href="${job.url}" target="_blank" class="text-indigo-600 hover:text-indigo-900 mr-2">View</a>
+                    <button onclick="applyToJob(${job.id}, '${job.title}', '${job.company}')" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs mr-2 btn-enhanced"
+                            ${job.application_status === 'applied' ? 'disabled' : ''}>
+                        ${job.application_status === 'applied' ? 'Applied' : 'Apply'}
+                    </button>
                     <button class="text-red-600 hover:text-red-900">Delete</button>
                 </td>
             `;
@@ -1132,6 +1137,117 @@
             toast.textContent = message;
             toastContainer.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
+        }
+
+        async function applyToJob(jobId, jobTitle, company) {
+            if (!selectedProfile) {
+                showToast('Please select a profile first', 'error');
+                return;
+            }
+
+            // Show application mode selection modal
+            const mode = await showApplicationModeModal(jobTitle, company);
+            if (!mode) return; // User cancelled
+
+            // Get the button element to update its state
+            const button = event.target;
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = mode === 'hybrid' ? 'Processing...' : 'Applying...';
+            button.classList.add('opacity-50');
+
+            try {
+                const response = await fetch(`/api/job/${jobId}/apply?mode=${mode}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showToast(`${result.message}`, 'success');
+                    
+                    // Open job URL if manual mode
+                    if (result.mode === 'manual' && result.job_url) {
+                        window.open(result.job_url, '_blank');
+                    }
+                    
+                    button.textContent = 'Applied';
+                    button.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    button.classList.add('bg-gray-500');
+                    button.disabled = true;
+                    
+                    // Refresh the jobs table to update the status
+                    setTimeout(() => {
+                        loadJobsTable();
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Failed to apply');
+                }
+            } catch (error) {
+                console.error('Apply error:', error);
+                showToast(`Failed to apply to job: ${error.message}`, 'error');
+                button.textContent = originalText;
+                button.disabled = false;
+                button.classList.remove('opacity-50');
+            }
+        }
+
+        async function showApplicationModeModal(jobTitle, company) {
+            return new Promise((resolve) => {
+                // Create modal HTML
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-backdrop';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 modal-content">
+                        <h3 class="text-lg font-semibold mb-4">Apply to ${jobTitle}</h3>
+                        <p class="text-gray-600 mb-4">at ${company}</p>
+                        
+                        <div class="space-y-3 mb-6">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="radio" name="applyMode" value="manual" checked class="form-radio">
+                                <div>
+                                    <div class="font-medium">Manual Apply</div>
+                                    <div class="text-sm text-gray-500">Mark as applied and open job page</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="radio" name="applyMode" value="hybrid" class="form-radio">
+                                <div>
+                                    <div class="font-medium">Guided Apply</div>
+                                    <div class="text-sm text-gray-500">AI-assisted application (if available)</div>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button onclick="this.closest('.modal-backdrop').remove(); resolve(null)" 
+                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button onclick="
+                                const mode = this.closest('.modal-backdrop').querySelector('input[name=applyMode]:checked').value;
+                                this.closest('.modal-backdrop').remove();
+                                resolve(mode);
+                            " class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                Apply
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Close on backdrop click
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        resolve(null);
+                    }
+                });
+            });
         }
 
         function showTableView() {
@@ -1235,5 +1351,8 @@
             // ... rest of dashboard init ...
         });
     </script>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
 </body>
 </html>

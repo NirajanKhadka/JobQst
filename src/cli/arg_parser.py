@@ -21,41 +21,65 @@ Examples:
   python main.py Nirajan --action dashboard        # Launch dashboard
   python main.py Nirajan --action shutdown         # Stop the dashboard
   python main.py Nirajan --action status           # Show status
-        """
+        """,
     )
 
     # Profile is required
     parser.add_argument("profile", help="Profile name to use (folder name in /profiles)")
 
     # Action commands
-    parser.add_argument("--action",
-                       choices=["interactive", "scrape", "apply", "apply-url", "apply-csv", "dashboard", "status", "setup", "process-queue", "shutdown"],
-                       default="interactive",
-                       help="Action to perform")
+    parser.add_argument(
+        "--action",
+        choices=[
+            "interactive",
+            "scrape",
+            "apply",
+            "apply-url",
+            "apply-csv",
+            "dashboard",
+            "status",
+            "setup",
+            "process-queue",
+            "shutdown",
+        ],
+        default="interactive",
+        help="Action to perform",
+    )
 
     # Scraping options
-    parser.add_argument("--sites",
-                       help="Comma-separated list of sites to scrape (eluta, indeed, workday)")
-    parser.add_argument("--keywords",
-                       help="Comma-separated list of keywords to search")
-    parser.add_argument("--batch", type=int,
-                       help="Number of jobs to process in each batch")
+    parser.add_argument(
+        "--sites", help="Comma-separated list of sites to scrape (eluta, indeed, workday)"
+    )
+    parser.add_argument("--keywords", help="Comma-separated list of keywords to search")
+    parser.add_argument("--batch", type=int, help="Number of jobs to process in each batch")
 
     # Application options
     parser.add_argument("--url", help="Specific job URL to apply to (use with --action apply-url)")
-    parser.add_argument("--csv", help="CSV file path for batch applications (use with --action apply-csv)")
-    parser.add_argument("--ats", choices=["workday", "icims", "greenhouse", "lever", "bamboohr", "auto", "manual"],
-                       help="ATS system to target (or 'auto' to detect)")
+    parser.add_argument(
+        "--csv", help="CSV file path for batch applications (use with --action apply-csv)"
+    )
+    parser.add_argument(
+        "--ats",
+        choices=["workday", "icims", "greenhouse", "lever", "bamboohr", "auto", "manual"],
+        help="ATS system to target (or 'auto' to detect)",
+    )
 
     # General options
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
-    parser.add_argument("--allow-senior", action="store_true", help="Don't skip senior job postings")
+    parser.add_argument(
+        "--allow-senior", action="store_true", help="Don't skip senior job postings"
+    )
     parser.add_argument("--headless", action="store_true", help="Run browser in headless mode")
-    parser.add_argument("--delay", type=int, default=30, help="Delay between applications in seconds")
+    parser.add_argument(
+        "--delay", type=int, default=30, help="Delay between applications in seconds"
+    )
     parser.add_argument("--preview", action="store_true", help="Preview jobs without applying")
 
-    subparsers = parser.add_subparsers(dest='subcommand')
-    parser_summarize_docs = subparsers.add_parser('summarize-docs', help='Summarize and update all core documentation files (README, ISSUE_TRACKER, STATUS).')
+    subparsers = parser.add_subparsers(dest="subcommand")
+    parser_summarize_docs = subparsers.add_parser(
+        "summarize-docs",
+        help="Summarize and update all core documentation files (README, ISSUE_TRACKER, STATUS).",
+    )
     parser_summarize_docs.set_defaults(func=summarize_docs_command)
 
     return parser
@@ -70,13 +94,13 @@ def parse_args() -> argparse.Namespace:
 def validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     """Validate and process arguments."""
     validated = vars(args)
-    
+
     # Process sites list
     if args.sites:
-        validated['sites'] = [site.strip() for site in args.sites.split(',')]
-    
+        validated["sites"] = [site.strip() for site in args.sites.split(",")]
+
     # Process keywords list
     if args.keywords:
-        validated['keywords'] = [keyword.strip() for keyword in args.keywords.split(',')]
-    
-    return validated 
+        validated["keywords"] = [keyword.strip() for keyword in args.keywords.split(",")]
+
+    return validated

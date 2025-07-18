@@ -13,9 +13,4 @@ from .application_handler import ApplicationHandler
 from .dashboard_handler import DashboardHandler
 from .system_handler import SystemHandler
 
-__all__ = [
-    'ScrapingHandler',
-    'ApplicationHandler', 
-    'DashboardHandler',
-    'SystemHandler'
-] 
+__all__ = ["ScrapingHandler", "ApplicationHandler", "DashboardHandler", "SystemHandler"]

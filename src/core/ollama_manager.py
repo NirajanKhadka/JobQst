@@ -2,6 +2,28 @@
 """
 Ollama Manager for AutoJobAgent
 Handles Ollama installation, service management, and model setup.
+
+This module manages the Ollama LLM service for text generation and model management.
+
+## Usage Pattern (Improved)
+- Always call `ensure_ollama_running()` before using `generate_with_ollama()` to guarantee the service is available.
+- This ensures robust, automated LLM-powered document generation and avoids connection errors.
+
+Example:
+    from src.core.ollama_manager import ensure_ollama_running, generate_with_ollama
+    if ensure_ollama_running():
+        result = generate_with_ollama('Your prompt here')
+        print(result)
+    else:
+        print('Ollama service could not be started.')
+
+## Functions
+- check_ollama_service(): Check if Ollama is running
+- start_ollama_service(): Start Ollama service
+- ensure_ollama_running(): Ensure Ollama is running (recommended)
+- generate_with_ollama(): Generate text from Ollama (call after ensure_ollama_running)
+
+This pattern is an improvement for reliability and automation.
 """
 
 import subprocess
@@ -22,7 +44,7 @@ def check_ollama_installation() -> bool:
             capture_output=True,
             text=True,
             timeout=5,
-            shell=True if os.name == 'nt' else False
+            shell=True if os.name == "nt" else False,
         )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
@@ -34,7 +56,7 @@ def install_ollama_guide():
     console.print("\n[bold red]❌ Ollama is not installed[/bold red]")
     console.print("\n[bold cyan]📥 Ollama Installation Guide:[/bold cyan]")
 
-    if os.name == 'nt':  # Windows
+    if os.name == "nt":  # Windows
         console.print("1. Visit: [link]https://ollama.ai[/link]")
         console.print("2. Download the Windows installer")
         console.print("3. Run the installer as Administrator")
@@ -61,18 +83,20 @@ def start_ollama_service() -> bool:
     console.print("[cyan]🚀 Starting Ollama service...[/cyan]")
 
     try:
-        if os.name == 'nt':  # Windows
+        if os.name == "nt":  # Windows
             # On Windows, try to start ollama serve
             subprocess.Popen(
                 ["ollama", "serve"],
                 shell=True,
-                creationflags=subprocess.CREATE_NEW_CONSOLE if hasattr(subprocess, 'CREATE_NEW_CONSOLE') else 0
+                creationflags=(
+                    subprocess.CREATE_NEW_CONSOLE
+                    if hasattr(subprocess, "CREATE_NEW_CONSOLE")
+                    else 0
+                ),
             )
         else:  # Linux/macOS
             subprocess.Popen(
-                ["ollama", "serve"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                ["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
 
         # Wait for service to start
@@ -113,7 +137,7 @@ def download_mistral_model() -> bool:
             capture_output=True,
             text=True,
             timeout=600,  # 10 minutes timeout for model download
-            shell=True if os.name == 'nt' else False
+            shell=True if os.name == "nt" else False,
         )
 
         if result.returncode == 0:
@@ -161,17 +185,39 @@ def setup_ollama_if_needed() -> bool:
     return check_ollama_status()
 
 
+def ensure_ollama_running() -> bool:
+    """
+    Ensure Ollama service is running. Starts it if not running.
+    Returns True if running, False otherwise.
+    """
+    if check_ollama_service():
+        return True
+    return start_ollama_service()
+
+
+def generate_with_ollama(prompt: str, model: str = "mistral") -> str:
+    """
+    Generate text from Ollama using the specified model and prompt.
+    Always call ensure_ollama_running() before using this function.
+    """
+    url = "http://localhost:11434/api/generate"
+    payload = {"model": model, "prompt": prompt, "stream": False}
+    response = requests.post(url, json=payload, timeout=60)
+    response.raise_for_status()
+    return response.json()["response"]
+
+
 class OllamaManager:
     """Manager class for Ollama operations."""
-    
+
     def __init__(self):
         """Initialize the Ollama manager."""
         self.base_url = "http://localhost:11434"
-    
+
     def get_available_models(self) -> List[Dict]:
         """
         Get list of available Ollama models.
-        
+
         Returns:
             List of model dictionaries with name and other metadata
         """
@@ -189,15 +235,15 @@ class OllamaManager:
         except Exception as e:
             console.print(f"[red]❌ Unexpected error getting models: {e}[/red]")
             return []
-    
+
     def is_service_running(self) -> bool:
         """Check if Ollama service is running."""
         return check_ollama_service()
-    
+
     def start_service(self) -> bool:
         """Start Ollama service."""
         return start_ollama_service()
-    
+
     def check_model(self, model_name: str) -> bool:
         """Check if a specific model is available."""
         try:
@@ -207,4 +253,4 @@ class OllamaManager:
                 return any(model_name in model.get("name", "") for model in models)
         except requests.exceptions.RequestException:
             pass
-        return False 
+        return False

@@ -1,32 +1,14 @@
-import psutil
 from typing import Dict
+from .health_utils import check_browser_processes as _check_browser_processes
 
-def check_browser_processes(config: Dict) -> Dict:
-    """Check for zombie browser processes."""
-    try:
-        browser_processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'memory_info']):
-            try:
-                if any(browser in proc.info['name'].lower() for browser in ['chrome', 'firefox', 'edge', 'opera']):
-                    browser_processes.append(proc.info)
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
-        
-        process_limit = config.get("browser_process_limit", 20)
-        if len(browser_processes) > process_limit:
-            return {
-                "status": "warning",
-                "message": f"Many browser processes running: {len(browser_processes)}"
-            }
-        else:
-            return {
-                "status": "healthy",
-                "message": f"Browser processes normal: {len(browser_processes)} running"
-            }
-            
-    except Exception as e:
-        return {"status": "error", "message": f"Browser process check failed: {str(e)}"}
 
 def check_browser(config: Dict) -> Dict:
-    """Alias for check_browser_processes to match system health monitor expectations."""
-    return check_browser_processes(config)
+    """Check for zombie browser processes using shared utilities."""
+    result = _check_browser_processes(config)
+    return result.to_dict()
+
+
+def check_browser_processes(config: Dict) -> Dict:
+    """Alias for check_browser to maintain backward compatibility."""
+    result = _check_browser_processes(config)
+    return result.to_dict()

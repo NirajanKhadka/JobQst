@@ -7,81 +7,86 @@ from rich.console import Console
 
 console = Console()
 
+
 class DashboardManager:
-    """Manages the lifecycle of the dashboard server."""
+    """Manages the lifecycle of the Simple HTTP dashboard server."""
+
     _process = None
-    _port = 8002
+    _port = 8501  # Changed to Simple HTTP Dashboard port
 
     @classmethod
     def start(cls, verbose: bool = False) -> bool:
-        """Starts the dashboard if it's not already running."""
+        """Starts the Simple HTTP dashboard if it's not already running."""
         if cls.is_running():
-            # console.print(f"[cyan]Dashboard already running at http://localhost:{cls._port}[/cyan]")
+            # console.print(f"[cyan]Simple HTTP Dashboard already running at http://localhost:{cls._port}[/cyan]")
             return True
 
-        console.print(f"[green]Starting dashboard on port {cls._port}...[/green]")
+        console.print(f"[green]Starting Simple HTTP Dashboard on port {cls._port}...[/green]")
         try:
             stdout = None if verbose else subprocess.DEVNULL
             stderr = None if verbose else subprocess.DEVNULL
-            
+
+            # Use the Simple HTTP Dashboard
             cls._process = subprocess.Popen(
-                [sys.executable, "-m", "uvicorn", "src.dashboard.api:app", "--port", str(cls._port), "--host", "0.0.0.0"],
-                stdout=stdout,
-                stderr=stderr
+                [sys.executable, "src/dashboard/simple_dashboard.py"], stdout=stdout, stderr=stderr
             )
-            
+
             # Wait for the server to start
             for _ in range(10):  # 10 seconds timeout
                 if cls.is_running():
-                    console.print(f"[green]✅ Dashboard started successfully at: http://localhost:{cls._port}[/green]")
+                    console.print(
+                        f"[green]✅ Simple HTTP Dashboard started successfully at: http://localhost:{cls._port}[/green]"
+                    )
                     return True
                 time.sleep(1)
 
-            console.print("[red]❌ Dashboard failed to start.[/red]")
+            console.print("[red]❌ Simple HTTP Dashboard failed to start.[/red]")
             cls.stop()
             return False
         except Exception as e:
-            console.print(f"[red]❌ Error starting dashboard: {e}[/red]")
+            console.print(f"[red]❌ Error starting Simple HTTP Dashboard: {e}[/red]")
             return False
 
     @classmethod
     def stop(cls):
-        """Stops the dashboard process if it's running."""
+        """Stops the Simple HTTP dashboard process if it's running."""
         if cls._process:
             try:
                 cls._process.terminate()
                 cls._process.wait(timeout=5)
-                console.print("[yellow]Dashboard stopped.[/yellow]")
+                console.print("[yellow]Simple HTTP Dashboard stopped.[/yellow]")
             except subprocess.TimeoutExpired:
                 cls._process.kill()
-                console.print("[red]Dashboard forcefully killed.[/red]")
+                console.print("[red]Simple HTTP Dashboard forcefully killed.[/red]")
             except Exception as e:
-                console.print(f"[red]Error stopping dashboard: {e}[/red]")
+                console.print(f"[red]Error stopping Simple HTTP Dashboard: {e}[/red]")
             finally:
                 cls._process = None
 
     @classmethod
     def is_running(cls) -> bool:
-        """Checks if the dashboard server is responsive."""
+        """Checks if the Simple HTTP dashboard server is responsive."""
         if cls._process and cls._process.poll() is not None:
             # Process has terminated
             cls._process = None
             return False
-            
+
         try:
             response = requests.get(f"http://localhost:{cls._port}/api/health", timeout=1)
             return response.status_code == 200
         except requests.exceptions.RequestException:
             return False
 
+
 class ProcessManager:
     """Manages subprocesses for scraping, ATS, document generation."""
+
     def __init__(self, profile):
         self.processes = {}
         self.queues = {}
         self.shutdown_event = multiprocessing.Event()
         self.profile = profile
-        self.is_main_process = multiprocessing.current_process().name == 'MainProcess'
+        self.is_main_process = multiprocessing.current_process().name == "MainProcess"
 
         if self.is_main_process:
             self._initialize_main_process_components()
@@ -104,16 +109,15 @@ class ProcessManager:
         monitor.run_comprehensive_health_check()
         console.print("[green]✅ System health checks performed.[/green]")
 
-
     def start_process(self, name, target, args=()):
         if name in self.processes and self.processes[name].is_alive():
             console.print(f"[yellow]Process '{name}' already running.[/yellow]")
             return
-        
+
         queue = multiprocessing.Queue()
         # Pass profile name instead of the whole object if it's not picklable
         all_args = (self.profile["profile_name"], queue, self.shutdown_event) + args
-        
+
         proc = multiprocessing.Process(target=target, args=all_args, name=name)
         proc.start()
         self.processes[name] = proc
@@ -128,7 +132,7 @@ class ProcessManager:
                 proc.join(timeout=5)
                 if proc.is_alive():
                     proc.terminate()
-                    proc.join(timeout=2) # wait for termination
+                    proc.join(timeout=2)  # wait for termination
                     if proc.is_alive():
                         proc.kill()
             console.print(f"[red]Stopped process: {name}[/red]")
@@ -138,7 +142,9 @@ class ProcessManager:
     def monitor_processes(self):
         for name, proc in list(self.processes.items()):
             if not proc.is_alive():
-                console.print(f"[red]Process '{name}' exited unexpectedly with code {proc.exitcode}.[/red]")
+                console.print(
+                    f"[red]Process '{name}' exited unexpectedly with code {proc.exitcode}.[/red]"
+                )
                 del self.processes[name]
                 if name in self.queues:
                     del self.queues[name]
@@ -148,15 +154,17 @@ class ProcessManager:
         self.shutdown_event.set()
         for name, proc in list(self.processes.items()):
             self.stop_process(name)
-        
+
         if self.is_main_process:
             DashboardManager.stop()
-        
+
         self.processes.clear()
         self.queues.clear()
         console.print("[yellow]All subprocesses shut down.[/yellow]")
 
+
 # Helper function to access job_db, needed for health check
 def get_job_db(profile_name):
     from src.core.job_database import get_job_db as get_db
+
     return get_db(profile_name)

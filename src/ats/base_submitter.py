@@ -1,7 +1,7 @@
 from src.utils.profile_helpers import load_profile, get_available_profiles
 from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
 from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
-from src.utils.document_generator import customize, DocumentGenerator
+from src.document_modifier.document_modifier import customize, DocumentModifier
 from src.core.exceptions import NeedsHumanException
 
 """
@@ -18,51 +18,53 @@ from rich.console import Console
 # Import specific functions for common functionality
 from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json
 from src.utils.job_helpers import generate_job_hash, is_duplicate_job
-from src.utils.document_generator import customize
+from src.document_modifier.document_modifier import customize
 from src.core.browser_utils import FormUtils
+from src.utils.document_generator import customize
 
 console = Console()
+
 
 class BaseSubmitter(ABC):
     """
     Base class for all ATS submitters.
     Defines the common interface and utility methods for ATS automation.
     """
-    
+
     def __init__(self, browser_context: BrowserContext):
         """
         Initialize the submitter with a browser context.
-        
+
         Args:
             browser_context: Playwright browser context
         """
         self.ctx = browser_context
-    
+
     @abstractmethod
     def submit(self, job: Dict, profile: Dict, resume_path: str, cover_letter_path: str) -> str:
         """
         Submit an application to an ATS.
         Must be implemented by subclasses.
-        
+
         Args:
             job: Job dictionary with details
             profile: User profile dictionary
             resume_path: Path to the resume file
             cover_letter_path: Path to the cover letter file
-            
+
         Returns:
             Status string (e.g., "Applied", "Failed", "Manual")
         """
         pass
-    
+
     def wait_for_navigation(self, page: Page, timeout: int = 30000) -> bool:
         """
         Wait for page navigation to complete.
-        
+
         Args:
             page: Playwright page
             timeout: Timeout in milliseconds
-            
+
         Returns:
             True if navigation completed, False otherwise
         """
@@ -72,17 +74,17 @@ class BaseSubmitter(ABC):
         except PlaywrightTimeoutError:
             console.print("[yellow]Navigation timeout, continuing anyway[/yellow]")
             return False
-    
+
     def check_for_captcha(self, page: Page) -> bool:
         """
         Check if a CAPTCHA is present on the page.
-        
+
         Args:
             page: Playwright page
-            
+
         Returns:
             True if CAPTCHA detected, False otherwise
-            
+
         Raises:
             NeedsHumanException: If CAPTCHA is detected
         """
@@ -91,49 +93,49 @@ class BaseSubmitter(ABC):
             "iframe[src*=recaptcha]",
             "div.g-recaptcha",
             "div[class*=captcha]",
-            "input[name*=captcha]"
+            "input[name*=captcha]",
         ]
-        
+
         for selector in captcha_selectors:
             if page.is_visible(selector):
                 console.print("[bold red]CAPTCHA detected![/bold red]")
                 raise NeedsHumanException("CAPTCHA detected, human intervention required")
-        
+
         return False
-    
+
     def fill_form_fields(self, page: Page, field_mappings: Dict[str, str]) -> int:
         """
         Fill form fields based on mappings.
-        
+
         Args:
             page: Playwright page
             field_mappings: Dictionary mapping selectors to values
-            
+
         Returns:
             Number of fields successfully filled
         """
         fields_filled = 0
-        
+
         for selector, value in field_mappings.items():
             try:
                 if FormUtils.fill_if_empty(page, selector, value):
                     fields_filled += 1
             except Exception as e:
                 console.print(f"[yellow]Failed to fill field {selector}: {e}[/yellow]")
-        
+
         return fields_filled
-    
+
     def upload_resume(self, page: Page, resume_path: str) -> bool:
         """
         Upload a resume to the ATS.
-        
+
         Args:
             page: Playwright page
             resume_path: Path to the resume file
-            
+
         Returns:
             True if successful, False otherwise
-            
+
         Raises:
             NeedsHumanException: If upload fails
         """
@@ -145,19 +147,19 @@ class BaseSubmitter(ABC):
             "input[type=file]:below(:text('CV'))",
             "input[type=file]:below(:text('Upload'))",
             "input[type=file][accept*=pdf]",
-            "input[type=file][accept*=docx]"
+            "input[type=file][accept*=docx]",
         ]
-        
+
         return FormUtils.smart_attach(page, resume_selectors, resume_path)
-    
+
     def upload_cover_letter(self, page: Page, cover_letter_path: str) -> bool:
         """
         Upload a cover letter to the ATS.
-        
+
         Args:
             page: Playwright page
             cover_letter_path: Path to the cover letter file
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -167,50 +169,58 @@ class BaseSubmitter(ABC):
             "input[type=file][name*=letter]",
             "input[type=file]:below(:text('Cover'))",
             "input[type=file]:below(:text('Letter'))",
-            "input[type=file]:nth-of-type(2)"
+            "input[type=file]:nth-of-type(2)",
         ]
-        
+
         try:
             return FormUtils.smart_attach(page, cover_letter_selectors, cover_letter_path)
         except NeedsHumanException:
             # Cover letter is often optional, so don't raise an exception
             console.print("[yellow]Could not upload cover letter automatically[/yellow]")
             return False
-    
+
     def fill_personal_info(self, page: Page, profile: Dict) -> int:
         """
         Fill common personal information fields.
-        
+
         Args:
             page: Playwright page
             profile: User profile dictionary
-            
+
         Returns:
             Number of fields successfully filled
         """
         # Map profile fields to common form field selectors
         field_mappings = {
-            "input[name*=firstName]": profile.get("name", "").split()[0] if profile.get("name") else "",
-            "input[name*=lastName]": profile.get("name", "").split()[-1] if profile.get("name") else "",
-            "input[name*=first_name]": profile.get("name", "").split()[0] if profile.get("name") else "",
-            "input[name*=last_name]": profile.get("name", "").split()[-1] if profile.get("name") else "",
+            "input[name*=firstName]": (
+                profile.get("name", "").split()[0] if profile.get("name") else ""
+            ),
+            "input[name*=lastName]": (
+                profile.get("name", "").split()[-1] if profile.get("name") else ""
+            ),
+            "input[name*=first_name]": (
+                profile.get("name", "").split()[0] if profile.get("name") else ""
+            ),
+            "input[name*=last_name]": (
+                profile.get("name", "").split()[-1] if profile.get("name") else ""
+            ),
             "input[type=email]": profile.get("email", ""),
             "input[name*=email]": profile.get("email", ""),
             "input[name*=phone]": profile.get("phone", ""),
             "input[name*=telephone]": profile.get("phone", ""),
             "input[name*=location]": profile.get("location", ""),
-            "input[name*=address]": profile.get("location", "")
+            "input[name*=address]": profile.get("location", ""),
         }
-        
+
         return self.fill_form_fields(page, field_mappings)
-    
+
     def click_next_button(self, page: Page) -> bool:
         """
         Click the next/continue button.
-        
+
         Args:
             page: Playwright page
-            
+
         Returns:
             True if button was clicked, False otherwise
         """
@@ -221,9 +231,9 @@ class BaseSubmitter(ABC):
             "input[type=submit][value*=Next]",
             "input[type=submit][value*=Continue]",
             "a:has-text('Next')",
-            "a:has-text('Continue')"
+            "a:has-text('Continue')",
         ]
-        
+
         for selector in next_button_selectors:
             try:
                 if page.is_visible(selector):
@@ -232,16 +242,16 @@ class BaseSubmitter(ABC):
                     return True
             except Exception:
                 continue
-        
+
         return False
-    
+
     def click_submit_button(self, page: Page) -> bool:
         """
         Click the final submit button.
-        
+
         Args:
             page: Playwright page
-            
+
         Returns:
             True if button was clicked, False otherwise
         """
@@ -252,9 +262,9 @@ class BaseSubmitter(ABC):
             "input[type=submit][value*=Submit]",
             "input[type=submit][value*=Apply]",
             "a:has-text('Submit')",
-            "a:has-text('Apply')"
+            "a:has-text('Apply')",
         ]
-        
+
         for selector in submit_button_selectors:
             try:
                 if page.is_visible(selector):
@@ -263,13 +273,13 @@ class BaseSubmitter(ABC):
                     return True
             except Exception:
                 continue
-        
+
         return False
-    
+
     def wait_for_human(self, page: Page, message: str) -> None:
         """
         Wait for human intervention.
-        
+
         Args:
             page: Playwright page
             message: Message to display
@@ -277,6 +287,7 @@ class BaseSubmitter(ABC):
         console.print(f"[bold yellow]Human intervention required: {message}[/bold yellow]")
         console.print("[bold yellow]Press Enter when ready to continue...[/bold yellow]")
         input()
+
 
 class TestBaseSubmitter(BaseSubmitter):
     def submit(self, job_data):

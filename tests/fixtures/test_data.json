@@ -1,0 +1,172 @@
+{
+  "sample_jobs": [
+    {
+      "title": "Senior Python Developer",
+      "company": "TechCorp Inc.",
+      "location": "Toronto, ON",
+      "description": "We are seeking an experienced Python developer to join our team. You will work on building scalable web applications using Django, integrate with PostgreSQL databases, and deploy on AWS cloud infrastructure. The ideal candidate has 3+ years of Python development experience and is passionate about clean, maintainable code.",
+      "skills": ["Python", "Django", "PostgreSQL", "AWS", "Git"],
+      "salary_range": "$80,000 - $120,000",
+      "job_type": "Full-time",
+      "experience_level": "Senior",
+      "remote_option": false,
+      "posted_date": "2025-07-13",
+      "application_deadline": "2025-08-13",
+      "benefits": ["Health Insurance", "RRSP Matching", "Learning Budget"]
+    },
+    {
+      "title": "Data Analyst",
+      "company": "Analytics Solutions Ltd",
+      "location": "Vancouver, BC", 
+      "description": "Join our data team to analyze business metrics and create insightful reports. You'll work with SQL databases, Python for data analysis, and create visualizations using Tableau. Experience with Excel and statistical analysis is required. This is a great opportunity for someone looking to grow their data analysis skills.",
+      "skills": ["SQL", "Python", "Tableau", "Excel", "Statistics"],
+      "salary_range": "$55,000 - $75,000",
+      "job_type": "Full-time",
+      "experience_level": "Mid",
+      "remote_option": true,
+      "posted_date": "2025-07-12",
+      "application_deadline": "2025-08-12",
+      "benefits": ["Remote Work", "Flexible Hours", "Health Insurance"]
+    },
+    {
+      "title": "Full Stack Developer",
+      "company": "WebDev Studio",
+      "location": "Montreal, QC",
+      "description": "We're looking for a versatile full stack developer to work on client projects. You'll use React for frontend development, Node.js for backend services, and work with MongoDB databases. Knowledge of modern JavaScript frameworks and RESTful APIs is essential. Great opportunity to work with diverse clients and technologies.",
+      "skills": ["JavaScript", "React", "Node.js", "MongoDB", "REST APIs"],
+      "salary_range": "$65,000 - $85,000",
+      "job_type": "Full-time", 
+      "experience_level": "Mid",
+      "remote_option": true,
+      "posted_date": "2025-07-11",
+      "application_deadline": "2025-08-11",
+      "benefits": ["Hybrid Work", "Project Variety", "Professional Development"]
+    },
+    {
+      "title": "Junior Software Developer",
+      "company": "StartupTech",
+      "location": "Calgary, AB",
+      "description": "Perfect entry-level position for a recent graduate or career changer. You'll learn Python development, work with our senior developers, and contribute to our SaaS platform. We provide mentorship and training to help you grow your skills. Experience with any programming language and eagerness to learn are the main requirements.",
+      "skills": ["Python", "Git", "Linux", "Problem Solving"],
+      "salary_range": "$45,000 - $60,000",
+      "job_type": "Full-time",
+      "experience_level": "Junior",
+      "remote_option": false,
+      "posted_date": "2025-07-10",
+      "application_deadline": "2025-08-10",
+      "benefits": ["Mentorship", "Training", "Growth Opportunities"]
+    },
+    {
+      "title": "DevOps Engineer",
+      "company": "CloudFirst Technologies",
+      "location": "Ottawa, ON",
+      "description": "Join our infrastructure team to manage cloud deployments and CI/CD pipelines. You'll work with AWS, Docker containers, Kubernetes orchestration, and automate deployment processes. Experience with infrastructure as code and monitoring tools is preferred. This role requires strong problem-solving skills and attention to detail.",
+      "skills": ["AWS", "Docker", "Kubernetes", "CI/CD", "Infrastructure as Code"],
+      "salary_range": "$75,000 - $100,000", 
+      "job_type": "Full-time",
+      "experience_level": "Senior",
+      "remote_option": true,
+      "posted_date": "2025-07-09",
+      "application_deadline": "2025-08-09",
+      "benefits": ["Remote Work", "Cloud Certifications", "Technical Challenges"]
+    }
+  ],
+  
+  "test_profiles": [
+    {
+      "name": "Alex Johnson",
+      "email": "alex.johnson@email.com",
+      "phone": "416-555-0123",
+      "location": "Toronto, ON",
+      "skills": ["Python", "Django", "PostgreSQL", "Git", "AWS"],
+      "experience_years": 4,
+      "education": "Bachelor of Computer Science",
+      "current_role": "Software Developer",
+      "summary": "Experienced Python developer with 4 years of web application development. Skilled in Django framework, database design, and cloud deployment. Passionate about writing clean, maintainable code and learning new technologies.",
+      "preferences": {
+        "salary_min": 70000,
+        "remote_work": true,
+        "job_types": ["Full-time"],
+        "locations": ["Toronto, ON", "Remote"]
+      }
+    },
+    {
+      "name": "Sarah Chen",
+      "email": "sarah.chen@email.com", 
+      "phone": "604-555-0456",
+      "location": "Vancouver, BC",
+      "skills": ["SQL", "Python", "Tableau", "Excel", "R", "Statistics"],
+      "experience_years": 2,
+      "education": "Master of Data Science",
+      "current_role": "Junior Data Analyst",
+      "summary": "Data analyst with strong statistical background and 2 years of experience. Proficient in SQL for data extraction, Python for analysis, and Tableau for visualization. Looking to advance career in data science.",
+      "preferences": {
+        "salary_min": 55000,
+        "remote_work": true,
+        "job_types": ["Full-time", "Contract"],
+        "locations": ["Vancouver, BC", "Remote"]
+      }
+    },
+    {
+      "name": "Michael Rodriguez",
+      "email": "michael.rodriguez@email.com",
+      "phone": "514-555-0789", 
+      "location": "Montreal, QC",
+      "skills": ["JavaScript", "React", "Node.js", "Express", "MongoDB", "HTML", "CSS"],
+      "experience_years": 3,
+      "education": "Diploma in Web Development",
+      "current_role": "Frontend Developer",
+      "summary": "Full stack web developer with 3 years of experience building modern web applications. Strong frontend skills with React and growing backend expertise with Node.js. Enjoys working on user-facing features and API development.",
+      "preferences": {
+        "salary_min": 60000,
+        "remote_work": false,
+        "job_types": ["Full-time"],
+        "locations": ["Montreal, QC", "Toronto, ON"]
+      }
+    }
+  ],
+  
+  "mock_scraping_responses": [
+    {
+      "url": "https://www.eluta.ca/search?q=python&l=toronto",
+      "html": "<html><body><div class='job-listing'><div class='job'><h3 class='job-title'>Python Developer</h3><div class='company'>Tech Corp</div><div class='location'>Toronto, ON</div><div class='description'>Python Django development</div></div></div></body></html>",
+      "expected_jobs": [
+        {
+          "title": "Python Developer",
+          "company": "Tech Corp", 
+          "location": "Toronto, ON",
+          "description": "Python Django development"
+        }
+      ]
+    },
+    {
+      "url": "https://www.indeed.ca/jobs?q=data+analyst&l=vancouver",
+      "html": "<html><body><div class='jobsearch-SerpJobCard'><h2 class='title'><a href='/job1'>Data Analyst</a></h2><span class='company'>Analytics Inc</span><div class='location'>Vancouver, BC</div></div></body></html>",
+      "expected_jobs": [
+        {
+          "title": "Data Analyst",
+          "company": "Analytics Inc",
+          "location": "Vancouver, BC"
+        }
+      ]
+    }
+  ],
+  
+  "performance_benchmarks": {
+    "job_matching": {
+      "single_job_max_time": 0.1,
+      "batch_100_jobs_max_time": 5.0,
+      "min_accuracy": 0.85
+    },
+    "database_operations": {
+      "single_insert_max_time": 0.01,
+      "batch_100_inserts_max_time": 1.0,
+      "search_max_time": 0.5
+    },
+    "scraping": {
+      "single_page_max_time": 5.0,
+      "min_jobs_per_second": 2.0,
+      "max_memory_mb": 200
+    }
+  }
+}

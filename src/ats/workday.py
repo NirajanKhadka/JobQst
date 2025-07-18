@@ -6,16 +6,17 @@ from rich.console import Console
 from .base_submitter import BaseSubmitter
 from .workday_login import WorkdayLogin
 from .workday_form_filler import WorkdayFormFiller
-import utils
+from src.core.exceptions import NeedsHumanException
 
 console = Console()
+
 
 class WorkdaySubmitter(BaseSubmitter):
     """
     Submitter for Workday ATS.
     Handles automation of job applications on Workday-based portals.
     """
-    
+
     def __init__(self, browser_context=None):
         self.browser_context = browser_context
 
@@ -39,25 +40,27 @@ class WorkdaySubmitter(BaseSubmitter):
 
             form_filler = WorkdayFormFiller(page, profile, resume_path, cover_letter_path)
             return form_filler.fill_form()
-            
-        except utils.NeedsHumanException:
+
+        except NeedsHumanException:
             console.print("[yellow]Human intervention required[/yellow]")
             self.wait_for_human(page, "Please complete the application manually")
             return "Manual"
-        
+
         except Exception as e:
             console.print(f"[bold red]Workday submission error: {e}[/bold red]")
             return "Failed"
-        
+
         finally:
             page.close()
 
     def _click_apply_button_enhanced(self, page: Page) -> bool:
         """Enhanced Apply button detection and clicking."""
         apply_selectors = [
-            "button:has-text('Apply')", "a:has-text('Apply')",
-            "button:has-text('Apply Now')", "a:has-text('Apply Now')",
-            "[data-automation-id*='apply']"
+            "button:has-text('Apply')",
+            "a:has-text('Apply')",
+            "button:has-text('Apply Now')",
+            "a:has-text('Apply Now')",
+            "[data-automation-id*='apply']",
         ]
         for selector in apply_selectors:
             try:

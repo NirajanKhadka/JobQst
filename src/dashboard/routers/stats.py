@@ -6,6 +6,7 @@ from src.utils import profile_helpers
 
 router = APIRouter()
 
+
 def get_comprehensive_stats() -> Dict:
     """
     Get comprehensive job and application statistics for all available profiles.
@@ -30,19 +31,23 @@ def get_comprehensive_stats() -> Dict:
     comprehensive_stats["job_stats"] = {"total_jobs": total_jobs}
     return comprehensive_stats
 
+
 @router.get("/api/comprehensive-stats")
 async def comprehensive_stats():
     return get_comprehensive_stats()
+
 
 @router.get("/api/job-stats")
 async def job_stats():
     stats = get_comprehensive_stats()
     return stats.get("job_stats", {})
 
+
 @router.get("/api/application-stats")
 async def application_stats():
     stats = get_comprehensive_stats()
     return stats.get("application_stats", {})
+
 
 @router.get("/api/profile-stats")
 async def profile_stats():

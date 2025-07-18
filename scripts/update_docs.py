@@ -20,6 +20,12 @@ SUMMARY = f"""
 - Continue fixing Priority 1 test failures in remaining subsystems (e.g., GmailVerifier, ResumeAnalyzer, JobAnalyzer, JobDatabase).
 - After each major change, rerun this script to keep documentation up to date.
 
+# TODO: Add documentation for the next automation phase:
+# - Browser-based job application submission (Playwright/Selenium)
+# - Ollama integration for answering application questions
+# - Interactive user prompts and answer saving
+# This is the next major milestone after scraping, dashboard, and document generation.
+
 """
 
 def update_doc(path, summary):

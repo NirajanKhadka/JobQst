@@ -3,12 +3,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from rich.console import Console
 
 from src.core.job_database import get_job_db
-from src.scraping.cache import ScrapingCache
-from src.scraping.metrics import ScrapingMetrics
+from src.scrapers.cache import ScrapingCache
+from src.scrapers.metrics import ScrapingMetrics
+
 # Assuming a generic scraper interface
 from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
 
 console = Console()
+
 
 class OptimizedScrapingCoordinator:
     def __init__(self, profile_name: str):
@@ -18,14 +20,20 @@ class OptimizedScrapingCoordinator:
         self.metrics = ScrapingMetrics()
         self.max_concurrent_scrapers = 3
 
-    def scrape_optimized(self, keywords: List[str], sites: Optional[List[str]] = None) -> List[Dict]:
+    def scrape_optimized(
+        self, keywords: List[str], sites: Optional[List[str]] = None
+    ) -> List[Dict]:
         if sites is None:
-            sites = ['eluta']
-        
+            sites = ["eluta"]
+
         all_jobs = []
         with ThreadPoolExecutor(max_workers=self.max_concurrent_scrapers) as executor:
-            future_to_keyword = {executor.submit(self._scrape_single_keyword, keyword, site): keyword for keyword in keywords for site in sites}
-            
+            future_to_keyword = {
+                executor.submit(self._scrape_single_keyword, keyword, site): keyword
+                for keyword in keywords
+                for site in sites
+            }
+
             for future in as_completed(future_to_keyword):
                 keyword = future_to_keyword[future]
                 try:
@@ -49,12 +57,13 @@ class OptimizedScrapingCoordinator:
     def _process_job_batch(self, jobs: List[Dict]) -> List[Dict]:
         processed_jobs = []
         for job in jobs:
-            if not self.cache.is_url_processed(job.get('url', '')):
+            if not self.cache.is_url_processed(job.get("url", "")):
                 # Simplified processing
                 self.db.add_job(job)
-                self.cache.add_processed_url(job.get('url', ''))
+                self.cache.add_processed_url(job.get("url", ""))
                 processed_jobs.append(job)
         return processed_jobs
+
 
 # Backward compatibility class for tests
 class ScrapingCoordinator:
@@ -74,9 +83,11 @@ class ScrapingCoordinator:
             console.print(f"Scraping coordination failed: {e}")
             return False
 
+
 def run_optimized_scraping(profile_name: str, keywords: List[str]):
     coordinator = OptimizedScrapingCoordinator(profile_name)
     coordinator.scrape_optimized(keywords)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run_optimized_scraping("Nirajan", ["python developer", "data analyst"])

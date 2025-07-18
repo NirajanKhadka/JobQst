@@ -4,15 +4,14 @@ from rich.console import Console
 
 console = Console()
 
+
 class WorkdayLogin:
     def __init__(self, page: Page):
         self.page = page
 
     def handle_login(self, profile: Dict, job_url: str) -> bool:
         try:
-            login_indicators = [
-                "text='Sign In'", "input[type='email']", "input[type='password']"
-            ]
+            login_indicators = ["text='Sign In'", "input[type='email']", "input[type='password']"]
             needs_login = any(self.page.is_visible(selector) for selector in login_indicators)
 
             if not needs_login:
@@ -35,7 +34,7 @@ class WorkdayLogin:
 
             self.page.fill("input[type='email']", default_email)
             self.page.fill("input[type='password']", default_password)
-            
+
             self.page.click("button:has-text('Sign In')")
             self.page.wait_for_timeout(5000)
 
@@ -47,8 +46,9 @@ class WorkdayLogin:
 
     def _extract_domain_for_password(self, url: str) -> str:
         from urllib.parse import urlparse
+
         parsed = urlparse(url)
-        domain = parsed.netloc.split('.')[0]
+        domain = parsed.netloc.split(".")[0]
         return domain.capitalize()
 
     def _manual_login(self) -> bool:

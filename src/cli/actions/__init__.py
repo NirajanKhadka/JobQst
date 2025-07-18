@@ -13,9 +13,4 @@ from .application_actions import ApplicationActions
 from .dashboard_actions import DashboardActions
 from .system_actions import SystemActions
 
-__all__ = [
-    'ScrapingActions',
-    'ApplicationActions',
-    'DashboardActions',
-    'SystemActions'
-] 
+__all__ = ["ScrapingActions", "ApplicationActions", "DashboardActions", "SystemActions"]

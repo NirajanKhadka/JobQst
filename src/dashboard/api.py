@@ -27,11 +27,19 @@ app.include_router(system.router)
 # WebSocket endpoint
 app.add_websocket_route("/ws", websocket_endpoint)
 
+
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Render the main dashboard page."""
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
+
 if __name__ == "__main__":
+    import sys
+
+    if sys.argv[0].endswith("api.py"):
+        print("[ERROR] Do not run this file directly. Use: python -m src.dashboard.api")
+        sys.exit(1)
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8002)

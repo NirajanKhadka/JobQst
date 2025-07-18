@@ -4,6 +4,7 @@ from rich.console import Console
 
 console = Console()
 
+
 class WorkdayFormFiller:
     def __init__(self, page: Page, profile: Dict, resume_path: str, cover_letter_path: str):
         self.page = page
@@ -26,10 +27,12 @@ class WorkdayFormFiller:
                 console.print(f"[green]Filled {fields_filled} fields on this step[/green]")
 
                 user_input = input("Continue to next step? (y/n/manual): ").strip().lower()
-                if user_input == 'n':
-                    console.print("[yellow]Please make corrections manually, then press Enter...[/yellow]")
+                if user_input == "n":
+                    console.print(
+                        "[yellow]Please make corrections manually, then press Enter...[/yellow]"
+                    )
                     input()
-                elif user_input == 'manual':
+                elif user_input == "manual":
                     return "Manual"
 
                 if not self._move_to_next_step():
