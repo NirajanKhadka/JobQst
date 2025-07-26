@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
 """
 Global pytest configuration and fixtures for AutoJobAgent test suite.
-Provides shared test infrastructure following DEVELOPMENT_STANDARDS.md
+Provides shared test infrastructure following TESTING_STANDARDS.md
+
+This module provides:
+- Test configuration and markers
+- Real data fixtures (no fabricated content)
+- Performance monitoring utilities
+- Test isolation and cleanup
+- Shared test infrastructure
 """
 
 import pytest
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import time
+import tempfile
+import shutil
+from unittest.mock import Mock, patch
 from rich.console import Console
 
 # Add src to path for imports
@@ -20,7 +30,7 @@ sys.path.insert(0, str(src_path))
 
 console = Console()
 
-# Test configuration constants
+# Test configuration constants following TESTING_STANDARDS.md
 TEST_CONFIG = {
     "DEFAULT_JOB_LIMIT": 10,
     "DEFAULT_TIMEOUT": 30,
@@ -28,6 +38,10 @@ TEST_CONFIG = {
     "PERFORMANCE_TEST_DURATION": 60,
     "SCRAPING_DELAY": 0.5,
     "BATCH_SIZE": 5,
+    "MAX_UNIT_TEST_TIME": 1.0,  # Unit tests must complete within 1 second
+    "MAX_INTEGRATION_TEST_TIME": 10.0,  # Integration tests within 10 seconds
+    "MAX_PERFORMANCE_TEST_TIME": 60.0,  # Performance tests within 60 seconds
+    "COVERAGE_THRESHOLD": 80,  # Overall project coverage target
 }
 
 # Test markers for categorization

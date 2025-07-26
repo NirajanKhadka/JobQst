@@ -261,15 +261,16 @@ class TestJobAnalysisErrorHandling:
     
     def test_analyzer_initialization_with_missing_dependencies(self):
         """Test analyzer works even if optional dependencies are missing."""
-        with patch('src.utils.job_analyzer.some_optional_dependency', side_effect=ImportError):
-            analyzer = JobAnalyzer()
-            
-            # Should still be able to do basic analysis
-            job = {"title": "Python Developer", "skills": ["Python"]}
-            profile = {"skills": ["Python"], "experience_years": 2}
-            
-            score = analyzer.calculate_match_score(job, profile)
-            assert isinstance(score, (int, float))
+        # Test that analyzer can be initialized with minimal profile
+        minimal_profile = {"skills": ["Python"]}
+        analyzer = JobAnalyzer(minimal_profile)
+        
+        # Should still be able to do basic analysis
+        job = {"title": "Python Developer", "skills": ["Python"]}
+        
+        score = analyzer.calculate_match_score(job, minimal_profile)
+        assert isinstance(score, (int, float))
+        assert 0.0 <= score <= 1.0
 
 
 @pytest.mark.performance

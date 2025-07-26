@@ -70,6 +70,55 @@ class EnhancedJobDescriptionScraper:
             r"working\s*knowledge\s*of\s*([^.,]+)",
         ]
 
+    async def _handle_popups_and_overlays(self, page: Page):
+        """Handle cookie popups and overlays that block content"""
+        try:
+            # Common cookie popup selectors
+            popup_selectors = [
+                # Generic cookie buttons
+                'button[id*="accept"]',
+                'button[class*="accept"]',
+                'button[id*="cookie"]',
+                'button[class*="cookie"]',
+                'button:has-text("Accept")',
+                'button:has-text("Accept All")',
+                'button:has-text("I Accept")',
+                'button:has-text("OK")',
+                'button:has-text("Got it")',
+                'button:has-text("Continue")',
+                
+                # Workday specific
+                '[data-automation-id="cookieBanner"] button',
+                '[data-automation-id="legalNoticeAcceptButton"]',
+                
+                # Greenhouse specific
+                '.gdpr-cookie-notice button',
+                
+                # Generic close buttons
+                'button[aria-label="Close"]',
+                'button[title="Close"]',
+                '.close-button',
+                '[class*="close"]',
+                
+                # Modal overlays
+                '.modal button:has-text("Accept")',
+                '.overlay button:has-text("Accept")',
+            ]
+            
+            for selector in popup_selectors:
+                try:
+                    element = await page.query_selector(selector)
+                    if element:
+                        await element.click()
+                        await asyncio.sleep(1)
+                        console.print(f"[green]✅ Clicked popup: {selector}[/green]")
+                        break
+                except:
+                    continue
+                    
+        except Exception as e:
+            console.print(f"[yellow]⚠️ Error handling popups: {e}[/yellow]")
+
     async def scrape_job_description(self, job_url: str, page: Page) -> Dict[str, Any]:
         """
         Scrape detailed job description from a job URL.
@@ -87,6 +136,10 @@ class EnhancedJobDescriptionScraper:
             # Navigate to job page
             await page.goto(job_url, timeout=30000)
             await page.wait_for_load_state("domcontentloaded")
+            await asyncio.sleep(3)
+
+            # Handle cookie popups and overlays
+            await self._handle_popups_and_overlays(page)
             await asyncio.sleep(2)
 
             # Extract basic job information
@@ -132,41 +185,82 @@ class EnhancedJobDescriptionScraper:
         }
 
         try:
-            # Common selectors for job information
+            # Enhanced selectors for different ATS systems
             selectors = {
                 "title": [
+                    # Workday specific
+                    '[data-automation-id="jobPostingHeader"]',
+                    '[data-automation-id="jobTitle"]',
+                    'h1[data-automation-id]',
+                    # Greenhouse specific
+                    '.app-title',
+                    '.job-post-title',
+                    # Generic selectors
                     'h1[class*="title"]',
                     'h1[class*="job"]',
                     ".job-title",
                     ".title",
                     "h1",
                     '[data-testid="job-title"]',
+                    # Fallback - any h1 with text
+                    'h1:not(:empty)',
                 ],
                 "company": [
+                    # Workday specific
+                    '[data-automation-id="company"]',
+                    '[data-automation-id="companyName"]',
+                    # Greenhouse specific
+                    '.company-name',
+                    '.app-company',
+                    # Generic selectors
                     '[class*="company"]',
                     ".company-name",
                     ".employer",
                     '[data-testid="company-name"]',
+                    # Extract from URL as fallback
                 ],
                 "location": [
+                    # Workday specific
+                    '[data-automation-id="locations"]',
+                    '[data-automation-id="jobLocation"]',
+                    # Greenhouse specific
+                    '.location',
+                    '.app-location',
+                    # Generic selectors
                     '[class*="location"]',
                     ".job-location",
                     ".location",
                     '[data-testid="location"]',
                 ],
                 "job_type": [
+                    # Workday specific
+                    '[data-automation-id="jobType"]',
+                    '[data-automation-id="timeType"]',
+                    # Generic selectors
                     '[class*="type"]',
                     ".job-type",
                     ".employment-type",
                     '[data-testid="job-type"]',
                 ],
                 "salary_range": [
+                    # Workday specific
+                    '[data-automation-id="salary"]',
+                    '[data-automation-id="compensation"]',
+                    # Generic selectors
                     '[class*="salary"]',
                     ".salary",
                     ".compensation",
+                    ".pay",
+                    ".wage",
                     '[data-testid="salary"]',
+                    # Text patterns
+                    '*:contains("$")',
                 ],
                 "posted_date": [
+                    # Workday specific
+                    '[data-automation-id="postedOn"]',
+                    '[data-automation-id="datePosted"]',
+                    # Generic selectors
                     '[class*="date"]',
                     ".posted-date",
                     ".date-posted",
@@ -194,6 +288,13 @@ class EnhancedJobDescriptionScraper:
     async def _extract_job_description(self, page: Page) -> str:
         """Extract the full job description text."""
         description_selectors = [
+            # Workday specific
+            '[data-automation-id="jobPostingDescription"]',
+            '[data-automation-id="jobDescription"]',
+            # Greenhouse specific
+            '.content-intro',
+            '.job-description',
+            # Generic selectors
             '[class*="description"]',
             ".job-description",
             ".description",
@@ -205,6 +306,8 @@ class EnhancedJobDescriptionScraper:
             ".content",
             "main",
             "article",
+            # Last resort - get all body text
+            "body"
         ]
 
         for selector in description_selectors:
@@ -213,9 +316,20 @@ class EnhancedJobDescriptionScraper:
                 if element:
                     text = await element.text_content()
                     if text and len(text.strip()) > 100:  # Minimum description length
+                        console.print(f"[green]✅ Found description with selector: {selector}[/green]")
                         return text.strip()
-            except:
+            except Exception as e:
+                console.print(f"[yellow]⚠️ Error with selector {selector}: {e}[/yellow]")
                 continue
+
+        # If we get here, try to get all text from the page as a last resort
+        try:
+            text = await page.evaluate('() => document.body.innerText')
+            if text and len(text.strip()) > 100:
+                console.print("[yellow]⚠️ Using body text as fallback[/yellow]")
+                return text.strip()
+        except:
+            pass
 
         return ""
 
@@ -503,13 +617,38 @@ async def scrape_job_description_async(job_url: str) -> Dict[str, Any]:
         Dictionary with detailed job information
     """
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
+        # Use non-headless mode for better popup handling
+        browser = await p.chromium.launch(headless=False)
+        context = await browser.new_context(
+            viewport={"width": 1280, "height": 800},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
+        )
         page = await context.new_page()
 
         try:
+            # Set longer timeout for better reliability
+            page.set_default_timeout(45000)
+            
             scraper = EnhancedJobDescriptionScraper()
             result = await scraper.scrape_job_description(job_url, page)
+            
+            # Extract company from URL if not found
+            if not result.get('company'):
+                try:
+                    url_parts = job_url.split('/')
+                    domain = None
+                    for part in url_parts:
+                        if '.com' in part or '.ca' in part or '.org' in part:
+                            domain = part.split('.')[0]
+                            break
+                    if domain:
+                        result['company'] = domain.capitalize()
+                except:
+                    pass
+            
+            # Map fields to database structure
+            result['job_description'] = result.get('description', '')
+            
             return result
         finally:
             await context.close()

@@ -25,6 +25,43 @@ from src.utils.job_analysis_engine import run_intelligent_scraping
 console = Console()
 logger = logging.getLogger(__name__)
 
+scraping_logger = logging.getLogger("scraping_orchestrator")
+scraping_logger.setLevel(logging.INFO)
+s_handler = logging.FileHandler("logs/scraping_orchestrator.log")
+s_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+s_handler.setFormatter(s_formatter)
+if not scraping_logger.hasHandlers():
+    scraping_logger.addHandler(s_handler)
+
+class ScrapingOrchestrator:
+    """Orchestrates scraping sessions, wraps ScrapingHandler, and logs actions."""
+    def __init__(self, profile: Dict):
+        self.profile = profile
+        self.handler = ScrapingHandler(profile)
+        self.logger = scraping_logger
+
+    def log(self, message, level="INFO"):
+        if level == "INFO":
+            self.logger.info(message)
+        elif level == "WARNING":
+            self.logger.warning(message)
+        elif level == "ERROR":
+            self.logger.error(message)
+        elif level == "CRITICAL":
+            self.logger.critical(message)
+        else:
+            self.logger.info(message)
+
+    def run_scraping(self, *args, **kwargs):
+        self.log(f"Starting scraping session for profile: {self.profile.get('profile_name', 'Unknown')}", "INFO")
+        try:
+            result = self.handler.run_scraping(*args, **kwargs)
+            self.log(f"Scraping session completed with result: {result}", "INFO")
+            return result
+        except Exception as e:
+            self.log(f"Scraping session failed: {e}", "ERROR")
+            raise
+
 
 class ScrapingHandler:
     """Handles all job scraping operations."""
@@ -100,8 +137,8 @@ class ScrapingHandler:
         # Set defaults
         if sites is None:
             sites = ["eluta"]
-        if keywords is None:
-            keywords = self.profile.get("keywords", [])
+        # Always use only the keywords from profile JSON
+        keywords = self.profile.get("keywords", [])
 
         # Validate and normalize scraping mode
         try:
@@ -138,8 +175,8 @@ class ScrapingHandler:
             return self._run_enhanced_scraping(days, pages, jobs)
         
         # Use comprehensive scraper for default parameters
-        from src.scrapers.comprehensive_eluta_scraper import run_comprehensive_scraping
         import asyncio
+        from src.scrapers.comprehensive_eluta_scraper import run_comprehensive_scraping
 
         console.print("[cyan]🔄 Using simple sequential scraping for reliability[/cyan]")
         console.print("[yellow]📝 Note: This will scrape jobs and save directly to database.[/yellow]")
@@ -179,8 +216,8 @@ class ScrapingHandler:
             return self._run_enhanced_scraping(days, pages, jobs)
         
         # Use comprehensive scraper for default parameters
-        from src.scrapers.comprehensive_eluta_scraper import run_comprehensive_scraping
         import asyncio
+        from src.scrapers.comprehensive_eluta_scraper import run_comprehensive_scraping
 
         console.print("[cyan]⚡ Using multi-worker scraping (parallel keyword processing)[/cyan]")
         console.print("[yellow]📝 Note: This will scrape jobs and save directly to database.[/yellow]")
@@ -226,8 +263,8 @@ class ScrapingHandler:
             console.print(f"[yellow]📅 {days} days back, {pages} pages per keyword, {jobs} jobs per keyword[/yellow]")
             
             # Import and run the enhanced scraper directly
-            from src.scrapers.enhanced_eluta_scraper import EnhancedElutaScraper
             import asyncio
+            from src.scrapers.enhanced_eluta_scraper import EnhancedElutaScraper
             
             # Create enhanced scraper instance
             scraper = EnhancedElutaScraper(
@@ -260,8 +297,8 @@ class ScrapingHandler:
 
     def eluta_enhanced_click_popup_scrape(self) -> bool:
         """Run Eluta enhanced click-popup scraping - saves directly to database."""
-        from src.scrapers.comprehensive_eluta_scraper import run_comprehensive_scraping
         import asyncio
+        from src.scrapers.comprehensive_eluta_scraper import run_comprehensive_scraping
 
         console.print("[cyan]🖱️ Running Eluta enhanced click-popup scraping...[/cyan]")
 

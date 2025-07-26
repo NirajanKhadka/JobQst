@@ -1073,7 +1073,7 @@ def display_analytics_tab(df: pd.DataFrame) -> None:
     
     # Recent activity
     if 'created_at' in df.columns:
-        st.markdown("### � Recent Activity")
+        st.markdown("### 📅 Recent Activity")
         
         # Jobs added in last 7 days
         recent_jobs = len(df[df['created_at'] > (datetime.now() - timedelta(days=7))])
@@ -1491,11 +1491,11 @@ def _render_fallback_auto_management():
     st.markdown("### 🤖 Auto-Management Features")
     st.info("""
     **Smart Auto-Start/Stop Logic (Available with full orchestration):**
-    - � Auto-start scraper when job count drops below threshold
+    - �� Auto-start scraper when job count drops below threshold
     - ⚙️ Auto-start processor when scraped jobs exceed threshold
     - 👥 Auto-start workers when processed jobs accumulate
     - ✉️ Auto-start applicator when documents are ready
-    - ⏹️ Auto-stop services after idle timeout
+    - 🛑 Auto-stop services after idle timeout
     - 🧠 Resource-aware service management
     """)
     
@@ -1635,7 +1635,7 @@ def display_cli_tab(profile_name: str) -> None:
         if st.button("🎛️ Go to System Tab", use_container_width=True):
             st.info("💡 Click on the 'System & Smart Orchestration' tab above")
         
-        st.markdown("### � Available Features")
+        st.markdown("### 🎯 Available Features")
         st.markdown("""
         - **🖥️ CLI Commands**: Full command interface
         - **🎛️ Service Control**: Smart orchestration panel  
@@ -1668,23 +1668,60 @@ def display_cli_tab(profile_name: str) -> None:
 
 
 def display_logs_tab() -> None:
-    """Display logs from various log files."""
-    st.markdown('<h2 class="section-header">📄 System Logs</h2>', unsafe_allow_html=True)
+    """Display logs from various orchestrator log files with live refresh, search, and filtering."""
+    st.markdown('<h2 class="section-header">📄 System & Orchestrator Logs</h2>', unsafe_allow_html=True)
 
     log_files = {
-        "Error Log": "error_logs.log",
-        "Main Log": "logs/autojobagent.log"
+        "CLI Orchestrator": "logs/cli_orchestrator.log",
+        "Scraping Orchestrator": "logs/scraping_orchestrator.log",
+        "Application Orchestrator": "logs/application_orchestrator.log",
+        "Dashboard Orchestrator": "logs/dashboard_orchestrator.log",
+        "System Orchestrator": "logs/system_orchestrator.log",
+        "Main Log": "logs/autojobagent.log",
+        "Error Log": "error_logs.log"
     }
 
     log_choice = st.selectbox("Select Log File", list(log_files.keys()))
-
     log_file_path = Path(log_files[log_choice])
+
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        search_term = st.text_input("🔍 Search log entries", "", key="log_search")
+    with col2:
+        log_level = st.selectbox("Log Level", ["ALL", "INFO", "WARNING", "ERROR", "CRITICAL"], key="log_level")
+
+    refresh = st.button("🔄 Refresh Log", key="refresh_log")
+    auto_refresh = st.checkbox("Live Update (every 2s)", value=False, key="auto_refresh_log")
+    if auto_refresh:
+        import time
+        st_autorefresh(interval=2000, key="log_auto_refresh")
 
     if log_file_path.exists():
         try:
             with open(log_file_path, "r", encoding="utf-8") as f:
-                log_content = f.read()
-            st.code(log_content, language='log', line_numbers=True)
+                log_content = f.read()[-10000:]  # Only last 10k chars
+            log_lines = log_content.splitlines()
+            # Filter by search term
+            if search_term:
+                log_lines = [line for line in log_lines if search_term.lower() in line.lower()]
+            # Filter by log level
+            if log_level != "ALL":
+                log_lines = [line for line in log_lines if f" {log_level} " in line]
+            if log_lines:
+                # Color-coding for log levels
+                def color_line(line):
+                    if " ERROR " in line or " CRITICAL " in line:
+                        return f'<span style="color:#ef4444">{line}</span>'
+                    elif " WARNING " in line:
+                        return f'<span style="color:#f59e0b">{line}</span>'
+                    elif " INFO " in line:
+                        return f'<span style="color:#10b981">{line}</span>'
+                    else:
+                        return line
+                html = "<br>".join([color_line(line) for line in log_lines])
+                st.markdown(f'<div style="font-family:monospace;font-size:13px;">{html}</div>', unsafe_allow_html=True)
+            else:
+                st.info("No log entries match your filter.")
         except Exception as e:
             st.error(f"Error reading log file: {e}")
     else:

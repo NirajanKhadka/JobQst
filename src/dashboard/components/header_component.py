@@ -73,7 +73,7 @@ class HeaderComponent(BaseComponent):
             
         with col3:
             if st.button("🔄 Refresh Now", type="primary", key=f"{self.name}_refresh"):
-                st.cache_data.clear()
+                st.cache_resource.clear()
                 st.rerun()
     
     def get_selected_profile(self) -> Optional[str]:

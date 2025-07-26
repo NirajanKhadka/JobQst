@@ -14,6 +14,7 @@ import os
 import requests
 from typing import Dict, Optional
 from pathlib import Path
+import logging
 
 from rich.console import Console
 from rich.panel import Panel
@@ -22,6 +23,43 @@ from rich.prompt import Prompt
 from src.utils import get_available_profiles
 
 console = Console()
+
+system_logger = logging.getLogger("system_orchestrator")
+system_logger.setLevel(logging.INFO)
+s_handler = logging.FileHandler("logs/system_orchestrator.log")
+s_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+s_handler.setFormatter(s_formatter)
+if not system_logger.hasHandlers():
+    system_logger.addHandler(s_handler)
+
+class SystemOrchestrator:
+    """Orchestrates system sessions, wraps SystemHandler, and logs actions."""
+    def __init__(self, profile: Dict):
+        self.profile = profile
+        self.handler = SystemHandler(profile)
+        self.logger = system_logger
+
+    def log(self, message, level="INFO"):
+        if level == "INFO":
+            self.logger.info(message)
+        elif level == "WARNING":
+            self.logger.warning(message)
+        elif level == "ERROR":
+            self.logger.error(message)
+        elif level == "CRITICAL":
+            self.logger.critical(message)
+        else:
+            self.logger.info(message)
+
+    def check_ollama_status(self):
+        self.log(f"Checking Ollama status for profile: {self.profile.get('profile_name', 'Unknown')}", "INFO")
+        try:
+            result = self.handler.check_ollama_status()
+            self.log(f"Ollama status checked: {result}", "INFO")
+            return result
+        except Exception as e:
+            self.log(f"Ollama status check failed: {e}", "ERROR")
+            raise
 
 
 class SystemHandler:

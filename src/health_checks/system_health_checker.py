@@ -34,7 +34,7 @@ class SystemHealthChecker:
         """Check database connectivity and integrity."""
         try:
             # Check if database directory exists
-            db_path = f"profiles/{self.profile_name}/job_database.db"
+            db_path = f"profiles/{self.profile_name}/{self.profile_name}.db"
             if not os.path.exists(db_path):
                 console.print(f"[yellow]⚠️ Database file not found: {db_path}[/yellow]")
                 return False

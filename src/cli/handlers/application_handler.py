@@ -23,6 +23,45 @@ from src.ats.csv_applicator import CSVJobApplicator
 from src.ats import detect, get_submitter
 from src.job_applier.job_applier import JobApplier
 
+import logging
+
+application_logger = logging.getLogger("application_orchestrator")
+application_logger.setLevel(logging.INFO)
+a_handler = logging.FileHandler("logs/application_orchestrator.log")
+a_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+a_handler.setFormatter(a_formatter)
+if not application_logger.hasHandlers():
+    application_logger.addHandler(a_handler)
+
+class ApplicationOrchestrator:
+    """Orchestrates application sessions, wraps ApplicationHandler, and logs actions."""
+    def __init__(self, profile: Dict):
+        self.profile = profile
+        self.handler = ApplicationHandler(profile)
+        self.logger = application_logger
+
+    def log(self, message, level="INFO"):
+        if level == "INFO":
+            self.logger.info(message)
+        elif level == "WARNING":
+            self.logger.warning(message)
+        elif level == "ERROR":
+            self.logger.error(message)
+        elif level == "CRITICAL":
+            self.logger.critical(message)
+        else:
+            self.logger.info(message)
+
+    def run_application(self, *args, **kwargs):
+        self.log(f"Starting application session for profile: {self.profile.get('profile_name', 'Unknown')}", "INFO")
+        try:
+            result = self.handler.run_application(*args, **kwargs)
+            self.log(f"Application session completed with result: {result}", "INFO")
+            return result
+        except Exception as e:
+            self.log(f"Application session failed: {e}", "ERROR")
+            raise
+
 console = Console()
 
 

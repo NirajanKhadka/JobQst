@@ -1,23 +1,3 @@
-# Ensure session state keys are initialized
-if 'dark_mode' not in st.session_state:
-    st.session_state['dark_mode'] = False
-# Fallbacks for undefined project-specific functions/constants
-def get_job_db(profile):
-    class DummyDB:
-        def get_job_stats(self):
-            return {}
-    return DummyDB()
-
-HAS_AUTOREFRESH = globals().get('HAS_AUTOREFRESH', False)
-def st_autorefresh(*args, **kwargs):
-    pass
-
-def get_available_profiles():
-    return ["Nirajan"]
-
-HAS_DOCUMENT_COMPONENT = globals().get('HAS_DOCUMENT_COMPONENT', False)
-def render_document_generation_tab(profile):
-    st.info("Document generation component not available.")
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -28,571 +8,117 @@ Combines the best features from streamlit_dashboard.py and modern_dashboard.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import pyarrow
+
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import sqlite3
 from pathlib import Path
-from typing import List, Dict, Any
+import sys
 import os
-try:
-    import psutil
-except ImportError:
-    psutil = None
-
-# Fallbacks for undefined background processor and project root
-HAS_BACKGROUND_PROCESSOR = globals().get('HAS_BACKGROUND_PROCESSOR', False)
-def get_background_processor():
-    return None
-def get_document_generator():
-    return None
-class ModernJobDatabase:
-    def __init__(self, db_path=None):
-        pass
-    def get_job_stats(self):
-        return {}
-project_root = Path(os.getcwd())
 import time
-
-# Safe fallback logger
 import logging
-logger = logging.getLogger("dashboard")
+from typing import Dict, List, Optional, Tuple
+import json
+import numpy as np
+import psutil
 
-# Fallbacks for undefined constants/components
-HAS_ORCHESTRATION_COMPONENT = globals().get('HAS_ORCHESTRATION_COMPONENT', False)
-HAS_CLI_COMPONENT = globals().get('HAS_CLI_COMPONENT', False)
-def render_cli_tab(*args, **kwargs):
-    st.info("CLI component not available.")
-UNIFIED_CSS = """
+# Try to import auto-refresh, but make it optional
+try:
+    from streamlit_autorefresh import st_autorefresh
+    HAS_AUTOREFRESH = True
+except ImportError:
+    HAS_AUTOREFRESH = False
+    st_autorefresh = None
+
+# Configure logging early
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Import CLI component
+try:
+    from src.dashboard.components.cli_component import render_cli_tab
+    HAS_CLI_COMPONENT = True
+except ImportError as e:
+    HAS_CLI_COMPONENT = False
+    render_cli_tab = None
+    logger.warning(f"CLI component not found: {e}")
+
+# Import Orchestration component
+try:
+    from src.dashboard.components.orchestration_component import render_orchestration_control
+    HAS_ORCHESTRATION_COMPONENT = True
+except ImportError as e:
+    HAS_ORCHESTRATION_COMPONENT = False
+    render_orchestration_control = None
+    logger.warning(f"Orchestration component not found: {e}")
+
+# Import Document Generation component
+try:
+    from src.dashboard.components.document_generation_component import render_document_generation_tab
+    HAS_DOCUMENT_COMPONENT = True
+except ImportError as e:
+    HAS_DOCUMENT_COMPONENT = False
+    render_document_generation_tab = None
+    logger.warning(f"Document generation component not found: {e}")
+
+# Import background processor
+try:
+    from .background_processor import get_background_processor, get_document_generator
+    HAS_BACKGROUND_PROCESSOR = True
+except ImportError:
+    HAS_BACKGROUND_PROCESSOR = False
+    get_background_processor = None
+    get_document_generator = None
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+try:
+    from src.core.job_database import ModernJobDatabase, get_job_db
+    from src.utils.profile_helpers import get_available_profiles
+except ImportError as e:
+    st.error(f"❌ Failed to import required modules: {e}")
+    st.info("💡 Make sure you're running from the project root directory")
+    st.stop()
+
+# Page configuration
+st.set_page_config(
+    page_title="AutoJobAgent - Unified Dashboard",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# Initialize session state
 if "auto_refresh" not in st.session_state:
     st.session_state["auto_refresh"] = False
 if "selected_profile" not in st.session_state:
     st.session_state["selected_profile"] = None
 
-# Unified Modern CSS - Best of both dashboards
-UNIFIED_CSS = """
-UNIFIED_CSS = """
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
-    
-    /* Reset and base styles */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    
-    /* Theme variables */
-    :root {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f8fafc;
-        --bg-card: #ffffff;
-        --text-primary: #23272f; /* darker for readability */
-        --text-secondary: #49505a; /* darker for readability */
-        --border-color: #e2e8f0;
-        --accent-primary: #3b82f6;
-        --accent-secondary: #6366f1;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --error: #ef4444;
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Dark mode theme */
-    [data-theme="dark"] {
-        --bg-primary: #0f172a;
-        --bg-secondary: #1e293b;
-        --bg-card: #334155;
-        --text-primary: #e2e8f0; /* off-white, not pure white */
-        --text-secondary: #b6bdc6; /* light gray, not white */
-        --border-color: #475569;
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    }
-    
-    /* Main application styles */
-    .stApp {
-        background: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    }
-    
-    .main {
-        background: var(--bg-secondary) !important;
-        padding: 1rem !important;
-    }
-    
-    /* Header styles */
-    .dashboard-header {
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-        color: var(--text-primary);
-        padding: 2rem;
-        border-radius: 1rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-lg);
-        border: 1px solid var(--border-color);
-    }
-    
-    .dashboard-title {
-        font-size: 3rem;
-        font-weight: 800;
-        margin: 0;
-        letter-spacing: -0.025em;
-        background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    .dashboard-subtitle {
-        font-size: 1.25rem;
-        color: var(--text-secondary);
-        margin: 0.5rem 0 0 0;
-        font-weight: 500;
-        opacity: 0.95;
-    }
-    
-    /* Metric cards */
-    .metric-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        margin: 0.5rem 0;
-        box-shadow: var(--shadow-md);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-        border-color: var(--accent-primary);
-    }
-    
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-        border-radius: 1rem 1rem 0 0;
-    }
-    
-    .metric-value {
-        font-size: 2.8rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        font-family: 'JetBrains Mono', monospace;
-        margin: 0.5rem 0;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
-    
-    .metric-label {
-        font-size: 1.05rem;
-        color: var(--text-secondary);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-    }
-    
-    .metric-delta {
-        font-size: 0.875rem;
-        font-weight: 600;
-        margin-top: 0.5rem;
-    }
-    
-    .metric-delta.positive {
-        color: var(--success);
-    }
-    
-    .metric-delta.negative {
-        color: var(--error);
-    }
-    
-    /* Job cards */
-    .job-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: var(--shadow-md);
-        transition: all 0.3s ease;
-        position: relative;
-    }
-    
-    .job-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-        border-color: var(--accent-primary);
-    }
-    
-    .job-title {
-        font-size: 1.45rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-        line-height: 1.4;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
-    
-    .job-company {
-        font-size: 1rem;
-        color: var(--accent-primary);
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-    }
-    
-    .job-location {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin-bottom: 1rem;
-    }
-    
-    .job-meta {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border-color);
-    }
-    
-    .job-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--text-primary);
-        background: var(--bg-secondary);
-    }
-    
-    .job-badge.applied {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-    
-    .job-badge.applied-status {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-    
-    .job-badge.document-status {
-        background: rgba(99, 102, 241, 0.1);
-        color: var(--accent-secondary);
-        border: 1px solid rgba(99, 102, 241, 0.2);
-    }
-    
-    .job-badge.processed-status {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--warning);
-        border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-    
-    .job-badge.scraped-status {
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--accent-primary);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-    
-    .job-badge.new-status {
-        background: rgba(100, 116, 139, 0.1);
-        color: var(--text-secondary);
-        border: 1px solid rgba(100, 116, 139, 0.2);
-    }
+# Load unified CSS from external file
+def load_unified_css():
+    """Load the unified CSS from the external file."""
+    css_path = Path(__file__).parent / "styles" / "unified_dashboard_styles.css"
+    try:
+        with open(css_path, 'r', encoding='utf-8') as f:
+            css_content = f.read()
+        return f"<style>\n{css_content}\n</style>"
+    except FileNotFoundError:
+        # Fallback to inline CSS if file not found
+        return """
+        <style>
+        /* Fallback CSS - Unified styles file not found */
+        .stApp { background: #0f172a !important; color: #f1f5f9 !important; }
+        .main { background: #0f172a !important; color: #f1f5f9 !important; }
+        .stSidebar { background: #334155 !important; }
+        .stButton > button { background: #3b82f6 !important; color: white !important; border-radius: 0.5rem !important; }
+        .section-header { color: #f1f5f9; border-bottom: 2px solid #3b82f6; }
+        </style>
+        """
 
-    .job-badge.unapplied {
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--accent-primary);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-    
-    .job-badge.high-priority {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--error);
-        border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-    
-    .job-badge.medium-priority {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--warning);
-        border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-    
-    .job-badge.low-priority {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-    
-    /* Filters and controls */
-    .filter-container {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    /* Section headers */
-    .section-header {
-        font-size: 2.1rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        margin: 2rem 0 1rem 0;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid var(--accent-primary);
-        display: inline-block;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.10);
-    }
-    
-    /* Tabs styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 0.5rem;
-        background: var(--bg-card);
-        border-radius: 1rem;
-        padding: 0.5rem;
-        border: 1px solid var(--border-color);
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        background: transparent;
-        border-radius: 0.5rem;
-        color: var(--text-secondary);
-        font-weight: 500;
-        padding: 0.75rem 1.5rem;
-        border: none;
-        transition: all 0.3s ease;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background: var(--accent-primary) !important;
-        color: var(--bg-primary) !important;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    /* Buttons */
-    .stButton > button {
-        background: var(--accent-primary);
-        color: var(--bg-primary);
-        border: none;
-        border-radius: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .stButton > button:hover {
-        background: var(--accent-secondary);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-    }
-    
-    /* Data tables */
-    .stDataFrame {
-        border-radius: 1rem;
-        overflow: hidden;
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--border-color);
-    }
-    
-    /* Sidebar */
-    .stSidebar {
-        background: var(--bg-card);
-        border-right: 1px solid var(--border-color);
-    }
-    
-    /* Sidebar content styling */
-    .stSidebar .stMetric {
-        background: var(--bg-secondary);
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border: 1px solid var(--border-color);
-        margin: 0.5rem 0;
-    }
-    
-    .stSidebar .stMetric > div {
-        color: var(--text-primary) !important;
-    }
-    
-    .stSidebar .stMetric [data-testid="metric-container"] {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: 0.5rem;
-        padding: 1rem;
-    }
-    
-    .stSidebar .stMetric [data-testid="metric-container"] > div {
-        color: var(--text-primary) !important;
-    }
-    
-    .stSidebar .stMetric label {
-        color: var(--text-secondary) !important;
-        font-weight: 500 !important;
-    }
-    
-    .stSidebar .stMetric [data-testid="metric-container"] [data-testid="metric-value"] {
-        color: var(--accent-primary) !important;
-        font-weight: 700 !important;
-        font-size: 1.5rem !important;
-    }
-    
-    .stSidebar .stMetric [data-testid="metric-container"] [data-testid="metric-delta"] {
-        color: var(--text-secondary) !important;
-    }
-    
-    /* Sidebar headings */
-    .stSidebar h3, .stSidebar h4 {
-        color: var(--text-primary) !important;
-        background: var(--bg-secondary);
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        border: 1px solid var(--border-color);
-        margin: 1rem 0 0.5rem 0;
-    }
-    
-    /* Sidebar buttons */
-    .stSidebar .stButton > button {
-        background: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 0.5rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-    
-    .stSidebar .stButton > button:hover {
-        background: var(--accent-primary) !important;
-        color: var(--bg-primary) !important;
-        border-color: var(--accent-primary) !important;
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-sm);
-    }
-    
-    /* Sidebar selectbox */
-    .stSidebar .stSelectbox > div > div {
-        background: var(--bg-secondary) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 0.5rem;
-    }
-    
-    .stSidebar .stSelectbox label {
-        color: var(--text-primary) !important;
-        font-weight: 500 !important;
-    }
-    
-    /* Sidebar text and captions */
-    .stSidebar .stMarkdown, .stSidebar p, .stSidebar .stCaption {
-        color: var(--text-primary) !important;
-    }
-    
-    .stSidebar .stCaption {
-        color: var(--text-secondary) !important;
-        background: var(--bg-secondary);
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        border: 1px solid var(--border-color);
-        margin: 0.25rem 0;
-    }
-    
-    /* Sidebar info/success/error messages */
-    .stSidebar .stSuccess, .stSidebar .stInfo, .stSidebar .stError, .stSidebar .stWarning {
-        background: var(--bg-secondary) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 0.5rem;
-        margin: 0.5rem 0;
-    }
-    
-    /* Force all sidebar text to be visible */
-    .stSidebar * {
-        color: var(--text-primary) !important;
-    }
-    
-    .stSidebar .stMarkdown h1, .stSidebar .stMarkdown h2, .stSidebar .stMarkdown h3, 
-    .stSidebar .stMarkdown h4, .stSidebar .stMarkdown h5, .stSidebar .stMarkdown h6 {
-        color: var(--text-primary) !important;
-    }
-    
-    /* Charts */
-    .js-plotly-plot {
-        border-radius: 1rem;
-        overflow: hidden;
-    }
-    
-    /* Success/Error messages */
-    .stSuccess {
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-        border-radius: 0.5rem;
-    }
-    
-    .stError {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.2);
-        border-radius: 0.5rem;
-    }
-    
-    .stWarning {
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.2);
-        border-radius: 0.5rem;
-    }
-    
-    .stInfo {
-        background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        border-radius: 0.5rem;
-    }
-    
-    /* Animations */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fade-in {
-        animation: fadeIn 0.5s ease-out;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
-    }
-    
-    .pulse {
-        animation: pulse 2s infinite;
-    }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .dashboard-header {
-            padding: 1.5rem;
-        }
-        
-        .dashboard-title {
-            font-size: 2rem;
-        }
-        
-        .metric-card {
-            padding: 1rem;
-        }
-        
-        .job-card {
-            padding: 1rem;
-        }
-    }
-</style>
-"""
+UNIFIED_CSS = load_unified_css()
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_job_data(profile_name: str) -> pd.DataFrame:
@@ -630,13 +156,14 @@ def load_job_data(profile_name: str) -> pd.DataFrame:
                 status = row.get('status', 'scraped').lower()
                 application_status = row.get('application_status', 'not_applied').lower()
                 
+                # Priority order: check application status first, then processing status
                 if application_status == 'applied':
                     return 'Applied'
                 elif application_status in ['documents_ready', 'document_created']:
                     return 'Document Created'
-                elif status == 'processed':
+                elif status in ['processed', 'enhanced', 'analyzed']:
                     return 'Processed'
-                elif status == 'scraped':
+                elif status == 'scraped' or status is None:
                     return 'Scraped'
                 else:
                     return 'New'
@@ -801,6 +328,272 @@ def get_system_metrics() -> Dict[str, any]:
         logger.error(f"Failed to get system metrics: {e}")
         return {}
 
+def display_services_tab(profile_name: str) -> None:
+    """Display the Services management tab with robust service control."""
+    st.markdown("# 🛠️ Service Management")
+    st.markdown("Manage and monitor core AutoJobAgent services with robust error handling.")
+    
+    try:
+        from src.services.robust_service_manager import get_service_manager
+        service_manager = get_service_manager()
+        
+        # Get current service health
+        health = service_manager.get_service_health()
+        
+        # Display overall system status
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            overall_status = health.get("overall_status", "unknown")
+            status_color = {
+                "healthy": "🟢",
+                "degraded": "🟡", 
+                "unhealthy": "🔴",
+                "unknown": "⚪"
+            }.get(overall_status, "⚪")
+            
+            st.markdown(f"### {status_color} System Status: {overall_status.title()}")
+        
+        with col2:
+            system_info = health.get("system", {})
+            cpu_percent = system_info.get("cpu_percent", 0)
+            st.metric("CPU Usage", f"{cpu_percent:.1f}%")
+        
+        with col3:
+            memory_percent = system_info.get("memory_percent", 0)
+            st.metric("Memory Usage", f"{memory_percent:.1f}%")
+        
+        st.markdown("---")
+        
+        # Service control section
+        st.markdown("## 🎛️ Service Control")
+        
+        # Quick actions
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            if st.button("🚀 Start All Services", key="start_all_services"):
+                with st.spinner("Starting all services..."):
+                    results = service_manager.start_all_services()
+                    
+                    success_count = sum(1 for success in results.values() if success)
+                    total_count = len(results)
+                    
+                    if success_count == total_count:
+                        st.success(f"✅ All {total_count} services started successfully!")
+                    elif success_count > 0:
+                        st.warning(f"⚠️ {success_count}/{total_count} services started successfully")
+                    else:
+                        st.error("❌ Failed to start services")
+                    
+                    # Show detailed results
+                    for service_name, success in results.items():
+                        status_icon = "✅" if success else "❌"
+                        st.write(f"{status_icon} {service_name}: {'Started' if success else 'Failed'}")
+        
+        with col2:
+            if st.button("🛑 Stop All Services", key="stop_all_services"):
+                with st.spinner("Stopping all services..."):
+                    results = service_manager.stop_all_services()
+                    
+                    success_count = sum(1 for success in results.values() if success)
+                    total_count = len(results)
+                    
+                    if success_count == total_count:
+                        st.success(f"✅ All {total_count} services stopped successfully!")
+                    else:
+                        st.warning(f"⚠️ {success_count}/{total_count} services stopped")
+        
+        with col3:
+            if st.button("🔄 Refresh Status", key="refresh_services"):
+                st.rerun()
+        
+        with col4:
+            if st.button("🔧 Health Check", key="health_check"):
+                with st.spinner("Running health check..."):
+                    health = service_manager.get_service_health()
+                    st.success("✅ Health check completed!")
+        
+        st.markdown("---")
+        
+        # Individual service management
+        st.markdown("## 📋 Individual Services")
+        
+        services = health.get("services", {})
+        
+        for service_name, service_info in services.items():
+            with st.expander(f"🔧 {service_info.get('description', service_name)}", expanded=False):
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    status = service_info.get("status", "unknown")
+                    status_icons = {
+                        "running": "🟢 Running",
+                        "stopped": "🔴 Stopped",
+                        "starting": "🟡 Starting",
+                        "error": "❌ Error",
+                        "unknown": "⚪ Unknown"
+                    }
+                    st.markdown(f"**Status:** {status_icons.get(status, status)}")
+                    
+                    if service_info.get("required", False):
+                        st.markdown("**Required:** ✅ Yes")
+                    else:
+                        st.markdown("**Required:** ❌ No")
+                
+                with col2:
+                    if service_info.get("pid"):
+                        st.markdown(f"**PID:** {service_info['pid']}")
+                    
+                    if service_info.get("port"):
+                        st.markdown(f"**Port:** {service_info['port']}")
+                
+                with col3:
+                    if service_info.get("error"):
+                        st.error(f"**Error:** {service_info['error']}")
+                    
+                    if service_info.get("last_check"):
+                        import datetime
+                        last_check = datetime.datetime.fromtimestamp(service_info['last_check'])
+                        st.markdown(f"**Last Check:** {last_check.strftime('%H:%M:%S')}")
+                
+                # Service control buttons
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    if st.button(f"🚀 Start", key=f"start_{service_name}"):
+                        with st.spinner(f"Starting {service_name}..."):
+                            success = service_manager.start_service(service_name)
+                            if success:
+                                st.success(f"✅ {service_name} started successfully!")
+                            else:
+                                st.error(f"❌ Failed to start {service_name}")
+                            time.sleep(1)
+                            st.rerun()
+                
+                with col2:
+                    if st.button(f"🛑 Stop", key=f"stop_{service_name}"):
+                        with st.spinner(f"Stopping {service_name}..."):
+                            success = service_manager.stop_service(service_name)
+                            if success:
+                                st.success(f"✅ {service_name} stopped successfully!")
+                            else:
+                                st.error(f"❌ Failed to stop {service_name}")
+                            time.sleep(1)
+                            st.rerun()
+                
+                with col3:
+                    if st.button(f"🔄 Restart", key=f"restart_{service_name}"):
+                        with st.spinner(f"Restarting {service_name}..."):
+                            success = service_manager.restart_service(service_name)
+                            if success:
+                                st.success(f"✅ {service_name} restarted successfully!")
+                            else:
+                                st.error(f"❌ Failed to restart {service_name}")
+                            time.sleep(1)
+                            st.rerun()
+        
+        # Service logs section
+        st.markdown("---")
+        st.markdown("## 📄 Service Logs")
+        
+        if st.button("📋 View Recent Logs", key="view_logs"):
+            try:
+                log_files = [
+                    "logs/error_logs.log",
+                    "logs/scraper.log", 
+                    "logs/processor.log"
+                ]
+                
+                for log_file in log_files:
+                    if Path(log_file).exists():
+                        with st.expander(f"📄 {log_file}", expanded=False):
+                            try:
+                                with open(log_file, 'r') as f:
+                                    lines = f.readlines()
+                                    # Show last 50 lines
+                                    recent_lines = lines[-50:] if len(lines) > 50 else lines
+                                    st.text_area(
+                                        f"Recent entries from {log_file}:",
+                                        value=''.join(recent_lines),
+                                        height=200,
+                                        key=f"log_{log_file.replace('/', '_')}"
+                                    )
+                            except Exception as e:
+                                st.error(f"Error reading {log_file}: {e}")
+                    else:
+                        st.info(f"Log file {log_file} not found")
+            except Exception as e:
+                st.error(f"Error accessing logs: {e}")
+        
+        # Auto-refresh option
+        st.markdown("---")
+        auto_refresh = st.checkbox("🔄 Auto-refresh every 10 seconds", key="services_auto_refresh")
+        
+        if auto_refresh:
+            time.sleep(10)
+            st.rerun()
+            
+    except ImportError as e:
+        st.error(f"❌ Service manager not available: {e}")
+        st.info("💡 The robust service manager component is not installed or configured properly.")
+        
+        # Fallback basic service status
+        st.markdown("## 📊 Basic Service Status")
+        
+        # Check basic services manually
+        import socket
+        import subprocess
+        
+        services_to_check = {
+            "Ollama (AI Service)": ("localhost", 11434),
+            "Streamlit Dashboard": ("localhost", 8501),
+        }
+        
+        for service_name, (host, port) in services_to_check.items():
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(1)
+                result = sock.connect_ex((host, port))
+                sock.close()
+                
+                if result == 0:
+                    st.success(f"✅ {service_name}: Running on {host}:{port}")
+                else:
+                    st.error(f"❌ {service_name}: Not running on {host}:{port}")
+            except Exception as e:
+                st.warning(f"⚠️ {service_name}: Could not check status - {e}")
+        
+        # Manual service start buttons
+        st.markdown("### 🚀 Manual Service Control")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("🤖 Start Ollama", key="manual_start_ollama"):
+                try:
+                    subprocess.Popen(["ollama", "serve"], 
+                                   creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0)
+                    st.success("✅ Ollama start command sent!")
+                    st.info("⏳ Please wait a few seconds for Ollama to start...")
+                except Exception as e:
+                    st.error(f"❌ Failed to start Ollama: {e}")
+        
+        with col2:
+            if st.button("⚙️ Start Job Processor", key="manual_start_processor"):
+                try:
+                    subprocess.Popen([sys.executable, "main.py", "--action", "process", "--headless"],
+                                   creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0)
+                    st.success("✅ Job processor start command sent!")
+                    st.info("⏳ Please wait a few seconds for the processor to start...")
+                except Exception as e:
+                    st.error(f"❌ Failed to start job processor: {e}")
+    
+    except Exception as e:
+        st.error(f"❌ Unexpected error in Services tab: {e}")
+        logger.error(f"Services tab error: {e}", exc_info=True)
+
 def display_enhanced_metrics(df: pd.DataFrame) -> None:
     """Display enhanced metrics with modern styling."""
     if df.empty:
@@ -892,47 +685,49 @@ def display_enhanced_metrics(df: pd.DataFrame) -> None:
             unsafe_allow_html=True
         )
 
+
 def display_job_cards(df: pd.DataFrame, limit: int = 6) -> None:
-    """
-    Display job cards in the dashboard overview section.
-    Shows up to `limit` jobs from the DataFrame.
-    """
-    if df is None or df.empty:
-        st.info("No jobs to display.")
+    """Display job cards with proper Streamlit components instead of HTML."""
+    if df.empty:
+        st.info("🚀 Start scraping to see job opportunities here!")
         return
+    
+    st.markdown('<h3 class="section-header">💼 Recent Opportunities</h3>', unsafe_allow_html=True)
+    
+    # Sort by created_at if available, otherwise by index
+    if 'created_at' in df.columns:
+        recent_jobs = df.sort_values('created_at', ascending=False).head(limit)
+    else:
+        recent_jobs = df.head(limit)
+    
+    # Display in a grid using proper Streamlit components
+    cols = st.columns(2)
+    for idx, (_, job) in enumerate(recent_jobs.iterrows()):
+        col = cols[idx % 2]
+        with col:
+            company = job.get('company', 'Unknown Company')
+            title = job.get('title', 'Unknown Position')
+            location = job.get('location', 'Location not specified')
+            match_score = job.get('match_score', 0)
+            job_url = job.get('url', job.get('job_url', ''))
+            status_text = job.get('status_text', 'New')
+            priority = job.get('priority', 'Medium')
+            # Use Streamlit markdown for header, but avoid raw HTML for actions
+            st.markdown(f"**{title}** at **{company}**")
+            st.write(f"📍 {location}")
+            st.write(f"🔍 Status: {status_text} | 🎯 Priority: {priority} | Match: {match_score:.0f}%")
+            button_col1, button_col2 = st.columns(2)
+            with button_col1:
+                if job_url:
+                    st.link_button("🔗 View Job", job_url)
+                else:
+                    st.button("🔗 No URL", disabled=True, key=f"no_url_recent_{idx}")
+            with button_col2:
+                if st.button("📋 Copy", key=f"copy_recent_{idx}_{hash(str(title))}", help="Copy job info"):
+                    job_info = f"{title} at {company} - {location}"
+                    st.success(f"Job info copied!")
+            st.divider()
 
-    jobs_to_show = df.head(limit)
-    for _, row in jobs_to_show.iterrows():
-        title = row.get('title', 'Unknown Title')
-        company = row.get('company', 'Unknown Company')
-        location = row.get('location', 'Unknown Location')
-        status = row.get('status', 'Status')
-        priority = row.get('priority', 'Priority')
-        match_score = row.get('match_score', 0)
-        status_class = status.lower() if isinstance(status, str) else ''
-        priority_class = priority.lower() if isinstance(priority, str) else ''
-        stage_emoji = ''  # Optionally map status to emoji
-        status_text = status
-        action_buttons = ''  # Placeholder for future action buttons
-
-        st.markdown(
-            f"""
-            <div class="job-card fade-in">
-                <div class="job-title">{title}</div>
-                <div class="job-company">{company}</div>
-                <div class="job-location">📍 {location}</div>
-                <div class="job-meta">
-                    <span class="job-badge {status_class}">{stage_emoji} {status_text}</span>
-                    <span class="job-badge {priority_class}-priority">{priority} Priority</span>
-                    <span class="job-badge">Match: {match_score:.0f}%</span>
-                </div>
-                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                    {action_buttons}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
 
 def display_analytics_tab(df: pd.DataFrame) -> None:
     """Display simplified analytics without heavy charts."""
@@ -984,7 +779,7 @@ def display_analytics_tab(df: pd.DataFrame) -> None:
     
     # Recent activity
     if 'created_at' in df.columns:
-        st.markdown("### � Recent Activity")
+        st.markdown("### 📅 Recent Activity")
         
         # Jobs added in last 7 days
         recent_jobs = len(df[df['created_at'] > (datetime.now() - timedelta(days=7))])
@@ -999,135 +794,56 @@ def display_analytics_tab(df: pd.DataFrame) -> None:
             st.metric("Today", today_jobs)
 
 def apply_to_job_streamlit(job_id: int, job_title: str, company: str, job_url: str, profile_name: str, mode: str) -> None:
-    """Apply to a job from the Streamlit dashboard with enhanced orchestration."""
+    """Apply to a job from the Streamlit dashboard."""
     try:
         from src.core.job_database import get_job_db
         
-        # Progress tracking
-        progress_container = st.empty()
-        status_container = st.empty()
-        
-        with st.spinner("🚀 Processing application..."):
+        with st.spinner("Processing application..."):
             db = get_job_db(profile_name)
-            
-            # Step 1: Auto-Document Generation (if enabled)
-            doc_generation_enabled = st.session_state.get('auto_doc_generation', True)
-            
-            if doc_generation_enabled:
-                progress_container.progress(0.2, "📄 Generating job-specific documents...")
-                
-                try:
-                    # Try to generate job-specific documents
-                    from src.services.document_generator import DocumentGenerator
-                    
-                    doc_generator = DocumentGenerator(profile_name)
-                    
-                    # Generate documents for this specific job
-                    job_data = {
-                        'id': job_id,
-                        'title': job_title,
-                        'company': company,
-                        'url': job_url
-                    }
-                    
-                    documents = doc_generator.generate_job_specific_documents(job_data)
-                    
-                    if documents:
-                        status_container.success(f"✅ Generated job-specific documents: {len(documents)} files")
-                    else:
-                        status_container.warning("⚠️ Document generation skipped - using default documents")
-                        
-                except ImportError:
-                    status_container.info("💡 Document generator not available - using manual documents")
-                except Exception as e:
-                    status_container.warning(f"⚠️ Document generation failed: {str(e)} - proceeding with application")
-            
-            # Step 2: Application Processing
-            progress_container.progress(0.5, "🎯 Processing application...")
             
             if "Manual" in mode:
                 # Manual mode: mark as applied and open URL
                 db.update_application_status(job_id, "applied", "Applied via Dashboard (Manual)")
-                progress_container.progress(1.0, "✅ Application marked as complete!")
-                status_container.success(f"✅ Marked as applied: {job_title} at {company}")
+                st.success(f"✅ Marked as applied: {job_title} at {company}")
                 st.markdown(f"🔗 [**Click here to open job page in new tab**]({job_url})")
                 
             elif "Hybrid" in mode:
-                progress_container.progress(0.7, "🤖 Starting AI-assisted application...")
-                
                 try:
-                    # Hybrid mode: use applier
-                    from applier import JobApplier
-                    
+                    # Hybrid mode: use applier if available
+                    try:
+                        from src.job_applier.job_applier import JobApplier
+                    except ImportError:
+                        try:
+                            from src.job_applier import JobApplier
+                        except ImportError:
+                            st.warning("⚠️ Job applier module not available. Falling back to manual mode.")
+                            db.update_application_status(job_id, "applied", "Applied via Dashboard (Manual Fallback)")
+                            st.success(f"✅ Marked as applied: {job_title} at {company}")
+                            st.markdown(f"🔗 [**Click here to open job page in new tab**]({job_url})")
+                            return
                     applier = JobApplier(profile_name=profile_name)
                     result = applier.apply_to_job(job_url)
-                    
                     if result.get("success"):
                         db.update_application_status(job_id, "applied", "Applied via Dashboard (Hybrid)")
-                        progress_container.progress(1.0, "✅ AI-assisted application completed!")
-                        status_container.success(f"✅ Application completed: {job_title} at {company}")
-                        
+                        st.success(f"✅ Application completed: {job_title} at {company}")
                         if result.get("details"):
-                            st.info(f"📋 Details: {result['details']}")
+                            st.info(f"Details: {result['details']}")
                     else:
-                        progress_container.progress(0.8, "❌ AI application failed - switching to manual")
-                        status_container.error(f"❌ Application failed: {result.get('error', 'Unknown error')}")
-                        
-                        # Fallback to manual mode
-                        db.update_application_status(job_id, "applied", "Applied via Dashboard (Manual Fallback)")
-                        status_container.success(f"✅ Marked as applied (manual fallback): {job_title} at {company}")
-                        st.markdown(f"🔗 [**Click here to complete application manually**]({job_url})")
-                        
-                except ImportError:
-                    progress_container.progress(0.8, "⚠️ Applier not available - using manual mode")
-                    status_container.warning("⚠️ Applier module not available. Falling back to manual mode.")
+                        st.error(f"❌ Application failed: {result.get('error', 'Unknown error')}")
+                except Exception as e:
+                    st.error(f"❌ Error in hybrid application: {str(e)}")
+                    # Fallback to manual mode
                     db.update_application_status(job_id, "applied", "Applied via Dashboard (Manual Fallback)")
-                    status_container.success(f"✅ Marked as applied: {job_title} at {company}")
+                    st.success(f"✅ Marked as applied: {job_title} at {company}")
                     st.markdown(f"🔗 [**Click here to open job page in new tab**]({job_url})")
             
-            # Step 3: Application Queue Integration (Future Enhancement)
-            progress_container.progress(0.9, "📊 Updating application queue...")
-            
-            # Update application metrics
-            if 'application_count' not in st.session_state:
-                st.session_state['application_count'] = 0
-            st.session_state['application_count'] += 1
-            
-            # Final status
-            progress_container.progress(1.0, "🎉 Application process complete!")
-            
-            # Auto-refresh after successful application
+            # Auto-refresh the page after 2 seconds
             time.sleep(2)
             st.rerun()
                 
     except Exception as e:
         st.error(f"❌ Error applying to job: {str(e)}")
         logger.error(f"Apply error: {e}")
-        
-        # Show detailed error information for debugging
-        with st.expander("🔍 Error Details"):
-            st.code(f"""
-Error Type: {type(e).__name__}
-Error Message: {str(e)}
-Job ID: {job_id}
-Job Title: {job_title}
-Company: {company}
-Mode: {mode}
-            """)
-        
-        # Provide manual fallback option
-        st.markdown(f"### 🔗 Manual Application Fallback")
-        st.markdown(f"You can still apply manually: [**Open {job_title} at {company}**]({job_url})")
-        
-        if st.button("Mark as Applied Manually", key=f"manual_fallback_{job_id}"):
-            try:
-                db = get_job_db(profile_name)
-                db.update_application_status(job_id, "applied", f"Applied manually after error: {str(e)}")
-                st.success("✅ Marked as applied manually")
-                time.sleep(1)
-                st.rerun()
-            except Exception as fallback_error:
-                st.error(f"❌ Could not mark as applied: {fallback_error}")
 
 
 def display_jobs_table(df: pd.DataFrame, profile_name: str = None) -> None:
@@ -1138,45 +854,45 @@ def display_jobs_table(df: pd.DataFrame, profile_name: str = None) -> None:
     
     st.markdown('<h2 class="section-header">📋 Job Management</h2>', unsafe_allow_html=True)
     
-    # Filters
+    # Filters (now with salary, experience, job type)
     with st.container():
         st.markdown('<div class="filter-container">', unsafe_allow_html=True)
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
+        col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
         with col1:
-            # Company filter
             companies = ["All"] + sorted(df['company'].dropna().unique().tolist())
             selected_company = st.selectbox("🏢 Company", companies)
-        
         with col2:
-            # Status filter - Updated for 4-stage pipeline
             status_options = ["All", "New", "Scraped", "Processed", "Document Created", "Applied"]
             selected_status = st.selectbox("📊 Status", status_options)
-        
         with col3:
-            # Priority filter
             priority_options = ["All"] + sorted(df['priority'].dropna().unique().tolist())
             selected_priority = st.selectbox("🎯 Priority", priority_options)
-        
         with col4:
-            # Search
+            job_type_options = ["All"] + sorted(df['job_type'].dropna().unique().tolist()) if 'job_type' in df.columns else ["All"]
+            selected_job_type = st.selectbox("�️ Job Type", job_type_options)
+        with col5:
+            experience_options = ["All"] + sorted(df['experience_level'].dropna().unique().tolist()) if 'experience_level' in df.columns else ["All"]
+            selected_experience = st.selectbox("🧑‍💼 Experience", experience_options)
+        with col6:
+            salary_options = ["All"] + sorted(df['salary'].dropna().unique().tolist()) if 'salary' in df.columns else ["All"]
+            selected_salary = st.selectbox("💰 Salary", salary_options)
+        with col7:
             search_term = st.text_input("🔍 Search", placeholder="Search jobs...")
-        
         st.markdown('</div>', unsafe_allow_html=True)
-    
     # Apply filters
     filtered_df = df.copy()
-    
     if selected_company != "All":
         filtered_df = filtered_df[filtered_df['company'] == selected_company]
-    
     if selected_status != "All":
         filtered_df = filtered_df[filtered_df['status_text'] == selected_status]
-    
     if selected_priority != "All":
         filtered_df = filtered_df[filtered_df['priority'] == selected_priority]
-    
+    if selected_job_type != "All" and 'job_type' in filtered_df.columns:
+        filtered_df = filtered_df[filtered_df['job_type'] == selected_job_type]
+    if selected_experience != "All" and 'experience_level' in filtered_df.columns:
+        filtered_df = filtered_df[filtered_df['experience_level'] == selected_experience]
+    if selected_salary != "All" and 'salary' in filtered_df.columns:
+        filtered_df = filtered_df[filtered_df['salary'] == selected_salary]
     if search_term:
         mask = (
             filtered_df['title'].str.contains(search_term, case=False, na=False) |
@@ -1187,15 +903,11 @@ def display_jobs_table(df: pd.DataFrame, profile_name: str = None) -> None:
     
     # Display results
     st.write(f"**Found {len(filtered_df)} jobs** (filtered from {len(df)} total)")
-    
     if not filtered_df.empty:
-        # Select columns to display - Updated for new pipeline
-        display_columns = ['title', 'company', 'location', 'status_text', 'priority', 'match_score', 'url']
+        # Select columns to display - now with salary, experience, job type
+        display_columns = ['title', 'company', 'location', 'job_type', 'experience_level', 'salary', 'status_text', 'priority', 'match_score', 'url']
         available_columns = [col for col in display_columns if col in filtered_df.columns]
-        
-        # Format for display
         display_df = filtered_df[available_columns].copy()
-        
         # Add status emojis
         if 'status_text' in display_df.columns:
             status_emoji_map = {
@@ -1206,347 +918,98 @@ def display_jobs_table(df: pd.DataFrame, profile_name: str = None) -> None:
                 'Applied': '✅ Applied'
             }
             display_df['status_text'] = display_df['status_text'].map(status_emoji_map)
-        
         if 'match_score' in display_df.columns:
             display_df['match_score'] = display_df['match_score'].apply(lambda x: f"{x:.0f}%")
-        
-        # Format URLs as clickable links and add individual Apply buttons
-        if 'url' in display_df.columns:
-            # Add individual apply functionality for each job row
-            apply_buttons = []
-            apply_button_keys = []
-            
-            for idx, row in display_df.iterrows():
-                job_url = row.get('url', '')
-                job_title = row.get('title', 'Unknown')
-                company = row.get('company', 'Unknown')
-                job_id = filtered_df.loc[idx, 'id'] if 'id' in filtered_df.columns else idx
-                status = filtered_df.loc[idx, 'application_status'] if 'application_status' in filtered_df.columns else 'not_applied'
-                
-                if status == 'applied':
-                    apply_buttons.append('✅ Applied')
-                    apply_button_keys.append(None)
-                else:
-                    # Create unique key for each apply button
-                    button_key = f"apply_individual_{idx}_{hash(str(job_url))}"
-                    apply_buttons.append('🎯 Apply Now')
-                    apply_button_keys.append({
-                        'key': button_key,
-                        'job_id': job_id,
-                        'title': job_title,
-                        'company': company,
-                        'url': job_url
-                    })
-            
-            display_df['apply_action'] = apply_buttons
-            display_df['url'] = display_df['url'].apply(
-                lambda x: f'<a href="{x}" target="_blank">🔗 View</a>' if pd.notna(x) and x else 'No URL'
-            )
-            
-            # Store apply button info in session state for button handling
-            if 'apply_button_keys' not in st.session_state:
-                st.session_state['apply_button_keys'] = {}
-            st.session_state['apply_button_keys'] = {info['key']: info for info in apply_button_keys if info}
-        
-        # Rename columns for better display
-        column_names = {
-            'title': 'Job Title',
-            'company': 'Company',
-            'location': 'Location',
-            'status_text': 'Pipeline Status',
-            'priority': 'Priority',
-            'match_score': 'Match',
-            'url': 'View Job',
-            'apply_action': 'Apply'
-        }
-        display_df = display_df.rename(columns=column_names)
-        
-        # Display the dataframe
-        st.dataframe(
-            display_df,
-            use_container_width=True,
-            hide_index=True,
-            height=600
-        )
-        
-        # Individual Apply Buttons Section
-        if not filtered_df.empty and hasattr(st.session_state, 'apply_button_keys') and st.session_state['apply_button_keys']:
-            st.markdown("### 🎯 Individual Job Applications")
-            st.markdown("Apply to jobs directly from the table above, or use the quick apply options below:")
-            
-            # Create columns for individual apply buttons
-            apply_cols = st.columns(min(3, len(st.session_state['apply_button_keys'])))
-            
-            for i, (button_key, job_info) in enumerate(st.session_state['apply_button_keys'].items()):
-                col_idx = i % len(apply_cols)
-                with apply_cols[col_idx]:
-                    # Create individual apply button with mode selection
-                    with st.container():
-                        st.markdown(f"**{job_info['title']}**")
-                        st.markdown(f"*{job_info['company']}*")
-                        
-                        # Mode selection for this specific job
-                        mode_key = f"mode_{button_key}"
-                        mode = st.radio(
-                            "Application method:",
-                            ["Manual", "Hybrid"],
-                            key=mode_key,
-                            horizontal=True
+        # Enhanced table or fallback
+        try:
+            from src.dashboard.components.enhanced_job_table import render_enhanced_job_table, display_job_details
+            result = render_enhanced_job_table(filtered_df, st.session_state.get("selected_profile", "default"))
+            if result is None:
+                selected_job, selected_indices = None, []
+            else:
+                selected_job, selected_indices = result
+            if selected_job:
+                display_job_details(selected_job, filtered_df)
+        except ImportError as e:
+            st.error(f"Enhanced table component not available: {e}")
+            st.info("Falling back to basic table display...")
+            # Fallback to basic table with multi-select checkboxes
+            display_columns = ['title', 'company', 'location', 'job_type', 'experience_level', 'salary', 'status_text', 'priority', 'match_score']
+            available_columns = [col for col in display_columns if col in filtered_df.columns]
+            if available_columns:
+                st.dataframe(
+                    filtered_df[available_columns],
+                    use_container_width=True,
+                    hide_index=True,
+                    height=400
+                )
+            # Multi-select for batch apply
+            st.markdown("### 🎯 Batch Apply to Jobs")
+            apply_indices = st.multiselect("Select jobs to apply:", filtered_df.index.tolist(), help="Select multiple jobs for batch apply")
+            if apply_indices:
+                mode = st.radio(
+                    "Application method:",
+                    ["Manual (Mark as applied)", "Hybrid (AI-assisted)"],
+                    key="batch_apply_mode"
+                )
+                if st.button("🚀 Apply to Selected Jobs", type="primary"):
+                    for idx in apply_indices:
+                        row = filtered_df.loc[idx]
+                        apply_to_job_streamlit(
+                            row.get('id', idx),
+                            row.get('title', 'Unknown Job'),
+                            row.get('company', 'Unknown Company'),
+                            row.get('url', ''),
+                            profile_name,
+                            mode
                         )
-                        
-                        # Individual apply button
-                        if st.button(
-                            f"🚀 Apply Now",
-                            key=button_key,
-                            type="primary",
-                            use_container_width=True
-                        ):
-                            # Show application progress
-                            with st.spinner(f"Applying to {job_info['title']}..."):
-                                apply_to_job_streamlit(
-                                    job_info['job_id'],
-                                    job_info['title'],
-                                    job_info['company'],
-                                    job_info['url'],
-                                    profile_name,
-                                    mode
-                                )
-                            
-                            # Remove this job from apply buttons (it's now applied)
-                            if button_key in st.session_state['apply_button_keys']:
-                                del st.session_state['apply_button_keys'][button_key]
-                            
-                            # Trigger rerun to update the display
-                            st.rerun()
-        
-        # Job Application Section (Dropdown Method - Legacy)
-        if not filtered_df.empty:
-            st.markdown("### 📋 Batch Job Selection")
-            st.markdown("Select multiple jobs for batch processing:")
-            
-            # Select a job to apply to
-            job_options = []
-            job_mapping = {}
-            
-            for idx, row in filtered_df.iterrows():
-                status = row.get('application_status', 'not_applied')
-                if status != 'applied':
-                    job_title = row.get('title', 'Unknown Job')
-                    company = row.get('company', 'Unknown Company')
-                    job_key = f"{job_title} at {company}"
-                    job_options.append(job_key)
-                    job_mapping[job_key] = {
-                        'id': row.get('id', idx),
-                        'title': job_title,
-                        'company': company,
-                        'url': row.get('url', ''),
-                        'index': idx
-                    }
-            
-            if job_options:
-                selected_job_key = st.selectbox("Select a job to apply to:", [""] + job_options)
-                
-                if selected_job_key:
-                    job_info = job_mapping[selected_job_key]
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        mode = st.radio(
-                            "Application method:",
-                            ["Manual (Mark as applied)", "Hybrid (AI-assisted)"],
-                            key="apply_mode"
-                        )
-                    
-                    with col2:
-                        if st.button("🚀 Apply Now", type="primary"):
-                            apply_to_job_streamlit(
-                                job_info['id'], 
-                                job_info['title'], 
-                                job_info['company'], 
-                                job_info['url'], 
-                                profile_name,
-                                mode
-                            )
+                    st.success(f"Applied to {len(apply_indices)} jobs!")
+                    st.experimental_rerun()
             else:
                 st.info("✅ All visible jobs have been applied to!")
 
 def display_system_tab(profile_name: str) -> None:
     """Display enhanced system information and orchestration controls with integrated CLI."""
-    st.markdown('<h2 class="section-header">� Application Orchestration & System Control</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="section-header">🖥️ System Command & Information Center</h2>', unsafe_allow_html=True)
     
-    # Application Queue Status - prominently displayed first
-    st.markdown("### 📊 Application Queue Status")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    queue_size = st.session_state.get('application_queue_size', 0)
-    applications_today = st.session_state.get('application_count', 0)
-    applications_per_hour = st.session_state.get('applications_per_hour', 3)
-    queue_paused = st.session_state.get('queue_paused', False)
-    
-    with col1:
-        st.metric("📋 Queue Size", queue_size, delta=None)
-    
-    with col2:
-        st.metric("✅ Applied Today", applications_today, delta=None)
-    
-    with col3:
-        rate_text = f"{applications_per_hour}/hour"
-        if queue_paused:
-            rate_text += " (Paused)"
-        st.metric("⏱️ Current Rate", rate_text)
-    
-    with col4:
-        auto_doc = st.session_state.get('auto_doc_generation', True)
-        doc_status = "✅ Enabled" if auto_doc else "❌ Disabled"
-        st.metric("📄 Auto-Docs", doc_status)
-    
-    # Quick Orchestration Controls
-    st.markdown("### 🎛️ Quick Orchestration Controls")
-    
-    control_col1, control_col2, control_col3, control_col4 = st.columns(4)
-    
-    with control_col1:
-        if st.button("▶️ Start Queue Processing", key="orch_start_queue", use_container_width=True, disabled=not queue_size > 0):
-            st.session_state['queue_paused'] = False
-            st.session_state['queue_processing'] = True
-            st.success("Queue processing started!")
-    
-    with control_col2:
-        if st.button("⏸️ Pause Queue", key="orch_pause_queue", use_container_width=True, disabled=queue_paused):
-            st.session_state['queue_paused'] = True
-            st.success("Queue paused!")
-    
-    with control_col3:
-        if st.button("🗑️ Clear Queue", key="orch_clear_queue", use_container_width=True, disabled=not queue_size > 0):
-            st.session_state['application_queue_size'] = 0
-            st.session_state['application_queue'] = []
-            st.success("Queue cleared!")
-    
-    with control_col4:
-        if st.button("🔄 Reset Daily Count", key="orch_reset_count", use_container_width=True):
-            st.session_state['application_count'] = 0
-            st.success("Daily count reset!")
-    
-    st.markdown("---")
-    
-    # Main orchestration controls for backend services
+    # Main orchestration controls - prominently displayed first
     if HAS_ORCHESTRATION_COMPONENT:
-        st.markdown("### 🖥️ Backend Service Controls")
+        st.markdown("### 🎛️ Quick Orchestration Controls")
         
         # Quick action buttons for core services
-        service_col1, service_col2, service_col3, service_col4 = st.columns(4)
+        col1, col2, col3, col4 = st.columns(4)
         
         from src.dashboard.components.orchestration_component import EnhancedOrchestrationComponent
         orchestration = EnhancedOrchestrationComponent(profile_name)
         
-        with service_col1:
-            if st.button("🚀 Start Core Pipeline", key="main_start_core_pipeline", use_container_width=True):
+        with col1:
+            if st.button("🚀 Start Core Pipeline", use_container_width=True):
                 orchestration._start_all_services()
         
-        with service_col2:
-            if st.button("⏹️ Stop Core Pipeline", key="main_stop_core_pipeline", use_container_width=True):
+        with col2:
+            if st.button("⏹️ Stop Core Pipeline", use_container_width=True):
                 orchestration._stop_all_services()
         
-        with service_col3:
-            if st.button("🚀 Start 3 Workers", key="main_start_3_workers", use_container_width=True):
+        with col3:
+            if st.button("🚀 Start 3 Workers", use_container_width=True):
                 orchestration._start_n_workers(3)
         
-        with service_col4:
-            if st.button("⏹️ Stop All Workers", key="main_stop_all_workers", use_container_width=True):
+        with col4:
+            if st.button("⏹️ Stop All Workers", use_container_width=True):
                 orchestration._stop_worker_pool()
         
         st.markdown("---")
     
     # Create sub-tabs for detailed orchestration features
     system_tabs = st.tabs([
-        "📊 Application Queue", 
         "🎛️ Service Control", 
-        "👥 Worker Pool", 
-        "� Monitoring", 
+        "👥 5-Worker Pool", 
+        "📊 Monitoring", 
         "🤖 Auto-Management",
         "🖥️ CLI Commands"
     ])
     
-    with system_tabs[0]:  # Application Queue Management
-        st.markdown("### 📋 Application Queue Management")
-        
-        # Queue configuration
-        config_col1, config_col2 = st.columns(2)
-        
-        with config_col1:
-            st.markdown("**Queue Settings**")
-            
-            # Application rate limiting
-            new_rate = st.slider(
-                "Applications per hour",
-                min_value=1,
-                max_value=10,
-                value=applications_per_hour,
-                help="Rate limit for automated applications"
-            )
-            if new_rate != applications_per_hour:
-                st.session_state['applications_per_hour'] = new_rate
-                st.success(f"Rate updated to {new_rate}/hour")
-            
-            # Auto-document generation
-            auto_doc_enabled = st.checkbox(
-                "Auto-generate documents per job",
-                value=st.session_state.get('auto_doc_generation', True),
-                help="Generate job-specific resume/cover letter"
-            )
-            st.session_state['auto_doc_generation'] = auto_doc_enabled
-            
-            # Background processing
-            background_enabled = st.checkbox(
-                "Enable background processing",
-                value=st.session_state.get('enable_background', False),
-                help="Process applications in background"
-            )
-            st.session_state['enable_background'] = background_enabled
-        
-        with config_col2:
-            st.markdown("**Queue Status**")
-            
-            # Display queue items
-            queue_items = st.session_state.get('application_queue', [])
-            
-            if queue_items:
-                st.markdown("**Queued Applications:**")
-                for i, item in enumerate(queue_items[:5]):  # Show first 5
-                    st.text(f"{i+1}. {item.get('title', 'Unknown')} at {item.get('company', 'Unknown')}")
-                
-                if len(queue_items) > 5:
-                    st.text(f"... and {len(queue_items) - 5} more")
-            else:
-                st.info("No applications in queue")
-            
-            # Queue statistics
-            if applications_today > 0:
-                avg_time = 300  # Estimated 5 minutes per application
-                est_completion = queue_size * avg_time / 60  # Convert to minutes
-                st.metric("🕒 Est. Completion", f"{est_completion:.1f} min")
-        
-        # Bulk queue actions
-        st.markdown("**Bulk Actions**")
-        bulk_col1, bulk_col2, bulk_col3 = st.columns(3)
-        
-        with bulk_col1:
-            if st.button("📥 Add All Scraped Jobs", key="bulk_add_all", use_container_width=True):
-                # Add logic to queue all scraped jobs
-                st.info("Feature coming soon - will add all scraped jobs to queue")
-        
-        with bulk_col2:
-            if st.button("🎯 Add Filtered Jobs", key="bulk_add_filtered", use_container_width=True):
-                # Add logic to queue filtered jobs
-                st.info("Feature coming soon - will add filtered jobs to queue")
-        
-        with bulk_col3:
-            if st.button("📊 Export Queue", key="bulk_export_queue", use_container_width=True):
-                # Export queue to CSV
-                st.info("Feature coming soon - queue export functionality")
-    
-    with system_tabs[1]:  # Service Control
+    with system_tabs[0]:  # Service Control
         if HAS_ORCHESTRATION_COMPONENT:
             # Use the enhanced orchestration component - Service Control section
             from src.dashboard.components.orchestration_component import EnhancedOrchestrationComponent
@@ -1555,7 +1018,7 @@ def display_system_tab(profile_name: str) -> None:
         else:
             _render_fallback_service_control(profile_name)
     
-    with system_tabs[2]:  # Worker Pool
+    with system_tabs[1]:  # 5-Worker Pool
         if HAS_ORCHESTRATION_COMPONENT:
             # Worker Pool Management section
             from src.dashboard.components.orchestration_component import EnhancedOrchestrationComponent
@@ -1564,7 +1027,7 @@ def display_system_tab(profile_name: str) -> None:
         else:
             _render_fallback_worker_info()
     
-    with system_tabs[3]:  # Monitoring
+    with system_tabs[2]:  # Monitoring
         if HAS_ORCHESTRATION_COMPONENT:
             # Service Monitoring section
             from src.dashboard.components.orchestration_component import EnhancedOrchestrationComponent
@@ -1573,7 +1036,7 @@ def display_system_tab(profile_name: str) -> None:
         else:
             _render_fallback_monitoring()
     
-    with system_tabs[4]:  # Auto-Management
+    with system_tabs[3]:  # Auto-Management
         if HAS_ORCHESTRATION_COMPONENT:
             # Auto-Management panel
             from src.dashboard.components.orchestration_component import EnhancedOrchestrationComponent
@@ -1582,7 +1045,7 @@ def display_system_tab(profile_name: str) -> None:
         else:
             _render_fallback_auto_management()
     
-    with system_tabs[5]:  # CLI Commands
+    with system_tabs[4]:  # CLI Commands
         _render_integrated_cli_commands(profile_name)
 
 
@@ -1691,11 +1154,11 @@ def _render_fallback_auto_management():
     st.markdown("### 🤖 Auto-Management Features")
     st.info("""
     **Smart Auto-Start/Stop Logic (Available with full orchestration):**
-    - � Auto-start scraper when job count drops below threshold
+    - �� Auto-start scraper when job count drops below threshold
     - ⚙️ Auto-start processor when scraped jobs exceed threshold
     - 👥 Auto-start workers when processed jobs accumulate
     - ✉️ Auto-start applicator when documents are ready
-    - ⏹️ Auto-stop services after idle timeout
+    - 🛑 Auto-stop services after idle timeout
     - 🧠 Resource-aware service management
     """)
     
@@ -1835,7 +1298,7 @@ def display_cli_tab(profile_name: str) -> None:
         if st.button("🎛️ Go to System Tab", use_container_width=True):
             st.info("💡 Click on the 'System & Smart Orchestration' tab above")
         
-        st.markdown("### � Available Features")
+        st.markdown("### 🎯 Available Features")
         st.markdown("""
         - **🖥️ CLI Commands**: Full command interface
         - **🎛️ Service Control**: Smart orchestration panel  
@@ -1868,23 +1331,60 @@ def display_cli_tab(profile_name: str) -> None:
 
 
 def display_logs_tab() -> None:
-    """Display logs from various log files."""
-    st.markdown('<h2 class="section-header">📄 System Logs</h2>', unsafe_allow_html=True)
+    """Display logs from various orchestrator log files with live refresh, search, and filtering."""
+    st.markdown('<h2 class="section-header">📄 System & Orchestrator Logs</h2>', unsafe_allow_html=True)
 
     log_files = {
-        "Error Log": "error_logs.log",
-        "Main Log": "logs/autojobagent.log"
+        "CLI Orchestrator": "logs/cli_orchestrator.log",
+        "Scraping Orchestrator": "logs/scraping_orchestrator.log",
+        "Application Orchestrator": "logs/application_orchestrator.log",
+        "Dashboard Orchestrator": "logs/dashboard_orchestrator.log",
+        "System Orchestrator": "logs/system_orchestrator.log",
+        "Main Log": "logs/autojobagent.log",
+        "Error Log": "error_logs.log"
     }
 
     log_choice = st.selectbox("Select Log File", list(log_files.keys()))
-
     log_file_path = Path(log_files[log_choice])
+
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        search_term = st.text_input("🔍 Search log entries", "", key="log_search")
+    with col2:
+        log_level = st.selectbox("Log Level", ["ALL", "INFO", "WARNING", "ERROR", "CRITICAL"], key="log_level")
+
+    refresh = st.button("🔄 Refresh Log", key="refresh_log")
+    auto_refresh = st.checkbox("Live Update (every 2s)", value=False, key="auto_refresh_log")
+    if auto_refresh:
+        import time
+        st_autorefresh(interval=2000, key="log_auto_refresh")
 
     if log_file_path.exists():
         try:
             with open(log_file_path, "r", encoding="utf-8") as f:
-                log_content = f.read()
-            st.code(log_content, language='log', line_numbers=True)
+                log_content = f.read()[-10000:]  # Only last 10k chars
+            log_lines = log_content.splitlines()
+            # Filter by search term
+            if search_term:
+                log_lines = [line for line in log_lines if search_term.lower() in line.lower()]
+            # Filter by log level
+            if log_level != "ALL":
+                log_lines = [line for line in log_lines if f" {log_level} " in line]
+            if log_lines:
+                # Color-coding for log levels
+                def color_line(line):
+                    if " ERROR " in line or " CRITICAL " in line:
+                        return f'<span style="color:#ef4444">{line}</span>'
+                    elif " WARNING " in line:
+                        return f'<span style="color:#f59e0b">{line}</span>'
+                    elif " INFO " in line:
+                        return f'<span style="color:#10b981">{line}</span>'
+                    else:
+                        return line
+                html = "<br>".join([color_line(line) for line in log_lines])
+                st.markdown(f'<div style="font-family:monospace;font-size:13px;">{html}</div>', unsafe_allow_html=True)
+            else:
+                st.info("No log entries match your filter.")
         except Exception as e:
             st.error(f"Error reading log file: {e}")
     else:
@@ -2143,45 +1643,134 @@ def display_enhanced_quick_actions() -> None:
         if st.button("🧹 Cleanup", use_container_width=True, key="cleanup_data"):
             st.info("Cleanup functionality coming soon!")
 
+def check_dashboard_backend_connection() -> bool:
+    """
+    Check dashboard backend connection health.
+    
+    Returns:
+        True if backend connection is healthy, False otherwise
+    """
+    try:
+        import socket
+        import requests
+        from pathlib import Path
+        
+        logger.info("Checking dashboard backend connection...")
+        
+        # Check database connectivity
+        try:
+            db = get_job_db("default")  # Test with default profile
+            db.get_job_stats()  # Simple query to test connection
+            logger.debug("Database connection: OK")
+        except Exception as e:
+            logger.error(f"Database connection failed: {e}")
+            return False
+        
+        # Check if required directories exist
+        required_dirs = ["profiles", "logs", "cache"]
+        for dir_name in required_dirs:
+            dir_path = Path(dir_name)
+            if not dir_path.exists():
+                logger.warning(f"Required directory missing: {dir_name}")
+                # Don't fail for missing directories, just warn
+        
+        # Check system resources
+        try:
+            import psutil
+            cpu_percent = psutil.cpu_percent(interval=0.1)
+            memory_percent = psutil.virtual_memory().percent
+            
+            if cpu_percent > 95:
+                logger.warning(f"High CPU usage detected: {cpu_percent}%")
+            if memory_percent > 95:
+                logger.warning(f"High memory usage detected: {memory_percent}%")
+                
+            logger.debug(f"System resources: CPU {cpu_percent}%, Memory {memory_percent}%")
+            
+        except ImportError:
+            logger.debug("psutil not available for system resource monitoring")
+        
+        # Check if required modules can be imported
+        try:
+            from src.core.job_database import ModernJobDatabase
+            from src.utils.profile_helpers import get_available_profiles
+            logger.debug("Core modules import: OK")
+        except ImportError as e:
+            logger.error(f"Core module import failed: {e}")
+            return False
+        
+        # Check network connectivity (optional)
+        try:
+            response = requests.get("https://httpbin.org/status/200", timeout=5)
+            if response.status_code == 200:
+                logger.debug("External network connectivity: OK")
+            else:
+                logger.debug("External network connectivity: Limited")
+        except Exception:
+            logger.debug("External network connectivity: Not available")
+            # Don't fail for network issues
+        
+        # Check if FastAPI backend is running (if applicable)
+        backend_ports = [8000, 8001, 8002]  # Common backend ports
+        backend_running = False
+        
+        for port in backend_ports:
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(1)
+                result = sock.connect_ex(('127.0.0.1', port))
+                if result == 0:
+                    backend_running = True
+                    logger.debug(f"Backend service detected on port {port}")
+                    break
+                sock.close()
+            except Exception:
+                continue
+        
+        if not backend_running:
+            logger.debug("No backend service detected on common ports")
+            # Don't fail for missing backend - dashboard can work standalone
+        
+        logger.info("Dashboard backend connection check completed successfully")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Dashboard backend connection check failed: {e}")
+        return False
 
 def main() -> None:
-    """Main dashboard function."""
-    # Apply unified CSS
+    """Main dashboard function with modern dark theme and reorganized tabs."""
+    # Apply modern dark CSS
     st.markdown(UNIFIED_CSS, unsafe_allow_html=True)
     
-    # Set theme class based on dark mode
-    theme_class = "dark" if st.session_state["dark_mode"] else "light"
-    st.markdown(f'<div data-theme="{theme_class}">', unsafe_allow_html=True)
+    # Force dark theme - no light mode toggle needed
+    st.markdown("""
+    <script>
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.body.setAttribute('data-theme', 'dark');
+    </script>
+    """, unsafe_allow_html=True)
     
-    # Header with controls
-    col1, col2, col3 = st.columns([6, 1, 1])
+    # Modern header
+    col1, col2 = st.columns([4, 1])
     
     with col1:
-        st.markdown(
-            """
-            <div class="dashboard-header">
-                <h1 class="dashboard-title">🚀 AutoJobAgent</h1>
-                <p class="dashboard-subtitle">Unified Professional Job Management Dashboard</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 2rem; border-radius: 1rem; border: 1px solid #475569; margin-bottom: 2rem;'>
+            <h1 style='color: #f1f5f9; margin: 0; font-size: 2.5rem; font-weight: 700;'>🚀 AutoJobAgent</h1>
+            <p style='color: #cbd5e1; margin: 0.5rem 0 0 0; font-size: 1.125rem;'>Modern Job Application Automation Dashboard</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        dark_mode = st.toggle("🌙 Dark", value=st.session_state["dark_mode"])
-        st.session_state["dark_mode"] = dark_mode
-    
-    with col3:
-        st.markdown("<br>", unsafe_allow_html=True)
-        auto_refresh = st.toggle("🔄 Auto", value=st.session_state["auto_refresh"])
+        # Auto-refresh toggle
+        auto_refresh = st.toggle("🔄 Auto Refresh", value=st.session_state.get("auto_refresh", False))
         st.session_state["auto_refresh"] = auto_refresh
-    
-    # Auto-refresh functionality
-    if auto_refresh and HAS_AUTOREFRESH:
-        st_autorefresh(interval=60000, key="dashboard_refresh")
-    elif auto_refresh and not HAS_AUTOREFRESH:
-        st.info("💡 Install `streamlit-autorefresh` for auto-refresh functionality")
+        
+        if auto_refresh and HAS_AUTOREFRESH:
+            st_autorefresh(interval=30000, key="dashboard_refresh")
+        elif auto_refresh and not HAS_AUTOREFRESH:
+            st.info("💡 Install `streamlit-autorefresh` for auto-refresh")
     
     # Profile selection
     try:
@@ -2193,172 +1782,128 @@ def main() -> None:
             st.code("python main.py Nirajan --action scrape", language="bash")
             return
         
-        # Enhanced profile management in sidebar
+        # Sidebar with profile and quick actions
         with st.sidebar:
-            selected_profile = display_profile_management_sidebar(
-                profiles, 
-                st.session_state.get("selected_profile", profiles[0])
+            st.markdown("### 👤 Profile Selection")
+            selected_profile = st.selectbox(
+                "Select Profile",
+                profiles,
+                index=profiles.index(st.session_state.get("selected_profile", profiles[0])) if st.session_state.get("selected_profile") in profiles else 0,
+                key="sidebar_profile_selector"
             )
             st.session_state["selected_profile"] = selected_profile
             
-            # Enhanced quick actions
-            display_enhanced_quick_actions()
-            
-            # Application Orchestration Configuration
-            st.markdown("---")
-            st.markdown("### 🚀 Application Orchestration")
-            
-            # Auto-document generation toggle
-            auto_doc_generation = st.checkbox(
-                "📄 Auto-generate job-specific documents",
-                value=st.session_state.get('auto_doc_generation', True),
-                help="Automatically generate tailored resume/cover letter for each job"
-            )
-            st.session_state['auto_doc_generation'] = auto_doc_generation
-            
-            # Application rate limiting
-            applications_per_hour = st.slider(
-                "⏱️ Applications per hour",
-                min_value=1,
-                max_value=10,
-                value=st.session_state.get('applications_per_hour', 3),
-                help="Rate limit for automated applications (recommended: 2-5)"
-            )
-            st.session_state['applications_per_hour'] = applications_per_hour
-            
-            # Application queue status
-            queue_size = st.session_state.get('application_queue_size', 0)
-            applications_today = st.session_state.get('application_count', 0)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("📊 Queue", queue_size)
-            with col2:
-                st.metric("✅ Today", applications_today)
-            
-            # Queue management buttons
-            if queue_size > 0:
-                if st.button("⏸️ Pause Queue", key="pause_queue", use_container_width=True):
-                    st.session_state['queue_paused'] = True
-                    st.success("Queue paused")
-                    
-                if st.button("🗑️ Clear Queue", key="clear_queue", use_container_width=True):
-                    st.session_state['application_queue_size'] = 0
-                    st.success("Queue cleared")
-            
-            if st.session_state.get('queue_paused', False):
-                if st.button("▶️ Resume Queue", key="resume_queue", use_container_width=True):
-                    st.session_state['queue_paused'] = False
-                    st.success("Queue resumed")
-            
-            # Advanced settings
-            with st.expander("🔧 Advanced Settings"):
-                # Document generation settings
-                st.markdown("**Document Generation**")
-                doc_template_quality = st.selectbox(
-                    "Template Quality",
-                    ["Standard", "High", "Premium"],
-                    index=1,
-                    help="Higher quality takes longer but produces better results"
-                )
-                st.session_state['doc_template_quality'] = doc_template_quality
+            # Quick system status
+            st.markdown("### ⚡ Quick Status")
+            try:
+                from src.services.orchestration_service import orchestration_service
+                services_status = orchestration_service.get_all_services_status()
+                running_count = sum(1 for status in services_status.values() if status.get('status') == 'running')
+                total_count = len(services_status)
                 
-                # Application retry settings
-                st.markdown("**Application Retry Logic**")
-                max_retries = st.number_input(
-                    "Max retries per job",
-                    min_value=0,
-                    max_value=5,
-                    value=st.session_state.get('max_retries', 2),
-                    help="Number of automatic retries for failed applications"
-                )
-                st.session_state['max_retries'] = max_retries
+                st.metric("Services Running", f"{running_count}/{total_count}")
                 
-                # Background processing
-                st.markdown("**Background Processing**")
-                enable_background = st.checkbox(
-                    "Enable background orchestration",
-                    value=st.session_state.get('enable_background', False),
-                    help="Process applications in background with queue management"
-                )
-                st.session_state['enable_background'] = enable_background
+                # Quick service controls
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("🚀 Start All", use_container_width=True):
+                        for service_name in ["processor_worker_1", "processor_worker_2", "processor_worker_3"]:
+                            orchestration_service.start_service(service_name, selected_profile)
+                        st.success("Services started!")
+                        st.rerun()
+                
+                with col2:
+                    if st.button("⏹️ Stop All", use_container_width=True):
+                        for service_name in ["processor_worker_1", "processor_worker_2", "processor_worker_3"]:
+                            orchestration_service.stop_service(service_name)
+                        st.success("Services stopped!")
+                        st.rerun()
+                        
+            except ImportError:
+                st.info("Orchestration service not available")
         
         # Load data for selected profile
         with st.spinner("Loading dashboard data..."):
             df = load_job_data(selected_profile)
         
-        # Main content tabs
+        # Modern tab structure - logical workflow order
         tabs = st.tabs([
             "📊 Overview", 
             "💼 Jobs", 
+            "🎛️ Orchestration",
             "📈 Analytics", 
-            "📄 Documents",
-            "⚙️ Orchestration",
-            "🖥️ CLI Interface",
-            "📄 Logs",
-            "🔧 Configuration"
+            "🖥️ CLI",
+            "⚙️ Settings"
         ])
         
-        with tabs[0]:  # Overview
+        with tabs[0]:  # Overview - Main dashboard with key metrics and quick actions
             try:
+                from src.dashboard.components.dashboard_overview import render_dashboard_overview
+                render_dashboard_overview(df, selected_profile)
+            except ImportError:
+                st.error("❌ Dashboard overview component not available")
+                # Fallback to basic metrics
                 display_enhanced_metrics(df)
-                display_job_cards(df)
             except Exception as e:
                 st.error(f"❌ Error in Overview tab: {e}")
                 logger.error(f"Overview tab error: {e}")
         
-        with tabs[1]:  # Jobs
+        with tabs[1]:  # Jobs - Consolidated job management
             try:
+                from src.dashboard.components.modern_job_table import render_modern_job_table
+                render_modern_job_table(df, selected_profile)
+            except ImportError:
+                st.error("❌ Modern job table component not available")
+                # Fallback to original
                 display_jobs_table(df, selected_profile)
             except Exception as e:
                 st.error(f"❌ Error in Jobs tab: {e}")
                 logger.error(f"Jobs tab error: {e}")
         
-        with tabs[2]:  # Analytics
+        with tabs[2]:  # Orchestration - Service control and monitoring
             try:
+                if HAS_ORCHESTRATION_COMPONENT:
+                    render_orchestration_control(selected_profile)
+                else:
+                    st.error("❌ Orchestration component not available")
+                    st.info("Enhanced orchestration features require the orchestration component.")
+            except Exception as e:
+                st.error(f"❌ Error in Orchestration tab: {e}")
+                logger.error(f"Orchestration tab error: {e}")
+        
+        with tabs[3]:  # Analytics - Charts and insights
+            try:
+                from src.dashboard.components.analytics_dashboard import render_analytics_dashboard
+                render_analytics_dashboard(df, selected_profile)
+            except ImportError:
+                st.error("❌ Analytics dashboard component not available")
+                # Fallback to basic analytics
                 display_analytics_tab(df)
             except Exception as e:
                 st.error(f"❌ Error in Analytics tab: {e}")
                 logger.error(f"Analytics tab error: {e}")
         
-        with tabs[3]:  # Documents
+        with tabs[4]:  # CLI - Command interface
             try:
-                if HAS_DOCUMENT_COMPONENT:
-                    render_document_generation_tab(selected_profile)
+                if HAS_CLI_COMPONENT:
+                    render_cli_tab(selected_profile)
                 else:
-                    st.error("❌ Document Generation component not available")
-                    st.info("The document generation service is not properly installed or configured.")
+                    st.error("❌ CLI component not available")
+                    st.info("CLI interface requires the CLI component.")
             except Exception as e:
-                st.error(f"❌ Error in Documents tab: {e}")
-                logger.error(f"Documents tab error: {e}")
-
-        with tabs[4]:  # System / Orchestration
+                st.error(f"❌ Error in CLI tab: {e}")
+                logger.error(f"CLI tab error: {e}")
+        
+        with tabs[5]:  # Settings - Configuration and preferences
             try:
-                display_system_tab(selected_profile)
+                from src.dashboard.components.settings_component import render_settings_component
+                render_settings_component(selected_profile)
+            except ImportError:
+                st.error("❌ Settings component not available")
+                st.info("Settings management requires the settings component.")
             except Exception as e:
-                st.error(f"❌ Error in System tab: {e}")
-                logger.error(f"System tab error: {e}", exc_info=True)
-
-        with tabs[5]:  # CLI Interface
-            try:
-                display_cli_tab(selected_profile)
-            except Exception as e:
-                st.error(f"❌ Error in CLI Interface tab: {e}")
-                logger.error(f"CLI Interface tab error: {e}")
-
-        with tabs[6]:  # Logs
-            try:
-                display_logs_tab()
-            except Exception as e:
-                st.error(f"❌ Error in Logs tab: {e}")
-                logger.error(f"Logs tab error: {e}")
-
-        with tabs[7]:  # Configuration
-            try:
-                display_configuration_tab()
-            except Exception as e:
-                st.error(f"❌ Error in Configuration tab: {e}")
-                logger.error(f"Configuration tab error: {e}")
+                st.error(f"❌ Error in Settings tab: {e}")
+                logger.error(f"Settings tab error: {e}")
             
     except Exception as e:
         st.error(f"❌ Dashboard error: {e}")

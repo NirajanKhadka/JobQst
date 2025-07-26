@@ -1,0 +1,61 @@
+{
+  "mcpServers": {
+    "mcpfinder": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mcpfinder/server"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "search_mcp_servers",
+        "get_mcp_server_details",
+        "add_mcp_server_config",
+        "remove_mcp_server_config",
+        "stream_mcp_events"
+      ]
+    },
+    "modelcontextprot": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "create_entities",
+        "create_relations",
+        "add_observations",
+        "delete_entities",
+        "delete_observations",
+        "delete_relations",
+        "read_graph",
+        "search_nodes",
+        "open_nodes"
+      ]
+    },
+    "mcpflow_io_mcp_s": {
+      "command": "npx",
+      "args": [
+        "@mcpflow.io/mcp-sequential-thinking"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "sequentialthinking"
+      ]
+    },
+    "upstash_context7": {
+      "command": "npx",
+      "args": [
+        "@upstash/context7-mcp"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "resolve-library-id",
+        "get-library-docs"
+      ]
+    }
+  }
+}

@@ -18,9 +18,8 @@ class SpecificIssueTester:
     def __init__(self):
         self.issues_found = []
         self.fixes_applied = []
-        
+
     def log_issue(self, issue_id, component, severity, description, fix_suggestion=None, error=None):
-        """Log a specific issue with fix suggestions."""
         issue = {
             'id': issue_id,
             'component': component,
@@ -31,24 +30,18 @@ class SpecificIssueTester:
             'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
         }
         self.issues_found.append(issue)
-    
+
     def test_csv_applicator_function(self):
         """Test the specific CSV applicator function issue."""
         console.print("[bold blue]🔍 Testing CSV Applicator Function Issue[/bold blue]")
-        
         try:
-            import src.ats.csv_applicator
-            
-            # Check for the expected function name
+            import src.ats.csv_applicator as csv_applicator
             if hasattr(csv_applicator, 'apply_from_csv'):
                 console.print("[green]✅ apply_from_csv function found[/green]")
-                return True
+                assert True
             else:
-                # Check what functions actually exist
                 functions = [attr for attr in dir(csv_applicator) if callable(getattr(csv_applicator, attr)) and not attr.startswith('_')]
                 console.print(f"[yellow]⚠️ apply_from_csv not found. Available functions: {functions}[/yellow]")
-                
-                # Check if main function exists (which is the actual entry point)
                 if hasattr(csv_applicator, 'main'):
                     console.print("[cyan]ℹ️ Found 'main' function instead[/cyan]")
                     self.log_issue(
@@ -58,9 +51,7 @@ class SpecificIssueTester:
                         'apply_from_csv function not found, but main function exists',
                         'The CSV applicator uses a main() function and CSVJobApplicator class. The expected apply_from_csv function should be created as a wrapper.'
                     )
-                    return False
-                
-                # Check if CSVJobApplicator class exists
+                    assert False
                 if hasattr(csv_applicator, 'CSVJobApplicator'):
                     console.print("[cyan]ℹ️ Found CSVJobApplicator class[/cyan]")
                     self.log_issue(
@@ -70,8 +61,7 @@ class SpecificIssueTester:
                         'apply_from_csv function missing, but CSVJobApplicator class exists',
                         'Create an apply_from_csv wrapper function that uses CSVJobApplicator class'
                     )
-                    return False
-                
+                    assert False
                 self.log_issue(
                     'CSV-003',
                     'csv_applicator',
@@ -79,8 +69,7 @@ class SpecificIssueTester:
                     'No expected functions or classes found in csv_applicator',
                     'Review csv_applicator.py structure and ensure proper function exports'
                 )
-                return False
-                
+                assert False
         except Exception as e:
             console.print(f"[red]❌ Error testing CSV applicator: {e}[/red]")
             self.log_issue(
@@ -91,14 +80,13 @@ class SpecificIssueTester:
                 'Check csv_applicator.py for syntax errors and import issues',
                 e
             )
-            return False
+            assert False
     
     def test_ats_modules_detailed(self):
         """Test ATS modules with detailed analysis."""
         console.print("[bold blue]🔍 Testing ATS Modules in Detail[/bold blue]")
-        
-        # Check what files actually exist
-        ats_dir = Path('ats')
+        # Check what files actually exist in src/ats
+        ats_dir = Path('src/ats')
         if not ats_dir.exists():
             console.print("[red]❌ ATS directory not found[/red]")
             self.log_issue(
@@ -106,14 +94,12 @@ class SpecificIssueTester:
                 'ats_directory',
                 'CRITICAL',
                 'ATS directory does not exist',
-                'Create ats/ directory with proper ATS modules'
+                'Create src/ats/ directory with proper ATS modules'
             )
-            return False
-        
+            assert False
         # List actual files
         actual_files = list(ats_dir.glob('*.py'))
         console.print(f"[cyan]Found ATS files: {[f.name for f in actual_files]}[/cyan]")
-        
         # Test base_submitter class name issue
         try:
             from src.ats.base_submitter import BaseSubmitter
@@ -128,7 +114,6 @@ class SpecificIssueTester:
                 'Check ats/base_submitter.py for correct class name and exports',
                 e
             )
-        
         # Test individual ATS modules
         ats_modules = [
             ('workday', 'ats.workday', 'WorkdaySubmitter'),
@@ -136,7 +121,6 @@ class SpecificIssueTester:
             ('greenhouse', 'ats.greenhouse', 'GreenhouseSubmitter'),
             ('bamboohr', 'ats.bamboohr', 'BambooHRSubmitter'),
         ]
-        
         working_modules = 0
         for module_name, module_path, class_name in ats_modules:
             try:
@@ -164,16 +148,13 @@ class SpecificIssueTester:
                     f'Check ats/{module_name}.py for correct class name. Expected: {class_name}',
                     e
                 )
-        
-        return working_modules > 0
+        assert working_modules > 0
     
     def test_base_scraper_abstract_issue(self):
         """Test the BaseJobScraper abstract class issue."""
         console.print("[bold blue]🔍 Testing BaseJobScraper Abstract Class Issue[/bold blue]")
-        
         try:
             from src.scrapers.base_scraper import BaseJobScraper
-            
             # This should fail because it's abstract
             try:
                 test_profile = {'profile_name': 'test', 'keywords': ['Python'], 'city': 'Toronto'}
@@ -186,16 +167,15 @@ class SpecificIssueTester:
                     'BaseJobScraper can be instantiated but should be abstract',
                     'This is actually correct behavior - abstract classes should not be instantiable'
                 )
-                return False
+                assert False, "BaseJobScraper should not be instantiable (it's abstract)"
             except TypeError as e:
                 if "abstract" in str(e).lower():
                     console.print("[green]✅ BaseJobScraper correctly prevents instantiation (abstract class)[/green]")
                     console.print("[cyan]ℹ️ This is expected behavior for an abstract base class[/cyan]")
-                    return True
+                    assert True
                 else:
                     console.print(f"[yellow]⚠️ BaseJobScraper failed instantiation for different reason: {e}[/yellow]")
-                    return False
-                    
+                    assert False, f"BaseJobScraper failed instantiation for different reason: {e}"
         except Exception as e:
             console.print(f"[red]❌ Error testing BaseJobScraper: {e}[/red]")
             self.log_issue(
@@ -206,24 +186,21 @@ class SpecificIssueTester:
                 'Check scrapers/base_scraper.py for import issues',
                 e
             )
-            return False
+            assert False, f"Failed to import BaseJobScraper: {e}"
     
     def test_database_table_issue(self):
         """Test the database table creation issue."""
         console.print("[bold blue]🔍 Testing Database Table Creation Issue[/bold blue]")
-        
         try:
             from src.core.job_database import JobDatabase
-            
             # Test with in-memory database
             db = JobDatabase(":memory:")
-            
             # Check if tables are created automatically
             try:
                 # Try to get stats (this should trigger table creation if not exists)
                 stats = db.get_stats()
                 console.print(f"[green]✅ Database stats retrieved: {stats}[/green]")
-                return True
+                assert True
             except Exception as e:
                 if "no such table" in str(e).lower():
                     console.print(f"[red]❌ Database tables not created automatically: {e}[/red]")
@@ -234,7 +211,6 @@ class SpecificIssueTester:
                         'Database tables not created automatically on initialization',
                         'Add table creation in JobDatabase.__init__() or create_tables() method'
                     )
-                    
                     # Check if there's a create_tables method
                     if hasattr(db, 'create_tables'):
                         console.print("[cyan]ℹ️ Found create_tables method, testing...[/cyan]")
@@ -249,17 +225,16 @@ class SpecificIssueTester:
                                 'Tables need to be created manually',
                                 'Call create_tables() automatically in __init__ or ensure it\'s called before first use'
                             )
-                            return True
+                            assert True
                         except Exception as e2:
                             console.print(f"[red]❌ Manual table creation failed: {e2}[/red]")
-                            return False
+                            assert False, f"Manual table creation failed: {e2}"
                     else:
                         console.print("[yellow]⚠️ No create_tables method found[/yellow]")
-                        return False
+                        assert False, "No create_tables method found"
                 else:
                     console.print(f"[red]❌ Database error: {e}[/red]")
-                    return False
-                    
+                    assert False, f"Database error: {e}"
         except Exception as e:
             console.print(f"[red]❌ Error testing database: {e}[/red]")
             self.log_issue(
@@ -270,39 +245,36 @@ class SpecificIssueTester:
                 'Check job_database.py for import and initialization issues',
                 e
             )
-            return False
+            assert False, f"Failed to import or initialize JobDatabase: {e}"
     
     def run_specific_tests(self):
         """Run all specific issue tests."""
         console.print(Panel("🔍 Specific Issue Analysis", style="bold blue"))
-        
         tests = [
             ("CSV Applicator Function", self.test_csv_applicator_function),
             ("ATS Modules Detailed", self.test_ats_modules_detailed),
             ("BaseJobScraper Abstract", self.test_base_scraper_abstract_issue),
             ("Database Table Creation", self.test_database_table_issue),
         ]
-        
         results = []
         for test_name, test_func in tests:
             console.print(f"\n[bold cyan]Running: {test_name}[/bold cyan]")
             start_time = time.time()
-            
             try:
-                success = test_func()
+                test_func()
                 duration = time.time() - start_time
-                results.append((test_name, success, duration))
+                results.append((test_name, True, duration))
+            except AssertionError as e:
+                console.print(f"[red]❌ Test {test_name} failed: {e}[/red]")
+                results.append((test_name, False, time.time() - start_time))
             except Exception as e:
                 console.print(f"[red]❌ Test {test_name} crashed: {e}[/red]")
                 results.append((test_name, False, time.time() - start_time))
-        
         # Display results
         self.display_results(results)
-        
         # Generate enhanced issues tracker
         self.generate_enhanced_issues_tracker()
-        
-        return all(result[1] for result in results)
+        assert all(result[1] for result in results)
     
     def display_results(self, results):
         """Display test results."""
@@ -382,11 +354,35 @@ class SpecificIssueTester:
         return content
 
 
+# Convert class methods to pytest functions
+def test_csv_applicator_function():
+    """Test the specific CSV applicator function issue."""
+    tester = SpecificIssueTester()
+    tester.test_csv_applicator_function()
+
+
+def test_ats_modules_detailed():
+    """Test the ATS modules detailed functionality."""
+    tester = SpecificIssueTester()
+    tester.test_ats_modules_detailed()
+
+
+def test_base_scraper_abstract_issue():
+    """Test the BaseJobScraper abstract class issue."""
+    tester = SpecificIssueTester()
+    tester.test_base_scraper_abstract_issue()
+
+
+def test_database_table_issue():
+    """Test the database table creation issue."""
+    tester = SpecificIssueTester()
+    tester.test_database_table_issue()
+
+
 def main():
     """Main function."""
     tester = SpecificIssueTester()
-    success = tester.run_specific_tests()
-    return 0 if success else 1
+    tester.run_specific_tests()
 
 
 if __name__ == "__main__":

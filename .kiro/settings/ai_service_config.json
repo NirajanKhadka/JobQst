@@ -1,0 +1,22 @@
+{
+  "endpoints": [
+    {
+      "name": "llama3_7b",
+      "endpoint": "http://localhost:11434",
+      "model": "llama3:7b",
+      "timeout_seconds": 30,
+      "max_retries": 3,
+      "retry_delay_seconds": 1.0,
+      "priority": 1,
+      "enabled": true,
+      "auth_config": {}
+    }
+  ],
+  "fallback_to_rule_based": true,
+  "rule_based_min_score": 0.6,
+  "connection_check_interval": 30,
+  "health_check_timeout": 5,
+  "enable_circuit_breaker": true,
+  "circuit_breaker_threshold": 5,
+  "circuit_breaker_timeout": 60
+}

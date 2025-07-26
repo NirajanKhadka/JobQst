@@ -27,7 +27,8 @@ def test_scraper_availability():
         else:
             console.print(f"❌ {scraper}: Not available")
     
-    return len(AVAILABLE_SCRAPERS) >= 5  # At least 5 scrapers should be available
+    # At least 5 scrapers should be available
+    assert len(AVAILABLE_SCRAPERS) >= 5, f"Expected at least 5 scrapers, got {len(AVAILABLE_SCRAPERS)}"
 
 def test_scraper_instantiation():
     """Test that scrapers can be instantiated without errors."""
@@ -55,7 +56,8 @@ def test_scraper_instantiation():
         except Exception as e:
             console.print(f"❌ {scraper_name}: Failed to instantiate - {e}")
     
-    return len(working_scrapers) >= 3  # At least 3 scrapers should work
+    # At least 3 scrapers should work
+    assert len(working_scrapers) >= 3, f"Expected at least 3 working scrapers, got {len(working_scrapers)}"
 
 def test_site_display_mapping():
     """Test that site display names are properly mapped."""
@@ -63,6 +65,9 @@ def test_site_display_mapping():
     
     site_display_names = {
         "eluta": "Eluta.ca (Canadian jobs with deep bot detection)",
+        "eluta_comprehensive": "Eluta Comprehensive (Enhanced Eluta scraper)",
+        "parallel": "Parallel Scraper (Multi-threaded scraping)",
+        "pipeline": "Pipeline Scraper (Modern job pipeline)",
         "indeed": "Indeed.ca (Global jobs with anti-detection)",
         "linkedin": "LinkedIn Jobs (Professional network - requires login)",
         "jobbank": "JobBank.gc.ca (Government jobs)",
@@ -79,7 +84,8 @@ def test_site_display_mapping():
         else:
             console.print(f"❌ {site}: No display name mapping")
     
-    return mapped_sites == len(AVAILABLE_SCRAPERS)
+    # All sites should have display name mappings
+    assert mapped_sites == len(AVAILABLE_SCRAPERS), f"Expected {len(AVAILABLE_SCRAPERS)} mapped sites, got {mapped_sites}"
 
 def test_bot_detection_config():
     """Test bot detection configuration options."""
@@ -95,7 +101,8 @@ def test_bot_detection_config():
     for method, config in bot_config.items():
         console.print(f"✅ Method {method}: {config}")
     
-    return len(bot_config) == 4
+    # Should have exactly 4 bot detection methods
+    assert len(bot_config) == 4, f"Expected 4 bot detection methods, got {len(bot_config)}"
 
 def main():
     """Run all tests."""

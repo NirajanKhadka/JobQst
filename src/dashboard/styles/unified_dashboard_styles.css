@@ -1,0 +1,1194 @@
+
+}/*
+ * Unified Dashboard CSS System
+ * Centralized styling for AutoJobAgent Dashboard
+ * Edits require explicit user request.
+ * 
+ * This file provides consistent styling across:
+ * - Streamlit Dashboard (unified_dashboard.py)
+ * - HTML Dashboard (dashboard.html)
+ * - All dashboard components
+ */
+
+/* ===== IMPORTS ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ===== CSS VARIABLES (UNIFIED COLOR PALETTE) ===== */
+:root {
+    /* Dark Theme Color Palette */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #334155;
+    --bg-hover: #475569;
+    --bg-input: #374151;
+    
+    /* Text Colors */
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-inverse: #1f2937;
+    
+    /* Border Colors */
+    --border-color: #475569;
+    --border-light: #64748b;
+    --border-focus: #3b82f6;
+    
+    /* Accent Colors */
+    --accent-primary: #3b82f6;
+    --accent-secondary: #6366f1;
+    --accent-hover: #2563eb;
+    --accent-light: #93c5fd;
+    
+    /* Status Colors */
+    --success: #10b981;
+    --success-light: #34d399;
+    --success-bg: rgba(16, 185, 129, 0.1);
+    --warning: #f59e0b;
+    --warning-light: #fbbf24;
+    --warning-bg: rgba(245, 158, 11, 0.1);
+    --error: #ef4444;
+    --error-light: #f87171;
+    --error-bg: rgba(239, 68, 68, 0.1);
+    --info: #06b6d4;
+    --info-light: #22d3ee;
+    --info-bg: rgba(6, 182, 212, 0.1);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+    --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    --gradient-success: linear-gradient(135deg, var(--success), var(--success-light));
+    --gradient-warning: linear-gradient(135deg, var(--warning), var(--warning-light));
+    --gradient-error: linear-gradient(135deg, var(--error), var(--error-light));
+    --gradient-header: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-full: 9999px;
+    
+    /* Transitions */
+    --transition-fast: all 0.15s ease;
+    --transition-normal: all 0.3s ease;
+    --transition-slow: all 0.5s ease;
+    
+    /* Z-Index Scale */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    --z-toast: 1080;
+/* stray bracket removed */
+
+/* ===== RESET & BASE STYLES ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== STREAMLIT SPECIFIC OVERRIDES ===== */
+.stApp {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.main {
+    background: var(--bg-primary) !important;
+    padding: var(--spacing-md) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Force all text to be visible in dark theme */
+.stApp *, .main *, .stSidebar * {
+    color: var(--text-primary) !important;
+}
+
+/* Override any white backgrounds */
+.stApp div, .main div, .stSidebar div {
+    background-color: transparent !important;
+}
+
+/* Ensure no white backgrounds anywhere */
+[style*="background-color: white"], 
+[style*="background-color: #ffffff"], 
+[style*="background-color: #fff"] {
+    background-color: var(--bg-card) !important;
+}
+
+/* ===== LAYOUT COMPONENTS ===== */
+
+/* Header Styles */
+.dashboard-header {
+    background: var(--gradient-header);
+    color: var(--text-primary);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.025em;
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.dashboard-subtitle {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin: var(--spacing-sm) 0 0 0;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+/* Section Headers */
+.section-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--accent-primary);
+    display: inline-block;
+}
+
+/* ===== CARD COMPONENTS ===== */
+
+/* Base Card Styles */
+.card-base {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-base:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent-primary);
+}
+
+/* Metric Cards */
+.metric-card {
+    /* @extend .card-base;  // Not valid in standard CSS. Add 'card-base' class in HTML or duplicate styles if needed. */
+    margin: var(--spacing-sm) 0;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    margin: var(--spacing-sm) 0;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.metric-delta {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-top: var(--spacing-sm);
+}
+
+.metric-delta.positive {
+    color: var(--success);
+}
+
+.metric-delta.negative {
+    color: var(--error);
+}
+
+/* Job Cards */
+.job-card {
+    /* @extend .card-base;  // Not valid in standard CSS. Add 'card-base' class in HTML or duplicate styles if needed. */
+    margin: var(--spacing-md) 0;
+}
+
+.job-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.4;
+}
+
+.job-company {
+    font-size: 1rem;
+    color: var(--accent-primary);
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+}
+
+.job-location {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.job-meta {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Service Cards */
+.service-card {
+    /* @extend .card-base;  // Not valid in standard CSS. Add 'card-base' class in HTML or duplicate styles if needed. */
+    margin: var(--spacing-sm) 0;
+    transition: var(--transition-normal);
+}
+
+.service-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.service-card.running {
+    border-left: 4px solid var(--success);
+}
+
+.service-card.stopped {
+    border-left: 4px solid var(--error);
+}
+
+.service-card.warning {
+    border-left: 4px solid var(--warning);
+}
+
+/* ===== BADGE COMPONENTS ===== */
+
+/* Base Badge */
+.badge-base {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid transparent;
+}
+
+/* Job Status Badges */
+
+
+.job-badge.applied,
+.job-badge.applied-status {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.job-badge.document-status {
+    background: var(--info-bg);
+    color: var(--accent-secondary);
+    border-color: var(--accent-secondary);
+}
+
+.job-badge.processed-status {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border-color: var(--warning);
+}
+
+.job-badge.scraped-status {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.job-badge.new-status {
+    background: rgba(100, 116, 139, 0.1);
+    color: var(--text-secondary);
+    border-color: var(--text-secondary);
+}
+
+.job-badge.unapplied {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+/* Priority Badges */
+.job-badge.high-priority {
+    background: var(--error-bg);
+    color: var(--error);
+    border-color: var(--error);
+}
+
+.job-badge.medium-priority {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border-color: var(--warning);
+}
+
+.job-badge.low-priority {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+/* Status Badges */
+
+
+.status-badge.running {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.status-badge.stopped {
+    background: var(--error-bg);
+    color: var(--error);
+    border-color: var(--error);
+}
+
+.status-badge.warning {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border-color: var(--warning);
+}
+
+/* ===== BUTTON COMPONENTS ===== */
+
+/* Base Button */
+.btn-base {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
+}
+
+.btn-base:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-base:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-base:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Button Variants */
+.btn-primary {
+    /* @extend .btn-base;  // Not valid in standard CSS. Add 'btn-base' class in HTML or duplicate styles if needed. */
+    background: var(--accent-primary);
+    color: var(--text-inverse);
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+.btn-secondary {
+    /* @extend .btn-base;  // Not valid in standard CSS. Add 'btn-base' class in HTML or duplicate styles if needed. */
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+}
+
+.btn-success {
+    /* @extend .btn-base;  // Not valid in standard CSS. Add 'btn-base' class in HTML or duplicate styles if needed. */
+    background: var(--success);
+    color: var(--text-inverse);
+}
+
+.btn-success:hover {
+    background: var(--success-light);
+}
+
+.btn-warning {
+    /* @extend .btn-base;  // Not valid in standard CSS. Add 'btn-base' class in HTML or duplicate styles if needed. */
+    background: var(--warning);
+    color: var(--text-inverse);
+}
+
+.btn-warning:hover {
+    background: var(--warning-light);
+}
+
+.btn-error {
+    /* @extend .btn-base;  // Not valid in standard CSS. Add 'btn-base' class in HTML or duplicate styles if needed. */
+    background: var(--error);
+    color: var(--text-inverse);
+}
+
+.btn-error:hover {
+    background: var(--error-light);
+}
+
+/* Enhanced Button (for HTML dashboard) */
+
+
+/* ===== FORM COMPONENTS ===== */
+
+/* Input Fields */
+.input-base {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: var(--transition-fast);
+}
+
+.input-base:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-base::placeholder {
+    color: var(--text-muted);
+}
+
+/* Select Fields */
+.select-base {
+    /* @extend .input-base;  // Not valid in standard CSS. Add 'input-base' class in HTML or duplicate styles if needed. */
+    cursor: pointer;
+}
+
+/* Checkbox and Radio */
+.checkbox-base,
+.radio-base {
+    accent-color: var(--accent-primary);
+}
+
+/* ===== FILTER COMPONENTS ===== */
+
+.filter-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md) 0;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== TAB COMPONENTS ===== */
+
+/* Streamlit Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: var(--spacing-sm);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: transparent;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    transition: var(--transition-normal);
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+}
+
+.stTabs [aria-selected="true"] {
+    background: var(--accent-primary) !important;
+    color: var(--text-inverse) !important;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== TABLE COMPONENTS ===== */
+
+.table-base {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.table-header {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table-row {
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--transition-fast);
+}
+
+.table-row:hover {
+    background: var(--bg-hover);
+}
+
+.table-cell {
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-primary);
+}
+
+/* Enhanced Table */
+
+
+/* Streamlit DataFrame */
+.stDataFrame {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+}
+
+/* ===== SIDEBAR COMPONENTS ===== */
+
+.stSidebar {
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-color);
+}
+
+/* Sidebar Metrics */
+.stSidebar .stMetric {
+    background: var(--bg-secondary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin: var(--spacing-sm) 0;
+}
+
+.stSidebar .stMetric > div {
+    color: var(--text-primary) !important;
+}
+
+.stSidebar .stMetric [data-testid="metric-container"] {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+}
+
+.stSidebar .stMetric [data-testid="metric-container"] > div {
+    color: var(--text-primary) !important;
+}
+
+.stSidebar .stMetric label {
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+}
+
+.stSidebar .stMetric [data-testid="metric-container"] [data-testid="metric-value"] {
+    color: var(--accent-primary) !important;
+    font-weight: 700 !important;
+    font-size: 1.5rem !important;
+}
+
+.stSidebar .stMetric [data-testid="metric-container"] [data-testid="metric-delta"] {
+    color: var(--text-secondary) !important;
+}
+
+/* Sidebar Headings */
+.stSidebar h3, .stSidebar h4 {
+    color: var(--text-primary) !important;
+    background: var(--bg-secondary);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+}
+
+/* Sidebar Buttons */
+.stSidebar .stButton > button {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: var(--transition-normal);
+}
+
+.stSidebar .stButton > button:hover {
+    background: var(--accent-primary) !important;
+    color: var(--text-inverse) !important;
+    border-color: var(--accent-primary) !important;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Sidebar Form Elements */
+.stSidebar .stSelectbox > div > div {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md);
+}
+
+.stSidebar .stSelectbox label {
+    color: var(--text-primary) !important;
+    font-weight: 500 !important;
+}
+
+.stSidebar .stTextInput > div > div > input {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md);
+    color: var(--text-primary) !important;
+}
+
+/* Sidebar Text and Captions */
+.stSidebar .stMarkdown, .stSidebar p, .stSidebar .stCaption {
+    color: var(--text-primary) !important;
+}
+
+.stSidebar .stCaption {
+    color: var(--text-secondary) !important;
+    background: var(--bg-secondary);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    margin: var(--spacing-xs) 0;
+}
+
+/* Sidebar Messages */
+.stSidebar .stSuccess, .stSidebar .stInfo, .stSidebar .stError, .stSidebar .stWarning {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md);
+    margin: var(--spacing-sm) 0;
+}
+
+/* Force all sidebar text to be visible */
+.stSidebar * {
+    color: var(--text-primary) !important;
+}
+
+.stSidebar .stMarkdown h1, .stSidebar .stMarkdown h2, .stSidebar .stMarkdown h3, 
+.stSidebar .stMarkdown h4, .stSidebar .stMarkdown h5, .stSidebar .stMarkdown h6 {
+    color: var(--text-primary) !important;
+}
+
+/* ===== LOG COMPONENTS ===== */
+
+.log-entry {
+    background: var(--bg-card);
+    border-left: 4px solid var(--accent-primary);
+    padding: var(--spacing-sm);
+    margin: var(--spacing-xs) 0;
+    border-radius: var(--radius-md);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+}
+
+.log-entry.error {
+    border-left-color: var(--error);
+    background: var(--error-bg);
+}
+
+.log-entry.warning {
+    border-left-color: var(--warning);
+    background: var(--warning-bg);
+}
+
+.log-entry.info {
+    border-left-color: var(--success);
+    background: var(--success-bg);
+}
+
+.log-entry.debug {
+    border-left-color: var(--text-muted);
+    background: rgba(148, 163, 184, 0.07);
+}
+
+/* Log Level Coloring (for HTML dashboard) */
+.log-info {
+    border-left: 4px solid var(--success);
+    background: var(--success-bg);
+}
+
+.log-warning {
+    border-left: 4px solid var(--warning);
+    background: var(--warning-bg);
+}
+
+.log-error {
+    border-left: 4px solid var(--error);
+    background: var(--error-bg);
+}
+
+/* ===== MESSAGE COMPONENTS ===== */
+
+/* Streamlit Messages */
+.stSuccess {
+    background: var(--success-bg);
+    border: 1px solid var(--success);
+    border-radius: var(--radius-md);
+    color: var(--success);
+}
+
+.stError {
+    background: var(--error-bg);
+    border: 1px solid var(--error);
+    border-radius: var(--radius-md);
+    color: var(--error);
+}
+
+.stWarning {
+    background: var(--warning-bg);
+    border: 1px solid var(--warning);
+    border-radius: var(--radius-md);
+    color: var(--warning);
+}
+
+.stInfo {
+    background: var(--info-bg);
+    border: 1px solid var(--info);
+    border-radius: var(--radius-md);
+    color: var(--info);
+}
+
+/* ===== CHART COMPONENTS ===== */
+
+.js-plotly-plot {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+/* ===== ANIMATION CLASSES ===== */
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        opacity: 1; 
+    }
+    50% { 
+        opacity: 0.7; 
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.3s ease-out;
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.bounce-in {
+    animation: bounceIn 0.6s ease-out;
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+/* Status Classes */
+.status-running {
+    color: var(--success) !important;
+    font-weight: bold !important;
+}
+
+.status-stopped {
+    color: var(--error) !important;
+    font-weight: bold !important;
+}
+
+.status-warning {
+    color: var(--warning) !important;
+    font-weight: bold !important;
+}
+
+/* Resource Usage Classes */
+.resource-low {
+    color: var(--success) !important;
+}
+
+.resource-medium {
+    color: var(--warning) !important;
+}
+
+.resource-high {
+    color: var(--error) !important;
+}
+
+/* Gradient Headers */
+.gradient-header {
+    background: var(--gradient-primary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.gradient-header h2, .gradient-header p {
+    color: var(--text-primary) !important;
+}
+
+/* ===== SCROLLBAR STYLING ===== */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: var(--radius-lg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
+/* Firefox Scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) var(--bg-secondary);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: var(--spacing-lg);
+    }
+    
+    .dashboard-title {
+        font-size: 2rem;
+    }
+    
+    .metric-card, .job-card, .service-card {
+        padding: var(--spacing-md);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+    }
+    
+    .btn-base {
+        padding: var(--spacing-sm);
+        font-size: 0.8rem;
+    }
+    
+    .table-cell {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-title {
+        font-size: 1.75rem;
+    }
+    
+    .metric-value {
+        font-size: 1.75rem;
+    }
+    
+    .job-title {
+        font-size: 1.125rem;
+    }
+    
+    .section-header {
+        font-size: 1.25rem;
+    }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Focus States */
+.btn-base:focus,
+.input-base:focus,
+.select-base:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #ffffff;
+        --text-secondary: #ffffff;
+        --bg-card: #000000;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+
+@media print {
+    .dashboard-header,
+    .stSidebar,
+    .btn-base,
+    .filter-container {
+        display: none !important;
+    }
+    
+    .metric-card,
+    .job-card,
+    .service-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+}
+
+/* ===== COMPONENT-SPECIFIC OVERRIDES ===== */
+
+/* Streamlit Button Overrides */
+.stButton > button {
+    background: var(--accent-primary) !important;
+    color: var(--text-inverse) !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    padding: var(--spacing-sm) var(--spacing-lg) !important;
+    font-weight: 600 !important;
+    transition: var(--transition-normal) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.stButton > button:hover {
+    background: var(--accent-secondary) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+/* Streamlit Progress Bar */
+.stProgress > div > div > div {
+    border-radius: var(--radius-lg) !important;
+    background: var(--accent-primary) !important;
+}
+
+.stProgress > div > div {
+    background: var(--bg-secondary) !important;
+    border-radius: var(--radius-lg) !important;
+}
+
+/* Streamlit Expander */
+.streamlit-expanderHeader {
+    background: var(--bg-secondary) !important;
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--border-color) !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+.streamlit-expanderContent {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-top: none !important;
+    border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+}
+
+/* Streamlit Checkbox */
+.stCheckbox > label {
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+/* Element Container Spacing */
+.element-container {
+    margin-bottom: var(--spacing-md);
+}
+
+/* Hide Streamlit Branding */
+#MainMenu {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
+header {
+    visibility: hidden;
+}
+
+/* ===== DARK MODE SPECIFIC CLASSES ===== */
+
+.dark-mode-card {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Force dark theme for specific elements */
+.bg-gray-50,
+.bg-white {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.text-gray-800,
+.text-gray-900 {
+    color: var(--text-primary) !important;
+}
+
+.text-gray-600,
+.text-gray-500 {
+    color: var(--text-secondary) !important;
+}
+
+.text-gray-400 {
+    color: var(--text-muted) !important;
+}
+
+/* ===== END OF UNIFIED DASHBOARD CSS ===== */

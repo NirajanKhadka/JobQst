@@ -32,6 +32,42 @@ import psutil
 logger = logging.getLogger(__name__)
 console = Console()
 
+dash_logger = logging.getLogger("dashboard_orchestrator")
+dash_logger.setLevel(logging.INFO)
+d_handler = logging.FileHandler("logs/dashboard_orchestrator.log")
+d_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+d_handler.setFormatter(d_formatter)
+if not dash_logger.hasHandlers():
+    dash_logger.addHandler(d_handler)
+
+class DashboardOrchestrator:
+    """Orchestrates dashboard sessions, wraps DashboardHandler, and logs actions."""
+    def __init__(self, profile: Dict):
+        self.profile = profile
+        self.handler = DashboardHandler(profile)
+        self.logger = dash_logger
+
+    def log(self, message, level="INFO"):
+        if level == "INFO":
+            self.logger.info(message)
+        elif level == "WARNING":
+            self.logger.warning(message)
+        elif level == "ERROR":
+            self.logger.error(message)
+        elif level == "CRITICAL":
+            self.logger.critical(message)
+        else:
+            self.logger.info(message)
+
+    def show_status_and_dashboard(self):
+        self.log(f"Showing status and dashboard for profile: {self.profile.get('profile_name', 'Unknown')}", "INFO")
+        try:
+            self.handler.show_status_and_dashboard()
+            self.log("Status and dashboard displayed.", "INFO")
+        except Exception as e:
+            self.log(f"Dashboard display failed: {e}", "ERROR")
+            raise
+
 
 class DashboardHandler:
     """Handles Modern Dashboard and status operations."""

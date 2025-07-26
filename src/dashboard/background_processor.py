@@ -21,10 +21,10 @@ sys.path.insert(0, str(project_root))
 try:
     from src.core.job_database import ModernJobDatabase, get_job_db
     from src.utils.profile_helpers import get_available_profiles
-    from src.pipeline.stages.processing import ProcessingStage
+    from src.pipeline.stages.processing import processing_stage
 except ImportError as e:
     logging.error(f"Failed to import required modules: {e}")
-    ProcessingStage = None
+    processing_stage = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

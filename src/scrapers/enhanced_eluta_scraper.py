@@ -240,9 +240,16 @@ class EnhancedElutaScraper:
         # Initialize AI extractor
         self.ai_extractor = AIJobContentExtractor(ai_model)
 
-        # Get search terms from profile
-        self.keywords = self.profile.get("keywords", [])
-        self.skills = self.profile.get("skills", [])
+        # Get search terms from profile (handle None profile gracefully)
+        if self.profile:
+            self.keywords = self.profile.get("keywords", [])
+            self.skills = self.profile.get("skills", [])
+        else:
+            # Fallback to default search terms if profile not found
+            console.print(f"[yellow]⚠️ Profile '{profile_name}' not found, using default search terms[/yellow]")
+            self.keywords = ["Python Developer", "Data Analyst", "Software Engineer"]
+            self.skills = ["Python", "SQL", "Machine Learning"]
+        
         all_terms = set(self.keywords + self.skills)
         self.search_terms = list(all_terms)
 
@@ -585,11 +592,19 @@ class EnhancedElutaScraper:
         """Save enhanced jobs to database"""
         if not jobs:
             return
-            
+        
         console.print(f"\n[cyan]💾 Saving {len(jobs)} jobs to database...[/cyan]")
         saved_count = 0
+        skipped_count = 0
         
         for job in jobs:
+            url = job.get("url", "")
+            apply_url = job.get("apply_url", "")
+            # Skip jobs with search result URLs
+            if any(pattern in url for pattern in ["/search?", "q=", "pg=", "posted="]) or any(pattern in apply_url for pattern in ["/search?", "q=", "pg=", "posted="]):
+                console.print(f"[yellow]Skipping job with invalid URL: {url or apply_url}[/yellow]")
+                skipped_count += 1
+                continue
             try:
                 self.db.add_job(job)
                 saved_count += 1
@@ -598,6 +613,8 @@ class EnhancedElutaScraper:
                 console.print(f"[yellow]⚠️ Could not save job: {e}[/yellow]")
 
         console.print(f"[green]✅ Saved {saved_count} enhanced jobs to database[/green]")
+        if skipped_count > 0:
+            console.print(f"[yellow]Skipped {skipped_count} jobs with invalid URLs[/yellow]")
 
 
 def create_cli_parser():

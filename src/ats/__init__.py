@@ -1,229 +1,247 @@
-import warnings
-
-warnings.warn(
-    "[DEPRECATED] Use 'src.ats' instead of root-level 'ats' module. This module will be removed.",
-    DeprecationWarning,
-)
-
 """
-ATS package initialization.
-Provides functions to detect and get submitters for various ATS systems.
+ATS Detection and Submitter Module
+Provides automatic detection of ATS systems and returns appropriate submitters.
 """
 
+import logging
 import re
-from typing import Dict, Optional, Union
+from typing import Optional, Dict, Any
+from urllib.parse import urlparse
 
-from playwright.sync_api import BrowserContext
+logger = logging.getLogger(__name__)
 
-# Import ATS submitters
-from .base_submitter import BaseSubmitter
+# ATS URL patterns for detection
+ATS_PATTERNS = {
+    'workday': [
+        r'\.workday\.com',
+        r'\.workdaycdn\.com',
+        r'/jobs/[^/]+\.workday\.com',
+        r'workday\..*\.com'
+    ],
+    'greenhouse': [
+        r'\.greenhouse\.io',
+        r'boards\.greenhouse\.io',
+        r'job-boards\.greenhouse\.io'
+    ],
+    'icims': [
+        r'\.icims\.com',
+        r'careers\.icims\.com',
+        r'\.icims\..*\.com'
+    ],
+    'bamboohr': [
+        r'\.bamboohr\.com',
+        r'careers\.bamboohr\.com',
+        r'\.bamboohr\..*\.com'
+    ],
+    'lever': [
+        r'\.lever\.co',
+        r'jobs\.lever\.co',
+        r'\.leverpostings\.com'
+    ]
+}
 
-# Import fallback submitters
-from .fallback_submitters import (
-    GenericATSSubmitter,
-    ManualApplicationSubmitter,
-    EmergencyEmailSubmitter,
-)
+# Company-specific ATS mappings (for when URL patterns aren't enough)
+COMPANY_ATS_MAPPINGS = {
+    'microsoft': 'icims',
+    'google': 'greenhouse', 
+    'amazon': 'workday',
+    'meta': 'workday',
+    'apple': 'workday',
+    'salesforce': 'workday',
+    'netflix': 'greenhouse',
+    'uber': 'greenhouse',
+    'airbnb': 'greenhouse'
+}
 
-# Import shared utilities
-from .ats_utils import detect_ats_system, ATS_PATTERNS
-
-# Import available submitters (some may be stubs)
-try:
-    from .workday import WorkdaySubmitter
-
-    WORKDAY_AVAILABLE = True
-except ImportError:
-    WORKDAY_AVAILABLE = False
-
-try:
-    from .icims import ICIMSSubmitter
-
-    ICIMS_AVAILABLE = True
-except ImportError:
-    ICIMS_AVAILABLE = False
-
-try:
-    from .greenhouse import GreenhouseSubmitter
-
-    GREENHOUSE_AVAILABLE = True
-except ImportError:
-    GREENHOUSE_AVAILABLE = False
-
-try:
-    from .bamboohr import BambooHRSubmitter
-
-    BAMBOOHR_AVAILABLE = True
-except ImportError:
-    BAMBOOHR_AVAILABLE = False
-
-try:
-    from .lever import LeverSubmitter
-
-    LEVER_AVAILABLE = True
-except ImportError:
-    LEVER_AVAILABLE = False
-
-# Registry of ATS submitters - only include available ones
-ATS_SUBMITTERS = {}
-
-# Register available submitters
-if WORKDAY_AVAILABLE:
-    ATS_SUBMITTERS["workday"] = WorkdaySubmitter
-
-if ICIMS_AVAILABLE:
-    ATS_SUBMITTERS["icims"] = ICIMSSubmitter
-
-if GREENHOUSE_AVAILABLE:
-    ATS_SUBMITTERS["greenhouse"] = GreenhouseSubmitter
-
-if BAMBOOHR_AVAILABLE:
-    ATS_SUBMITTERS["bamboohr"] = BambooHRSubmitter
-
-if LEVER_AVAILABLE:
-    ATS_SUBMITTERS["lever"] = LeverSubmitter
-
-
-def detect(url: str) -> str:
+def detect(job_url: str, company_name: str = None) -> Optional[str]:
     """
-    Detect the ATS system from a job URL.
-
+    Detect the ATS system from a job URL and optionally company name.
+    
     Args:
-        url: Job posting URL
-
+        job_url: The URL of the job posting
+        company_name: Optional company name for additional context
+    
     Returns:
-        ATS system name or "unknown"
+        String identifier of the detected ATS system, or None if not detected
     """
-    return detect_ats_system(url)
-
-
-def get_submitter(ats_name: str, browser_context: BrowserContext) -> BaseSubmitter:
-    """
-    Get a submitter instance for the specified ATS.
-
-    Args:
-        ats_name: ATS system name
-        browser_context: Playwright browser context
-
-    Returns:
-        ATS submitter instance
-
-    Raises:
-        ValueError: If ATS is unknown or not supported
-    """
-    if ats_name == "unknown":
-        raise ValueError("Unknown ATS system")
-
-    if ats_name == "lever" and not LEVER_AVAILABLE:
-        raise ValueError("Lever ATS support is not available")
-
-    if ats_name not in ATS_SUBMITTERS:
-        raise ValueError(f"Unsupported ATS system: {ats_name}")
-
-    # Create and return the submitter instance
-    return ATS_SUBMITTERS[ats_name](browser_context)
-
-
-def get_submitter_with_fallbacks(ats_name: str, browser_context: BrowserContext) -> BaseSubmitter:
-    """
-    Get a submitter instance with comprehensive fallback support.
-    Fallback chain: Specific ATS -> Generic ATS -> Manual -> Emergency Email
-
-    Args:
-        ats_name: ATS system name
-        browser_context: Playwright browser context
-
-    Returns:
-        ATS submitter instance (never fails)
-    """
-    from rich.console import Console
-
-    console = Console()
-
-    # Method 1: Try specific ATS submitter
+    if not job_url:
+        logger.warning("No job URL provided for ATS detection")
+        return None
+    
     try:
-        if ats_name != "unknown" and ats_name in ATS_SUBMITTERS:
-            console.print(f"[cyan]🔄 Using specific {ats_name} submitter...[/cyan]")
-            return get_submitter(ats_name, browser_context)
+        # Parse the URL
+        parsed_url = urlparse(job_url.lower())
+        full_url = job_url.lower()
+        
+        logger.debug(f"Detecting ATS for URL: {job_url}")
+        
+        # Check URL patterns for each ATS
+        for ats_name, patterns in ATS_PATTERNS.items():
+            for pattern in patterns:
+                if re.search(pattern, full_url):
+                    logger.info(f"Detected {ats_name.upper()} ATS from URL pattern: {pattern}")
+                    return ats_name
+        
+        # Check company-specific mappings if company name is provided
+        if company_name:
+            company_lower = company_name.lower().strip()
+            
+            # Direct company mapping
+            if company_lower in COMPANY_ATS_MAPPINGS:
+                detected_ats = COMPANY_ATS_MAPPINGS[company_lower]
+                logger.info(f"Detected {detected_ats.upper()} ATS from company mapping: {company_name}")
+                return detected_ats
+            
+            # Partial company name matching
+            for company_key, ats_name in COMPANY_ATS_MAPPINGS.items():
+                if company_key in company_lower or company_lower in company_key:
+                    logger.info(f"Detected {ats_name.upper()} ATS from partial company match: {company_name}")
+                    return ats_name
+        
+        # Additional heuristic checks based on URL structure
+        domain = parsed_url.netloc
+        
+        # Check for common ATS subdomains
+        if any(subdomain in domain for subdomain in ['careers', 'jobs', 'talent', 'apply']):
+            # Look for ATS-specific keywords in the path or query
+            url_content = f"{parsed_url.path} {parsed_url.query}"
+            
+            if 'workday' in url_content:
+                logger.info("Detected WORKDAY ATS from URL content analysis")
+                return 'workday'
+            elif 'greenhouse' in url_content:
+                logger.info("Detected GREENHOUSE ATS from URL content analysis") 
+                return 'greenhouse'
+            elif 'icims' in url_content:
+                logger.info("Detected ICIMS ATS from URL content analysis")
+                return 'icims'
+            elif 'bamboo' in url_content:
+                logger.info("Detected BAMBOOHR ATS from URL content analysis")
+                return 'bamboohr'
+            elif 'lever' in url_content:
+                logger.info("Detected LEVER ATS from URL content analysis")
+                return 'lever'
+        
+        logger.debug(f"No ATS detected for URL: {job_url}")
+        return None
+        
     except Exception as e:
-        console.print(f"[yellow]❌ Specific {ats_name} submitter failed: {e}[/yellow]")
+        logger.error(f"Error detecting ATS for URL {job_url}: {e}")
+        return None
 
-    # Method 2: Try generic ATS submitter
+def get_submitter(ats_type: str, browser_context=None):
+    """
+    Get the appropriate submitter instance for the detected ATS type.
+    
+    Args:
+        ats_type: The ATS type identifier (e.g., 'workday', 'greenhouse')
+        browser_context: Optional browser context for submitter initialization
+    
+    Returns:
+        Submitter instance for the specified ATS, or fallback submitter
+    """
+    if not ats_type:
+        logger.warning("No ATS type provided, using fallback submitter")
+        return _get_fallback_submitter(browser_context)
+    
     try:
-        console.print("[cyan]🔄 Using generic ATS submitter...[/cyan]")
+        ats_type = ats_type.lower().strip()
+        logger.info(f"Getting submitter for ATS type: {ats_type}")
+        
+        # Import submitters dynamically to avoid circular imports
+        if ats_type == 'workday':
+            from .workday import WorkdaySubmitter
+            return WorkdaySubmitter(browser_context)
+            
+        elif ats_type == 'greenhouse':
+            from .greenhouse import GreenhouseSubmitter
+            return GreenhouseSubmitter(browser_context)
+            
+        elif ats_type == 'icims':
+            from .icims import ICIMSSubmitter
+            return ICIMSSubmitter(browser_context)
+            
+        elif ats_type == 'bamboohr':
+            from .bamboohr import BambooHRSubmitter
+            return BambooHRSubmitter(browser_context)
+            
+        elif ats_type == 'lever':
+            # Note: Lever submitter is currently incomplete
+            logger.warning("Lever ATS submitter is not fully implemented, using fallback")
+            return _get_fallback_submitter(browser_context)
+            
+        else:
+            logger.warning(f"Unknown ATS type: {ats_type}, using fallback submitter")
+            return _get_fallback_submitter(browser_context)
+            
+    except ImportError as e:
+        logger.error(f"Failed to import submitter for {ats_type}: {e}")
+        return _get_fallback_submitter(browser_context)
+    except Exception as e:
+        logger.error(f"Error creating submitter for {ats_type}: {e}")
+        return _get_fallback_submitter(browser_context)
+
+def _get_fallback_submitter(browser_context=None):
+    """
+    Get a fallback submitter when specific ATS detection fails.
+    
+    Args:
+        browser_context: Optional browser context
+    
+    Returns:
+        Fallback submitter instance
+    """
+    try:
+        # Try to use GenericATSSubmitter first
+        from .fallback_submitters import GenericATSSubmitter
+        logger.info("Using Generic ATS Submitter as fallback")
         return GenericATSSubmitter(browser_context)
-    except Exception as e:
-        console.print(f"[yellow]❌ Generic ATS submitter failed: {e}[/yellow]")
+        
+    except ImportError:
+        logger.warning("Generic ATS Submitter not available, using manual fallback")
+        try:
+            from .fallback_submitters import ManualApplicationSubmitter
+            return ManualApplicationSubmitter(browser_context)
+        except ImportError:
+            logger.error("No fallback submitters available")
+            return None
 
-    # Method 3: Try manual application submitter
-    try:
-        console.print("[yellow]🔄 Using manual application submitter...[/yellow]")
-        return ManualApplicationSubmitter(browser_context)
-    except Exception as e:
-        console.print(f"[yellow]❌ Manual application submitter failed: {e}[/yellow]")
-
-    # Method 4: Emergency email submitter (always works)
-    console.print("[red]🚨 Using emergency email submitter as final fallback...[/red]")
-    return EmergencyEmailSubmitter(browser_context)
-
-
-def submit_application_with_fallbacks(
-    job: dict,
-    profile: dict,
-    resume_path: str,
-    cover_letter_path: str,
-    browser_context: BrowserContext,
-) -> str:
+def get_supported_ats_types() -> Dict[str, Dict[str, Any]]:
     """
-    Submit job application with comprehensive fallback methods.
-
-    Args:
-        job: Job dictionary
-        profile: User profile dictionary
-        resume_path: Path to resume file
-        cover_letter_path: Path to cover letter file
-        browser_context: Playwright browser context
-
+    Get information about supported ATS types.
+    
     Returns:
-        Application status string
+        Dictionary with ATS type information including patterns and status
     """
-    from rich.console import Console
-
-    console = Console()
-
-    # Detect ATS system
-    ats_name = detect(job.get("url", ""))
-    console.print(f"[cyan]🔍 Detected ATS: {ats_name}[/cyan]")
-
-    # Get submitter with fallbacks
-    submitter = get_submitter_with_fallbacks(ats_name, browser_context)
-
-    # Submit application
-    try:
-        result = submitter.submit(job, profile, resume_path, cover_letter_path)
-        console.print(f"[green]✅ Application submitted: {result}[/green]")
-        return result
-    except Exception as e:
-        console.print(f"[red]❌ Application failed: {e}[/red]")
-        return f"Failed: {str(e)}"
-
-
-def register_submitter(ats_name: str, submitter_class) -> None:
-    """
-    Register a custom ATS submitter.
-
-    Args:
-        ats_name: Name of the ATS system
-        submitter_class: Submitter class to register
-    """
-    ATS_SUBMITTERS[ats_name] = submitter_class
-
-
-def get_supported_ats() -> list:
-    """
-    Get list of supported ATS systems.
-
-    Returns:
-        List of supported ATS system names
-    """
-    return list(ATS_SUBMITTERS.keys())
+    return {
+        'workday': {
+            'name': 'Workday',
+            'patterns': ATS_PATTERNS['workday'],
+            'status': 'active',
+            'description': 'Workday Human Capital Management ATS'
+        },
+        'greenhouse': {
+            'name': 'Greenhouse',
+            'patterns': ATS_PATTERNS['greenhouse'], 
+            'status': 'active',
+            'description': 'Greenhouse recruiting software'
+        },
+        'icims': {
+            'name': 'iCIMS',
+            'patterns': ATS_PATTERNS['icims'],
+            'status': 'active', 
+            'description': 'iCIMS Talent Cloud ATS'
+        },
+        'bamboohr': {
+            'name': 'BambooHR',
+            'patterns': ATS_PATTERNS['bamboohr'],
+            'status': 'active',
+            'description': 'BambooHR HR software with ATS'
+        },
+        'lever': {
+            'name': 'Lever',
+            'patterns': ATS_PATTERNS['lever'],
+            'status': 'incomplete',
+            'description': 'Lever recruiting platform (implementation in progress)'
+        }
+    } 

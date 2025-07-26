@@ -1,406 +1,486 @@
 #!/usr/bin/env python3
 """
-Enhanced Job Analyzer with Llama3 Integration
-Replaces current rule-based similarity logic with AI-powered analysis
+Enhanced Job Analyzer with Mistral 7B Integration
+Replaces current rule-based similarity logic with AI-powered analysis using Mistral 7B
 """
 
 import logging
 from typing import Dict, List, Optional, Any
 from dataclasses import asdict
 import json
+import time
 
 from .llama_job_analyzer import LlamaJobAnalyzer, JobAnalysisResult
 
 logger = logging.getLogger(__name__)
 
+# --- Constants for Analysis ---
+ANALYSIS_METHOD_OPENHERMES = 'openhermes_2_5'
+ANALYSIS_METHOD_MISTRAL = 'mistral_7b'  # Legacy support
+ANALYSIS_METHOD_LLAMA3 = 'llama3'
+ANALYSIS_METHOD_RULE_BASED = 'rule_based'
+ANALYSIS_METHOD_FAILED = 'failed'
+
+MATCH_QUALITY_EXCELLENT = 'excellent'
+MATCH_QUALITY_GOOD = 'good'
+MATCH_QUALITY_FAIR = 'fair'
+MATCH_QUALITY_POOR = 'poor'
+MATCH_QUALITY_VERY_POOR = 'very_poor'
+
+PRIORITY_HIGH = 'high'
+PRIORITY_MEDIUM = 'medium'
+PRIORITY_LOW = 'low'
+PRIORITY_SKIP = 'skip'
+
+
 class EnhancedJobAnalyzer:
-    """Enhanced job analyzer that uses Llama3 for sophisticated matching"""
-    
-    def __init__(self, profile: Dict, use_llama: bool = True, fallback_to_rule_based: bool = True):
+    """Enhanced job analyzer that uses Mistral 7B for sophisticated matching"""
+
+    def __init__(self, profile: Dict, use_openhermes: bool = True, fallback_to_llama: bool = True, fallback_to_rule_based: bool = True):
         """
-        Initialize enhanced analyzer
-        
+        Initialize enhanced analyzer.
+
         Args:
-            profile: User profile dict
-            use_llama: Whether to use Llama3 for analysis (default: True)
-            fallback_to_rule_based: Fall back to rule-based if Llama3 fails (default: True)
+            profile: User profile dict.
+            use_openhermes: Whether to use OpenHermes 2.5 for analysis (default: True).
+            fallback_to_llama: Fall back to Llama3 if OpenHermes fails (default: True).
+            fallback_to_rule_based: Fall back to rule-based if AI fails (default: True).
         """
         self.profile = profile
-        self.use_llama = use_llama
+        self.use_openhermes = use_openhermes
+        self.fallback_to_llama = fallback_to_llama
         self.fallback_to_rule_based = fallback_to_rule_based
         
-        # Initialize Llama3 analyzer if requested
+        # Initialize analyzers
+        self.openhermes_analyzer = None
         self.llama_analyzer = None
-        if use_llama:
-            try:
-                # Get Ollama model from profile, default to llama3:latest (8B model)
-                ollama_model = profile.get("ollama_model", "llama3:latest")
-                self.llama_analyzer = LlamaJobAnalyzer(model=ollama_model)
-                logger.info(f"✅ Ollama analyzer initialized with model: {ollama_model}")
-            except Exception as e:
-                logger.warning(f"⚠️ Ollama initialization failed: {e}")
-                if not fallback_to_rule_based:
-                    raise
-        
-        # Initialize rule-based analyzer as fallback
-        if fallback_to_rule_based or not self.llama_analyzer:
-            from ..utils.job_analyzer import JobAnalyzer
-            self.rule_based_analyzer = JobAnalyzer(profile)
+        self.rule_based_analyzer = None
+
+        if self.use_openhermes:
+            self._initialize_openhermes_analyzer()
+
+        if self.fallback_to_llama:
+            self._initialize_llama_analyzer()
+
+        if self.fallback_to_rule_based or (not self.openhermes_analyzer and not self.llama_analyzer):
+            self._initialize_rule_based_analyzer()
+
+    def _initialize_openhermes_analyzer(self):
+        """Initializes the OpenHermes 2.5 analyzer."""
+        try:
+            # Get OpenHermes configuration from profile
+            openhermes_config = self.profile.get("openhermes_config", {})
+            model_name = openhermes_config.get("model", "openhermes:v2.5")
+            
+            # Create OpenHermes-specific analyzer
+            self.openhermes_analyzer = OpenHermesJobAnalyzer(
+                model=model_name,
+                config=openhermes_config
+            )
+            logger.info(f"✅ OpenHermes 2.5 analyzer initialized with model: {model_name}")
+        except Exception as e:
+            logger.warning(f"⚠️ OpenHermes 2.5 initialization failed: {e}")
+            self.openhermes_analyzer = None
+            if not self.fallback_to_llama and not self.fallback_to_rule_based:
+                raise
+
+    def _initialize_llama_analyzer(self):
+        """Initializes the Llama3 analyzer as fallback."""
+        try:
+            ollama_model = self.profile.get("ollama_model", "llama3:latest")
+            self.llama_analyzer = LlamaJobAnalyzer(model=ollama_model)
+            logger.info(f"✅ Llama3 analyzer initialized as fallback: {ollama_model}")
+        except Exception as e:
+            logger.warning(f"⚠️ Llama3 initialization failed: {e}")
+            self.llama_analyzer = None
+
+    def _initialize_rule_based_analyzer(self):
+        """Initializes the rule-based analyzer."""
+        try:
+            from src.utils.job_analyzer import JobAnalyzer
+            self.rule_based_analyzer = JobAnalyzer(self.profile)
             logger.info("✅ Rule-based analyzer initialized as fallback")
-    
+        except Exception as e:
+            logger.warning(f"⚠️ Rule-based analyzer initialization failed: {e}")
+            self.rule_based_analyzer = None
+
     def analyze_job(self, job: Dict) -> Dict[str, Any]:
         """
-        Analyze job compatibility using best available method
-        
+        Analyze job compatibility using the best available method.
+
         Args:
-            job: Job posting dict
-            
+            job: Job posting dict.
+
         Returns:
-            Enhanced analysis result dict
+            Enhanced analysis result dict.
         """
-        # Try Llama3 analysis first
-        if self.llama_analyzer:
+        # Try OpenHermes 2.5 analysis first
+        if self.openhermes_analyzer:
+            try:
+                openhermes_result = self.openhermes_analyzer.analyze_job(self.profile, job)
+                if openhermes_result:
+                    return self._convert_openhermes_result(openhermes_result, job)
+                logger.warning("OpenHermes 2.5 analysis returned None, falling back to Llama3")
+            except Exception as e:
+                logger.error(f"OpenHermes 2.5 analysis failed: {e}")
+
+        # Fallback to Llama3
+        if self.fallback_to_llama and self.llama_analyzer:
             try:
                 llama_result = self.llama_analyzer.analyze_job(self.profile, job)
                 if llama_result:
                     return self._convert_llama_result(llama_result, job)
-                else:
-                    logger.warning("Llama3 analysis returned None, falling back to rule-based")
+                logger.warning("Llama3 analysis returned None, falling back to rule-based")
             except Exception as e:
                 logger.error(f"Llama3 analysis failed: {e}")
-        
+
         # Fallback to rule-based analysis
-        if self.fallback_to_rule_based and hasattr(self, 'rule_based_analyzer'):
+        if self.fallback_to_rule_based and self.rule_based_analyzer:
             logger.info("Using rule-based analysis as fallback")
-            return self._enhance_rule_based_result(
-                self.rule_based_analyzer.analyze_job(job), job
-            )
-        
-        # No analysis possible
+            rule_result = self.rule_based_analyzer.analyze_job(job)
+            return self._enhance_rule_based_result(rule_result, job)
+
         logger.error("No analysis method available")
-        return self._create_empty_result()
-    
+        return self._create_failed_result()
+
+    def _convert_openhermes_result(self, openhermes_result: Dict, job: Dict) -> Dict[str, Any]:
+        """Convert OpenHermes 2.5 analysis result to standard format."""
+        try:
+            # OpenHermes 2.5 provides comprehensive analysis
+            analysis = {
+                'compatibility_score': openhermes_result.get('match_score', {}).get('overall', 0.7),
+                'confidence': openhermes_result.get('confidence', 0.7),
+                'skill_matches': openhermes_result.get('keyword_analysis', {}).get('technical_skills', []),
+                'skill_gaps': openhermes_result.get('skill_gaps', []),
+                'experience_match': openhermes_result.get('experience_analysis', {}).get('level', 'unknown'),
+                'location_match': openhermes_result.get('location_analysis', {}).get('remote_policy', 'unknown'),
+                'cultural_fit': openhermes_result.get('match_score', {}).get('cultural_fit', 0.7),
+                'growth_potential': openhermes_result.get('match_score', {}).get('growth_potential', 0.7),
+                'recommendation': self._get_recommendation(openhermes_result.get('match_score', {}).get('overall', 0.7)),
+                'reasoning': openhermes_result.get('reasoning', 'Analysis completed by OpenHermes 2.5'),
+                'analysis_method': ANALYSIS_METHOD_OPENHERMES,
+                'analysis_timestamp': time.time(),
+                'openhermes_analysis': openhermes_result  # Keep full OpenHermes analysis
+            }
+            
+            return analysis
+        except Exception as e:
+            logger.error(f"Error converting OpenHermes result: {e}")
+            return self._create_failed_result()
+
     def _convert_llama_result(self, llama_result: JobAnalysisResult, job: Dict) -> Dict[str, Any]:
-        """Convert Llama3 result to enhanced format"""
-        
-        # Create comprehensive result
-        result = {
-            # Core compatibility metrics
-            'compatibility_score': llama_result.compatibility_score,
-            'relevance_score': llama_result.compatibility_score,  # Alias for backward compatibility
-            'confidence': llama_result.confidence,
-            
-            # Skill analysis
-            'skill_matches': llama_result.skill_matches,
-            'skill_gaps': llama_result.skill_gaps,
-            'skill_match_ratio': len(llama_result.skill_matches) / max(len(self.profile.get('skills', [])), 1),
-            
-            # Experience and location
-            'experience_match': llama_result.experience_match,
-            'location_match': llama_result.location_match,
-            'salary_assessment': llama_result.salary_assessment,
-            
-            # Cultural and growth factors
-            'cultural_fit': llama_result.cultural_fit,
-            'growth_potential': llama_result.growth_potential,
-            
-            # Recommendation
-            'recommendation': llama_result.recommendation,
-            'reasoning': llama_result.reasoning,
-            
-            # Classification
-            'match_quality': self._classify_match_quality(llama_result.compatibility_score),
-            'application_priority': self._determine_priority(llama_result),
-            
-            # Metadata
-            'analysis_method': 'llama3',
-            'analysis_timestamp': self._get_timestamp(),
-            
-            # Backward compatibility fields
-            'match_factors': self._extract_match_factors(llama_result),
-            'extracted_skills': llama_result.skill_matches,
-            
-            # Additional insights
-            'insights': {
-                'key_strengths': llama_result.skill_matches[:5],  # Top 5 strengths
-                'improvement_areas': llama_result.skill_gaps[:3],  # Top 3 gaps
-                'career_fit': 'excellent' if llama_result.growth_potential >= 0.8 else 'good' if llama_result.growth_potential >= 0.6 else 'fair',
-                'competition_level': self._assess_competition(llama_result, job)
+        """Convert Llama3 analysis result to standard format."""
+        try:
+            analysis = {
+                'compatibility_score': llama_result.compatibility_score,
+                'confidence': llama_result.confidence,
+                'skill_matches': llama_result.skill_matches,
+                'skill_gaps': llama_result.skill_gaps,
+                'experience_match': llama_result.experience_match,
+                'location_match': llama_result.location_match,
+                'cultural_fit': llama_result.cultural_fit,
+                'growth_potential': llama_result.growth_potential,
+                'recommendation': llama_result.recommendation,
+                'reasoning': llama_result.reasoning,
+                'analysis_method': ANALYSIS_METHOD_LLAMA3,
+                'analysis_timestamp': time.time()
             }
-        }
-        
-        return result
-    
+            
+            return analysis
+        except Exception as e:
+            logger.error(f"Error converting Llama result: {e}")
+            return self._create_failed_result()
+
     def _enhance_rule_based_result(self, rule_result: Dict, job: Dict) -> Dict[str, Any]:
-        """Enhance rule-based result with additional insights"""
-        
-        # Extract base scores
-        base_score = max(
-            rule_result.get('compatibility_score', 0),
-            rule_result.get('relevance_score', 0)
-        )
-        
-        # Enhanced result with additional analysis
-        result = {
-            # Base scores from rule-based system
-            'compatibility_score': base_score,
-            'relevance_score': base_score,
-            'confidence': 0.6,  # Medium confidence for rule-based
+        """Enhance rule-based result with additional analysis."""
+        try:
+            enhanced_result = rule_result.copy()
             
-            # Enhanced skill analysis
-            'skill_matches': rule_result.get('extracted_skills', []),
-            'skill_gaps': self._identify_skill_gaps(job),
-            'skill_match_ratio': len(rule_result.get('extracted_skills', [])) / max(len(self.profile.get('skills', [])), 1),
+            # Add missing fields
+            enhanced_result.update({
+                'analysis_method': ANALYSIS_METHOD_RULE_BASED,
+                'analysis_timestamp': time.time(),
+                'confidence': 0.6,  # Lower confidence for rule-based
+                'cultural_fit': 0.5,
+                'growth_potential': 0.5,
+                'skill_matches': rule_result.get('match_factors', []),
+                'skill_gaps': self._identify_skill_gaps(job),
+                'experience_match': self._assess_experience_match(job),
+                'location_match': self._assess_location_match(job),
+                'recommendation': self._get_recommendation(rule_result.get('compatibility_score', 0.5))
+            })
             
-            # Basic matching
-            'experience_match': self._assess_experience_match(job),
-            'location_match': self._assess_location_match(job),
-            'salary_assessment': 'unknown',
-            
-            # Estimated factors
-            'cultural_fit': min(base_score + 0.1, 1.0),  # Slight boost
-            'growth_potential': 0.5,  # Neutral
-            
-            # Simple recommendation
-            'recommendation': self._simple_recommendation(base_score),
-            'reasoning': f"Rule-based analysis with {base_score:.1%} compatibility",
-            
-            # Classification
-            'match_quality': self._classify_match_quality(base_score),
-            'application_priority': 'medium' if base_score >= 0.3 else 'low',
-            
-            # Metadata
-            'analysis_method': 'rule_based',
-            'analysis_timestamp': self._get_timestamp(),
-            
-            # Backward compatibility
-            'match_factors': rule_result.get('match_factors', []),
-            'extracted_skills': rule_result.get('extracted_skills', []),
-            
-            # Basic insights
-            'insights': {
-                'key_strengths': rule_result.get('extracted_skills', [])[:3],
-                'improvement_areas': ['More detailed analysis needed'],
-                'career_fit': 'unknown',
-                'competition_level': 'unknown'
-            }
-        }
-        
-        return result
-    
-    def _create_empty_result(self) -> Dict[str, Any]:
-        """Create empty result when analysis fails"""
-        return {
-            'compatibility_score': 0.0,
-            'relevance_score': 0.0,
-            'confidence': 0.0,
-            'skill_matches': [],
-            'skill_gaps': [],
-            'skill_match_ratio': 0.0,
-            'experience_match': 'unknown',
-            'location_match': 'unknown',
-            'salary_assessment': 'unknown',
-            'cultural_fit': 0.0,
-            'growth_potential': 0.0,
-            'recommendation': 'skip',
-            'reasoning': 'Analysis failed',
-            'match_quality': 'poor',
-            'application_priority': 'skip',
-            'analysis_method': 'failed',
-            'analysis_timestamp': self._get_timestamp(),
-            'match_factors': [],
-            'extracted_skills': [],
-            'insights': {
-                'key_strengths': [],
-                'improvement_areas': ['Analysis system unavailable'],
-                'career_fit': 'unknown',
-                'competition_level': 'unknown'
-            }
-        }
-    
-    def _classify_match_quality(self, score: float) -> str:
-        """Classify match quality based on score"""
-        if score >= 0.8:
-            return 'excellent'
-        elif score >= 0.6:
-            return 'good'
-        elif score >= 0.4:
-            return 'fair'
-        elif score >= 0.2:
-            return 'poor'
-        else:
-            return 'very_poor'
-    
-    def _determine_priority(self, llama_result: JobAnalysisResult) -> str:
-        """Determine application priority"""
-        if llama_result.recommendation == 'highly_recommend':
-            return 'high'
-        elif llama_result.recommendation == 'recommend':
-            return 'medium'
-        elif llama_result.recommendation == 'consider':
-            return 'low'
-        else:
-            return 'skip'
-    
-    def _extract_match_factors(self, llama_result: JobAnalysisResult) -> List[str]:
-        """Extract match factors for backward compatibility"""
-        factors = []
-        
-        if llama_result.skill_matches:
-            factors.append(f"Skills match: {len(llama_result.skill_matches)} skills found")
-        
-        if llama_result.experience_match in ['perfect', 'close']:
-            factors.append(f"Experience level: {llama_result.experience_match}")
-        
-        if llama_result.location_match in ['perfect', 'nearby', 'remote_ok']:
-            factors.append(f"Location: {llama_result.location_match}")
-        
-        if llama_result.cultural_fit >= 0.7:
-            factors.append("Good cultural fit")
-        
-        if llama_result.growth_potential >= 0.7:
-            factors.append("High growth potential")
-        
-        return factors
-    
-    def _assess_competition(self, llama_result: JobAnalysisResult, job: Dict) -> str:
-        """Assess competition level for the job"""
-        # This could be enhanced with more sophisticated analysis
-        company = job.get('company', '').lower()
-        title = job.get('title', '').lower()
-        
-        if any(term in company for term in ['google', 'microsoft', 'apple', 'meta', 'amazon']):
-            return 'very_high'
-        elif 'senior' in title or 'lead' in title:
-            return 'high'
-        elif 'entry' in title.lower() or 'junior' in title.lower():
-            return 'medium'
-        else:
-            return 'unknown'
-    
-    def _identify_skill_gaps(self, job: Dict) -> List[str]:
-        """Identify potential skill gaps (simple rule-based)"""
-        # This is a simplified version - Llama3 does this much better
-        text = f"{job.get('title', '')} {job.get('summary', '')} {job.get('description', '')}".lower()
-        
-        profile_skills = [skill.lower() for skill in self.profile.get('skills', [])]
-        
-        # Common skills that might be mentioned in jobs
-        potential_skills = [
-            'python', 'sql', 'java', 'javascript', 'react', 'node', 'aws', 'docker',
-            'kubernetes', 'machine learning', 'tensorflow', 'pytorch', 'powerbi',
-            'tableau', 'excel', 'git', 'agile', 'scrum'
-        ]
-        
-        gaps = []
-        for skill in potential_skills:
-            if skill in text and skill not in profile_skills:
-                gaps.append(skill)
-        
-        return gaps[:5]  # Return top 5 gaps
-    
-    def _assess_experience_match(self, job: Dict) -> str:
-        """Assess experience level match (simple rule-based)"""
-        profile_exp = self.profile.get('experience_level', '').lower()
-        job_exp = job.get('experience_level', '').lower()
-        
-        if profile_exp in job_exp or job_exp in profile_exp:
-            return 'perfect'
-        elif 'entry' in profile_exp and 'junior' in job_exp:
-            return 'close'
-        elif 'junior' in profile_exp and 'entry' in job_exp:
-            return 'close'
-        else:
-            return 'mismatch'
-    
-    def _assess_location_match(self, job: Dict) -> str:
-        """Assess location match (simple rule-based)"""
-        profile_loc = self.profile.get('location', '').lower()
-        job_loc = job.get('location', '').lower()
-        
-        if 'remote' in job_loc:
-            return 'remote_ok'
-        elif profile_loc in job_loc or job_loc in profile_loc:
-            return 'perfect'
-        elif any(common in profile_loc and common in job_loc for common in ['ontario', 'bc', 'alberta']):
-            return 'nearby'
-        else:
-            return 'mismatch'
-    
-    def _simple_recommendation(self, score: float) -> str:
-        """Simple recommendation based on score"""
-        if score >= 0.7:
+            return enhanced_result
+        except Exception as e:
+            logger.error(f"Error enhancing rule-based result: {e}")
+            return self._create_failed_result()
+
+    def _get_recommendation(self, score: float) -> str:
+        """Get recommendation based on compatibility score."""
+        if score >= 0.9:
             return 'highly_recommend'
-        elif score >= 0.5:
+        elif score >= 0.7:
             return 'recommend'
-        elif score >= 0.3:
+        elif score >= 0.5:
             return 'consider'
         else:
             return 'skip'
-    
-    def _get_timestamp(self) -> str:
-        """Get current timestamp"""
-        from datetime import datetime
-        return datetime.now().isoformat()
-    
-    def batch_analyze_jobs(self, jobs: List[Dict], progress_callback=None) -> List[Dict]:
-        """
-        Analyze multiple jobs in batch
-        
-        Args:
-            jobs: List of job dicts
-            progress_callback: Optional callback for progress updates
-            
-        Returns:
-            List of analysis results
-        """
-        results = []
-        
-        for i, job in enumerate(jobs):
-            if progress_callback:
-                progress_callback(i, len(jobs), job.get('title', 'Unknown'))
-            
-            analysis = self.analyze_job(job)
-            results.append({
-                'job': job,
-                'analysis': analysis
-            })
-        
-        return results
-    
-    def get_recommendations(self, jobs: List[Dict], min_score: float = 0.3) -> List[Dict]:
-        """
-        Get job recommendations above minimum score
-        
-        Args:
-            jobs: List of job dicts
-            min_score: Minimum compatibility score (default: 0.3)
-            
-        Returns:
-            List of recommended jobs with analysis
-        """
-        results = self.batch_analyze_jobs(jobs)
-        
-        # Filter and sort by score
-        recommendations = [
-            result for result in results 
-            if result['analysis']['compatibility_score'] >= min_score
-        ]
-        
-        recommendations.sort(
-            key=lambda x: x['analysis']['compatibility_score'], 
-            reverse=True
-        )
-        
-        return recommendations
 
-# Backward compatibility wrapper
-class JobAnalyzer(EnhancedJobAnalyzer):
-    """Backward compatible JobAnalyzer with Llama3 enhancement"""
-    
-    def __init__(self, profile: Dict):
-        super().__init__(profile, use_llama=True, fallback_to_rule_based=True)
+    def _identify_skill_gaps(self, job: Dict) -> List[str]:
+        """Identify potential skill gaps using a simple rule-based approach."""
+        text = f"{job.get('title', '')} {job.get('summary', '')} {job.get('description', '')}".lower()
+        profile_skills = {skill.lower() for skill in self.profile.get('skills', [])}
         
-    def analyze_job(self, job: Dict) -> Dict[str, Any]:
-        """Analyze job with enhanced capabilities"""
-        return super().analyze_job(job)
+        potential_skills = {
+            'python', 'sql', 'java', 'javascript', 'react', 'node', 'aws', 'docker',
+            'kubernetes', 'machine learning', 'tensorflow', 'pytorch', 'powerbi',
+            'tableau', 'excel', 'git', 'agile', 'scrum'
+        }
+        
+        return [skill for skill in potential_skills if skill in text and skill not in profile_skills][:5]
+
+    def _assess_experience_match(self, job: Dict) -> str:
+        """Assess experience level match using a simple rule-based approach."""
+        profile_exp = self.profile.get('experience_level', '').lower()
+        job_exp = job.get('experience_level', '').lower()
+
+        if not profile_exp or not job_exp:
+            return 'unknown'
+        if profile_exp in job_exp or job_exp in profile_exp:
+            return 'perfect'
+        if ('entry' in profile_exp and 'junior' in job_exp) or \
+           ('junior' in profile_exp and 'entry' in job_exp):
+            return 'close'
+        return 'mismatch'
+
+    def _assess_location_match(self, job: Dict) -> str:
+        """Assess location match using a simple rule-based approach."""
+        profile_loc = self.profile.get('location', '').lower()
+        job_loc = job.get('location', '').lower()
+
+        if 'remote' in job_loc:
+            return 'remote_ok'
+        if not profile_loc or not job_loc:
+            return 'unknown'
+        if profile_loc in job_loc or job_loc in profile_loc:
+            return 'perfect'
+        if any(common in profile_loc and common in job_loc for common in ['ontario', 'bc', 'alberta']):
+            return 'nearby'
+        return 'mismatch'
+
+    def _create_failed_result(self) -> Dict[str, Any]:
+        """Create a failed analysis result."""
+        return {
+            'compatibility_score': 0.5,
+            'confidence': 0.0,
+            'skill_matches': [],
+            'skill_gaps': [],
+            'experience_match': 'unknown',
+            'location_match': 'unknown',
+            'cultural_fit': 0.5,
+            'growth_potential': 0.5,
+            'recommendation': 'consider',
+            'reasoning': 'Analysis failed - using default values',
+            'analysis_method': ANALYSIS_METHOD_FAILED,
+            'analysis_timestamp': time.time()
+        }
+
+
+class OpenHermesJobAnalyzer:
+    """OpenHermes 2.5 specific job analyzer with optimized prompts."""
+    
+    def __init__(self, model: str = "openhermes:v2.5", config: Dict = None):
+        """
+        Initialize OpenHermes 2.5 analyzer.
+        
+        Args:
+            model: OpenHermes model name
+            config: Configuration dictionary
+        """
+        self.model = model
+        self.config = config or {}
+        self.ollama_url = "http://localhost:11434"
+        
+        # Default OpenHermes 2.5 configuration
+        self.default_config = {
+            "temperature": 0.2,  # Lower temperature for more consistent analysis
+            "max_tokens": 2048,
+            "top_p": 0.9,
+            "analysis_timeout": 30
+        }
+        
+        # Update with provided config
+        self.default_config.update(self.config)
+        
+        logger.info(f"✅ OpenHermesJobAnalyzer initialized with model: {model}")
+    
+    def analyze_job(self, profile: Dict, job: Dict) -> Optional[Dict[str, Any]]:
+        """
+        Analyze job using OpenHermes 2.5 with comprehensive prompts.
+        
+        Args:
+            profile: User profile
+            job: Job posting data
+            
+        Returns:
+            Comprehensive analysis result or None if failed
+        """
+        try:
+            # Create comprehensive analysis prompt
+            prompt = self._create_comprehensive_analysis_prompt(profile, job)
+            
+            # Get analysis from OpenHermes 2.5
+            response = self._call_openhermes_api(prompt)
+            
+            if response:
+                return self._parse_openhermes_response(response, job)
+            else:
+                logger.warning("OpenHermes 2.5 API call failed")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error in OpenHermes 2.5 analysis: {e}")
+            return None
+    
+    def _create_comprehensive_analysis_prompt(self, profile: Dict, job: Dict) -> str:
+        """Create comprehensive analysis prompt for OpenHermes 2.5."""
+        
+        # Extract key information
+        job_title = job.get('title', 'Unknown')
+        job_company = job.get('company', 'Unknown')
+        job_location = job.get('location', 'Unknown')
+        job_description = job.get('description', job.get('summary', ''))
+        
+        # Profile information
+        profile_skills = ', '.join(profile.get('skills', []))
+        profile_experience = profile.get('experience_level', 'Unknown')
+        profile_location = profile.get('location', 'Unknown')
+        
+        return f"""You are an expert job analysis AI powered by OpenHermes 2.5. Analyze this job posting comprehensively.
+
+CANDIDATE PROFILE:
+- Skills: {profile_skills}
+- Experience Level: {profile_experience}
+- Location: {profile_location}
+
+JOB POSTING:
+- Title: {job_title}
+- Company: {job_company}
+- Location: {job_location}
+- Description: {job_description[:2000]}...
+
+ANALYSIS TASK:
+Provide a comprehensive analysis in JSON format with these exact fields:
+
+{{
+    "salary_analysis": {{
+        "extracted_range": "salary range if found",
+        "market_position": "below_average|average|above_average|unknown",
+        "confidence": 0.0-1.0
+    }},
+    "experience_analysis": {{
+        "level": "entry|junior|mid|senior|executive",
+        "years_required": "years range if found",
+        "progression_path": "next career step",
+        "confidence": 0.0-1.0
+    }},
+    "location_analysis": {{
+        "primary_location": "specific location",
+        "remote_policy": "remote|hybrid|onsite|not_specified",
+        "relocation_required": true/false,
+        "confidence": 0.0-1.0
+    }},
+    "keyword_analysis": {{
+        "technical_skills": ["skill1", "skill2"],
+        "soft_skills": ["skill1", "skill2"],
+        "emerging_tech": ["tech1", "tech2"],
+        "confidence": 0.0-1.0
+    }},
+    "skill_gaps": ["gap1", "gap2"],
+    "match_score": {{
+        "overall": 0.0-1.0,
+        "skill_match": 0.0-1.0,
+        "experience_match": 0.0-1.0,
+        "location_match": 0.0-1.0,
+        "cultural_fit": 0.0-1.0,
+        "growth_potential": 0.0-1.0
+    }},
+    "confidence": 0.0-1.0,
+    "reasoning": "2-3 sentence explanation"
+}}
+
+SCORING GUIDELINES:
+- Skill alignment: 40% weight
+- Experience level match: 25% weight
+- Location compatibility: 15% weight
+- Cultural fit: 10% weight
+- Growth potential: 10% weight
+
+Return ONLY valid JSON, no additional text."""
+    
+    def _call_openhermes_api(self, prompt: str) -> Optional[str]:
+        """Call OpenHermes 2.5 API."""
+        try:
+            import requests
+            
+            payload = {
+                "model": self.model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": self.default_config["temperature"],
+                    "top_p": self.default_config["top_p"],
+                    "num_predict": self.default_config["max_tokens"]
+                }
+            }
+            
+            response = requests.post(
+                f"{self.ollama_url}/api/generate",
+                json=payload,
+                timeout=self.default_config["analysis_timeout"]
+            )
+            
+            if response.status_code == 200:
+                return response.json().get("response", "")
+            else:
+                logger.error(f"OpenHermes API error: {response.status_code}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error calling OpenHermes API: {e}")
+            return None
+    
+    def _parse_openhermes_response(self, response: str, job: Dict) -> Optional[Dict[str, Any]]:
+        """Parse OpenHermes 2.5 response into structured data."""
+        try:
+            # Extract JSON from response
+            import re
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            
+            if json_match:
+                json_str = json_match.group()
+                parsed_data = json.loads(json_str)
+                
+                # Validate and clean data
+                cleaned_data = {
+                    "salary_analysis": parsed_data.get("salary_analysis", {}),
+                    "experience_analysis": parsed_data.get("experience_analysis", {}),
+                    "location_analysis": parsed_data.get("location_analysis", {}),
+                    "keyword_analysis": parsed_data.get("keyword_analysis", {}),
+                    "skill_gaps": parsed_data.get("skill_gaps", []),
+                    "match_score": parsed_data.get("match_score", {}),
+                    "confidence": parsed_data.get("confidence", 0.5),
+                    "reasoning": parsed_data.get("reasoning", "Analysis completed by OpenHermes 2.5")
+                }
+                
+                return cleaned_data
+            else:
+                logger.warning("Could not extract JSON from OpenHermes response")
+                return None
+                
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error in OpenHermes response: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error parsing OpenHermes response: {e}")
+            return None

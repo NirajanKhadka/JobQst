@@ -211,19 +211,195 @@ class DocumentModifier:
             logger.exception(f"Failed to write PDF {pdf_path}: {e}")
             raise
 
-    # --- Stub Methods for Future Implementation ---
+    # --- AI-Powered Document Generation Methods ---
 
     def get_available_templates(self) -> List[str]:
         """Return a list of available document templates."""
-        raise NotImplementedError("Template discovery is not yet implemented.")
+        try:
+            templates = []
+            
+            # Check for DOCX templates in profile directory
+            docx_templates = list(self.profile_dir.glob("*.docx"))
+            for template in docx_templates:
+                templates.append(template.name)
+            
+            # Always include AI-generated templates
+            templates.extend([
+                "AI-Generated Resume (Gemini)",
+                "AI-Generated Cover Letter (Gemini)",
+                "Default PDF Template"
+            ])
+            
+            logger.info(f"Found {len(templates)} available templates")
+            return templates
+            
+        except Exception as e:
+            logger.error(f"Error discovering templates: {e}")
+            return ["Default PDF Template"]
 
     def generate_ai_cover_letter(self, job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> str:
-        """Generate an AI-powered cover letter."""
-        raise NotImplementedError("AI cover letter generation is not yet implemented.")
+        """Generate an AI-powered cover letter using Gemini API."""
+        try:
+            from src.utils.gemini_client import GeminiClient
+            from src.utils.pdf_generator import PDFGenerator
+            
+            # Initialize Gemini client
+            gemini = GeminiClient()
+            
+            # Generate cover letter content
+            logger.info(f"Generating AI cover letter for {job_data.get('company', 'Unknown')} - {job_data.get('title', 'Unknown')}")
+            cover_letter_content = gemini.generate_cover_letter(profile_data, job_data)
+            
+            if not cover_letter_content:
+                raise ValueError("Gemini API returned empty content")
+            
+            # Save as text file first
+            company = job_data.get('company', 'UnknownCompany').replace(' ', '_')
+            title = job_data.get('title', 'UnknownPosition').replace(' ', '_')
+            
+            text_path = self.output_dir / f"cover_letter_{company}_{title}.txt"
+            pdf_path = self.output_dir / f"cover_letter_{company}_{title}.pdf"
+            
+            # Save text content
+            with open(text_path, 'w', encoding='utf-8') as f:
+                f.write(cover_letter_content)
+            
+            # Generate PDF
+            pdf_generator = PDFGenerator()
+            success = pdf_generator.text_to_pdf(cover_letter_content, pdf_path, "cover_letter")
+            
+            if success:
+                logger.info(f"✅ AI cover letter generated successfully: {pdf_path}")
+                return str(pdf_path)
+            else:
+                logger.warning(f"PDF generation failed, returning text file: {text_path}")
+                return str(text_path)
+                
+        except Exception as e:
+            logger.error(f"Failed to generate AI cover letter: {e}")
+            # Fallback to simple template
+            return self._generate_fallback_cover_letter(job_data, profile_data)
 
     def generate_ai_resume(self, job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> str:
-        """Generate an AI-powered resume summary or objective."""
-        raise NotImplementedError("AI resume generation is not yet implemented.")
+        """Generate an AI-powered resume using Gemini API."""
+        try:
+            from src.utils.gemini_client import GeminiClient
+            from src.utils.pdf_generator import PDFGenerator
+            
+            # Initialize Gemini client
+            gemini = GeminiClient()
+            
+            # Generate resume content
+            logger.info(f"Generating AI resume for {job_data.get('company', 'Unknown')} - {job_data.get('title', 'Unknown')}")
+            resume_content = gemini.generate_resume(profile_data, job_data)
+            
+            if not resume_content:
+                raise ValueError("Gemini API returned empty content")
+            
+            # Save as text file first
+            company = job_data.get('company', 'UnknownCompany').replace(' ', '_')
+            title = job_data.get('title', 'UnknownPosition').replace(' ', '_')
+            
+            text_path = self.output_dir / f"resume_{company}_{title}.txt"
+            pdf_path = self.output_dir / f"resume_{company}_{title}.pdf"
+            
+            # Save text content
+            with open(text_path, 'w', encoding='utf-8') as f:
+                f.write(resume_content)
+            
+            # Generate PDF
+            pdf_generator = PDFGenerator()
+            success = pdf_generator.text_to_pdf(resume_content, pdf_path, "resume")
+            
+            if success:
+                logger.info(f"✅ AI resume generated successfully: {pdf_path}")
+                return str(pdf_path)
+            else:
+                logger.warning(f"PDF generation failed, returning text file: {text_path}")
+                return str(text_path)
+                
+        except Exception as e:
+            logger.error(f"Failed to generate AI resume: {e}")
+            # Fallback to simple template
+            return self._generate_fallback_resume(job_data, profile_data)
+
+    def _generate_fallback_cover_letter(self, job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> str:
+        """Generate a simple fallback cover letter when AI generation fails."""
+        try:
+            company = job_data.get('company', 'Hiring Manager')
+            title = job_data.get('title', 'the position')
+            name = profile_data.get('name', 'Nirajan Khadka')
+            
+            content = f"""Dear {company} Hiring Team,
+
+I am writing to express my strong interest in the {title} position at {company}. With my background in data analysis and technical skills, I am confident that I would be a valuable addition to your team.
+
+My experience includes:
+- Data analysis using Python, SQL, and various BI tools
+- Creating automated dashboards and reports
+- Collaborating with cross-functional teams
+- Developing predictive models and insights
+
+I am excited about the opportunity to contribute to {company}'s continued success and would welcome the chance to discuss how my skills and experience align with your needs.
+
+Thank you for your consideration.
+
+Sincerely,
+{name}"""
+            
+            company_safe = company.replace(' ', '_')
+            title_safe = title.replace(' ', '_')
+            fallback_path = self.output_dir / f"cover_letter_fallback_{company_safe}_{title_safe}.txt"
+            
+            with open(fallback_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            
+            logger.info(f"Generated fallback cover letter: {fallback_path}")
+            return str(fallback_path)
+            
+        except Exception as e:
+            logger.error(f"Failed to generate fallback cover letter: {e}")
+            return ""
+
+    def _generate_fallback_resume(self, job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> str:
+        """Generate a simple fallback resume when AI generation fails."""
+        try:
+            name = profile_data.get('name', 'Nirajan Khadka')
+            email = profile_data.get('email', 'your.email@example.com')
+            phone = profile_data.get('phone', '(555) 123-4567')
+            location = profile_data.get('location', 'Your City, State')
+            
+            content = f"""{name}
+{email} | {phone} | {location}
+
+PROFESSIONAL SUMMARY
+{profile_data.get('summary', 'Experienced professional with strong analytical and technical skills.')}
+
+EXPERIENCE
+{profile_data.get('experience', 'Please see attached resume for detailed experience.')}
+
+SKILLS
+{profile_data.get('skills', 'Python, SQL, Data Analysis, Business Intelligence')}
+
+EDUCATION
+{profile_data.get('education', 'Bachelor of Science in relevant field')}
+
+CERTIFICATIONS
+{profile_data.get('certifications', 'Industry-relevant certifications')}"""
+            
+            company = job_data.get('company', 'UnknownCompany').replace(' ', '_')
+            title = job_data.get('title', 'UnknownPosition').replace(' ', '_')
+            fallback_path = self.output_dir / f"resume_fallback_{company}_{title}.txt"
+            
+            with open(fallback_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            
+            logger.info(f"Generated fallback resume: {fallback_path}")
+            return str(fallback_path)
+            
+        except Exception as e:
+            logger.error(f"Failed to generate fallback resume: {e}")
+            return ""
 
 
 def customize(job_data: Dict[str, Any], profile_name: str) -> Dict[str, str]:

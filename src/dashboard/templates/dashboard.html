@@ -7,131 +7,161 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/unified_dashboard_styles.css">
     <style>
+        /*
+         * HTML Dashboard Specific Overrides
+         * Edits require explicit user request.
+         * Additional styles specific to the HTML dashboard that extend the unified CSS.
+         */
+        
+        /* Enhanced Header for HTML Dashboard */
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient-header) !important;
         }
-        .card-shadow {
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        
+        /* HTML-specific form elements */
+        .form-input, .form-select {
+            @extend .input-base;
         }
-        .metric-card {
-            transition: all 0.3s ease-in-out;
-            border: 1px solid transparent;
+        
+        /* HTML-specific table styling */
+        .min-w-full {
+            @extend .table-base;
         }
-        .metric-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            border-color: rgba(102, 126, 234, 0.2);
+        
+        /* HTML-specific button variants */
+        .bg-green-600 {
+            background: var(--success) !important;
         }
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
+        
+        .bg-blue-600 {
+            background: var(--accent-primary) !important;
         }
-        .status-active { background-color: #10b981; }
-        .status-paused { background-color: #f59e0b; }
-        .status-error { background-color: #ef4444; }
-        .pulse {
-            animation: pulse 2s infinite;
+        
+        .bg-red-600 {
+            background: var(--error) !important;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        
+        .bg-yellow-600, .bg-orange-600 {
+            background: var(--warning) !important;
         }
-
-        /* Enhanced animations and effects */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
+        
+        .bg-purple-600 {
+            background: var(--accent-secondary) !important;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        
+        /* HTML-specific text colors */
+        .text-green-600 {
+            color: var(--success) !important;
         }
-
-        .slide-in {
-            animation: slideIn 0.3s ease-out;
+        
+        .text-blue-600 {
+            color: var(--accent-primary) !important;
         }
-        @keyframes slideIn {
-            from { transform: translateX(-20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        
+        .text-red-600 {
+            color: var(--error) !important;
         }
-
-        /* Enhanced table styling */
-        .enhanced-table {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        
+        .text-yellow-600, .text-orange-600 {
+            color: var(--warning) !important;
         }
-
-        .enhanced-table tbody tr:hover {
-            background-color: #f8fafc;
-            transform: scale(1.001);
-            transition: all 0.2s ease;
+        
+        /* HTML-specific background colors */
+        .bg-green-100 {
+            background: var(--success-bg) !important;
         }
-
-        /* Enhanced buttons */
-        .btn-enhanced {
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
+        
+        .bg-blue-100 {
+            background: rgba(59, 130, 246, 0.1) !important;
         }
-
-        .btn-enhanced:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        
+        .bg-red-100 {
+            background: var(--error-bg) !important;
         }
-
-        .btn-enhanced:active {
-            transform: translateY(0);
+        
+        .bg-yellow-100, .bg-orange-100 {
+            background: var(--warning-bg) !important;
         }
-
-        /* Loading states */
-        .loading-skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
+        
+        /* HTML-specific hover states */
+        .hover\\:bg-green-700:hover {
+            background: var(--success-light) !important;
         }
-
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        
+        .hover\\:bg-blue-700:hover {
+            background: var(--accent-hover) !important;
         }
-
-        /* Enhanced modals */
+        
+        .hover\\:bg-red-700:hover {
+            background: var(--error-light) !important;
+        }
+        
+        .hover\\:bg-gray-100:hover {
+            background: var(--bg-hover) !important;
+        }
+        
+        .hover\\:bg-gray-50:hover {
+            background: var(--bg-hover) !important;
+        }
+        
+        /* HTML-specific border colors */
+        .border-gray-300 {
+            border-color: var(--border-color) !important;
+        }
+        
+        .border-gray-200 {
+            border-color: var(--border-color) !important;
+        }
+        
+        .divide-gray-200 > * + * {
+            border-color: var(--border-color) !important;
+        }
+        
+        /* HTML-specific focus states */
+        .focus\\:ring-blue-500:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        }
+        
+        .focus\\:border-blue-500:focus {
+            border-color: var(--accent-primary) !important;
+        }
+        
+        /* HTML-specific table headers */
+        .bg-gray-100 {
+            background: var(--bg-secondary) !important;
+            color: var(--text-secondary) !important;
+        }
+        
+        /* HTML-specific modal and overlay styles */
         .modal-backdrop {
-            backdrop-filter: blur(4px);
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.8) !important;
         }
-
+        
         .modal-content {
-            animation: modalSlideIn 0.3s ease-out;
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
         }
-
-        @keyframes modalSlideIn {
-            from { transform: scale(0.9) translateY(-20px); opacity: 0; }
-            to { transform: scale(1) translateY(0); opacity: 1; }
+        
+        /* HTML-specific animation overrides */
+        .animate-bounce {
+            animation: bounce 1s infinite;
         }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            .dark-mode-card {
-                background-color: #1f2937;
-                color: #f9fafb;
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(-25%);
+                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+            }
+            50% {
+                transform: none;
+                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
             }
         }
-
-        /* Responsive enhancements */
-        @media (max-width: 768px) {
-            .metric-card {
-                margin-bottom: 1rem;
-            }
-
-            .enhanced-table {
-                font-size: 0.875rem;
-            }
-        }
+        
+        /* End HTML Dashboard Specific Overrides */
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -197,6 +227,41 @@
 
     <!-- Main Content -->
     <main class="container mx-auto px-6 py-8">
+        <!-- Worker Pool Section -->
+        <section id="workerPoolSection" class="mb-8 bg-white rounded-xl p-6 card-shadow">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <i class="fas fa-users-cog text-xl text-green-600 mr-3"></i>
+                    <h2 class="text-xl font-bold text-gray-800">Worker Pool</h2>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="workerTotal" class="text-sm text-gray-600">Total: 0</span>
+                    <span id="workerRunning" class="text-sm text-green-600">Running: 0</span>
+                    <span id="workerStopped" class="text-sm text-red-600">Stopped: 0</span>
+                    <button id="startAllBtn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded btn-enhanced" onclick="startAllWorkers()"><i class="fas fa-play mr-1"></i>Start All</button>
+                    <button id="stopAllBtn" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded btn-enhanced" onclick="stopAllWorkers()"><i class="fas fa-stop mr-1"></i>Stop All</button>
+                    <button id="restartAllBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded btn-enhanced" onclick="restartAllWorkers()"><i class="fas fa-sync-alt mr-1"></i>Restart All</button>
+                </div>
+            </div>
+            <div id="workerPoolTableContainer" class="overflow-x-auto">
+                <table class="min-w-full bg-white enhanced-table">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase">Name</th>
+                            <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase">Description</th>
+                            <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                            <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase">CPU (%)</th>
+                            <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase">Memory (%)</th>
+                            <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase">Uptime</th>
+                            <th class="px-4 py-2 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workerPoolTableBody" class="divide-y divide-gray-200">
+                        <tr><td colspan="7" class="text-center p-4 text-gray-400">Loading workers...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
         <!-- Enhanced Key Metrics Row -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 fade-in">
             <!-- Jobs Scraped -->
@@ -460,13 +525,20 @@
             }
         }
 
-        // Delete job function
+        /**
+         * Delete a job by ID after user confirmation.
+         * Shows success/error alerts and refreshes the jobs table on success.
+         * @param {number} jobId - The job's unique ID
+         * @param {string} jobTitle - The job's title (for confirmation message)
+         */
         async function deleteJob(jobId, jobTitle) {
+            // Confirm with the user before deleting
             if (!confirm(`Are you sure you want to delete "${jobTitle}"?\n\nThis action cannot be undone.`)) {
                 return;
             }
 
             try {
+                // Send DELETE request to backend
                 const response = await fetch(`/api/job/${jobId}`, {
                     method: 'DELETE',
                     headers: {
@@ -490,7 +562,10 @@
             }
         }
 
-        // Load available sites for filter dropdown
+        /**
+         * Load available job sites for the filter dropdown.
+         * Populates the site filter select element with options from the backend.
+         */
         async function loadAvailableSites() {
             try {
                 const response = await fetch('/api/sites');
@@ -502,7 +577,7 @@
                 // Clear existing options except "All Sites"
                 siteFilter.innerHTML = '<option value="">All Sites</option>';
 
-                // Add available sites
+                // Add available sites from API
                 data.sites.forEach(site => {
                     const option = document.createElement('option');
                     option.value = site.value;
@@ -900,17 +975,39 @@
                 const profiles = await response.json();
                 const switcher = document.getElementById('profileSwitcher');
                 switcher.innerHTML = '';
+                if (!profiles || profiles.length === 0) {
+                    // No profiles found
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No profiles found';
+                    option.disabled = true;
+                    option.selected = true;
+                    switcher.appendChild(option);
+                    showToast('No profiles available. Please create a profile.', 'warning');
+                    return;
+                }
+                let nirajanFound = false;
                 profiles.forEach(profile => {
                     const option = document.createElement('option');
                     option.value = profile;
                     option.textContent = profile;
-                    if (profile === activeProfile) {
-                        option.selected = true;
-                    }
+                    if (profile === 'Nirajan') nirajanFound = true;
+                    if (profile === activeProfile) option.selected = true;
                     switcher.appendChild(option);
                 });
+                if (!nirajanFound) {
+                    showToast('Warning: "Nirajan" profile not found. Please check your profile data.', 'warning');
+                }
             } catch (error) {
                 console.error('Failed to load profiles:', error);
+                const switcher = document.getElementById('profileSwitcher');
+                switcher.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Error loading profiles';
+                option.disabled = true;
+                option.selected = true;
+                switcher.appendChild(option);
                 showToast('Could not load profiles for switcher.', 'error');
             }
         }
@@ -1343,9 +1440,179 @@
             }, 60000); // 60 seconds
         }
 
+        // --- Worker Pool Logic ---
+        let workerStatus = {};
+        let workerWebSocket = null;
+
+        async function fetchWorkerStatus() {
+            try {
+                const response = await fetch('/api/system/worker_status');
+                const data = await response.json();
+                updateWorkerPoolUI(data);
+            } catch (error) {
+                console.error('Error fetching worker status:', error);
+            }
+        }
+
+        function updateWorkerPoolUI(data) {
+            if (!data || !data.workers) return;
+            workerStatus = data;
+            const workers = data.workers;
+            const total = data.total_workers || 0;
+            const running = data.running_workers || 0;
+            const stopped = data.available_workers || 0;
+            document.getElementById('workerTotal').textContent = `Total: ${total}`;
+            document.getElementById('workerRunning').textContent = `Running: ${running}`;
+            document.getElementById('workerStopped').textContent = `Stopped: ${stopped}`;
+            const tbody = document.getElementById('workerPoolTableBody');
+            tbody.innerHTML = '';
+            Object.entries(workers).forEach(([name, info]) => {
+                const status = info.status === 'running' ? '🟢' : '🔴';
+                const cpu = info.cpu_usage != null ? info.cpu_usage : 0;
+                const mem = info.memory_usage != null ? info.memory_usage : 0;
+                const uptime = info.uptime || '00:00:00';
+                const desc = info.description || '';
+                const isRunning = info.status === 'running';
+                const actionBtn = isRunning
+                    ? `<button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded btn-enhanced" onclick="stopWorker('${name}')"><i class='fas fa-stop'></i> Stop</button>`
+                    : `<button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded btn-enhanced" onclick="startWorker('${name}')"><i class='fas fa-play'></i> Start</button>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="px-4 py-2 font-semibold">${name}</td>
+                        <td class="px-4 py-2">${desc}</td>
+                        <td class="px-4 py-2">${status} <span class="text-xs">${info.status}</span></td>
+                        <td class="px-4 py-2">${cpu}</td>
+                        <td class="px-4 py-2">${mem}</td>
+                        <td class="px-4 py-2">${uptime}</td>
+                        <td class="px-4 py-2">${actionBtn}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function startWorker(name) {
+            try {
+                const response = await fetch('/api/system/start_worker', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ service_name: name })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showNotification(`Started worker: ${name}`, 'success');
+                } else {
+                    showNotification(`Failed to start worker: ${name}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`Network error starting worker: ${name}`, 'error');
+            }
+        }
+
+        async function stopWorker(name) {
+            try {
+                const response = await fetch('/api/system/stop_worker', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ service_name: name })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showNotification(`Stopped worker: ${name}`, 'success');
+                } else {
+                    showNotification(`Failed to stop worker: ${name}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`Network error stopping worker: ${name}`, 'error');
+            }
+        }
+
+        function setupWorkerWebSocket() {
+            if (workerWebSocket) workerWebSocket.close();
+            workerWebSocket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
+            workerWebSocket.onmessage = function(event) {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'worker_status_update') {
+                        updateWorkerPoolUI(msg.worker_status);
+                    }
+                } catch (e) {
+                    console.error('WebSocket message error:', e);
+                }
+            };
+            workerWebSocket.onclose = function() {
+                setTimeout(setupWorkerWebSocket, 2000); // Auto-reconnect
+            };
+        }
+
+        let orchestrationInProgress = false;
+
+        async function startAllWorkers() {
+            if (orchestrationInProgress) return;
+            orchestrationInProgress = true;
+            setOrchestrationButtonsDisabled(true);
+            try {
+                const response = await fetch('/api/system/start_all_workers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const data = await response.json();
+                showNotification('Started all workers', 'success');
+            } catch (error) {
+                showNotification('Failed to start all workers', 'error');
+            }
+            orchestrationInProgress = false;
+            setOrchestrationButtonsDisabled(false);
+        }
+
+        async function stopAllWorkers() {
+            if (orchestrationInProgress) return;
+            orchestrationInProgress = true;
+            setOrchestrationButtonsDisabled(true);
+            try {
+                const response = await fetch('/api/system/stop_all_workers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                showNotification('Stopped all workers', 'success');
+            } catch (error) {
+                showNotification('Failed to stop all workers', 'error');
+            }
+            orchestrationInProgress = false;
+            setOrchestrationButtonsDisabled(false);
+        }
+
+        async function restartAllWorkers() {
+            if (orchestrationInProgress) return;
+            orchestrationInProgress = true;
+            setOrchestrationButtonsDisabled(true);
+            try {
+                const response = await fetch('/api/system/restart_all_workers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const data = await response.json();
+                showNotification('Restarted all workers', 'success');
+            } catch (error) {
+                showNotification('Failed to restart all workers', 'error');
+            }
+            orchestrationInProgress = false;
+            setOrchestrationButtonsDisabled(false);
+        }
+
+        function setOrchestrationButtonsDisabled(disabled) {
+            document.getElementById('startAllBtn').disabled = disabled;
+            document.getElementById('stopAllBtn').disabled = disabled;
+            document.getElementById('restartAllBtn').disabled = disabled;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             connectWebSocket();
             fallbackStatsPolling();
+            fetchWorkerStatus(); // Initial fetch
+            setupWorkerWebSocket(); // Set up WebSocket listener
             // Remove or disable the old 30s polling for stats
             // setInterval(() => { ... }); // REMOVE or comment out
             // ... rest of dashboard init ...

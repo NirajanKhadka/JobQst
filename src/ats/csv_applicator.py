@@ -468,3 +468,60 @@ def create_csv_applicator(profile_name: str, csv_file_path: Optional[str] = None
         CSVApplicator instance
     """
     return CSVApplicator(profile_name, csv_file_path)
+
+
+def apply_from_csv(profile_name: str, csv_file_path: str, **kwargs) -> Dict[str, Any]:
+    """
+    Apply to jobs from a CSV file.
+    
+    This function provides a simple interface for applying to jobs from CSV files,
+    as expected by the test suite.
+    
+    Args:
+        profile_name: Name of the user profile
+        csv_file_path: Path to CSV file containing job data
+        **kwargs: Additional options for job application
+        
+    Returns:
+        Dictionary containing application results
+    """
+    try:
+        applicator = CSVJobApplicator(profile_name, csv_file_path)
+        jobs = applicator.load_jobs_from_csv()
+        
+        if not jobs:
+            return {
+                "success": False,
+                "error": "No jobs found in CSV file",
+                "jobs_processed": 0
+            }
+        
+        # Process applications
+        results = []
+        for job in jobs:
+            try:
+                result = applicator.apply_to_job(job)
+                results.append(result)
+            except Exception as e:
+                results.append({
+                    "job": job,
+                    "success": False,
+                    "error": str(e)
+                })
+        
+        successful = sum(1 for r in results if r.get("success", False))
+        
+        return {
+            "success": True,
+            "jobs_processed": len(jobs),
+            "successful_applications": successful,
+            "failed_applications": len(jobs) - successful,
+            "results": results
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "jobs_processed": 0
+        }

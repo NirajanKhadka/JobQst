@@ -48,24 +48,110 @@ class DBQueries:
     def get_job_stats(self) -> Dict:
         try:
             stats = {}
+            
+            # Total jobs count
             cursor = self.conn.execute("SELECT COUNT(*) as count FROM jobs")
             stats["total_jobs"] = cursor.fetchone()["count"]
+            
+            # Applied jobs count (using both 'applied' column and application_status)
+            cursor = self.conn.execute(
+                "SELECT COUNT(*) as count FROM jobs WHERE applied = 1 OR application_status = 'applied'"
+            )
+            stats["applied_jobs"] = cursor.fetchone()["count"]
+            
+            # Successful applications (jobs with successful application status)
+            cursor = self.conn.execute(
+                "SELECT COUNT(*) as count FROM jobs WHERE application_status IN ('applied', 'interview', 'hired')"
+            )
+            stats["successful_applications"] = cursor.fetchone()["count"]
+            
+            # Failed applications
+            cursor = self.conn.execute(
+                "SELECT COUNT(*) as count FROM jobs WHERE application_status IN ('rejected', 'failed')"
+            )
+            stats["failed_applications"] = cursor.fetchone()["count"]
+            
+            # Unapplied jobs
+            cursor = self.conn.execute(
+                "SELECT COUNT(*) as count FROM jobs WHERE (applied = 0 OR applied IS NULL) AND (application_status IS NULL OR application_status = 'not_applied')"
+            )
+            stats["unapplied_jobs"] = cursor.fetchone()["count"]
+            
+            # Manual review needed (jobs with certain statuses)
+            cursor = self.conn.execute(
+                "SELECT COUNT(*) as count FROM jobs WHERE status IN ('pending_review', 'needs_review') OR application_status = 'pending_review'"
+            )
+            stats["manual_review_needed"] = cursor.fetchone()["count"]
 
+            # Jobs by site breakdown
             cursor = self.conn.execute(
                 "SELECT site, COUNT(*) as count FROM jobs GROUP BY site ORDER BY count DESC"
             )
             stats["jobs_by_site"] = dict(cursor.fetchall())
 
+            # Unique companies count
+            cursor = self.conn.execute("SELECT COUNT(DISTINCT company) as count FROM jobs WHERE company IS NOT NULL")
+            stats["unique_companies"] = cursor.fetchone()["count"]
+            
+            # Unique sites count
+            cursor = self.conn.execute("SELECT COUNT(DISTINCT site) as count FROM jobs WHERE site IS NOT NULL")
+            stats["unique_sites"] = cursor.fetchone()["count"]
+
+            # Recent jobs (last 24 hours)
             yesterday = (datetime.now() - timedelta(days=1)).isoformat()
             cursor = self.conn.execute(
                 "SELECT COUNT(*) as count FROM jobs WHERE scraped_at > ?", (yesterday,)
             )
             stats["recent_jobs"] = cursor.fetchone()["count"]
+            
+            # Calculate application success rate
+            total_applications = stats.get("applied_jobs", 0)
+            successful = stats.get("successful_applications", 0)
+            stats["application_success_rate"] = round(
+                (successful / total_applications * 100) if total_applications > 0 else 0, 1
+            )
+            
+            # Last scraped time
+            cursor = self.conn.execute(
+                "SELECT scraped_at FROM jobs ORDER BY scraped_at DESC LIMIT 1"
+            )
+            last_scraped = cursor.fetchone()
+            if last_scraped and last_scraped["scraped_at"]:
+                try:
+                    last_time = datetime.fromisoformat(last_scraped["scraped_at"].replace('Z', '+00:00'))
+                    time_diff = datetime.now() - last_time
+                    if time_diff.days > 0:
+                        stats["last_scraped_ago"] = f"{time_diff.days} days ago"
+                    elif time_diff.seconds > 3600:
+                        hours = time_diff.seconds // 3600
+                        stats["last_scraped_ago"] = f"{hours} hours ago"
+                    elif time_diff.seconds > 60:
+                        minutes = time_diff.seconds // 60
+                        stats["last_scraped_ago"] = f"{minutes} minutes ago"
+                    else:
+                        stats["last_scraped_ago"] = "Just now"
+                except:
+                    stats["last_scraped_ago"] = "Unknown"
+            else:
+                stats["last_scraped_ago"] = "Never"
 
             return stats
         except Exception as e:
             console.print(f"[red]Failed to get stats: {e}[/red]")
-            return {}
+            return {
+                "total_jobs": 0,
+                "applied_jobs": 0,
+                "successful_applications": 0,
+                "failed_applications": 0,
+                "unapplied_jobs": 0,
+                "manual_review_needed": 0,
+                "application_success_rate": 0,
+                "jobs_by_site": {},
+                "unique_companies": 0,
+                "unique_sites": 0,
+                "recent_jobs": 0,
+                "last_scraped_ago": "Never"
+            }
 
     def search_jobs(self, query: str, limit: int = 50) -> List[Dict]:
         search_term = f"%{query.lower()}%"

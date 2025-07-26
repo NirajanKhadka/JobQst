@@ -77,7 +77,7 @@ Performance Optimized Examples:
         help="Action to perform (new: pipeline, health-check)",
     )
     parser.add_argument(
-        "--sites", help="Comma-separated list of sites (eluta, indeed, linkedin, monster)"
+        "--sites", help="Comma-separated list of sites (eluta, indeed, linkedin, monster, towardsai)"
     )
     parser.add_argument("--keywords", help="Comma-separated list of keywords")
     parser.add_argument("--batch", type=int, default=10, help="Number of jobs per batch")
@@ -100,53 +100,21 @@ async def run_optimized_scraping(profile: Dict[str, Any], args) -> bool:
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
-        
-        task = progress.add_task("🚀 Starting simple Eluta scraping...", total=None)
-        
+        task = progress.add_task("🚀 Starting unified Eluta scraping...", total=None)
         try:
-            # Use the reliable comprehensive Eluta scraper
-            from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
-            from src.core.job_database import get_job_db
-            
-            progress.update(task, description="⚙️ Initializing Eluta scraper...")
-            
-            # Get job database
-            db = get_job_db(profile["profile_name"])
-            
-            # Create simple config for Eluta scraper
+            from src.scrapers.unified_eluta_scraper import run_unified_eluta_scraper
+            # Build config for unified scraper
             config = {
                 "headless": args.headless,
-                "timeout": args.timeout,
-                "max_retries": args.retry_attempts,
-                "delay_range": (1, 3),  # Simple delay
+                "pages": args.pages,
+                "jobs": args.jobs,
+                "workers": args.workers,
+                "delay": 1,
             }
-            
-            progress.update(task, description="🔍 Creating scraper instance...")
-            
-            # Initialize the reliable scraper with just profile name
-            scraper = ComprehensiveElutaScraper(profile["profile_name"])
-            
-            # Testing Mode: Limit to 2 keywords only for faster testing
-            progress.update(task, description="🧪 Running in TEST MODE: 2 keywords only...")
-            
-            # Override scraper's search terms for testing
-            original_terms = scraper.search_terms
-            test_keywords = ["Python", "Data Analyst"]  # Just 2 keywords for testing
-            scraper.search_terms = test_keywords
-            
-            console.print(f"[yellow]🧪 TEST MODE: Using only {len(test_keywords)} keywords: {test_keywords}[/yellow]")
-            console.print(f"[yellow]📊 Target: {args.jobs} jobs total (instead of full {len(original_terms)} keywords)[/yellow]")
-            
-            progress.update(task, description="🎯 Scraping jobs from Eluta.ca (TEST MODE)...")
-            
-            # Run limited scraping with fewer jobs per keyword
-            jobs_per_keyword = max(1, args.jobs // len(test_keywords))  # Distribute jobs across test keywords
-            jobs = await scraper.scrape_all_keywords(max_jobs_per_keyword=jobs_per_keyword)
-            
+            progress.update(task, description="⚙️ Initializing Unified Eluta Scraper...")
+            jobs = await run_unified_eluta_scraper(profile["profile_name"], config)
             jobs_found = len(jobs) if jobs else 0
-            
             progress.update(task, description=f"🎉 Scraping completed! Found {jobs_found} total jobs")
-            
             if jobs_found > 0:
                 console.print(f"\n✅ [bold green]Successfully scraped {jobs_found} jobs![/bold green]")
                 console.print(f"💾 [cyan]Jobs saved to: profiles/{profile['profile_name']}/{profile['profile_name']}.db[/cyan]")
@@ -154,9 +122,8 @@ async def run_optimized_scraping(profile: Dict[str, Any], args) -> bool:
             else:
                 console.print(f"\n⚠️ [yellow]No jobs found. Try different keywords or check your internet connection.[/yellow]")
                 return False
-                
         except Exception as e:
-            console.print(f"\n❌ [red]Scraping failed: {str(e)}[/red]")
+            console.print(f"\n❌ [red]Unified Eluta scraping failed: {str(e)}[/red]")
             return False
 
 

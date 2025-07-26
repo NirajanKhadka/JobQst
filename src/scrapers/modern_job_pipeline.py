@@ -31,14 +31,14 @@ except ImportError as e:
 # Import with proper relative paths when running from src directory
 try:
     from core.job_database import get_job_db
-    from utils.job_analysis_engine import JobAnalyzer
+    from ai.enhanced_job_analyzer import EnhancedJobAnalyzer
     from pipeline.stages.processing import processing_stage
     from pipeline.stages.analysis import analysis_stage
     from pipeline.stages.storage import storage_stage
 except ImportError:
     # Fallback for different import contexts
     from src.core.job_database import get_job_db
-    from src.enhanced_job_analyzer import JobAnalyzer
+    from src.ai.enhanced_job_analyzer import EnhancedJobAnalyzer
     from src.pipeline.stages.processing import processing_stage
     from src.pipeline.stages.analysis import analysis_stage
     from src.pipeline.stages.storage import storage_stage
@@ -90,7 +90,7 @@ class ModernJobPipeline:
         
         # Database and analyzer
         self.db = get_job_db(self.profile_name)
-        self.analyzer = JobAnalyzer(self.profile) if self.enable_ai_analysis else None
+        self.analyzer = EnhancedJobAnalyzer(self.profile) if self.enable_ai_analysis else None
         self.thread_pool = ThreadPoolExecutor(max_workers=self.max_workers)
 
         # Enhanced queue system with size limits for memory efficiency

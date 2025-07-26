@@ -7,6 +7,7 @@ Verifies all core functionality works after refactoring.
 import sys
 import time
 import os
+import pytest
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -19,12 +20,10 @@ def test_core_imports():
     
     core_modules = [
         ("main", "Main application entry point"),
-        ("utils", "Utility functions"),
-        ("job_database", "Database operations"),
-        ("document_generator", "Document generation"),
-        ("dashboard_api", "Dashboard API"),
-        ("csv_applicator", "CSV job application"),
-        ("intelligent_scraper", "AI-powered scraping"),
+        ("src.utils.profile_helpers", "Profile utility functions"),
+        ("src.core.job_database", "Database operations"),
+        ("src.utils.document_generator", "Document generation"),
+        ("src.dashboard.unified_dashboard", "Dashboard interface"),
     ]
     
     results = []
@@ -48,7 +47,8 @@ def test_core_imports():
     console.print(table)
     
     passed = sum(1 for _, status, _ in results if "PASS" in status)
-    return passed, len(results)
+    # At least 50% of core modules should import successfully
+    assert passed >= len(results) * 0.5, f"Too many core module import failures: {passed}/{len(results)}"
 
 def test_scraper_imports():
     """Test that refactored scrapers import correctly."""
@@ -85,7 +85,8 @@ def test_scraper_imports():
     console.print(table)
     
     passed = sum(1 for _, status, _ in results if "PASS" in status)
-    return passed, len(results)
+    # At least 25% of scrapers should import successfully (they're optional)
+    assert passed >= len(results) * 0.25, f"Too many scraper import failures: {passed}/{len(results)}"
 
 def test_scraper_registry():
     """Test that scraper registry works correctly."""
@@ -96,25 +97,24 @@ def test_scraper_registry():
         
         console.print(f"[green]✅ Scraper registry imported successfully[/green]")
         console.print(f"[cyan]Available scrapers: {AVAILABLE_SCRAPERS}[/cyan]")
-        console.print(f"[cyan]Default scraper: {DEFAULT_SCRAPER.__name__}[/cyan]")
+        if DEFAULT_SCRAPER:
+            console.print(f"[cyan]Default scraper: {DEFAULT_SCRAPER.__name__}[/cyan]")
+            
+            # Test that we can instantiate the default scraper
+            test_profile_name = "test"
+            default_scraper = DEFAULT_SCRAPER(test_profile_name)
+            console.print(f"[green]✅ Default scraper instantiated: {default_scraper.__class__.__name__}[/green]")
+        else:
+            console.print("[yellow]⚠️ No default scraper available[/yellow]")
+            
         console.print(f"[cyan]Registry size: {len(SCRAPER_REGISTRY)} scrapers[/cyan]")
         
-        # Test that we can instantiate the default scraper
-        test_profile = {
-            "profile_name": "test",
-            "keywords": ["python"],
-            "name": "Test User",
-            "email": "test@example.com"
-        }
-        
-        default_scraper = DEFAULT_SCRAPER(test_profile)
-        console.print(f"[green]✅ Default scraper instantiated: {default_scraper.__class__.__name__}[/green]")
-        
-        return True
+        # At least some scrapers should be available
+        assert len(SCRAPER_REGISTRY) > 0, "No scrapers available in registry"
         
     except Exception as e:
         console.print(f"[red]❌ Scraper registry test failed: {e}[/red]")
-        return False
+        pytest.fail(f"Scraper registry test failed: {e}")
 
 def test_main_menu_functions():
     """Test that main menu functions exist and are callable."""
@@ -124,12 +124,8 @@ def test_main_menu_functions():
         import main
         
         required_functions = [
-            'smart_scrape_action',
-            'ultra_fast_scrape_action',
-            'deep_scrape_action',
-            'debug_dashboard_action',
-            'show_interactive_menu',
-            'handle_menu_choice'
+            'main',
+            'parse_arguments',
         ]
         
         results = []
@@ -156,11 +152,12 @@ def test_main_menu_functions():
         console.print(table)
         
         passed = sum(1 for _, status, _ in results if "PASS" in status)
-        return passed, len(results)
+        # At least 50% of main menu functions should work
+        assert passed >= len(results) * 0.5, f"Too many main menu function failures: {passed}/{len(results)}"
         
     except Exception as e:
         console.print(f"[red]❌ Main menu function test failed: {e}[/red]")
-        return 0, 1
+        pytest.fail(f"Main menu function test failed: {e}")
 
 def test_removed_dependencies():
     """Test that removed modules are no longer referenced."""
@@ -197,7 +194,8 @@ def test_removed_dependencies():
     console.print(table)
     
     passed = sum(1 for _, status, _ in results if "PASS" in status)
-    return passed, len(results)
+    # All removed dependencies should be confirmed as removed
+    assert passed == len(results), f"Some dependencies may not be properly removed: {passed}/{len(results)}"
 
 def test_performance_benchmark():
     """Quick performance test to ensure refactoring didn't hurt performance."""
@@ -220,22 +218,23 @@ def test_performance_benchmark():
         }
         
         start_time = time.time()
-        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
-        scraper = ElutaEnhancedScraper(test_profile)
+        from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
+        scraper = ComprehensiveElutaScraper("test")
         scraper_time = time.time() - start_time
         
         console.print(f"[cyan]Scraper instantiation time: {scraper_time:.3f} seconds[/cyan]")
         
         if import_time < 1.0 and scraper_time < 0.5:
             console.print("[green]✅ Performance looks good after refactoring[/green]")
-            return True
         else:
             console.print("[yellow]⚠️ Performance may need optimization[/yellow]")
-            return True  # Still pass, just a warning
+        
+        # Performance test should not fail, just warn
+        assert import_time < 5.0, f"Import time too slow: {import_time:.2f}s"
         
     except Exception as e:
         console.print(f"[red]❌ Performance benchmark failed: {e}[/red]")
-        return False
+        pytest.fail(f"Performance benchmark failed: {e}")
 
 def main():
     """Run comprehensive refactoring tests."""

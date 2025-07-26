@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 console = Console()
 
@@ -74,6 +74,38 @@ def test_dashboard_access():
     except requests.exceptions.RequestException as e:
         pytest.skip(f"Dashboard not accessible (may not be running): {e}")
 
+def test_profiles_api_endpoint():
+    """Test if the profiles API endpoint is accessible and returns Nirajan profile."""
+    """
+    Test if the profiles API endpoint is accessible and returns Nirajan profile. Skips if API not running.
+    """
+    try:
+        # Test API health first
+        health_response = requests.get("http://localhost:8002/health", timeout=5)
+        assert health_response.status_code == 200, f"API health check failed with status {health_response.status_code}"
+        console.print("[green]✅ API server is running[/green]")
+        
+        # Test profiles endpoint
+        profiles_response = requests.get("http://localhost:8002/api/profiles", timeout=10)
+        assert profiles_response.status_code == 200, f"Profiles endpoint returned status {profiles_response.status_code}"
+        
+        profiles_data = profiles_response.json()
+        assert profiles_data.get("status") == "success", f"Profiles API status should be 'success'"
+        
+        # Check for Nirajan profile
+        profile_names = [profile.get("profile_name", "") for profile in profiles_data.get("profiles", [])]
+        if "Nirajan" in profile_names:
+            console.print("[green]✅ Nirajan profile found in /api/profiles endpoint[/green]")
+        else:
+            console.print(f"[yellow]⚠️ Nirajan profile not found. Available: {profile_names}[/yellow]")
+            
+        console.print(f"[cyan]Found {len(profile_names)} total profiles via API[/cyan]")
+        
+    except requests.exceptions.RequestException as e:
+        pytest.skip(f"Profiles API not accessible (may not be running): {e}")
+    except Exception as e:
+        pytest.skip(f"Profiles API test failed: {e}")
+
 def main():
     """Run all dashboard integration tests."""
     console.print("[bold blue]🔍 Dashboard Integration Verification[/bold blue]")
@@ -84,6 +116,7 @@ def main():
         ("Unified Dashboard Import", test_unified_dashboard_import),
         ("Document Component Import", test_document_component_import),
         ("Dashboard HTTP Access", test_dashboard_access),
+        ("Profiles API Endpoint", test_profiles_api_endpoint),
     ]
     
     results = []

@@ -1,13 +1,13 @@
 import asyncio
 from src.scrapers.scraping_models import JobData, JobStatus
-from src.enhanced_job_analyzer import JobAnalyzer
+from src.ai.enhanced_job_analyzer import EnhancedJobAnalyzer
 
 
 async def analysis_stage(
     analysis_queue: asyncio.Queue,
     storage_queue: asyncio.Queue,
     metrics,
-    analyzer: JobAnalyzer,
+    analyzer: EnhancedJobAnalyzer,
     thread_pool,
 ):
     """Analyzes jobs and moves them to the storage_queue."""

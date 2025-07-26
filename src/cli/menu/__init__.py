@@ -8,9 +8,7 @@ Contains menu system for interactive CLI operations:
 - System menu
 """
 
-from .main_menu import MainMenu
-from .scraping_menu import ScrapingMenu
 from .application_menu import ApplicationMenu
 from .system_menu import SystemMenu
 
-__all__ = ["MainMenu", "ScrapingMenu", "ApplicationMenu", "SystemMenu"]
+__all__ = ["ApplicationMenu", "SystemMenu"]

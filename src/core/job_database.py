@@ -72,7 +72,24 @@ class ModernJobDatabase:
                     raw_data TEXT, 
                     analysis_data TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    -- Enhanced 2-worker system fields
+                    employment_type TEXT,
+                    required_skills TEXT,
+                    job_requirements TEXT,
+                    compatibility_score REAL DEFAULT 0.0,
+                    analysis_confidence REAL DEFAULT 0.0,
+                    extracted_benefits TEXT,
+                    analysis_reasoning TEXT,
+                    custom_logic_confidence REAL DEFAULT 0.0,
+                    llm_processing_time REAL DEFAULT 0.0,
+                    total_processing_time REAL DEFAULT 0.0,
+                    processing_method TEXT DEFAULT 'unknown',
+                    fallback_used INTEGER DEFAULT 0,
+                    processed_at TEXT,
+                    processing_worker_id INTEGER,
+                    processing_time REAL DEFAULT 0.0,
+                    error_message TEXT
                 )
             """
             )
@@ -154,6 +171,10 @@ class ModernJobDatabase:
     def get_job_stats(self) -> Dict:
         with self._get_connection() as conn:
             return DBQueries(conn).get_job_stats()
+
+    def get_stats(self) -> Dict:
+        """Alias for get_job_stats for backward compatibility."""
+        return self.get_job_stats()
 
     def search_jobs(self, query: str, limit: int = 50) -> List[Dict]:
         with self._get_connection() as conn:
@@ -299,6 +320,47 @@ class ModernJobDatabase:
         with self._get_connection() as conn:
             cursor = conn.execute("SELECT * FROM jobs")
             return [dict(row) for row in cursor.fetchall()]
+    
+    def get_jobs_by_status(self, status: str, limit: int = None) -> List[Dict]:
+        """Get jobs by status."""
+        with self._get_connection() as conn:
+            if limit:
+                cursor = conn.execute("SELECT * FROM jobs WHERE status = ? LIMIT ?", (status, limit))
+            else:
+                cursor = conn.execute("SELECT * FROM jobs WHERE status = ?", (status,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def update_job(self, job_id: int, job_data: Dict) -> bool:
+        """Update job with new data by ID."""
+        try:
+            with self._get_connection() as conn:
+                # Build update query dynamically based on provided fields
+                update_fields = []
+                values = []
+                
+                for field, value in job_data.items():
+                    if field != 'id':  # Don't update ID
+                        update_fields.append(f"{field} = ?")
+                        # Convert lists/dicts to JSON strings
+                        if isinstance(value, (list, dict)):
+                            import json
+                            value = json.dumps(value)
+                        values.append(value)
+                
+                if not update_fields:
+                    return False
+                
+                # Add updated_at timestamp
+                update_fields.append("updated_at = CURRENT_TIMESTAMP")
+                values.append(job_id)
+                
+                query = f"UPDATE jobs SET {', '.join(update_fields)} WHERE id = ?"
+                conn.execute(query, values)
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error updating job {job_id}: {e}")
+            return False
 
     def update_job_status(self, job_id: int, new_status: str) -> bool:
         """Update job status by ID."""

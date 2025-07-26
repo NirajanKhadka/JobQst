@@ -57,6 +57,15 @@ def fetch_job_links_playwright_and_save():
 
 
 def main():
+    # Example: Use robust keyword extraction utility (for future CLI integration)
+    from src.utils.keyword_extractor import get_keywords_for_profile
+    profile_path = "profiles/Nirajan/Nirajan.json"  # TODO: make dynamic for CLI
+    try:
+        keywords = get_keywords_for_profile(profile_path)
+        print(f"[INFO] Loaded/extracted keywords: {keywords}")
+    except Exception as e:
+        print(f"[ERROR] Keyword extraction failed: {e}")
+        keywords = []
     print("Choose scraping method:")
     print("1. Playwright (save job links to file)")
     print("2. Requests + BeautifulSoup (return up to 11 jobs)")
