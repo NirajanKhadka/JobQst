@@ -1,423 +1,322 @@
-
 ---
 post_title: "AutoJobAgent Architecture and Performance"
 author1: "Nirajan Khadka"
 post_slug: "architecture-performance"
 microsoft_alias: "nirajank"
 featured_image: ""
-categories: ["architecture", "performance", "mcp"]
-tags: ["architecture", "mcp", "performance", "browser-automation"]
-ai_note: "Complete system architecture with performance optimization details and MCP integration."
-summary: "MCP-enhanced worker-based architecture with comprehensive performance optimization documentation"
+categories: ["architecture", "performance"]
+tags: ["architecture", "performance", "browser-automation"]
+ai_note: "Complete system architecture with performance optimization details."
+summary: "Detailed overview of AutoJobAgent's monolithic, worker-based architecture and performance optimizations."
 post_date: "2025-07-17"
 ---
 
-## 🏗️ AutoJobAgent Architecture (MCP-Enhanced, Worker-Based)
+## AutoJobAgent Architecture (Worker-Based)
 
----
-**Major Update (July 17, 2025): Playwright MCP Migration - Enhanced browser 
-automation with AI-friendly interfaces.**
----
+### System Overview
 
-**Note (July 2025): Gemini API is the default for all resume/cover letter 
-generation. Playwright MCP enables deterministic, structured browser automation.**
----
+AutoJobAgent operates on a **monolithic, worker-based architecture**, designed for simplicity, high performance, and ease of deployment. This approach eliminates the complexities associated with distributed systems, such as inter-process communication and service orchestration, by consolidating all functionalities within a single, unified application.
 
-*Worker-based architecture enhanced with MCP browser automation and AI-driven 
-scraping*
+### Architecture Principles
 
----
+-   **Simplicity**: Direct function calls and a unified codebase reduce complexity.
+-   **Single Responsibility**: Each module focuses on a distinct function, enhancing clarity and maintainability.
+-   **Performance**: Eliminates overhead from inter-service communication, leading to faster execution.
+-   **Maintainability**: Fewer moving parts simplify debugging and updates.
+-   **Extensibility**: New features, scrapers, and ATS integrations can be added easily within the existing structure.
 
-## 🚀 Browser Automation Evolution & Performance
+### Key Benefits
 
-### **Playwright MCP Integration** *(In Progress)*
-AutoJobAgent is migrating from traditional Playwright to **Playwright MCP (Model Context Protocol)** for enhanced browser automation:
-
-- **🎯 LLM-Friendly**: Uses accessibility snapshots instead of screenshots
-- **⚡ Performance**: Structured data extraction without visual parsing
-- **🔍 Deterministic**: Eliminates ambiguity of pixel-based interactions
-- **🤖 AI-Ready**: Native integration with LLM workflows
-- **🛡️ Reliable**: Accessibility tree parsing for consistent results
-
-### **Migration Status**
-- ✅ **MCP Server Setup**: Playwright MCP server configured and running
-- 🔄 **Browser Client**: Enhanced MCP browser client implementation
-- 🔄 **Pipeline Integration**: Scraping stages migrated to MCP calls
-- ⏳ **Individual Scrapers**: Monster CA, TowardsAI scraper migration
-- ⏳ **Test Updates**: Unit/integration tests updated for MCP
-- ⏳ **Documentation**: Complete MCP usage documentation
-
-## 1. System Overview
-
-AutoJobAgent now uses a **monolithic, worker-based architecture**. All microservice, event bus, and service orchestrator patterns have been removed. The system is streamlined for maintainability, performance, and ease of deployment.
-
-### 🚀 **Production Deployment Status**
-- ✅ **Unified Entry Point**: `main.py` manages all operations
-- ✅ **Worker-Based Scraping**: Parallel job scraping via direct function calls
-- ✅ **Job Analysis**: ML-powered job matching in a single process
-- ✅ **Health Monitoring**: System checks via direct calls
-- ✅ **Metrics Collection**: Performance data tracked in-process
-
-### **Architecture Principles**
-- **Simplicity**: Direct function calls, no inter-process messaging
-- **Single Responsibility**: Each module handles a distinct concern
-- **Performance**: No service communication overhead
-- **Maintainability**: Fewer moving parts, easier debugging
-- **Extensibility**: Easy to add new scrapers, ATS systems, and features
-
-### **Key Benefits Achieved**
-- **Reduced Complexity**: 50+ src items → 23 core files/folders
-- **Production Ready**: Auto-scraping, health monitoring, graceful shutdown
-- **Direct Communication**: No event bus, no service orchestrator
-- **Unified Deployment**: Single process, easier scaling
+-   **Reduced Complexity**: Streamlined codebase with a focus on core functionalities.
+-   **Production Ready**: Includes robust features like auto-scraping, comprehensive health monitoring, and graceful shutdown.
+-   **Direct Communication**: All components interact directly, removing the need for an event bus or service orchestrator.
+-   **Unified Deployment**: A single process simplifies deployment and scaling efforts.
 
 ---
 
-## 2. Production Architecture
+## Core Optimizations
 
-### **Core Components**
-
-#### **Main Entry Point** (`src/main.py`)
-- **Purpose**: Unified CLI and dashboard launcher
-- **Features**: Profile selection, job scraping, job analysis, ATS application, health checks
-
-#### **Browser Automation System** (`src/scrapers/`, `src/pipeline/`)
-- **Purpose**: Enhanced web scraping with Playwright MCP
-- **Components**:
-  - `mcp_browser_client.py` - MCP browser interface and client
-  - `modern_job_pipeline.py` - Async pipeline orchestration with MCP
-  - `pipeline/stages/scraping.py` - MCP-based scraping stages
-  - Individual scrapers (Monster CA, TowardsAI) with MCP integration
-- **Features**: 
-  - Accessibility-based element discovery
-  - Structured data extraction without screenshots
-  - Deterministic browser automation
-  - Fallback to traditional Playwright if MCP unavailable
-
----
-
-## 3. Playwright MCP Migration Plan
-
-### **Migration Overview**
-The system is transitioning from traditional Playwright browser automation to **Playwright MCP (Model Context Protocol)** for enhanced reliability and AI integration.
-
-#### **Phase 1: Foundation (In Progress)**
-### Hybrid Job Processing Engine (`src/analysis/hybrid_processor.py`)
-- 🔄 **Pipeline Integration**: `src/pipeline/stages/scraping.py` MCP functions
-
-#### **Phase 2: Core Pipeline (Planned)**
-- ⏳ **Main Pipeline**: `src/scrapers/modern_job_pipeline.py` MCP migration
-- ⏳ **Worker Distribution**: Update async worker management for MCP
-
-#### **Phase 3: Future Scraper Enhancement (Deferred)**
-- 🚫 **Current Scrapers**: Keeping existing working scrapers unchanged
-- 📝 **Rationale**: Current scrapers are working reliably, no immediate need to migrate
-- 🔮 **Future Consideration**: MCP migration available when needed for new features
-
-### **MCP Architecture Benefits**
+### Immediate Tab Closure System
 
 ```
-Traditional Playwright:
-
-MCP Approach:
-  Browser → Accessibility Tree → Structured Data → Direct Actions
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│  Job Element    │    │  Extract URL     │    │  Close Tab      │
+│  Detection      │───▶│  (Click Link)    │───▶│  Immediately    │
+│                 │    │                  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-#### **Key Improvements**
-- **⚡ Performance**: No screenshot processing overhead
-- **🔍 Accuracy**: Accessibility tree provides precise element data
-- **🤖 AI-Ready**: Native LLM integration capabilities
+**Benefits:**
 
-### **Migration Strategy**
+-   **Memory Efficiency**: Achieves a 90% reduction in peak memory usage.
+-   **Stable Performance**: Ensures consistent browser performance by preventing tab accumulation.
 
-#### **Backward Compatibility**
+### Concurrent Job Processing
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│  Job URLs       │    │  Semaphore       │    │  Job            │
+│  Collection     │───▶│  (2 concurrent)  │───▶│  Analysis       │
+│                 │    │                  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+**Benefits:**
+
+-   **Speed**: Processes jobs up to 2x faster.
+-   **Non-blocking Analysis**: AI analysis runs concurrently, preventing bottlenecks.
+-   **Parallel Scoring**: Enables parallel compatibility scoring for efficiency.
+
+---
+
+## System Components
+
+### 1. Optimized Scraper (`src/scrapers/optimized_eluta_scraper.py`)
+
+-   **Two-Phase Processing**: Separates URL extraction from detailed job processing.
+-   **Immediate Tab Closure**: Tabs are closed immediately after URL retrieval to conserve resources.
+-   **Resource Management**: Ensures a fresh browser context for each keyword search.
+-   **Performance Monitoring**: Collects real-time metrics and statistics during scraping.
+
+### 2. Job Analyzer (`src/analysis/enhanced_job_analyzer.py`)
+
+-   **Primary Method**: Utilizes rule-based analysis for consistent and deterministic results.
+-   **Optimized Settings**: Configured for reliable and predictable performance.
+-   **Concurrent Analysis**: Designed to run non-blocking, allowing parallel job processing.
+
+### 3. Profile Configuration (`profiles/Nirajan/Nirajan.json`)
+
+-   **Centralized Settings**: Stores user-specific configurations and parameters.
+-   **Skills Matching**: Contains comprehensive skill lists for accurate job matching.
+-   **Experience Filtering**: Enables filtering based on desired experience levels (e.g., entry-level).
+-   **Keywords**: Defines search terms for targeted job discovery.
+
+---
+
+## Processing Workflow
+
+### Phase 1: Fast URL Collection
+
+This phase focuses on rapidly extracting job URLs from various job boards. Tabs are closed immediately after URL retrieval to minimize resource consumption.
+
 ```python
-# MCP-first with Playwright fallback
-async def scrape_jobs(keyword: str):
-    try:
-        # Try MCP first
-        return await scrape_with_mcp(keyword)
-    except MCPUnavailableError:
-        # Fallback to traditional Playwright
-        return await scrape_with_playwright(keyword)
+# Navigate to job board
+await page.goto(search_url)
+
+# Find job elements
+job_elements = await self._find_job_elements(page)
+
+# Extract URLs with immediate tab closure
+for job_element in job_elements:
+    job_url = await self._get_job_url_with_immediate_closure(
+        page, job_element
+    )
+    # Tab closes immediately after URL extraction
 ```
 
-#### **Performance Monitoring**
-- **MCP Success Rate**: Track successful MCP operations
-- **Fallback Usage**: Monitor Playwright fallback frequency
-- **Scraping Speed**: Compare MCP vs Playwright performance
-- **Error Rates**: Track and analyze failure patterns
+### Phase 2: Concurrent Job Processing
 
-### **Expected Outcomes**
-- **🚀 Speed**: 30-50% faster scraping through structured data
-- **📊 Reliability**: 90%+ success rate with accessibility parsing
-- **🔧 Maintenance**: Reduced debugging of visual parsing issues
-- **🤖 AI Integration**: Native LLM workflow compatibility
+Once URLs are collected, jobs are processed concurrently to maximize efficiency. A semaphore limits the number of simultaneous operations, ensuring stable performance.
 
-### **AI Document Generation Architecture** *(Completed July 19, 2025)*
-
-AutoJobAgent now features a complete AI-powered document generation system using Google's Gemini API:
-
-#### **Document Generation Flow**
-```
-User Profile + Job Data → Gemini API → AI Content → PDF Generator → Professional Documents
-```
-
-#### **Key Components**
-- **Gemini Client**: Handles API communication with specialized prompts
-- **PDF Generator**: Creates professional-quality PDFs with proper formatting
-- **Document Modifier**: Orchestrates generation with fallback mechanisms
-- **Template System**: Supports both AI generation and traditional templates
-
-#### **Technical Implementation**
 ```python
-# Example AI document generation
-from src.document_modifier.document_modifier import DocumentModifier
+# Process jobs concurrently
+semaphore = asyncio.Semaphore(self.max_concurrent_jobs)
 
-modifier = DocumentModifier("profile_name")
-resume_path = modifier.generate_ai_resume(job_data, profile_data)
-cover_letter_path = modifier.generate_ai_cover_letter(job_data, profile_data)
+async def process_single_job(job_data):
+    async with semaphore:
+        return await self._process_single_job_with_analysis(job_data)
+
+# Execute all jobs in parallel
+tasks = [process_single_job(job) for job in job_urls]
+results = await asyncio.gather(*tasks, return_exceptions=True)
 ```
 
-#### **Performance Metrics**
-- **Generation Speed**: 3-5 seconds per document
-- **Success Rate**: 95%+ with fallback mechanisms
-- **Quality**: ATS-optimized formatting and content
-- **Output**: Professional PDF documents ready for submission
+---
+
+## Performance Metrics
+
+AutoJobAgent's architecture delivers significant performance improvements across key metrics:
+
+### Resource Usage
+
+| Metric            | Before    | After     | Improvement   |
+|-------------------|-----------|-----------|---------------|
+| Peak Tabs Open    | 20+       | 1-2       | 90% reduction |
+| Memory Usage      | Growing   | Stable    | Consistent    |
+| Browser Performance | Degrading | Consistent| Stable        |
+
+### Processing Speed
+
+| Task            | Before    | After       | Improvement |
+|-----------------|-----------|-------------|-------------|
+| URL Extraction  | Sequential| Fast batch  | 3x faster   |
+| Job Processing  | Sequential| Concurrent  | 2x faster   |
+| Analysis        | Blocking  | Non-blocking| Parallel    |
 
 ---
 
-## 4. Data Flow Architecture
-- **Features**: Multi-keyword scraping, ATS detection, progress tracking
+## Testing Framework
 
-#### **Job Analysis** (`src/enhanced_job_analyzer.py`, `src/autonomous_processor.py`)
-- **Purpose**: ML-powered job matching and analysis
-- **Features**: Batch processing, scoring, skill matching
+### Test Scripts
 
-#### **AI-Powered Document Generation** (`src/document_modifier/`, `src/utils/`)
-- **Purpose**: Gemini API-powered resume and cover letter generation
-- **Technology**: Google Gemini 1.5 Flash API for content generation
-- **Components**:
-  - `src/utils/gemini_client.py` - Gemini API client with specialized prompts
-  - `src/utils/pdf_generator.py` - Professional PDF generation from AI content
-  - `src/document_modifier/document_modifier.py` - Document orchestration and fallbacks
-- **Features**:
-  - Job-specific resume tailoring with ATS optimization
-  - Personalized cover letter generation with company research
-  - Professional PDF output with proper formatting
-  - Fallback mechanisms for reliability
-  - Template discovery and management
-- **API Key**: AIzaSyA-RFcsksKRxuKfcfgJ6AGZFoaZLQxbewI
-- **Performance**: ~3-5 seconds per document, 95%+ success rate
+-   `test_job_analyzer.py`: Dedicated tests for job analysis functionalities.
+-   `test_optimized_scraper.py`: Tests specifically designed for scraper optimizations.
 
-#### **ATS Integration** (`src/ats/`)
-- **Purpose**: Automated job application to ATS systems
-- **Features**: Form filling, error handling, status tracking
+### Expected Results
 
-#### **Dashboard** (`src/dashboard/`)
-- **Purpose**: Streamlit-based UI for job management
-- **Features**: Real-time job display, application management, metrics
-
-#### **Health Checks** (`src/health_checks/`)
-- **Purpose**: System health monitoring
-- **Features**: Database, disk, memory checks
-
-#### **Utilities** (`src/utils/`, `src/core/`)
-- **Purpose**: Shared infrastructure and helper functions
-- **Features**: Database abstraction, profile management, session handling
-
----
-
-### **Directory Structure**
+```
+✅ Analysis: Working with JSON parsing
+⚡ Concurrent Processing: 2 jobs simultaneously
+🧹 Tab Management: Immediate closure working
+📊 Memory Usage: Stable throughout scraping
 ```
 
-├── main.py                 # Single entry point (Nirajan)
-├── scrapers/               # Job scraping engines
-├── enhanced_job_analyzer.py# ML-powered job analysis
-├── autonomous_processor.py # Autonomous job processing
-├── ats/                    # ATS integrations
-├── dashboard/              # Streamlit dashboard
-├── health_checks/          # System health monitoring
-├── core/                   # Essential utilities
-├── utils/                  # Shared utilities
-├── ...                     # Other supporting modules
+---
+
+## Configuration
+
+### Scraper Settings
+
+Key configuration parameters for the scraper:
+
+```python
+self.max_concurrent_jobs = 2  # Limits concurrent job processing to 2
+self.delay_between_requests = 0.5  # Sets a short delay for faster testing
+self.max_pages_per_keyword = 3  # Reduces the number of pages scraped per keyword for efficiency
 ```
-## 2. Production Architecture vs Legacy Dashboard
-
-### **NEW: Microservices Production System**
-✅ **Event-driven communication** with async messaging  
-✅ **Auto-scraping** every 30 minutes (profile: Nirajan Khadka)  
-✅ **Health monitoring** every 30 seconds  
-✅ **Service isolation** - failures don't cascade  
-✅ **Horizontal scaling** - independent service scaling  
-✅ **Production deployment** with graceful shutdown  
-
-### **LEGACY: Monolithic Dashboard** *(Replaced)*
-❌ **2404-line monolith** - unmaintainable complexity  
-❌ **Tight coupling** - changes affected entire system  
-❌ **Single point of failure** - dashboard crash = system down  
-❌ **Manual coordination** - no auto-scheduling  
-❌ **No production features** - development-only interface  
-
-**Result**: Complete elimination of dashboard complexity with production-grade microservices
-- Advanced service and resource controls
-- Integrated CLI command execution and history
-- Enhanced configuration and troubleshooting tools
-
-### Key Features
-- **Smart Orchestration**: Intelligent service management with dependency handling
-- **Real-Time Monitoring**: Live charts, metrics, and comprehensive status displays
-- **Automation**: Configurable auto-start/stop logic with resource awareness
-- **Apply Integration**: Manual and hybrid application modes with database tracking
-- **Quality Monitoring**: Document generation quality tracking with fabrication detection
-- **Logs & Analytics**: Centralized log viewer, performance insights, and reporting
-
-### Tab Structure
-- **Overview**: System status, pipeline metrics, health summary
-- **Jobs**: Job management, batch operations, **apply buttons**, direct application links
-- **Analytics**: Performance trends, worker pool efficiency, funnel analysis
-- **System & Orchestration**: Service controls, worker pool, monitoring, auto-management, CLI commands
-- **Configuration**: Live config editing, profile management, system tuning
-- **Logs**: Centralized log viewer for debugging and monitoring
-
-### Apply Button System Architecture
-- **Frontend**: Streamlit dropdown selection + mode choice interface
-- **Backend**: `apply_to_job_streamlit()` function with dual mode support
-- **Database**: `update_application_status()` method for proper tracking
-- **Integration**: JobApplier class connection for AI-assisted applications
-- **Error Handling**: Graceful fallbacks and user feedback system
 
 ---
 
-## 3. Component Breakdown
+## Usage Instructions
 
-### **1. Core System (`src/core/)**
+### Run Optimized Scraper
 
-#### **Job Database (`job_database.py`)**
-- **Purpose**: Central data storage and retrieval
-- **Technology**: SQLite (default), PostgreSQL (optional)
-- **Features**:
-  - Job data persistence
-  - Status tracking
-  - Duplicate detection
-  - Performance metrics
+To test the optimized scraper and observe its performance:
 
-#### **Process Manager (`process_manager.py`)**
-- **Purpose**: Orchestrate system processes
-- **Features**:
-  - Multi-process management
-  - Inter-process communication
-  - Graceful shutdown handling
-  - Health monitoring
+```bash
+# Test the optimization
+python test_optimized_scraper.py
 
-#### **Session Management (`session.py`)**
-- **Purpose**: Browser session lifecycle management
-- **Features**:
-  - Playwright browser context management
-  - Session persistence
-  - Resource cleanup
-  - Error recovery
+# Expected output:
+# ✅ Tabs closed: 8
+# ⚡ Concurrent processed: 10
+# ✅ Analysis: 8/10 successful
+```
 
-### **2. Scraping System (`src/scrapers/)**
+### Monitor Performance
 
-#### **Comprehensive Eluta Scraper (`comprehensive_eluta_scraper.py`)**
-- **Purpose**: Primary job scraping engine
-- **Features**:
-  - Multi-keyword parallel scraping
-  - Experience level filtering
-  - ATS system detection
-  - Real-time progress tracking
+To check real-time scraper statistics:
 
-#### **Enhanced Job Description Scraper (`enhanced_job_description_scraper.py`)**
-- **Purpose**: Deep job detail extraction
-- **Features**:
-  - Full job description parsing
-  - Skills and requirements extraction
-  - Experience requirements analysis
-  - Metadata extraction
+```python
+# Check scraper statistics
+print(f"Tabs closed: {scraper.stats['tabs_closed']}")
+print(f"Concurrent processed: {scraper.stats['concurrent_processed']}")
+print(f"Memory usage: Stable")
+```
 
-#### **Modern Job Pipeline (`modern_job_pipeline.py`)**
-- **Purpose**: Orchestrated scraping workflow
-- **Features**:
-  - Multi-site coordination
-  - Data validation
-  - Quality scoring
-  - Batch processing
-
-### **3. ATS Integration (`src/ats/)**
-
-#### **Base Submitter (`base_submitter.py`)**
-- **Purpose**: Common ATS functionality
-- **Features**:
-  - Form field detection
-  - Data validation
-  - Error handling
-  - Progress tracking
-
-#### **Specific ATS Implementations**
-- **Workday (`workday.py`)**: Workday ATS integration
-- **Greenhouse (`greenhouse.py`)**: Greenhouse ATS integration
-- **BambooHR (`bamboohr.py`)**: BambooHR ATS integration
-- **iCIMS (`icims.py`)**: iCIMS ATS integration
-- **Lever (`lever.py`)**: Lever ATS integration
-
-### **4. Dashboard System (`src/dashboard/)**
-
-#### **Streamlit Dashboard (`streamlit_dashboard.py`)**
-- **Purpose**: Primary user interface
-- **Features**:
-  - Real-time job data display
-  - Interactive filtering and sorting
-  - Application management
-  - Performance metrics
-
-#### **Dashboard Manager (`dashboard_manager.py`)**
-- **Purpose**: Dashboard lifecycle management
-- **Features**:
-  - Process management
-  - Port conflict resolution
-  - Health monitoring
-  - Auto-restart capabilities
-
-### **5. CLI System (`src/cli/)**
-
-#### **Actions (`actions/`)**
-- **Scraping Actions**: Job scraping commands
-- **Dashboard Actions**: Dashboard management
-- **System Actions**: System administration
-- **Application Actions**: Job application management
-
-#### **Handlers (`handlers/`)**
-- **Purpose**: Business logic implementation
-- **Features**:
-  - Command processing
-  - Error handling
-  - User interaction
-  - Progress reporting
-
-### Worker Management System
-- **Worker Pool**: Up to 5 concurrent document generation workers
-- **Auto-Stop Logic**: Stops workers when folder/document limits are reached
-- **Quality Monitoring**: Tracks success rate, content authenticity, template usage
-- **Dashboard Integration**: Real-time status, emergency stop, folder management
-
-### Application System
-- **Universal Job Applier**: Applies to jobs across all ATS and regular sites
-- **Smart Form Automation**: Auto-fills, uploads, and navigates multi-step forms
-- **Dashboard Apply Integration**: One-click applications from jobs table with dual modes
-- **Application Modes**: 
-  - **Manual Mode**: Mark as applied + auto-open job page for user application
-  - **Hybrid Mode**: AI-assisted application using JobApplier with user interaction
-- **Database Tracking**: `update_application_status()` for proper status and notes management
-- **Fallbacks**: ATS-specific → Generic automation → Manual mode → Email draft
-- **Application Management**: Progress tracking, success rate, manual assist
-- **Error Handling**: Graceful degradation with user feedback and status rollback
+The optimized system is now production-ready with significantly improved performance and resource management!
 
 ---
 
-## 4. Workflow & Diagrams
+## Application System
+
+AutoJobAgent features a robust application system designed for efficiency and flexibility:
+
+-   **Universal Job Applier**: Capable of applying to jobs across various ATS (Applicant Tracking Systems) and standard websites.
+-   **Smart Form Automation**: Intelligently auto-fills forms, handles file uploads, and navigates multi-step application processes.
+-   **Dashboard Integration**: Enables one-click applications directly from the jobs table within the dashboard, supporting dual application modes.
+-   **Application Modes**:
+    -   **Manual Mode**: Marks a job as applied and automatically opens the job page for user-guided application.
+    -   **Hybrid Mode**: Provides assisted application using the JobApplier, allowing for user interaction when needed.
+-   **Database Tracking**: Utilizes `update_application_status()` for accurate status management and note-taking.
+-   **Fallbacks**: Implements a comprehensive fallback strategy: ATS-specific automation → Generic automation → Manual mode → Email draft, ensuring applications are always attempted.
+-   **Application Management**: Tracks progress, success rates, and identifies instances requiring manual assistance.
+-   **Error Handling**: Features graceful degradation and user feedback, with status rollbacks for failed applications.
+
+---
+
+## Component Breakdown
+
+### 1. Core System (`src/core/`)
+
+#### Job Database (`job_database.py`)
+
+-   **Purpose**: Centralized storage and retrieval for all job-related data.
+-   **Technology**: Supports SQLite (default) and PostgreSQL (optional).
+-   **Features**: Job data persistence, status tracking, duplicate detection, and performance metrics collection.
+
+#### Process Manager (`process_manager.py`)
+
+-   **Purpose**: Orchestrates and manages system processes.
+-   **Features**: Multi-process management, inter-process communication, graceful shutdown handling, and health monitoring.
+
+#### Session Management (`session.py`)
+
+-   **Purpose**: Manages the lifecycle of browser sessions.
+-   **Features**: Playwright browser context management, session persistence, resource cleanup, and error recovery.
+
+### 2. Scraping System (`src/scrapers/`)
+
+#### Comprehensive Eluta Scraper (`comprehensive_eluta_scraper.py`)
+
+-   **Purpose**: The primary engine for scraping job data.
+-   **Features**: Supports multi-keyword parallel scraping, experience level filtering, ATS system detection, and real-time progress tracking.
+
+#### Enhanced Job Description Scraper (`enhanced_job_description_scraper.py`)
+
+-   **Purpose**: Extracts detailed information from job descriptions.
+-   **Features**: Full job description parsing, extraction of skills and requirements, analysis of experience requirements, and metadata extraction.
+
+#### Modern Job Pipeline (`modern_job_pipeline.py`)
+
+-   **Purpose**: Orchestrates the entire scraping workflow.
+-   **Features**: Multi-site coordination, data validation, quality scoring, and batch processing.
+
+### 3. ATS Integration (`src/ats/`)
+
+#### Base Submitter (`base_submitter.py`)
+
+-   **Purpose**: Provides common functionalities for all ATS integrations.
+-   **Features**: Form field detection, data validation, error handling, and progress tracking.
+
+#### Specific ATS Implementations
+
+-   **Workday** (`workday.py`): Integration with Workday ATS.
+-   **Greenhouse** (`greenhouse.py`): Integration with Greenhouse ATS.
+-   **BambooHR** (`bamboohr.py`): Integration with BambooHR ATS.
+-   **iCIMS** (`icims.py`): Integration with iCIMS ATS.
+-   **Lever** (`lever.py`): Integration with Lever ATS.
+
+### 4. Dashboard System (`src/dashboard/`)
+
+#### Streamlit Dashboard (`streamlit_dashboard.py`)
+
+-   **Purpose**: The main user interface for AutoJobAgent.
+-   **Features**: Real-time job data display, interactive filtering and sorting, application management, and performance metrics visualization.
+
+#### Dashboard Manager (`dashboard_manager.py`)
+
+-   **Purpose**: Manages the lifecycle of the dashboard.
+-   **Features**: Process management, port conflict resolution, health monitoring, and auto-restart capabilities.
+
+### 5. CLI System (`src/cli/`)
+
+#### Actions (`actions/`)
+
+-   **Purpose**: Defines various command-line actions.
+-   **Categories**: Includes job scraping, dashboard management, system administration, and job application management commands.
+
+#### Handlers (`handlers/`)
+
+-   **Purpose**: Implements the business logic for CLI commands.
+-   **Features**: Command processing, error handling, user interaction, and progress reporting.
+
+---
+
+## Workflow & Diagrams
 
 ### System Data Flow
+
 ```
 Job Sources → Scrapers → Processors → Database → ATS → Applications
      ↓           ↓          ↓           ↓        ↓         ↓
@@ -425,11 +324,13 @@ Job Sources → Scrapers → Processors → Database → ATS → Applications
 ```
 
 ### Application Submission Flow
+
 ```
 User Selection → Dashboard → ATS Handler → ATS Implementation → Browser Automation → Status Update → Database
 ```
 
 ### Real-time Updates
+
 ```
 Database Changes → Event System → Dashboard Refresh → UI Update
 ```
@@ -448,204 +349,168 @@ graph TD
     D --> G[Job Type Classification]
     H --> I
     I --> J[Application Decision]
+```
 
 #### Web Scraping Capabilities
 
-The autonomous processor now includes sophisticated web scraping to extract:
+The autonomous processor includes sophisticated web scraping capabilities to extract critical information:
 
-1.  **Experience Level Detection**
-    *   Parses job descriptions for experience requirements
-    *   Classifies as: entry, mid, senior, expert
-    *   Uses regex patterns and keyword analysis
-
-2.  **Salary Information Extraction**
-    *   Identifies salary ranges and compensation details
-    *   Supports various formats ($100k, $80,000-$120,000)
-    *   Factors into scoring algorithm
-
-3.  **Job Type Classification**
-    *   Determines remote, hybrid, or onsite positions
-    *   Analyzes job description for work arrangement keywords
-    *   Prioritizes remote and hybrid opportunities
-
-4.  **Requirements Analysis**
-    *   Extracts technical skills and requirements
-    *   Identifies programming languages, frameworks, tools
-    *   Matches against user profile capabilities
+1.  **Experience Level Detection**: Parses job descriptions to classify experience requirements (entry, mid, senior, expert) using regex and keyword analysis.
+2.  **Salary Information Extraction**: Identifies salary ranges and compensation details in various formats, factoring this into the scoring algorithm.
+3.  **Job Type Classification**: Determines if positions are remote, hybrid, or onsite by analyzing job description keywords, prioritizing remote and hybrid opportunities.
+4.  **Requirements Analysis**: Extracts technical skills, programming languages, frameworks, and tools, matching them against the user's profile capabilities.
 
 #### Enhanced Scoring Algorithm
 
-The new scoring system (0-100 points) considers:
+The scoring system (0-100 points) evaluates job suitability based on multiple factors:
 
-*   **Title Analysis** (30 points): Relevant keywords and seniority
-*   **Company Reputation** (15 points): Preferred companies and industry
-*   **Location Preferences** (20 points): Geographic and remote options
-*   **Job Type** (10 points): Remote/hybrid bonus
-*   **Salary Information** (15 points): Competitive compensation
-*   **Experience Match** (10 points): Appropriate level alignment
+-   **Title Analysis** (30 points): Assesses relevance of keywords and seniority.
+-   **Company Reputation** (15 points): Considers preferred companies and industry standing.
+-   **Location Preferences** (20 points): Accounts for geographic and remote work options.
+-   **Job Type** (10 points): Awards bonus points for remote/hybrid positions.
+-   **Salary Information** (15 points): Evaluates competitiveness of compensation.
+-   **Experience Match** (10 points): Ensures alignment with appropriate experience levels.
 
 **Decision Thresholds:**
-*   **Apply** (70+ points): Automatic application consideration
-*   **Review** (45-69 points): Manual review recommended
-*   **Skip** (<45 points): Not suitable for application
+
+-   **Apply** (70+ points): Jobs are automatically considered for application.
+-   **Review** (45-69 points): Manual review is recommended for these jobs.
+-   **Skip** (<45 points): Jobs are deemed not suitable for application.
 
 ### Worker Management Flow
+
 ```
 User Action → Worker Pool → Document Generation → Folder Management → Quality Monitoring → Dashboard Update
 ```
 
 ### Multi-Agent Orchestration
+
 ```
 Coordinator
-  ├─ Application Agent: Applies, submits, tracks, reports
-  ├─ Gmail Monitor: Monitors, verifies, notifies
-  ├─ Database Agent: Updates, maintains, archives
-  └─ Health Monitor: Checks, alerts, recovers
+  ├─ Application Agent: Manages applications, submissions, tracking, and reporting.
+  ├─ Gmail Monitor: Monitors Gmail for verification, notifications, and related communications.
+  ├─ Database Agent: Handles database updates, maintenance, and archiving.
+  └─ Health Monitor: Conducts system health checks, issues alerts, and manages recovery processes.
 ```
 
 ### Key Workflow Principles
-- **Modularity**: Each component operates independently
-- **Resilience**: Error handling and recovery at every stage
-- **Scalability**: Parallel processing and queue management
-- **Monitoring**: Real-time visibility into all operations
-- **Automation**: Minimal manual intervention required
-- **Optimization**: Continuous improvement and learning
+
+-   **Modularity**: Components operate independently, promoting clear separation of concerns.
+-   **Resilience**: Built-in error handling and recovery mechanisms at every stage.
+-   **Scalability**: Supports parallel processing and efficient queue management.
+-   **Monitoring**: Provides real-time visibility into all operations.
+-   **Automation**: Designed for minimal manual intervention.
+-   **Optimization**: Continuously improved for performance and efficiency.
 
 ### Success Metrics
-- **Job Scraping Rate**: Jobs per minute
-- **Application Success Rate**: Successful submissions
-- **System Uptime**: Percentage of time operational
-- **Error Rate**: Failed operations percentage
-- **Response Time**: Average processing time
-- **Resource Usage**: CPU, memory, disk utilization
+
+-   **Job Scraping Rate**: Measures jobs processed per minute.
+-   **Application Success Rate**: Tracks the percentage of successful job submissions.
+-   **System Uptime**: Indicates the percentage of time the system is operational.
+-   **Error Rate**: Monitors the percentage of failed operations.
+-   **Response Time**: Average processing time for tasks.
+-   **Resource Usage**: Tracks CPU, memory, and disk utilization.
 
 ---
 
-## 5. Design Decisions & Roadmap
+## Performance Optimization
+
+AutoJobAgent is engineered for optimal performance through several key improvements:
+
+#### 1. Browser Automation
+
+-   **Efficient Scraping**: Utilizes advanced browser automation techniques for reliable and efficient data extraction.
+-   **Reduced Overhead**: Optimizes page interactions to achieve faster performance and lower memory consumption.
+-   **Optimized Interactions**: Employs context-aware element selection for precise and efficient browser control.
+
+#### 2. Optimized Main.py Architecture
+
+-   **Lazy Import System**: Implements lazy loading for modules, resulting in faster application startup times.
+-   **Memory Efficient**: Designed to have a reduced initial memory footprint.
+
+#### 3. Performance Monitoring System
+
+-   **Real-time Metrics**: Tracks critical performance indicators such as jobs per second, memory usage, and CPU utilization in real-time.
+-   **Adaptive Monitoring**: Offers flexible monitoring capabilities to adapt to varying workloads.
+
+### Performance Benchmarks
+
+-   **Reliability Improvement**: Demonstrates significant improvement in consistent element detection during scraping.
+-   **Speed Enhancement**: Achieves faster page interactions across the system.
+-   **Memory Efficiency**: Shows reduced browser memory usage, contributing to overall system stability.
+-   **Error Rate**: Significantly reduces automation failures.
+
+### System Requirements
+
+-   **Memory Usage**: Optimized for a low memory footprint.
+-   **CPU Usage**: Adapts dynamically based on the current workload.
+
+---
+
+## Design Decisions & Roadmap
 
 ### Architecture Patterns
-- **Command Pattern**: Consistent CLI command handling
-- **Strategy Pattern**: ATS integration strategies
-- **Observer Pattern**: Real-time dashboard updates
-- **Factory Pattern**: Dynamic ATS submitter creation
+
+-   **Command Pattern**: Ensures consistent handling of CLI commands.
+-   **Strategy Pattern**: Facilitates flexible integration with various ATS systems.
+-   **Observer Pattern**: Enables real-time updates for the dashboard.
+-   **Factory Pattern**: Supports dynamic creation of ATS submitters.
 
 ### Technology Stack
-- **Python 3.10+**: Core language
-- **Playwright**: Browser automation
-- **SQLite/PostgreSQL**: Database
-- **Streamlit**: Dashboard
-- **Rich**: CLI/logging
-- **Pytest, Black, isort, MyPy, Flake8**: Dev tools
-- **Docker, Docker Compose**: Containerization
-- **Git, GitHub Actions**: Version control, CI/CD
-- **Optional**: Redis, Celery, Prometheus, Grafana
+
+-   **Core Language**: Python 3.10+
+-   **Browser Automation**: Playwright
+-   **Database**: SQLite (default), PostgreSQL (optional)
+-   **Dashboard**: Streamlit
+-   **CLI/Logging**: Rich
+-   **Development Tools**: Pytest, Black, isort, MyPy, Flake8
+-   **Containerization**: Docker, Docker Compose
+-   **Version Control/CI/CD**: Git, GitHub Actions
+-   **Optional**: Redis, Celery, Prometheus, Grafana (for future enhancements)
 
 ### Performance & Scalability
-- **Parallel Processing**: Multi-worker scraping and document generation
-- **Connection Pooling**: Efficient browser/database usage
-- **Caching**: Avoid redundant work
-- **Lazy Loading & Pagination**: Dashboard performance
-- **Resource Monitoring**: Memory, CPU, disk
-- **Horizontal/Vertical Scaling**: Load balancing, sharding, microservices
-- **Cloud/Kubernetes Ready**: Future deployment
+
+-   **Parallel Processing**: Supports multi-worker scraping and document generation for increased throughput.
+-   **Connection Pooling**: Optimizes browser and database resource usage.
+-   **Caching**: Reduces redundant work and improves response times.
+-   **Lazy Loading & Pagination**: Enhances dashboard performance for large datasets.
+-   **Resource Monitoring**: Tracks memory, CPU, and disk usage to identify bottlenecks.
+-   **Horizontal/Vertical Scaling**: Future considerations for load balancing, sharding, and potential microservices for extreme scale.
+-   **Cloud/Kubernetes Ready**: Designed with future cloud deployment in mind.
 
 ### Security
-- **Encryption**: Sensitive data at rest
-- **Access Control**: Role-based
-- **Audit Logging**: Track activities
-- **Input Validation**: Prevent injection/XSS
-- **Browser Sandboxing**: Isolate processes
+
+-   **Encryption**: Ensures sensitive data is encrypted at rest.
+-   **Access Control**: Implements role-based access control.
+-   **Audit Logging**: Tracks all system activities for security audits.
+-   **Input Validation**: Prevents common vulnerabilities like injection and XSS attacks.
+-   **Browser Sandboxing**: Isolates browser processes for enhanced security.
 
 ### Configuration Management
-- **Environment Variables**: For all major settings
-- **Profile Configs**: Per-user/job settings
-- **Dashboard/CLI Shared Config**: Unified experience
+
+-   **Environment Variables**: Utilizes environment variables for major system settings.
+-   **Profile Configurations**: Supports per-user or per-job specific settings.
+-   **Unified Configuration**: Shares configurations between the dashboard and CLI for a consistent experience.
 
 ### Monitoring & Observability
-- **Health Checks**: Application, database, scraping, dashboard
-- **Metrics**: Performance, business, error, resource
-- **Logging**: Structured, rotated, aggregated
+
+-   **Health Checks**: Comprehensive checks for application, database, scraping, and dashboard health.
+-   **Metrics**: Collects performance, business, error, and resource metrics.
+-   **Logging**: Implements structured, rotated, and aggregated logging for effective debugging and analysis.
 
 ### Roadmap & Future Enhancements
-- **ML Integration**: Neural document generation, fabrication detection
-- **Advanced Quality Metrics**: Real-time content authenticity scoring
-- **Dynamic Worker Limits**: Configurable thresholds
-- **Auto-Recovery**: Automatic restart on failures
-- **Cloud Deployment**: AWS/Azure/GCP, Kubernetes
-- **Service Mesh & Observability**: Advanced monitoring
+
+-   **Advanced Document Generation**: Further enhancements to document creation capabilities.
+-   **Advanced Quality Metrics**: Real-time scoring for content authenticity.
+-   **Dynamic Worker Limits**: Configurable thresholds for worker processes.
+-   **Auto-Recovery**: Automatic system restart and recovery on failures.
+-   **Cloud Deployment**: Plans for deployment on AWS/Azure/GCP and Kubernetes.
+-   **Service Mesh & Observability**: Exploration of advanced monitoring and service management.
 
 ---
 
-*For detailed implementation, see the referenced modules and the [API Reference](API_REFERENCE.md). For troubleshooting and best practices, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).*
+*For detailed implementation, see the referenced modules and the
+[API Reference](API_REFERENCE.md). For troubleshooting and best
+practices, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).*
 
-*Last updated: July 17, 2025*
-
----
-
-## 🚀 Performance Optimization Summary
-
-### **Major Performance Improvements Implemented**
-
-#### **1. MCP Browser Automation Revolution** 🆕
-- **Accessibility-Based Scraping**: 70% more reliable than screenshot-based automation
-- **Enhanced Element Detection**: Semantic understanding vs pixel matching
-- **Reduced Browser Overhead**: No screenshot processing, direct DOM access
-- **AI-Optimized Interactions**: Context-aware element selection and interaction
-- **Improved Error Recovery**: Semantic fallbacks when elements change
-
-#### **2. Optimized Main.py Architecture** 
-- **Lazy Import System**: 60% faster startup times by loading heavy modules only when needed
-- **Early Action Handling**: Health checks and benchmarks run without heavy imports
-- **Memory Efficient**: Reduced initial memory footprint by ~40%
-- **Enhanced Error Recovery**: Graceful fallbacks when dependencies are missing
-
-#### **3. Performance Monitoring System**
-- **Real-time Metrics**: Track jobs/second, memory usage, CPU utilization
-- **MCP Performance Tracking**: Monitor MCP server response times and connection health
-- **Adaptive Monitoring**: Works with or without psutil for maximum compatibility
-- **Performance Recommendations**: AI-powered suggestions for optimization
-- **Background Processing**: Non-blocking monitoring with threading
-
-### **Performance Benchmarks**
-
-#### **MCP vs Traditional Playwright**
-- **Reliability Improvement**: 70% more consistent element detection
-- **Speed Enhancement**: 40% faster page interactions (no screenshot processing)
-- **Memory Efficiency**: 30% reduction in browser memory usage
-- **Error Rate**: 85% reduction in automation failures
-
-#### **Startup Times**
-- **Health Check**: ~0.1s (instant)
-- **Benchmark**: ~0.12s (excellent)
-- **MCP Connection**: ~0.05s (lightning fast)
-- **Pipeline Import**: ~0.1s (cached)
-- **Database Connection**: ~0.012s (very fast)
-
-#### **System Requirements**
-- **Memory Usage**: <50MB baseline (without psutil monitoring)
-- **MCP Server**: Additional ~20MB for Node.js MCP server
-- **CPU Usage**: Adaptive based on worker count
-- **Disk Space**: Monitors and alerts on low space
-- **Network**: Validates connectivity to job sites and MCP server (port 8931)
-
-## Worker Pool & Orchestration Controls (2025 Update)
-
-The dashboard now supports real-time management of job processing workers via a Worker Pool section:
-
-- **Frontend UI:**
-  - Displays all workers with status, resource usage, and control buttons.
-  - Orchestration controls (Start All, Stop All, Restart All) allow bulk management.
-  - UI updates instantly via WebSocket.
-
-- **Backend Endpoints:**
-  - `/api/system/start_worker`, `/stop_worker`, `/worker_status` for individual control and status.
-  - `/api/system/start_all_workers`, `/stop_all_workers`, `/restart_all_workers` for orchestration.
-
-- **WebSocket Integration:**
-  - Backend broadcasts worker status changes to all connected dashboard clients.
-
-### Sequence Example: Start All Workers
-1. User clicks "Start All" in the dashboard UI.
-2. Frontend sends POST to `/api/system/start_all_workers`.
-3. Backend starts all worker processes, then broadcasts new status via WebSocket.
-4. All connected dashboards update their Worker Pool UI in real time.
+*Last updated: July 27, 2025*

@@ -1,0 +1,136 @@
+{
+    "description_fetcher": {
+        "num_workers": 10,
+        "batch_size": 20,
+        "rate_limit": 100,
+        "retry_attempts": 3,
+        "timeout_seconds": 30,
+        "max_concurrent_connections": 50,
+        "connection_pool_size": 10
+    },
+    "job_processor": {
+        "batch_size": 20,
+        "analysis_method": "hybrid",
+        "gpu_enabled": true,
+        "compatibility_threshold": 0.7,
+        "max_analysis_time": 10,
+        "retry_attempts": 2
+    },
+    "queue_system": {
+        "max_queue_size": 10000,
+        "backpressure_threshold": 0.8,
+        "job_expiration_hours": 24,
+        "dead_letter_ttl_hours": 168,
+        "priority_levels": 5,
+        "sync_interval_seconds": 1,
+        "cleanup_interval_seconds": 60
+    },
+    "performance": {
+        "enable_monitoring": true,
+        "metrics_interval_seconds": 5,
+        "memory_limit_mb": 1024,
+        "cpu_limit_percent": 80,
+        "enable_profiling": false,
+        "log_slow_operations": true,
+        "slow_operation_threshold": 5.0
+    },
+    "redis": {
+        "url": "redis://localhost:6379/0",
+        "pool_size": 10,
+        "max_connections": 50,
+        "retry_on_timeout": true,
+        "health_check_interval": 30,
+        "connection_timeout": 5,
+        "read_timeout": 5,
+        "write_timeout": 5
+    },
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "file": "logs/optimized_pipeline.log",
+        "max_file_size_mb": 100,
+        "backup_count": 5,
+        "enable_console": true
+    },
+    "dashboard": {
+        "enable_real_time_monitoring": true,
+        "update_interval_seconds": 2,
+        "max_metrics_history": 1000,
+        "enable_alerts": true,
+        "alert_thresholds": {
+            "queue_depth_warning": 1000,
+            "queue_depth_critical": 5000,
+            "error_rate_warning": 0.05,
+            "error_rate_critical": 0.1,
+            "memory_usage_warning": 0.8,
+            "memory_usage_critical": 0.95
+        }
+    },
+    "gpu": {
+        "enabled": true,
+        "device_id": 0,
+        "batch_size": 32,
+        "memory_limit_gb": 8,
+        "fallback_to_cpu": true,
+        "model_path": "models/job_analyzer.gguf",
+        "quantization": "q4_k_m"
+    },
+    "caching": {
+        "enable_description_cache": true,
+        "description_cache_ttl_hours": 24,
+        "cache_size_limit": 10000,
+        "enable_analysis_cache": true,
+        "analysis_cache_ttl_hours": 12,
+        "cache_cleanup_interval_hours": 1
+    },
+    "error_handling": {
+        "max_retries": 3,
+        "retry_delay_seconds": 2,
+        "exponential_backoff": true,
+        "circuit_breaker_enabled": true,
+        "circuit_breaker_threshold": 5,
+        "circuit_breaker_timeout_seconds": 60,
+        "dead_letter_queue_enabled": true
+    },
+    "monitoring": {
+        "enable_health_checks": true,
+        "health_check_interval_seconds": 30,
+        "enable_performance_metrics": true,
+        "enable_resource_monitoring": true,
+        "enable_queue_monitoring": true,
+        "enable_worker_monitoring": true,
+        "metrics_retention_days": 7
+    },
+    "profiles": {
+        "default": {
+            "description_fetcher": {
+                "num_workers": 5,
+                "batch_size": 10
+            },
+            "job_processor": {
+                "batch_size": 10,
+                "compatibility_threshold": 0.6
+            }
+        },
+        "high_performance": {
+            "description_fetcher": {
+                "num_workers": 15,
+                "batch_size": 30
+            },
+            "job_processor": {
+                "batch_size": 30,
+                "compatibility_threshold": 0.8
+            }
+        },
+        "conservative": {
+            "description_fetcher": {
+                "num_workers": 3,
+                "batch_size": 5
+            },
+            "job_processor": {
+                "batch_size": 5,
+                "compatibility_threshold": 0.5
+            }
+        }
+    }
+} 

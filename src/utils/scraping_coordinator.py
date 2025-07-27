@@ -6,8 +6,8 @@ from src.core.job_database import get_job_db
 from src.scrapers.cache import ScrapingCache
 from src.scrapers.metrics import ScrapingMetrics
 
-# Assuming a generic scraper interface
-from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
+# Using the unified scraper interface
+from src.scrapers.unified_eluta_scraper import UnifiedElutaScraper
 
 console = Console()
 
@@ -49,7 +49,7 @@ class OptimizedScrapingCoordinator:
 
     def _scrape_single_keyword(self, keyword: str, site: str) -> List[Dict]:
         # Create scraper with profile name
-        scraper = ComprehensiveElutaScraper(self.profile_name)
+        scraper = UnifiedElutaScraper(self.profile_name)
         # For now, return empty list since scrape_all_keywords is async
         # In a real implementation, this would need to be handled differently
         return []

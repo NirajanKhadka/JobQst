@@ -72,9 +72,9 @@ Performance Optimized Examples:
     )
     parser.add_argument(
         "--action",
-        choices=["scrape", "dashboard", "interactive", "benchmark", "apply", "process-jobs", "generate-docs", "shutdown", "pipeline", "health-check"],
+        choices=["scrape", "dashboard", "interactive", "benchmark", "apply", "process-jobs", "fetch-descriptions", "analyze-jobs", "generate-docs", "shutdown", "pipeline", "health-check", "fast-pipeline"],
         default="interactive",
-        help="Action to perform (new: pipeline, health-check)",
+        help="Action to perform: scrape (get jobs), apply (submit applications), process-jobs (optimized pipeline with 10 workers), fetch-descriptions (fetch only), analyze-jobs (analyze only), generate-docs (create documents), shutdown (stop dashboard), interactive (dashboard + CLI)",
     )
     parser.add_argument(
         "--sites", help="Comma-separated list of sites (eluta, indeed, linkedin, monster, towardsai)"
@@ -89,41 +89,103 @@ Performance Optimized Examples:
     parser.add_argument("--workers", type=int, default=4, help="Number of worker processes (default: 4)")
     parser.add_argument("--timeout", type=int, default=30, help="Request timeout in seconds (default: 30)")
     parser.add_argument("--retry-attempts", type=int, default=3, help="Number of retry attempts (default: 3)")
+    
+    # Fast pipeline specific options
+    parser.add_argument("--processing-method", choices=["auto", "gpu", "hybrid", "rule_based"], 
+                       default="auto", help="Job processing method for fast pipeline")
+    parser.add_argument("--external-workers", type=int, default=6, help="External scraping workers for fast pipeline")
 
     return parser.parse_args()
 
 
 async def run_optimized_scraping(profile: Dict[str, Any], args) -> bool:
-    """Run simple, reliable scraping using the original Eluta scraper."""
+    """Run optimized scraping using the Core Eluta scraper with 5-tab optimization."""
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
-        task = progress.add_task("🚀 Starting unified Eluta scraping...", total=None)
+        task = progress.add_task("🚀 Starting Core Eluta scraping with 5-tab optimization...", total=None)
         try:
-            from src.scrapers.unified_eluta_scraper import run_unified_eluta_scraper
-            # Build config for unified scraper
+            from src.scrapers.core_eluta_scraper import run_core_eluta_scraper
+            
+            # Build config for core scraper with 5-tab optimization
             config = {
                 "headless": args.headless,
                 "pages": args.pages,
                 "jobs": args.jobs,
-                "workers": args.workers,
-                "delay": 1,
+                "delay": 1.0,
+                "days": getattr(args, "days", 14),
+                "enable_ai": True,  # Enable AI analysis by default
+                "entry_level_only": False,
+                "max_extra_tabs": 5,  # 5-tab threshold optimization
+                "tab_monitoring_interval": 3,  # Monitor every 3 jobs
             }
-            progress.update(task, description="⚙️ Initializing Unified Eluta Scraper...")
-            jobs = await run_unified_eluta_scraper(profile["profile_name"], config)
+            
+            progress.update(task, description="⚙️ Initializing Core Eluta Scraper with 5-tab optimization...")
+            jobs = await run_core_eluta_scraper(profile["profile_name"], config)
             jobs_found = len(jobs) if jobs else 0
-            progress.update(task, description=f"🎉 Scraping completed! Found {jobs_found} total jobs")
+            progress.update(task, description=f"🎉 Scraping completed! Found {jobs_found} total jobs with optimized tab management")
+            
             if jobs_found > 0:
-                console.print(f"\n✅ [bold green]Successfully scraped {jobs_found} jobs![/bold green]")
+                console.print(f"\n✅ [bold green]Successfully scraped {jobs_found} jobs with 5-tab optimization![/bold green]")
                 console.print(f"💾 [cyan]Jobs saved to: profiles/{profile['profile_name']}/{profile['profile_name']}.db[/cyan]")
+                console.print(f"🧹 [yellow]Memory optimized: Tabs cleaned up automatically at 5-tab threshold[/yellow]")
                 return True
             else:
                 console.print(f"\n⚠️ [yellow]No jobs found. Try different keywords or check your internet connection.[/yellow]")
                 return False
         except Exception as e:
-            console.print(f"\n❌ [red]Unified Eluta scraping failed: {str(e)}[/red]")
+            console.print(f"\n❌ [red]Core Eluta scraping failed: {str(e)}[/red]")
+            console.print(f"💡 [cyan]Tip: The new Core Eluta scraper includes 5-tab optimization for better performance[/cyan]")
+            return False
+
+
+async def run_fast_pipeline(profile: Dict[str, Any], args) -> bool:
+    """Run the new fast 3-phase pipeline (DEFAULT)."""
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("🚀 Starting Fast 3-Phase Pipeline...", total=None)
+        try:
+            from src.pipeline.fast_job_pipeline import FastJobPipeline
+            
+            # Build config for fast pipeline
+            pipeline_config = {
+                "eluta_pages": args.pages,
+                "eluta_jobs": args.jobs,
+                "external_workers": getattr(args, "external_workers", 6),
+                "processing_method": getattr(args, "processing_method", "auto"),
+                "save_to_database": True,
+                "enable_duplicate_check": True,
+            }
+            
+            progress.update(task, description="⚙️ Initializing Fast 3-Phase Pipeline...")
+            pipeline = FastJobPipeline(profile["profile_name"], pipeline_config)
+            
+            progress.update(task, description="🔄 Running complete pipeline (URL collection → Parallel scraping → GPU processing)...")
+            results = await pipeline.run_complete_pipeline(args.jobs)
+            
+            jobs_found = len(results) if results else 0
+            progress.update(task, description=f"🎉 Fast pipeline completed! Processed {jobs_found} jobs")
+            
+            if jobs_found > 0:
+                stats = pipeline.get_stats()
+                console.print(f"\n✅ [bold green]Fast pipeline completed successfully![/bold green]")
+                console.print(f"📊 [cyan]Jobs processed: {jobs_found}[/cyan]")
+                console.print(f"⚡ [cyan]Total time: {stats['total_processing_time']:.1f}s[/cyan]")
+                console.print(f"🚀 [cyan]Speed: {stats['jobs_per_second']:.1f} jobs/sec[/cyan]")
+                console.print(f"🧠 [cyan]Processing method: {stats['processing_method_used']}[/cyan]")
+                console.print(f"💾 [cyan]Saved to database: {stats['jobs_saved']} jobs[/cyan]")
+                return True
+            else:
+                console.print(f"\n⚠️ [yellow]No jobs processed. Check your keywords or internet connection.[/yellow]")
+                return False
+        except Exception as e:
+            console.print(f"\n❌ [red]Fast pipeline failed: {str(e)}[/red]")
+            console.print(f"💡 [cyan]Tip: Try --processing-method rule_based if GPU processing fails[/cyan]")
             return False
 
 
@@ -257,19 +319,24 @@ if __name__ == "__main__":
         
         console.print("\n[cyan]Performance Optimized Examples:[/cyan]")
         console.print("  python main.py Nirajan --action health-check         # System diagnostics")
-        console.print("  python main.py Nirajan --action pipeline             # Direct pipeline access")
-        console.print("  python main.py Nirajan --action scrape --headless    # Fast headless scraping")
-        console.print("  python main.py Nirajan --action scrape --workers 8   # High-performance mode")
+        console.print("  python main.py Nirajan --action scrape               # Scrape job URLs")
+        console.print("  python main.py Nirajan --action fetch-descriptions   # NEW: Fetch job descriptions only")
+        console.print("  python main.py Nirajan --action analyze-jobs         # NEW: Analyze jobs with descriptions")
+        console.print("  python main.py Nirajan --action process-jobs         # Complete processing pipeline")
+        console.print("  python main.py Nirajan --action apply                # Apply to queued jobs")
         console.print("  python main.py Nirajan --action benchmark            # Performance testing")
         
         console.print("\n[green]🚀 Performance Features:[/green]")
+        console.print("  • NEW: Fast 3-phase pipeline (4-5x faster)")
+        console.print("  • Parallel external job scraping (6+ workers)")
+        console.print("  • GPU-accelerated job processing")
         console.print("  • Lazy loading for 60% faster startup")
         console.print("  • Memory-optimized worker pools")
         console.print("  • Real-time performance monitoring")
         console.print("  • Adaptive error recovery")
         console.print("  • Intelligent caching system")
         
-        console.print("\n[yellow]💡 Pro Tip:[/yellow] Use --headless --workers 8 for maximum performance!")
+        console.print("\n[yellow]💡 Pro Tip:[/yellow] Use --action fast-pipeline --external-workers 8 for maximum performance!")
         sys.exit(0)
 
     # Get profile name from command line argument
@@ -397,49 +464,38 @@ if __name__ == "__main__":
         sys.exit(0 if success else 1)
         
     elif args.action == "pipeline":
-        # Direct pipeline access with async execution
-        console.print("[bold blue]🚀 Direct Pipeline Access[/bold blue]")
+        # Direct pipeline access with async execution (legacy)
+        console.print("[bold blue]🚀 Direct Pipeline Access (Legacy)[/bold blue]")
         success = asyncio.run(run_optimized_scraping(profile, args))
         sys.exit(0 if success else 1)
         
-    elif args.action == "scrape":
-        # Enhanced scraping with performance monitoring
-        console.print("[bold blue]🔍 Optimized Scraping Mode[/bold blue]")
+    elif args.action == "fast-pipeline":
+        # NEW: Fast 3-phase pipeline (DEFAULT)
+        console.print("[bold blue]⚡ Fast 3-Phase Pipeline (NEW DEFAULT)[/bold blue]")
+        success = asyncio.run(run_fast_pipeline(profile, args))
+        sys.exit(0 if success else 1)
         
-        # Choose between async pipeline or legacy actions based on performance
-        if args.workers > 1 or args.headless:
-            # Use new optimized pipeline for high-performance scenarios
-            success = asyncio.run(run_optimized_scraping(profile, args))
-        else:
-            # Use legacy actions for compatibility
-            actions = ScrapingActions(profile)
-            
-            # Override keywords if provided
-            if args.keywords:
-                profile["keywords"] = [k.strip() for k in args.keywords.split(",")]
-                if args.verbose:
-                    console.print(f"[cyan]Using custom keywords: {profile['keywords']}[/cyan]")
-
-            # Override batch size if provided
-            if args.batch:
-                profile["batch_default"] = args.batch
-                if args.verbose:
-                    console.print(f"[cyan]Batch size: {args.batch} jobs[/cyan]")
-
-            # Show scraping parameters
+    elif args.action == "scrape":
+        # Enhanced scraping with performance monitoring - NOW USES FAST PIPELINE BY DEFAULT
+        console.print("[bold blue]🔍 Enhanced Scraping Mode (Fast 3-Phase Pipeline)[/bold blue]")
+        
+        # Override keywords if provided
+        if args.keywords:
+            profile["keywords"] = [k.strip() for k in args.keywords.split(",")]
             if args.verbose:
-                console.print(f"[yellow]📅 Scraping Parameters:[/yellow]")
-                console.print(f"  Days: {args.days}")
-                console.print(f"  Pages per keyword: {args.pages}")
-                console.print(f"  Jobs per keyword: {args.jobs}")
+                console.print(f"[cyan]Using custom keywords: {profile['keywords']}[/cyan]")
 
-            # Execute scraping
-            success = actions.scraping_handler.run_scraping(
-                mode="multi_worker",
-                days=args.days,
-                pages=args.pages,
-                jobs=args.jobs
-            )
+        # Show scraping parameters
+        if args.verbose:
+            console.print(f"[yellow]📅 Scraping Parameters:[/yellow]")
+            console.print(f"  Days: {args.days}")
+            console.print(f"  Pages per keyword: {args.pages}")
+            console.print(f"  Jobs per keyword: {args.jobs}")
+            console.print(f"  External workers: {getattr(args, 'external_workers', 6)}")
+            console.print(f"  Processing method: {getattr(args, 'processing_method', 'auto')}")
+
+        # Use fast 3-phase pipeline by default (4-5x faster)
+        success = asyncio.run(run_fast_pipeline(profile, args))
 
         if success:
             console.print("[green]✅ Scraping completed successfully![/green]")
@@ -562,16 +618,108 @@ if __name__ == "__main__":
             )
             
     elif args.action == "process-jobs":
-        console.print("[bold blue]🔧 Processing Pending Jobs[/bold blue]")
+        console.print("[bold blue]🔄 Processing Scraped Jobs (Optimized Pipeline)[/bold blue]")
         try:
-            # Use job processor queue directly
-            from src.core.job_processor_queue import JobProcessorQueue
-            processor = JobProcessorQueue(profile_name, args.workers)
-            processor.start()
-            console.print("[cyan]Started job processor queue with background processing[/cyan]")
-            console.print("[green]✅ Job processing complete.[/green]")
+            from src.orchestration.description_fetcher_orchestrator import process_scraped_jobs_with_orchestrator
+            from src.orchestration.job_processor_orchestrator import process_jobs_with_orchestrator
+            
+            # Step 1: Fetch descriptions with 10-worker orchestrator
+            console.print("[cyan]📋 Step 1: Fetching job descriptions with 10 workers...[/cyan]")
+            limit = args.batch if args.batch else None
+            fetch_stats = asyncio.run(process_scraped_jobs_with_orchestrator(profile_name, limit))
+            
+            if fetch_stats["total_descriptions_fetched"] > 0:
+                console.print(f"[green]✅ Successfully fetched {fetch_stats['total_descriptions_fetched']} descriptions![/green]")
+                console.print(f"[green]📝 Success rate: {fetch_stats['success_rate']:.1f}%[/green]")
+                
+                # Step 2: Process jobs with batch analysis
+                console.print("[cyan]🧠 Step 2: Analyzing jobs with batch processing...[/cyan]")
+                batch_size = args.batch if args.batch else 20
+                process_stats = asyncio.run(process_jobs_with_orchestrator(profile_name, batch_size))
+                
+                if process_stats["total_jobs_analyzed"] > 0:
+                    console.print(f"[green]✅ Successfully analyzed {process_stats['total_jobs_analyzed']} jobs![/green]")
+                    console.print(f"[green]📝 {process_stats['total_jobs_queued']} jobs queued for application[/green]")
+                    console.print(f"[green]📊 Success rate: {process_stats['success_rate']:.1f}%[/green]")
+                else:
+                    console.print("[yellow]⚠️ No jobs were analyzed.[/yellow]")
+            else:
+                console.print("[yellow]⚠️ No descriptions were fetched. Check if you have scraped jobs in database.[/yellow]")
+                
         except Exception as e:
-            console.print(f"[red]❌ An error occurred during job processing: {e}[/red]")
+            console.print(f"[red]❌ Job processing failed: {e}[/red]")
+            
+    elif args.action == "fetch-descriptions":
+        console.print("[bold blue]🌐 Fetching Job Descriptions Only[/bold blue]")
+        try:
+            from src.orchestration.simple_job_orchestrator import fetch_descriptions_only
+            
+            # Fetch descriptions for scraped jobs
+            limit = args.batch if args.batch else None
+            stats = asyncio.run(fetch_descriptions_only(profile_name, limit))
+            
+            console.print(f"[green]✅ Description fetching completed in {stats['processing_time']:.1f}s[/green]")
+            console.print("[cyan]💡 Jobs now have status 'description_saved' and are ready for analysis[/cyan]")
+                
+        except Exception as e:
+            console.print(f"[red]❌ Description fetching failed: {e}[/red]")
+            
+    elif args.action == "analyze-jobs":
+        console.print("[bold blue]🧠 Analyzing Jobs with Descriptions[/bold blue]")
+        try:
+            from src.orchestration.simple_job_orchestrator import analyze_jobs_with_descriptions
+            
+            # Analyze jobs that have descriptions
+            limit = args.batch if args.batch else None
+            stats = asyncio.run(analyze_jobs_with_descriptions(profile_name, limit))
+            
+            if stats["jobs_processed"] > 0:
+                console.print(f"[green]✅ Successfully analyzed {stats['jobs_processed']} jobs![/green]")
+                console.print(f"[green]📝 {stats['jobs_queued']} jobs queued for application[/green]")
+            else:
+                console.print("[yellow]⚠️ No jobs were analyzed. Run --action fetch-descriptions first.[/yellow]")
+                
+        except Exception as e:
+            console.print(f"[red]❌ Job analysis failed: {e}[/red]")
+            
+            if not jobs_to_process:
+                console.print("[yellow]⚠️ No jobs found that need processing[/yellow]")
+                console.print("[cyan]💡 All jobs appear to be fully processed[/cyan]")
+                console.print("[cyan]💡 Use --action scrape to get new jobs[/cyan]")
+            else:
+                console.print(f"[cyan]📋 Found {len(jobs_to_process)} jobs to process[/cyan]")
+                console.print(f"[cyan]🚀 Using Fast Pipeline orchestrator...[/cyan]")
+                
+                # Configure Fast Pipeline for processing existing jobs
+                pipeline_config = {
+                    "eluta_pages": 1,
+                    "eluta_jobs": 0,
+                    "external_workers": 0,
+                    "processing_method": "auto",
+                    "save_to_database": True,
+                    "enable_duplicate_check": False,
+                }
+                
+                pipeline = FastJobPipeline(profile_name, pipeline_config)
+                
+                # Process existing jobs (skip scraping phases)
+                processed_jobs = asyncio.run(pipeline._phase3_process_jobs(jobs_to_process))
+                
+                if processed_jobs:
+                    # Save updated jobs
+                    asyncio.run(pipeline._save_jobs_to_database(processed_jobs))
+                    
+                    stats = pipeline.get_stats()
+                    console.print(f"[bold green]✅ Processing completed![/bold green]")
+                    console.print(f"[cyan]📊 Jobs processed: {len(processed_jobs)}[/cyan]")
+                    console.print(f"[cyan]🧠 Method: {stats.get('processing_method_used', 'auto')}[/cyan]")
+                    console.print(f"[cyan]💾 Jobs saved: {stats.get('jobs_saved', len(processed_jobs))}[/cyan]")
+                else:
+                    console.print("[yellow]⚠️ No jobs were successfully processed[/yellow]")
+                    
+        except Exception as e:
+            console.print(f"[red]❌ Error processing jobs: {e}[/red]")
+            console.print("[yellow]💡 Try using --action scrape for fresh jobs[/yellow]")
             
     elif args.action == "generate-docs":
         console.print("[bold blue]📄 Generating AI-Powered Documents[/bold blue]")

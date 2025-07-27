@@ -1,0 +1,33 @@
+{
+  "batch_sizes": {
+    "description_fetch": 10,
+    "job_analysis": 20,
+    "application": 5,
+    "max_concurrent": 5
+  },
+  "timeouts": {
+    "description_fetch": 30,
+    "analysis": 10,
+    "database_operation": 5
+  },
+  "retry_settings": {
+    "max_retries": 3,
+    "retry_delay": 2,
+    "exponential_backoff": true
+  },
+  "compatibility_thresholds": {
+    "queue_for_application": 0.7,
+    "high_priority": 0.85,
+    "recommendations": ["highly_recommend", "recommend"]
+  },
+  "caching": {
+    "description_cache_ttl_hours": 24,
+    "enable_cache": true,
+    "cache_size_limit": 1000
+  },
+  "performance": {
+    "enable_detailed_metrics": true,
+    "log_slow_operations": true,
+    "slow_operation_threshold": 5.0
+  }
+}

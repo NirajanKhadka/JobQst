@@ -20,7 +20,6 @@ from reportlab.lib.units import inch
 from reportlab.lib.colors import black, blue, gray
 from reportlab.lib import colors
 
-from gemini_optimizer import GeminiOptimizer # Import the new optimizer
 
 # Load environment variables
 load_dotenv()
@@ -219,26 +218,16 @@ Sincerely,
         """
         
         results = {}
-        optimizer = GeminiOptimizer()
 
         # Create base documents from the profile
-        base_resume = self._create_base_document(candidate_profile, "resume")
-        base_cover_letter = self._create_base_document(candidate_profile, "cover_letter", company_name)
+        resume_content = self._create_base_document(candidate_profile, "resume")
+        cover_letter_content = self._create_base_document(candidate_profile, "cover_letter", company_name)
         
         try:
-            self.logger.info("Optimizing documents with Gemini Optimizer...")
-            optimized_data = await optimizer.optimize_documents(
-                job_description,
-                base_resume,
-                base_cover_letter
-            )
-            self.logger.info("Documents optimized successfully.")
-
-            resume_content = optimized_data.get("optimizedResume", "")
-            cover_letter_content = optimized_data.get("optimizedCoverLetter", "")
+            self.logger.info("Skipping document optimization as per user request.")
 
             if not resume_content or not cover_letter_content:
-                raise ValueError("Optimized content is empty in the response.")
+                raise ValueError("Generated content is empty.")
 
             # Create PDFs
             resume_pdf = self.create_pdf(resume_content, f"{output_filename}_resume", "resume")
@@ -254,10 +243,6 @@ Sincerely,
             with open(self.output_dir / f"{output_filename}_cover_letter.txt", 'w', encoding='utf-8') as f:
                 f.write(cover_letter_content)
 
-            with open(self.output_dir / f"{output_filename}_analysis.json", 'w', encoding='utf-8') as f:
-                json.dump(optimized_data, f, indent=2)
-            
-            results['analysis'] = str(self.output_dir / f"{output_filename}_analysis.json")
 
         except (ValueError, RuntimeError) as e:
             self.logger.error(f"An error occurred during optimization: {e}")
@@ -326,7 +311,6 @@ async def main():
         print("Documents generated successfully!")
         print(f"Resume: {results.get('resume')}")
         print(f"Cover Letter: {results.get('cover_letter')}")
-        print(f"Analysis: {results.get('analysis')}")
         
     except Exception as e:
         print(f"Error: {str(e)}")

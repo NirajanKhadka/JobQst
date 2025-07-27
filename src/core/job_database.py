@@ -93,6 +93,13 @@ class ModernJobDatabase:
                 )
             """
             )
+            
+            # Create indexes for duplicate checking performance
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_url ON jobs(url)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_title_company ON jobs(title, company)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_title_location ON jobs(title, location)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_scraped_at ON jobs(scraped_at)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status)")
             conn.commit()
 
     def add_job(self, job_data: Union[Dict, JobRecord]) -> bool:
@@ -158,11 +165,89 @@ class ModernJobDatabase:
             return True
 
     def _is_duplicate(self, conn, job_record: JobRecord) -> bool:
+        """
+        Enhanced duplicate checking with multiple criteria.
+        
+        Checks in order of reliability:
+        1. URL match (most reliable)
+        2. Title + Company match (fallback)
+        3. Title + Location match (last resort for missing company)
+        """
+        # Primary check: URL match
         if job_record.url:
             cursor = conn.execute("SELECT id FROM jobs WHERE url = ?", (job_record.url,))
             if cursor.fetchone():
+                logger.info(f"Duplicate found by URL: {job_record.url}")
                 return True
+        
+        # Secondary check: Title + Company match
+        if job_record.title and job_record.company:
+            cursor = conn.execute(
+                "SELECT id FROM jobs WHERE LOWER(title) = LOWER(?) AND LOWER(company) = LOWER(?)", 
+                (job_record.title.strip(), job_record.company.strip())
+            )
+            if cursor.fetchone():
+                logger.info(f"Duplicate found by title+company: {job_record.title} at {job_record.company}")
+                return True
+        
+        # Tertiary check: Title + Location match (for cases where company name varies)
+        if job_record.title and job_record.location and not job_record.company:
+            cursor = conn.execute(
+                "SELECT id FROM jobs WHERE LOWER(title) = LOWER(?) AND LOWER(location) = LOWER(?)", 
+                (job_record.title.strip(), job_record.location.strip())
+            )
+            if cursor.fetchone():
+                logger.info(f"Duplicate found by title+location: {job_record.title} in {job_record.location}")
+                return True
+        
         return False
+
+    def is_duplicate_job(self, job_data: Dict) -> bool:
+        """
+        Check if job data represents a duplicate using multiple criteria.
+        
+        Args:
+            job_data: Dictionary containing job information
+            
+        Returns:
+            bool: True if duplicate found, False otherwise
+        """
+        try:
+            with self._get_connection() as conn:
+                job_url = job_data.get("url", "").strip()
+                job_title = job_data.get("title", "").strip()
+                job_company = job_data.get("company", "").strip()
+                job_location = job_data.get("location", "").strip()
+                
+                # Primary check: URL match
+                if job_url:
+                    cursor = conn.execute("SELECT id FROM jobs WHERE url = ?", (job_url,))
+                    if cursor.fetchone():
+                        return True
+                
+                # Secondary check: Title + Company match
+                if job_title and job_company:
+                    cursor = conn.execute(
+                        "SELECT id FROM jobs WHERE LOWER(title) = LOWER(?) AND LOWER(company) = LOWER(?)", 
+                        (job_title, job_company)
+                    )
+                    if cursor.fetchone():
+                        return True
+                
+                # Tertiary check: Title + Location match
+                if job_title and job_location and not job_company:
+                    cursor = conn.execute(
+                        "SELECT id FROM jobs WHERE LOWER(title) = LOWER(?) AND LOWER(location) = LOWER(?)", 
+                        (job_title, job_location)
+                    )
+                    if cursor.fetchone():
+                        return True
+                
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error checking duplicate: {e}")
+            return False
 
     def get_jobs(self, **kwargs) -> List[Dict]:
         with self._get_connection() as conn:

@@ -8,11 +8,11 @@ from rich.console import Console
 
 # Import core scrapers from src/scrapers
 try:
-    from .comprehensive_eluta_scraper import ComprehensiveElutaScraper
+    from .unified_eluta_scraper import UnifiedElutaScraper
 
-    ELUTA_COMPREHENSIVE_AVAILABLE = True
+    ELUTA_UNIFIED_AVAILABLE = True
 except ImportError:
-    ELUTA_COMPREHENSIVE_AVAILABLE = False
+    ELUTA_UNIFIED_AVAILABLE = False
 
 try:
     from .eluta_optimized_parallel import ElutaOptimizedParallelScraper
@@ -79,9 +79,7 @@ except ImportError:
 
 # Import from root-level scrapers for compatibility
 try:
-    from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
-    from src.scrapers.eluta_optimized_parallel import ElutaOptimizedParallelScraper
-    from src.scrapers.eluta_multi_ip import ElutaMultiIPScraper
+    from src.scrapers.unified_eluta_scraper import UnifiedElutaScraper
     from src.scrapers.parallel_job_scraper import ParallelJobScraper as RootParallelJobScraper
     from src.ats.fallback_submitters import (
         GenericATSSubmitter,
@@ -97,9 +95,9 @@ except ImportError:
 SCRAPER_REGISTRY = {}
 
 # Add src/scrapers implementations if available
-if ELUTA_COMPREHENSIVE_AVAILABLE:
-    SCRAPER_REGISTRY["eluta"] = ComprehensiveElutaScraper
-    SCRAPER_REGISTRY["eluta_comprehensive"] = ComprehensiveElutaScraper
+if ELUTA_UNIFIED_AVAILABLE:
+    SCRAPER_REGISTRY["eluta"] = UnifiedElutaScraper
+    SCRAPER_REGISTRY["eluta_unified"] = UnifiedElutaScraper
 
 if ELUTA_OPTIMIZED_AVAILABLE:
     SCRAPER_REGISTRY["eluta_optimized"] = ElutaOptimizedParallelScraper
@@ -131,8 +129,8 @@ if MONSTER_CA_AVAILABLE:
 
 # Default scraper for fallback
 DEFAULT_SCRAPER = (
-    ComprehensiveElutaScraper
-    if ELUTA_COMPREHENSIVE_AVAILABLE
+    UnifiedElutaScraper
+    if ELUTA_UNIFIED_AVAILABLE
     else (ElutaOptimizedParallelScraper if ELUTA_OPTIMIZED_AVAILABLE else None)
 )
 

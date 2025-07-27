@@ -18,7 +18,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.progress import Progress
-from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
+from src.scrapers.unified_eluta_scraper import UnifiedElutaScraper
 from src.scrapers.monster_ca_scraper import MonsterCaScraper
 from src.core.job_filters import remove_duplicates
 
@@ -47,7 +47,7 @@ async def run_multi_site_scraping(profile_name: str = "Nirajan", max_jobs_per_si
     sites = [
         {
             "name": "Eluta",
-            "scraper_class": ComprehensiveElutaScraper,
+            "scraper_class": UnifiedElutaScraper,
             "color": "blue",
         },
         {

@@ -23,23 +23,14 @@ class ParallelJobScraper:
         self.stats = {"tasks_created": 0, "tasks_completed": 0, "jobs_scraped": 0}
 
     async def start_parallel_scraping(self, max_jobs_per_keyword: int = 50) -> List[Dict]:
-        # Refactored: Use modern scraper classes directly
-        from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
-        from src.scrapers.enhanced_eluta_scraper import EnhancedElutaScraper
+        # Refactored: Use unified scraper
+        from src.scrapers.unified_eluta_scraper import UnifiedElutaScraper
         results = []
         keywords = getattr(self, 'keywords', ["Python", "Data Analyst", "SQL"])
-        # Basic scraping
-        basic_scraper = ComprehensiveElutaScraper(self.profile)
-        jobs = basic_scraper.scrape_jobs(keywords)
+        # Use unified scraper for all scraping
+        unified_scraper = UnifiedElutaScraper(self.profile_name)
+        jobs = await unified_scraper.scrape_all_keywords()
         results.extend(jobs[:max_jobs_per_keyword])
-        # Detail scraping
-        detail_scraper = EnhancedElutaScraper(self.profile)
-        detailed_jobs = []
-        for job in jobs[:max_jobs_per_keyword]:
-            # Assuming job['title'] is a valid input for detail scraping
-            detailed = detail_scraper.scrape_jobs([job['title']])
-            detailed_jobs.extend(detailed)
-        results.extend(detailed_jobs)
         return results
 
     async def _create_scraping_tasks(self, max_jobs_per_keyword: int):

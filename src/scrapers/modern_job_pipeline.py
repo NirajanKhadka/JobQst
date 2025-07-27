@@ -61,6 +61,8 @@ class PipelineResults:
     success: bool
 
 
+from src.pipeline.redis_queue import RedisQueue
+
 class ModernJobPipeline:
     """
     Enhanced job processing pipeline with performance optimizations.
@@ -81,7 +83,7 @@ class ModernJobPipeline:
         
         # Enhanced configuration
         self.max_workers = config.get("max_workers", 4)
-        self.enable_ai_analysis = config.get("enable_ai_analysis", True)
+        self.enable_ai_analysis = config.get("enable_ai_analysis", False)  # Rule-based is much faster
         self.performance_mode = config.get("performance_mode", False)
         self.timeout = config.get("timeout", 30)
         self.retry_attempts = config.get("retry_attempts", 3)
@@ -112,6 +114,9 @@ class ModernJobPipeline:
             "start_time": None,
             "end_time": None,
         }
+
+        # Redis queue for job handoff
+        self.redis_queue = RedisQueue(queue_name="jobs:main")
         
         # Performance monitoring
         self.performance_monitor = None
@@ -318,47 +323,31 @@ class ModernJobPipeline:
         for page_num in range(1, max_pages + 1):
             if jobs_scraped >= max_jobs:
                 break
-                
             try:
                 # Construct search URL (Eluta example)
                 search_url = f"https://www.eluta.ca/search?q={keyword}"
                 if page_num > 1:
                     search_url += f"&pg={page_num}"
-                
-                # Navigate with timeout
                 await page.goto(search_url, timeout=self.timeout * 1000, wait_until="domcontentloaded")
-                
-                # Wait for jobs to load with optimized selector
                 await page.wait_for_selector(".organic-job", timeout=10000)
-                
-                # Extract jobs
                 job_elements = await page.query_selector_all(".organic-job")
-                
                 if not job_elements:
                     console.print(f"[yellow]No jobs found on page {page_num} for '{keyword}'[/yellow]")
                     break
-                
-                # Process jobs in batch
                 batch_tasks = []
                 for i, job_elem in enumerate(job_elements[:max_jobs - jobs_scraped]):
                     batch_tasks.append(self._extract_job_data_enhanced(job_elem, keyword, page_num, i + 1))
-                
-                # Process batch
                 job_data_list = await asyncio.gather(*batch_tasks, return_exceptions=True)
-                
-                # Add valid jobs to queue
                 for job_data in job_data_list:
                     if job_data and not isinstance(job_data, Exception):
+                        # Enqueue to Redis
+                        await self.redis_queue.enqueue(job_data.to_dict())
                         await self.processing_queue.put(job_data)
                         jobs_scraped += 1
                         self.increment("jobs_scraped")
-                
                 console.print(f"[green]✅ {keyword} page {page_num}: {len([j for j in job_data_list if j and not isinstance(j, Exception)])} jobs[/green]")
-                
-                # Respect rate limiting
                 if not self.performance_mode:
                     await asyncio.sleep(1)
-                
             except Exception as e:
                 console.print(f"[yellow]⚠️ Page {page_num} error for '{keyword}': {str(e)[:100]}...[/yellow]")
                 continue

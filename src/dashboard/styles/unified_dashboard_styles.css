@@ -584,7 +584,6 @@ body {
 }
 
 /* ===== TABLE COMPONENTS ===== */
-
 .table-base {
     width: 100%;
     background: var(--bg-card);
@@ -592,6 +591,7 @@ body {
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-md);
+    position: relative;
 }
 
 .table-header {
@@ -601,6 +601,9 @@ body {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .table-row {
@@ -608,13 +611,37 @@ body {
     transition: var(--transition-fast);
 }
 
+.table-row:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
 .table-row:hover {
     background: var(--bg-hover);
+    transform: translateX(2px);
 }
 
 .table-cell {
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
     color: var(--text-primary);
+    position: relative;
+}
+
+/* Status cell styling */
+.table-cell[data-status="running"],
+.table-cell[data-status="success"] {
+    color: var(--success);
+    font-weight: 500;
+}
+
+.table-cell[data-status="stopped"],
+.table-cell[data-status="error"] {
+    color: var(--error);
+    font-weight: 500;
+}
+
+.table-cell[data-status="warning"] {
+    color: var(--warning);
+    font-weight: 500;
 }
 
 /* Enhanced Table */

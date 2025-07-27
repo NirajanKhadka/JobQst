@@ -25,6 +25,28 @@
 
 ## Quick Start
 
+### Redis Integration (Job Queue)
+
+The job pipeline now uses Redis for high-throughput, persistent job queueing. You must have a Redis server running and configure the connection string in your `.env` file:
+
+```
+REDIS_URL=redis://localhost:6379/0
+```
+
+If you need to install Redis locally:
+- **Windows:** Use [Memurai](https://www.memurai.com/) or [Redis for Windows](https://github.com/microsoftarchive/redis/releases)
+- **macOS/Linux:** Use `brew install redis` or your package manager
+
+Start Redis before running the pipeline:
+```powershell
+# Windows (Memurai)
+memurai.exe
+# macOS/Linux
+redis-server
+```
+
+The pipeline will automatically use the `REDIS_URL` from your environment.
+
 ### Prerequisites
 - **Python 3.10+**
 - **Ollama with OpenHermes 2.5**
