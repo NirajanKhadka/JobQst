@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test basic imports and functionality for AutoJobAgent.
+Test basic imports and functionality for JobLens.
 Follows DEVELOPMENT_STANDARDS.md - tests core functionality without fabricated content.
 """
 

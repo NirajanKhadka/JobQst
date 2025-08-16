@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Automated Resume Analyzer for AutoJobAgent.
+Automated Resume Analyzer for JobLens.
 This module automatically extracts keywords, skills, and experience level from resumes
 to enable Configurable, targeted job scraping.
 """

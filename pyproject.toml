@@ -3,16 +3,16 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "automate-job"
+name = "joblens"
 version = "2.0.0"
-description = "Automated Job Application System with AI-powered resume generation"
+description = "Profile-driven job scraping, matching, and ranking"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "AutoJobAgent Team"},
-    {email = "dev@autojobagent.com"}
+    {name = "JobLens Team"},
+    {email = "dev@joblens.dev"}
 ]
-keywords = ["job-automation", "ai", "resume-generation", "ats", "web-scraping"]
+keywords = ["job-discovery", "matching", "ranking", "profile", "web-scraping"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: End Users/Desktop",

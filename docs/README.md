@@ -1,23 +1,23 @@
 ---
-post_title: "AutoJobAgent Documentation Index"
+post_title: "JobLens Documentation Index"
 author1: "Nirajan Khadka"
 post_slug: "documentation-index"
 microsoft_alias: "nirajank"
 featured_image: ""
 categories: ["documentation", "index", "navigation"]
 tags: ["docs", "guide", "reference", "architecture", "api"]
-ai_note: "Complete documentation navigation hub for AutoJobAgent system"
-summary: "Central documentation index and navigation for the AutoJobAgent dual scraper job automation system"
+ai_note: "Documentation navigation hub for JobLens"
+summary: "Central documentation index and navigation for the JobLens job discovery and ranking system"
 post_date: "2025-08-08"
 ---
 
-# 📚 AutoJobAgent Documentation Hub
+# 📚 JobLens Documentation Hub
 
 **Job Application Automation System**  
 **Last Updated:** August 8, 2025  
 **Status:** 🟢 **ACTIVE DEVELOPMENT** - Dual Scraper Architecture
 
-> **AutoJobAgent** is a job automation platform with dual scraper architecture (JobSpy + Eluta), document generation using Gemini API, and application management.
+> **JobLens** focuses on job discovery, matching, and ranking with dual scraper support (JobSpy + Eluta) and an optional dashboard.
 
 ---
 

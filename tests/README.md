@@ -1,4 +1,4 @@
-# 🧪 AutoJobAgent Test Suite
+# 🧪 JobLens Test Suite
 
 > **Comprehensive testing infrastructure following TESTING_STANDARDS.md**
 
