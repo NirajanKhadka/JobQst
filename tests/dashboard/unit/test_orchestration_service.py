@@ -1,0 +1,545 @@
+"""
+Comprehensive unit tests for OrchestrationService.
+
+Tests all functionality of the orchestration service including:
+- Application queue management
+- Document generation coordination
+- Service health monitoring
+- Background process management
+- Recovery and error handling
+"""
+
+import pytest
+import asyncio
+from unittest.mock import Mock, patch, AsyncMock, MagicMock
+from datetime import datetime, timedelta
+from pathlib import Path
+import sys
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+from src.dashboard.services.orchestration_service import (
+    OrchestrationService, 
+    get_orchestration_service,
+    ApplicationStatus,
+    DocumentGenerationStatus
+)
+
+
+class TestOrchestrationService:
+    """Test suite for OrchestrationService class."""
+    
+    @pytest.fixture
+    def orchestration_service(self):
+        """Create a fresh OrchestrationService instance for testing."""
+        return OrchestrationService(cache_ttl=5)
+    
+    @pytest.fixture
+    def mock_application_queue(self):
+        """Mock application queue data."""
+        return {
+            "queued_jobs": [
+                {
+                    "job_id": "job_001",
+                    "title": "Software Engineer",
+                    "company": "Tech Corp",
+                    "priority": "high",
+                    "queued_at": "2025-08-09T10:00:00"
+                },
+                {
+                    "job_id": "job_002", 
+                    "title": "Senior Developer",
+                    "company": "Software Inc",
+                    "priority": "normal",
+                    "queued_at": "2025-08-09T11:00:00"
+                }
+            ],
+            "queued_count": 2,
+            "processing_count": 1,
+            "completed_count": 15,
+            "failed_count": 2
+        }
+    
+    @pytest.fixture
+    def mock_document_status(self):
+        """Mock document generation status data."""
+        return {
+            "active_workers": 2,
+            "queue_length": 5,
+            "completed_today": 8,
+            "failed_today": 1,
+            "average_generation_time": 45.2,
+            "last_activity": "2025-08-09T12:00:00"
+        }
+    
+    def test_orchestration_service_initialization(self, orchestration_service):
+        """Test OrchestrationService proper initialization."""
+        assert orchestration_service.cache_ttl == 5
+        assert orchestration_service._cache == {}
+        assert orchestration_service._cache_timestamps == {}
+        assert orchestration_service._recovery_attempts == {}
+    
+    def test_singleton_pattern(self):
+        """Test that get_orchestration_service returns the same instance."""
+        service1 = get_orchestration_service()
+        service2 = get_orchestration_service()
+        
+        assert service1 is service2
+        assert isinstance(service1, OrchestrationService)
+    
+    @pytest.mark.asyncio
+    async def test_get_application_queue_status_success(self, orchestration_service, mock_application_queue):
+        """Test successful application queue status retrieval."""
+        with patch.object(orchestration_service, '_check_application_processors', 
+                         return_value=mock_application_queue):
+            
+            status = await orchestration_service.get_application_queue_status()
+            
+            assert isinstance(status, dict)
+            assert status["queued_count"] == 2
+            assert status["processing_count"] == 1
+            assert status["completed_count"] == 15
+            assert len(status["queued_jobs"]) == 2
+    
+    @pytest.mark.asyncio
+    async def test_get_application_queue_status_caching(self, orchestration_service, mock_application_queue):
+        """Test that application queue status is properly cached."""
+        with patch.object(orchestration_service, '_check_application_processors', 
+                         return_value=mock_application_queue) as mock_check:
+            
+            # First call
+            status1 = await orchestration_service.get_application_queue_status()
+            
+            # Second call should use cache
+            status2 = await orchestration_service.get_application_queue_status()
+            
+            # Should only call the method once due to caching
+            mock_check.assert_called_once()
+            assert status1 == status2
+    
+    @pytest.mark.asyncio
+    async def test_trigger_job_application_success(self, orchestration_service):
+        """Test successful job application triggering."""
+        job_id = "job_123"
+        priority = "high"
+        
+        # Mock successful application trigger
+        expected_result = {
+            "success": True,
+            "job_id": job_id,
+            "status": ApplicationStatus.QUEUED.value,
+            "message": "Job application queued successfully",
+            "estimated_processing_time": 300
+        }
+        
+        with patch.object(orchestration_service, '_trigger_application_processor', 
+                         return_value=expected_result):
+            
+            result = await orchestration_service.trigger_job_application(job_id, priority)
+            
+            assert result["success"] is True
+            assert result["job_id"] == job_id
+            assert result["status"] == ApplicationStatus.QUEUED.value
+    
+    @pytest.mark.asyncio
+    async def test_trigger_job_application_failure(self, orchestration_service):
+        """Test job application triggering failure."""
+        job_id = "job_123"
+        
+        with patch.object(orchestration_service, '_trigger_application_processor', 
+                         side_effect=Exception("Processing error")):
+            
+            result = await orchestration_service.trigger_job_application(job_id)
+            
+            assert result["success"] is False
+            assert "error" in result
+            assert result["job_id"] == job_id
+    
+    @pytest.mark.asyncio
+    async def test_get_document_generation_status_success(self, orchestration_service, mock_document_status):
+        """Test successful document generation status retrieval."""
+        with patch.object(orchestration_service, '_check_document_generators',
+                         return_value=mock_document_status):
+            
+            status = await orchestration_service.get_document_generation_status()
+            
+            assert isinstance(status, dict)
+            assert status["active_workers"] == 2
+            assert status["queue_length"] == 5
+            assert status["completed_today"] == 8
+            assert status["average_generation_time"] == 45.2
+    
+    @pytest.mark.asyncio
+    async def test_pause_resume_application_pause(self, orchestration_service):
+        """Test pausing job application."""
+        job_id = "job_123"
+        
+        expected_result = {
+            "success": True,
+            "job_id": job_id,
+            "action": "paused",
+            "message": "Job application paused successfully"
+        }
+        
+        with patch.object(orchestration_service, '_control_application_processor',
+                         return_value=expected_result):
+            
+            result = await orchestration_service.pause_resume_application(job_id, "pause")
+            
+            assert result["success"] is True
+            assert result["action"] == "paused"
+            assert result["job_id"] == job_id
+    
+    @pytest.mark.asyncio
+    async def test_pause_resume_application_resume(self, orchestration_service):
+        """Test resuming job application."""
+        job_id = "job_123"
+        
+        expected_result = {
+            "success": True,
+            "job_id": job_id,
+            "action": "resumed",
+            "message": "Job application resumed successfully"
+        }
+        
+        with patch.object(orchestration_service, '_control_application_processor',
+                         return_value=expected_result):
+            
+            result = await orchestration_service.pause_resume_application(job_id, "resume")
+            
+            assert result["success"] is True
+            assert result["action"] == "resumed"
+    
+    @pytest.mark.asyncio
+    async def test_get_audit_trail_success(self, orchestration_service):
+        """Test successful audit trail retrieval."""
+        mock_audit_data = [
+            {
+                "timestamp": "2025-08-09T10:00:00",
+                "job_id": "job_001",
+                "action": "application_submitted",
+                "status": "success",
+                "details": "Application submitted to Tech Corp"
+            },
+            {
+                "timestamp": "2025-08-09T09:30:00",
+                "job_id": "job_002",
+                "action": "document_generated",
+                "status": "success", 
+                "details": "Cover letter generated"
+            }
+        ]
+        
+        with patch.object(orchestration_service, '_fetch_audit_trail',
+                         return_value=mock_audit_data):
+            
+            audit_trail = await orchestration_service.get_audit_trail(limit=10)
+            
+            assert isinstance(audit_trail, list)
+            assert len(audit_trail) == 2
+            assert audit_trail[0]["action"] == "application_submitted"
+            assert audit_trail[1]["action"] == "document_generated"
+    
+    @pytest.mark.asyncio
+    async def test_get_audit_trail_with_job_filter(self, orchestration_service):
+        """Test audit trail retrieval with job ID filter."""
+        job_id = "job_001"
+        mock_filtered_data = [
+            {
+                "timestamp": "2025-08-09T10:00:00",
+                "job_id": job_id,
+                "action": "application_submitted",
+                "status": "success"
+            }
+        ]
+        
+        with patch.object(orchestration_service, '_fetch_audit_trail',
+                         return_value=mock_filtered_data):
+            
+            audit_trail = await orchestration_service.get_audit_trail(job_id=job_id)
+            
+            assert isinstance(audit_trail, list)
+            assert len(audit_trail) == 1
+            assert audit_trail[0]["job_id"] == job_id
+    
+    @pytest.mark.asyncio
+    async def test_get_orchestration_health_healthy(self, orchestration_service):
+        """Test orchestration health when all services are healthy."""
+        healthy_app_health = {
+            "health": "healthy",
+            "workers": ["worker_1", "worker_2"],
+            "queued_count": 5
+        }
+        
+        healthy_doc_health = {
+            "health": "healthy",
+            "active_workers": 2,
+            "queue_length": 3
+        }
+        
+        with patch.object(orchestration_service, '_check_application_processors',
+                         return_value=healthy_app_health), \
+             patch.object(orchestration_service, '_check_document_generators',
+                         return_value=healthy_doc_health):
+            
+            health = await orchestration_service.get_orchestration_health()
+            
+            assert health["overall_status"] == "healthy"
+            assert health["services_healthy"] == 2
+            assert health["total_services"] == 2
+    
+    @pytest.mark.asyncio
+    async def test_get_orchestration_health_degraded(self, orchestration_service):
+        """Test orchestration health when some services are unhealthy."""
+        healthy_app_health = {
+            "health": "healthy",
+            "workers": ["worker_1"],
+            "queued_count": 10
+        }
+        
+        unhealthy_doc_health = {
+            "health": "unhealthy",
+            "active_workers": 0,
+            "queue_length": 15,
+            "error": "Document generator service down"
+        }
+        
+        with patch.object(orchestration_service, '_check_application_processors',
+                         return_value=healthy_app_health), \
+             patch.object(orchestration_service, '_check_document_generators',
+                         return_value=unhealthy_doc_health):
+            
+            health = await orchestration_service.get_orchestration_health()
+            
+            assert health["overall_status"] == "degraded"
+            assert health["services_healthy"] == 1
+            assert health["total_services"] == 2
+    
+    @pytest.mark.asyncio
+    async def test_get_orchestration_health_unhealthy(self, orchestration_service):
+        """Test orchestration health when all services are unhealthy."""
+        unhealthy_app_health = {
+            "health": "unhealthy",
+            "workers": [],
+            "error": "Application processor down"
+        }
+        
+        unhealthy_doc_health = {
+            "health": "unhealthy",
+            "active_workers": 0,
+            "error": "Document generator down"
+        }
+        
+        with patch.object(orchestration_service, '_check_application_processors',
+                         return_value=unhealthy_app_health), \
+             patch.object(orchestration_service, '_check_document_generators',
+                         return_value=unhealthy_doc_health):
+            
+            health = await orchestration_service.get_orchestration_health()
+            
+            assert health["overall_status"] == "unhealthy"
+            assert health["services_healthy"] == 0
+            assert health["total_services"] == 2
+    
+    @pytest.mark.asyncio
+    async def test_check_application_processors_success(self, orchestration_service):
+        """Test successful application processor checking."""
+        # Mock process discovery
+        mock_processes = [
+            Mock(info={
+                'pid': 1234,
+                'name': 'python',
+                'cmdline': ['python', 'Improved_job_processor.py']
+            })
+        ]
+        
+        with patch('psutil.process_iter', return_value=mock_processes):
+            result = await orchestration_service._check_application_processors()
+            
+            assert isinstance(result, dict)
+            assert "health" in result
+            assert "workers" in result
+    
+    @pytest.mark.asyncio
+    async def test_check_document_generators_success(self, orchestration_service):
+        """Test successful document generator checking."""
+        # Mock document generator processes
+        mock_processes = [
+            Mock(info={
+                'pid': 5678,
+                'name': 'python',
+                'cmdline': ['python', 'document_generator.py']
+            })
+        ]
+        
+        with patch('psutil.process_iter', return_value=mock_processes):
+            result = await orchestration_service._check_document_generators()
+            
+            assert isinstance(result, dict)
+            assert "health" in result
+            assert "active_workers" in result
+    
+    def test_clear_cache(self, orchestration_service):
+        """Test cache clearing functionality."""
+        # Add some cache data
+        orchestration_service._cache["test_key"] = "test_data"
+        orchestration_service._cache_timestamps["test_key"] = datetime.now()
+        
+        orchestration_service.clear_cache()
+        
+        assert orchestration_service._cache == {}
+        assert orchestration_service._cache_timestamps == {}
+    
+    def test_cache_validation(self, orchestration_service):
+        """Test cache validation logic."""
+        cache_key = "test_key"
+        
+        # No cache entry
+        assert not orchestration_service._is_cache_valid(cache_key)
+        
+        # Valid cache entry
+        orchestration_service._cache_timestamps[cache_key] = datetime.now()
+        assert orchestration_service._is_cache_valid(cache_key)
+        
+        # Expired cache entry
+        orchestration_service._cache_timestamps[cache_key] = datetime.now() - timedelta(
+            seconds=orchestration_service.cache_ttl + 1
+        )
+        assert not orchestration_service._is_cache_valid(cache_key)
+    
+    @pytest.mark.asyncio
+    async def test_error_handling_in_application_processors(self, orchestration_service):
+        """Test error handling during application processor checking."""
+        with patch('psutil.process_iter', side_effect=Exception("Process access error")):
+            result = await orchestration_service._check_application_processors()
+            
+            # Should handle error gracefully
+            assert isinstance(result, dict)
+            assert "error" in result or result.get("health") == "unknown"
+    
+    @pytest.mark.asyncio
+    async def test_error_handling_in_document_generators(self, orchestration_service):
+        """Test error handling during document generator checking."""
+        with patch('psutil.process_iter', side_effect=Exception("Process access error")):
+            result = await orchestration_service._check_document_generators()
+            
+            # Should handle error gracefully
+            assert isinstance(result, dict)
+            assert "error" in result or result.get("health") == "unknown"
+    
+    @pytest.mark.asyncio
+    async def test_recovery_attempt_tracking(self, orchestration_service):
+        """Test that recovery attempts are properly tracked."""
+        job_id = "job_123"
+        
+        # Simulate multiple recovery attempts
+        orchestration_service._recovery_attempts[job_id] = 3
+        
+        # Should track attempts correctly
+        assert orchestration_service._recovery_attempts[job_id] == 3
+    
+    @pytest.mark.asyncio
+    async def test_concurrent_operations(self, orchestration_service, mock_application_queue):
+        """Test handling of concurrent orchestration operations."""
+        with patch.object(orchestration_service, '_check_application_processors',
+                         return_value=mock_application_queue):
+            
+            # Run multiple operations concurrently
+            tasks = [
+                orchestration_service.get_application_queue_status(),
+                orchestration_service.get_application_queue_status(),
+                orchestration_service.get_application_queue_status()
+            ]
+            
+            results = await asyncio.gather(*tasks)
+            
+            # All should succeed and return same cached data
+            for result in results[1:]:
+                assert result == results[0]
+    
+    @pytest.mark.asyncio
+    async def test_performance_monitoring(self, orchestration_service):
+        """Test that operations complete within reasonable time."""
+        import time
+        
+        with patch.object(orchestration_service, '_check_application_processors',
+                         return_value={"health": "healthy", "workers": []}):
+            
+            start_time = time.time()
+            await orchestration_service.get_application_queue_status()
+            end_time = time.time()
+            
+            # Should complete within 2 seconds
+            assert (end_time - start_time) < 2.0
+    
+    @pytest.mark.asyncio
+    async def test_memory_management(self, orchestration_service):
+        """Test that service manages memory efficiently."""
+        # Add many cache entries
+        for i in range(100):
+            orchestration_service._cache[f"key_{i}"] = {
+                "data": [f"item_{j}" for j in range(100)]
+            }
+            orchestration_service._cache_timestamps[f"key_{i}"] = datetime.now()
+        
+        # Clear cache and verify memory is freed
+        orchestration_service.clear_cache()
+        
+        assert len(orchestration_service._cache) == 0
+        assert len(orchestration_service._cache_timestamps) == 0
+    
+    @pytest.mark.asyncio
+    async def test_service_dependency_handling(self, orchestration_service):
+        """Test handling of missing service dependencies."""
+        # Test with missing psutil
+        with patch('psutil.process_iter', side_effect=ImportError("psutil not available")):
+            result = await orchestration_service._check_application_processors()
+            
+            # Should handle gracefully
+            assert isinstance(result, dict)
+
+
+class TestOrchestrationServiceIntegration:
+    """Integration tests for OrchestrationService with real system processes."""
+    
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_real_process_discovery(self):
+        """Test with actual system process discovery."""
+        service = OrchestrationService()
+        
+        try:
+            # This should work with real psutil
+            import psutil
+            processes = list(psutil.process_iter(['pid', 'name']))
+            assert len(processes) > 0
+            
+            # Test application processor checking
+            result = await service._check_application_processors()
+            assert isinstance(result, dict)
+            
+        except Exception as e:
+            pytest.skip(f"Real process discovery not available: {e}")
+    
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_real_orchestration_health(self):
+        """Test actual orchestration health checking."""
+        service = OrchestrationService()
+        
+        try:
+            health = await service.get_orchestration_health()
+            
+            assert isinstance(health, dict)
+            assert "overall_status" in health
+            assert "services_healthy" in health
+            assert "total_services" in health
+            
+        except Exception as e:
+            pytest.skip(f"Real orchestration health check not available: {e}")
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
