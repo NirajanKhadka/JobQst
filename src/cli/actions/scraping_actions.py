@@ -26,7 +26,7 @@ class ScrapingActions:
         self.scraping_handler = ScrapingHandler(profile)
 
     def show_scraping_menu(self, args) -> None:
-        """Show enhanced scraping menu with NEW Fast 3-Phase Pipeline."""
+        """Show Improved scraping menu with NEW Fast 3-Phase Pipeline."""
         console.print(Panel("🚀 Fast 3-Phase Pipeline Scraping Menu (4.6x Faster)", style="bold blue"))
 
         # Show system capabilities and new pipeline info

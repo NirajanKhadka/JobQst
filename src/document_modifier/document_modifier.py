@@ -211,7 +211,7 @@ class DocumentModifier:
             logger.exception(f"Failed to write PDF {pdf_path}: {e}")
             raise
 
-    # --- AI-Powered Document Generation Methods ---
+    # --- Automated Document Generation Methods ---
 
     def get_available_templates(self) -> List[str]:
         """Return a list of available document templates."""
@@ -238,7 +238,7 @@ class DocumentModifier:
             return ["Default PDF Template"]
 
     def generate_ai_cover_letter(self, job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> str:
-        """Generate an AI-powered cover letter using Gemini API."""
+        """Generate an Automated cover letter using Gemini API."""
         try:
             from src.utils.gemini_client import GeminiClient
             from src.utils.pdf_generator import PDFGenerator
@@ -281,7 +281,7 @@ class DocumentModifier:
             return self._generate_fallback_cover_letter(job_data, profile_data)
 
     def generate_ai_resume(self, job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> str:
-        """Generate an AI-powered resume using Gemini API."""
+        """Generate an Automated resume using Gemini API."""
         try:
             from src.utils.gemini_client import GeminiClient
             from src.utils.pdf_generator import PDFGenerator

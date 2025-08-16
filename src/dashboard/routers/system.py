@@ -169,7 +169,7 @@ async def get_system_status() -> Dict[str, Any]:
                 "ipc_file_exists": IPC_FILE.exists()
             },
             "databases": {
-                "status": "Connected",  # Could be enhanced with actual DB checks
+                "status": "Connected",  # Could be Improved with actual DB checks
                 "connection_count": 1
             }
         }

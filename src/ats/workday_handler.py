@@ -1,6 +1,6 @@
 """
 Workday ATS Handler
-Provides the Workday-specific application logic for EnhancedUniversalApplier.
+Provides the Workday-specific application logic for ImprovedUniversalApplier.
 """
 
 import asyncio

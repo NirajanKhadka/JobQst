@@ -173,7 +173,7 @@ class SystemHealthChecker:
                         pass
                 
                 # Windows fallback
-                console.print("[yellow]⚠️ Advanced memory monitoring not available[/yellow]")
+                console.print("[yellow]⚠️ Improved memory monitoring not available[/yellow]")
                 console.print("[green]✅ Basic memory check passed[/green]")
                 return True
                 

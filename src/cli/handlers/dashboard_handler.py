@@ -129,8 +129,9 @@ class DashboardHandler:
         console.print("[cyan]✨ Features: Clean UI • Utility-Focused • High Performance[/cyan]")
 
         try:
-            # Use the Modern Dashboard manager
-            success = self.dashboard_manager.start_dashboard("modern")
+            # Use the Modern Dashboard manager with profile name
+            profile_name = self.profile.get("profile_name", "Nirajan")
+            success = self.dashboard_manager.start_dashboard("modern", profile_name=profile_name)
 
             if success:
                 console.print("[green]✅ Modern Dashboard started successfully![/green]")
@@ -200,7 +201,7 @@ class DashboardHandler:
         table.add_row("Port", str(self.port))
         table.add_row("URL", f"http://localhost:{self.port}")
         table.add_row("Type", "Modern Dashboard (Streamlit)")
-        table.add_row("Features", "Clean UI, Advanced Filtering, Real-time Metrics")
+        table.add_row("Features", "Clean UI, Improved Filtering, Real-time Metrics")
 
         console.print(table)
 

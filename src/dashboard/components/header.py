@@ -15,13 +15,13 @@ def render_header(title: Optional[str] = None, subtitle: Optional[str] = None) -
     
     Args:
         title: Custom title to display. Defaults to "🤖 AutoJobAgent Dashboard"
-        subtitle: Custom subtitle to display. Defaults to "Intelligent Job Application Automation System"
+        subtitle: Custom subtitle to display. Defaults to "Automated Job Application Automation System"
     
     Returns:
         None: Renders directly to Streamlit
     """
     default_title = "🤖 AutoJobAgent Dashboard"
-    default_subtitle = "Intelligent Job Application Automation System"
+    default_subtitle = "Automated Job Application Automation System"
     
     display_title = title or default_title
     display_subtitle = subtitle or default_subtitle

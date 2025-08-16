@@ -221,7 +221,7 @@ class CLIComponent:
                     st.error(f"❌ Failed to start {service_name} service")
                     
             except ImportError:
-                st.error("❌ Orchestration service not available")
+                st.warning("⚠️ Improved orchestration features are loading. Using CLI fallback.")
                 # Fallback to showing command for manual execution
                 try:
                     formatted_cmd = self.cli_service.format_command(command_name, profile_name, **params)
@@ -271,7 +271,7 @@ class CLIComponent:
                     st.error(f"❌ Failed to stop {service_name} service")
                     
             except ImportError:
-                st.error("❌ Orchestration service not available")
+                st.warning("⚠️ Improved orchestration features are loading. Service management unavailable.")
         else:
             st.warning(f"Cannot stop {command_name} - not a managed service")
             

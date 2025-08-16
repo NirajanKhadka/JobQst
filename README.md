@@ -1,27 +1,18 @@
 # AutoJobAgent
 
-**Intelligent job application automation with optimized web scraping and OpenHermes 2.5 AI analysis.**
+**Job application automation with web scraping and document generation.**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![OpenHermes 2.5](https://img.shields.io/badge/AI-OpenHermes%202.5-green.svg)](#ai-integration)
-
-## 🚀 Latest Optimizations
-
-### **Immediate Tab Closure + Concurrent Processing**
-- **90% Memory Reduction**: Tabs close immediately after URL extraction
-- **2x Faster Processing**: Concurrent job analysis (2 jobs simultaneously)
-- **OpenHermes 2.5 AI**: Superior job compatibility analysis
-- **Stable Performance**: Consistent resource usage throughout scraping
 
 ## Features
 
-- **🔍 Optimized Web Scraping**: Multi-site scraping with immediate tab closure
-- **🤖 OpenHermes 2.5 AI**: Advanced job analysis and compatibility scoring
-- **⚡ Concurrent Processing**: Parallel job processing for maximum efficiency
-- **📊 Smart Filtering**: Entry-level job filtering with AI-powered matching
-- **🎯 ATS Integration**: Automated application submission support
-- **📈 Real-time Dashboard**: Streamlit-based monitoring and management
+- **🔍 Web Scraping**: Multi-site job scraping from Eluta, Indeed, LinkedIn, and other job boards
+- **🤖 Document Generation**: Resume and cover letter generation using Gemini API
+- **⚡ Concurrent Processing**: Parallel job processing for better performance
+- **📊 Job Filtering**: Filter jobs by language, seniority level, and keywords
+- **🎯 ATS Integration**: Automated application submission to various ATS platforms
+- **📈 Dashboard**: Streamlit-based web interface for job management
 
 ## Quick Start
 
@@ -101,14 +92,13 @@ asyncio.run(main())
 python -m streamlit run src/dashboard/unified_dashboard.py
 ```
 
-## Performance Metrics
+## System Components
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Peak Tabs** | 20+ | 1-2 | **90% reduction** |
-| **Processing Speed** | Sequential | Concurrent | **2x faster** |
-| **Memory Usage** | Growing | Stable | **Constant** |
-| **AI Analysis** | Mistral 7B | OpenHermes 2.5 | **Superior quality** |
+- **Web Scraping**: Playwright-based browser automation
+- **Job Processing**: Rule-based filtering and keyword matching  
+- **Document Generation**: Gemini API integration for personalized documents
+- **Database**: SQLite for job storage and management
+- **Dashboard**: Streamlit web interface with real-time updates
 
 ## Configuration
 

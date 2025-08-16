@@ -452,8 +452,8 @@ if __name__ == "__main__":
     ai_logger.log_connection_check("mistral_local", True, 150.5)
     ai_logger.log_analysis_attempt("mistral_local", True, 2500.0, "mistral_7b", 0.75)
     ai_logger.log_connection_check("llama_local", False, 5000.0, "Connection timeout")
-    ai_logger.log_fallback_usage("mistral_7b", "enhanced_rule_based", "Connection failed")
-    ai_logger.log_analysis_attempt("system", True, 50.0, "enhanced_rule_based", 0.65)
+    ai_logger.log_fallback_usage("mistral_7b", "Improved_rule_based", "Connection failed")
+    ai_logger.log_analysis_attempt("system", True, 50.0, "Improved_rule_based", 0.65)
     
     print("AI Service Logger Test Results:")
     print("\nMetrics:")

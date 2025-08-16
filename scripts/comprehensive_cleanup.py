@@ -63,7 +63,7 @@ class ComprehensiveProjectCleaner:
         # Python files to organize
         self.python_files = {
             'demo_scripts': [
-                'demo_enhanced_processor.py'
+                'demo_Improved_processor.py'
             ],
             'utility_scripts': [
                 'extract_al_ibk_job.py'
@@ -236,14 +236,14 @@ Some guides may reference legacy configurations - verify current requirements.
 Demonstration scripts showcasing system capabilities.
 
 ## Available Demos
-- Enhanced processor demonstrations
+- Improved processor demonstrations
 - Feature showcases
 - Example workflows
 
 ## Usage
 Run demo scripts to see system capabilities:
 ```bash
-python scripts/demo/demo_enhanced_processor.py
+python scripts/demo/demo_Improved_processor.py
 ```
 
 These scripts are safe to run and demonstrate key features.

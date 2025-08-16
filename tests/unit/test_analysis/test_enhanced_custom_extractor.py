@@ -1,5 +1,5 @@
 """
-Unit tests for Enhanced Custom Data Extractor
+Unit tests for Improved Custom Data Extractor
 Tests the 95%+ reliability target for structured data extraction.
 """
 
@@ -11,20 +11,20 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.analysis.enhanced_custom_extractor import (
-    EnhancedCustomExtractor, 
-    EnhancedExtractionResult,
+from src.analysis.Improved_custom_extractor import (
+    ImprovedCustomExtractor, 
+    ImprovedExtractionResult,
     ExtractionConfidence,
     IndustryStandardsDatabase
 )
 
-class TestEnhancedCustomExtractor:
-    """Test suite for enhanced custom data extractor."""
+class TestImprovedCustomExtractor:
+    """Test suite for Improved custom data extractor."""
     
     @pytest.fixture
     def extractor(self):
         """Create extractor instance for testing."""
-        return EnhancedCustomExtractor()
+        return ImprovedCustomExtractor()
     
     @pytest.fixture
     def sample_job_data(self):
@@ -167,7 +167,7 @@ class TestEnhancedCustomExtractor:
         result = extractor.extract_job_data(malformed_data)
         
         # Should handle gracefully without crashing
-        assert isinstance(result, EnhancedExtractionResult)
+        assert isinstance(result, ImprovedExtractionResult)
         assert result.overall_confidence < 0.5  # Low confidence for poor data
     
     def test_html_content_extraction(self, extractor):
@@ -240,7 +240,7 @@ class TestExtractionReliability:
     
     @pytest.fixture
     def extractor(self):
-        return EnhancedCustomExtractor()
+        return ImprovedCustomExtractor()
     
     def test_batch_extraction_reliability(self, extractor):
         """Test reliability across multiple job postings."""

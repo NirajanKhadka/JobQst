@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 import logging
 
-# Try to import AgGrid for enhanced tables
+# Try to import AgGrid for Improved tables
 try:
     from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode, JsCode
     HAS_AGGRID = True
@@ -37,7 +37,7 @@ def render_modern_job_table(df: pd.DataFrame, profile_name: str = "default") -> 
     # Job statistics overview
     render_job_statistics(df)
     
-    # Smart filters
+    # Configurable filters
     filtered_df = render_job_filters(df)
     
     # Job table with actions
@@ -69,6 +69,7 @@ def render_job_statistics(df: pd.DataFrame):
     applied_jobs = len(df[df.get('status_text', '') == 'Applied'])
     processed_jobs = len(df[df.get('status_text', '') == 'Processed'])
     scraped_jobs = len(df[df.get('status_text', '') == 'Scraped'])
+    filtered_jobs = len(df[df.get('status_text', '') == 'Filtered Out'])
     
     # Recent activity (last 24 hours)
     if 'scraped_at' in df.columns:
@@ -121,7 +122,7 @@ def render_job_statistics(df: pd.DataFrame):
         """, unsafe_allow_html=True)
 
 def render_job_filters(df: pd.DataFrame) -> pd.DataFrame:
-    """Render smart job filters and return filtered dataframe."""
+    """Render Configurable job filters and return filtered dataframe."""
     
     st.markdown("### 🔍 Filters")
     
@@ -465,7 +466,7 @@ def render_aggrid_table(df: pd.DataFrame):
         """, unsafe_allow_html=True)
 
 def render_standard_table(df: pd.DataFrame):
-    """Render enhanced standard Streamlit table as fallback."""
+    """Render Improved standard Streamlit table as fallback."""
     
     # Prepare display columns with better selection
     preferred_columns = [
@@ -586,14 +587,14 @@ def render_standard_table(df: pd.DataFrame):
             height=600,
             hide_index=True
         )
-        st.caption(f"Note: Advanced styling unavailable ({str(e)})")
+        st.caption(f"Note: Improved styling unavailable ({str(e)})")
     
-    # Enhanced info message
+    # Improved info message
     st.markdown("""
     <div style='background: #1e293b; padding: 1rem; border-radius: 0.5rem; border: 1px solid #334155; margin-top: 1rem;'>
-        <div style='color: #3b82f6; font-weight: 600;'>💡 Enhanced Table Features</div>
+        <div style='color: #3b82f6; font-weight: 600;'>💡 Improved Table Features</div>
         <div style='color: #cbd5e1; font-size: 0.875rem; margin-top: 0.25rem;'>
-            Install <code>st-aggrid</code> for advanced features like multi-selection, filtering, and sorting:<br>
+            Install <code>st-aggrid</code> for Improved features like multi-selection, filtering, and sorting:<br>
             <code>pip install streamlit-aggrid</code>
         </div>
     </div>

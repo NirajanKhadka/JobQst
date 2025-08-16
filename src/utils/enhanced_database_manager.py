@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Enhanced Database Manager
-Provides advanced database operations, optimization, and performance analysis.
+Improved Database Manager
+Provides Improved database operations, optimization, and performance analysis.
 """
 
 import sqlite3
@@ -13,11 +13,11 @@ from rich.console import Console
 console = Console()
 
 
-class EnhancedDatabaseManager:
-    """Enhanced database manager with optimization and performance analysis capabilities."""
+class ImprovedDatabaseManager:
+    """Improved database manager with optimization and performance analysis capabilities."""
     
     def __init__(self, db_path: Optional[str] = None):
-        """Initialize the enhanced database manager."""
+        """Initialize the Improved database manager."""
         self.db_path = db_path or "jobs.db"
         self.console = console
         
@@ -188,4 +188,4 @@ class EnhancedDatabaseManager:
 
 
 # Backward compatibility alias
-DatabaseManager = EnhancedDatabaseManager
+DatabaseManager = ImprovedDatabaseManager

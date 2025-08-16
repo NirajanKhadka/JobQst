@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Demo: Enhanced Custom Data Extractor
+Demo: Improved Custom Data Extractor
 Demonstrates the improved reliability and web validation features.
 """
 
@@ -12,7 +12,7 @@ import time
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from src.analysis.enhanced_custom_extractor import EnhancedCustomExtractor
+from src.analysis.Improved_custom_extractor import ImprovedCustomExtractor
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -20,11 +20,11 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 console = Console()
 
-def demo_enhanced_extraction():
-    """Demonstrate enhanced extraction capabilities."""
+def demo_Improved_extraction():
+    """Demonstrate Improved extraction capabilities."""
     
     console.print(Panel.fit(
-        "[bold blue]Enhanced Custom Data Extractor Demo[/bold blue]\n"
+        "[bold blue]Improved Custom Data Extractor Demo[/bold blue]\n"
         "Showcasing 95%+ reliability with web validation",
         title="🚀 AutoJobAgent Enhancement"
     ))
@@ -35,8 +35,8 @@ def demo_enhanced_extraction():
         TextColumn("[progress.description]{task.description}"),
         console=console
     ) as progress:
-        task = progress.add_task("Initializing enhanced extractor...", total=None)
-        extractor = EnhancedCustomExtractor()
+        task = progress.add_task("Initializing Improved extractor...", total=None)
+        extractor = ImprovedCustomExtractor()
         progress.update(task, completed=True)
     
     # Test cases with varying quality
@@ -372,12 +372,12 @@ def analyze_reliability(results):
 def main():
     """Main demo function."""
     try:
-        demo_enhanced_extraction()
+        demo_Improved_extraction()
         
         console.print("\n[bold green]✅ Demo completed successfully![/bold green]")
         console.print("\n[dim]Next steps:[/dim]")
         console.print("1. Run the cleanup script: [cyan]python scripts/cleanup_project.py --live[/cyan]")
-        console.print("2. Test the enhanced extractor: [cyan]python -m pytest tests/unit/test_enhanced_custom_extractor.py -v[/cyan]")
+        console.print("2. Test the Improved extractor: [cyan]python -m pytest tests/unit/test_Improved_custom_extractor.py -v[/cyan]")
         console.print("3. Integrate with hybrid processor for full pipeline")
         
     except Exception as e:

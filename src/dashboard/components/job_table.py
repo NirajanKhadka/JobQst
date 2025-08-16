@@ -2,7 +2,7 @@
 Enhanced Job Table Component for AutoJobAgent Dashboard
 
 This module provides comprehensive job table display functionality with AI analysis,
-detailed job information, and enhanced filtering capabilities.
+detailed job information, and Improved filtering capabilities.
 """
 
 from typing import List, Optional, Dict, Any
@@ -15,7 +15,7 @@ from datetime import datetime
 
 def render_job_table(df: pd.DataFrame, max_rows: int = 50) -> None:
     """
-    Render an enhanced filterable job table with AI analysis and detailed information.
+    Render an Improved filterable job table with AI analysis and detailed information.
     
     Args:
         df: DataFrame containing job data with AI analysis
@@ -31,14 +31,14 @@ def render_job_table(df: pd.DataFrame, max_rows: int = 50) -> None:
         st.info("No jobs found for this profile")
         return
     
-    # Render enhanced filter controls
-    filters = _render_enhanced_filter_controls(df)
+    # Render Improved filter controls
+    filters = _render_Improved_filter_controls(df)
     
     # Apply filters to data
-    filtered_df = _apply_enhanced_filters(df, filters)
+    filtered_df = _apply_Improved_filters(df, filters)
     
-    # Display filtered results with enhanced information
-    _display_enhanced_job_results(filtered_df, df, max_rows)
+    # Display filtered results with Improved information
+    _display_Improved_job_results(filtered_df, df, max_rows)
 
 
 def get_available_columns(df: pd.DataFrame) -> List[str]:
@@ -56,9 +56,9 @@ def get_available_columns(df: pd.DataFrame) -> List[str]:
     return list(df.columns)
 
 
-def _render_enhanced_filter_controls(df: pd.DataFrame) -> Dict[str, Any]:
+def _render_Improved_filter_controls(df: pd.DataFrame) -> Dict[str, Any]:
     """
-    Render enhanced filter controls for job table.
+    Render Improved filter controls for job table.
     
     Args:
         df: DataFrame containing job data
@@ -66,7 +66,7 @@ def _render_enhanced_filter_controls(df: pd.DataFrame) -> Dict[str, Any]:
     Returns:
         Dictionary containing filter values
     """
-    st.markdown("### 🔍 Advanced Filters")
+    st.markdown("### 🔍 Improved Filters")
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -150,9 +150,9 @@ def _render_enhanced_filter_controls(df: pd.DataFrame) -> Dict[str, Any]:
     }
 
 
-def _apply_enhanced_filters(df: pd.DataFrame, filters: Dict[str, Any]) -> pd.DataFrame:
+def _apply_Improved_filters(df: pd.DataFrame, filters: Dict[str, Any]) -> pd.DataFrame:
     """
-    Apply enhanced filters to the DataFrame.
+    Apply Improved filters to the DataFrame.
     
     Args:
         df: Original DataFrame
@@ -238,7 +238,7 @@ def _sort_dataframe(df: pd.DataFrame, sort_by: str) -> pd.DataFrame:
         return df
 
 
-def _display_enhanced_job_results(filtered_df: pd.DataFrame, original_df: pd.DataFrame, max_rows: int) -> None:
+def _display_Improved_job_results(filtered_df: pd.DataFrame, original_df: pd.DataFrame, max_rows: int) -> None:
     """
     Display enhanced job results with detailed information and AI analysis.
     

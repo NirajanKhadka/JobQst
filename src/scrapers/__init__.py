@@ -6,13 +6,13 @@ Provides core scrapers for job boards with clean architecture and fallback suppo
 from typing import Dict, List, Optional, Any
 from rich.console import Console
 
-# Import core scrapers from src/scrapers
+# Import the unified Eluta scraper
 try:
-    from .unified_eluta_scraper import UnifiedElutaScraper
+    from .unified_eluta_scraper import ElutaScraper
 
-    ELUTA_UNIFIED_AVAILABLE = True
+    ELUTA_SCRAPER_AVAILABLE = True
 except ImportError:
-    ELUTA_UNIFIED_AVAILABLE = False
+    ELUTA_SCRAPER_AVAILABLE = False
 
 try:
     from .eluta_optimized_parallel import ElutaOptimizedParallelScraper
@@ -43,28 +43,28 @@ except ImportError:
     PIPELINE_AVAILABLE = False
 
 try:
-    from .indeed_enhanced import IndeedEnhancedScraper
+    from .indeed_Improved import IndeedImprovedScraper
 
     INDEED_AVAILABLE = True
 except ImportError:
     INDEED_AVAILABLE = False
 
 try:
-    from .linkedin_enhanced import LinkedInEnhancedScraper
+    from .linkedin_Improved import LinkedInImprovedScraper
 
     LINKEDIN_AVAILABLE = True
 except ImportError:
     LINKEDIN_AVAILABLE = False
 
 try:
-    from .monster_enhanced import MonsterEnhancedScraper
+    from .monster_Improved import MonsterImprovedScraper
 
     MONSTER_AVAILABLE = True
 except ImportError:
     MONSTER_AVAILABLE = False
 
 try:
-    from .jobbank_enhanced import JobBankEnhancedScraper
+    from .jobbank_Improved import JobBankImprovedScraper
 
     JOBANK_AVAILABLE = True
 except ImportError:
@@ -94,10 +94,10 @@ except ImportError:
 # Registry of available scrapers
 SCRAPER_REGISTRY = {}
 
-# Add src/scrapers implementations if available
-if ELUTA_UNIFIED_AVAILABLE:
-    SCRAPER_REGISTRY["eluta"] = UnifiedElutaScraper
-    SCRAPER_REGISTRY["eluta_unified"] = UnifiedElutaScraper
+# Add the unified Eluta scraper
+if ELUTA_SCRAPER_AVAILABLE:
+    SCRAPER_REGISTRY["eluta"] = ElutaScraper
+    SCRAPER_REGISTRY["eluta_scraper"] = ElutaScraper
 
 if ELUTA_OPTIMIZED_AVAILABLE:
     SCRAPER_REGISTRY["eluta_optimized"] = ElutaOptimizedParallelScraper
@@ -112,16 +112,16 @@ if PIPELINE_AVAILABLE:
     SCRAPER_REGISTRY["pipeline"] = ModernJobPipeline
 
 if INDEED_AVAILABLE:
-    SCRAPER_REGISTRY["indeed"] = IndeedEnhancedScraper
+    SCRAPER_REGISTRY["indeed"] = IndeedImprovedScraper
 
 if LINKEDIN_AVAILABLE:
-    SCRAPER_REGISTRY["linkedin"] = LinkedInEnhancedScraper
+    SCRAPER_REGISTRY["linkedin"] = LinkedInImprovedScraper
 
 if MONSTER_AVAILABLE:
-    SCRAPER_REGISTRY["monster"] = MonsterEnhancedScraper
+    SCRAPER_REGISTRY["monster"] = MonsterImprovedScraper
 
 if JOBANK_AVAILABLE:
-    SCRAPER_REGISTRY["jobbank"] = JobBankEnhancedScraper
+    SCRAPER_REGISTRY["jobbank"] = JobBankImprovedScraper
 
 if MONSTER_CA_AVAILABLE:
     SCRAPER_REGISTRY["monster_ca"] = MonsterCaScraper
@@ -129,8 +129,8 @@ if MONSTER_CA_AVAILABLE:
 
 # Default scraper for fallback
 DEFAULT_SCRAPER = (
-    UnifiedElutaScraper
-    if ELUTA_UNIFIED_AVAILABLE
+    ElutaScraper
+    if ELUTA_SCRAPER_AVAILABLE
     else (ElutaOptimizedParallelScraper if ELUTA_OPTIMIZED_AVAILABLE else None)
 )
 
@@ -164,7 +164,7 @@ def get_scraper(site_name: str, profile: dict, **kwargs):
 def get_scraper_with_fallbacks(site_name: str, profile: dict, **kwargs):
     """
     Get a scraper instance with comprehensive fallback chain.
-    Fallback order: Requested -> Enhanced -> Basic -> Emergency CSV
+    Fallback order: Requested -> Improved -> Basic -> Emergency CSV
 
     Args:
         site_name: Name of the job site
@@ -183,15 +183,15 @@ def get_scraper_with_fallbacks(site_name: str, profile: dict, **kwargs):
     except Exception as e:
         console.print(f"[yellow]❌ {site_name} scraper failed: {e}[/yellow]")
 
-    # Method 2: Try enhanced scrapers in priority order
-    enhanced_priority = ["eluta", "eluta_optimized", "eluta_multi_ip", "parallel"]
-    for enhanced_site in enhanced_priority:
-        if enhanced_site != site_name and enhanced_site in SCRAPER_REGISTRY:
+    # Method 2: Try Improved scrapers in priority order
+    Improved_priority = ["eluta", "eluta_optimized", "eluta_multi_ip", "parallel"]
+    for Improved_site in Improved_priority:
+        if Improved_site != site_name and Improved_site in SCRAPER_REGISTRY:
             try:
-                console.print(f"[cyan]🔄 Trying enhanced {enhanced_site} scraper...[/cyan]")
-                return get_scraper(enhanced_site, profile, **kwargs)
+                console.print(f"[cyan]🔄 Trying Improved {Improved_site} scraper...[/cyan]")
+                return get_scraper(Improved_site, profile, **kwargs)
             except Exception as e:
-                console.print(f"[yellow]❌ Enhanced {enhanced_site} scraper failed: {e}[/yellow]")
+                console.print(f"[yellow]❌ Improved {Improved_site} scraper failed: {e}[/yellow]")
 
     # Method 3: Try basic scraper (if available)
     if ROOT_SCRAPERS_AVAILABLE:
@@ -330,7 +330,7 @@ class MultiSiteScraper:
 
 def get_scraper_registry():
     """
-    Get the scraper registry for advanced usage.
+    Get the scraper registry for Improved usage.
 
     Returns:
         Dictionary mapping site names to scraper classes

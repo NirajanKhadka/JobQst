@@ -1,8 +1,8 @@
 """
-LinkedIn Enhanced Scraper Module
+LinkedIn Improved Scraper Module
 
-This module provides enhanced scraping capabilities for LinkedIn,
-with advanced job search and data extraction features.
+This module provides Improved scraping capabilities for LinkedIn,
+with Improved job search and data extraction features.
 """
 
 from typing import Dict, Any, List, Optional
@@ -11,17 +11,17 @@ from .scraping_models import ScrapingTask, JobData
 from .session_manager import SessionManager
 
 
-class LinkedInEnhancedScraper:
+class LinkedInImprovedScraper:
     """
-    Enhanced scraper for LinkedIn job board.
+    Improved scraper for LinkedIn job board.
 
-    Provides advanced job search, data extraction, and
-    intelligent filtering for LinkedIn jobs.
+    Provides Improved job search, data extraction, and
+    Automated filtering for LinkedIn jobs.
     """
 
     def __init__(self, profile_name: str, config: Optional[Dict[str, Any]] = None):
         """
-        Initialize the enhanced LinkedIn scraper.
+        Initialize the Improved LinkedIn scraper.
 
         Args:
             profile_name: Name of the user profile
@@ -133,17 +133,17 @@ class LinkedInEnhancedScraper:
         }
 
 
-def create_linkedin_enhanced_scraper(
+def create_linkedin_Improved_scraper(
     profile_name: str, config: Optional[Dict[str, Any]] = None
-) -> LinkedInEnhancedScraper:
+) -> LinkedInImprovedScraper:
     """
-    Factory function to create an enhanced LinkedIn scraper.
+    Factory function to create an Improved LinkedIn scraper.
 
     Args:
         profile_name: Name of the user profile
         config: Configuration dictionary
 
     Returns:
-        LinkedInEnhancedScraper instance
+        LinkedInImprovedScraper instance
     """
-    return LinkedInEnhancedScraper(profile_name, config)
+    return LinkedInImprovedScraper(profile_name, config)

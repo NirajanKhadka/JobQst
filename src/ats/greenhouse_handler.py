@@ -1,6 +1,6 @@
 """
 Greenhouse ATS Handler
-Provides the Greenhouse-specific application logic for EnhancedUniversalApplier.
+Provides the Greenhouse-specific application logic for ImprovedUniversalApplier.
 """
 
 import asyncio

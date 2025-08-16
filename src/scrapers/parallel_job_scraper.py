@@ -24,12 +24,12 @@ class ParallelJobScraper:
 
     async def start_parallel_scraping(self, max_jobs_per_keyword: int = 50) -> List[Dict]:
         # Refactored: Use unified scraper
-        from src.scrapers.unified_eluta_scraper import UnifiedElutaScraper
+        from src.scrapers.unified_eluta_scraper import ElutaScraper
         results = []
         keywords = getattr(self, 'keywords', ["Python", "Data Analyst", "SQL"])
         # Use unified scraper for all scraping
-        unified_scraper = UnifiedElutaScraper(self.profile_name)
-        jobs = await unified_scraper.scrape_all_keywords()
+        eluta_scraper = ElutaScraper(self.profile_name)
+        jobs = await eluta_scraper.scrape_all_keywords()
         results.extend(jobs[:max_jobs_per_keyword])
         return results
 

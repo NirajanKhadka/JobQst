@@ -12,7 +12,13 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 
-from src.pipeline.redis_queue import RedisQueue
+try:
+    from src.pipeline.redis_queue import RedisQueue
+    _REDIS_AVAILABLE = True
+except Exception:
+    RedisQueue = None  # type: ignore
+    _REDIS_AVAILABLE = False
+
 from src.core.job_database import get_job_db
 from src.dashboard.websocket import manager as websocket_manager
 
@@ -168,6 +174,16 @@ class PipelineHealthMonitor:
     async def _check_redis_health(self) -> Dict[str, Any]:
         """Check Redis connectivity and performance."""
         start_time = datetime.now()
+        if not _REDIS_AVAILABLE or RedisQueue is None:
+            return {
+                "status": "degraded",
+                "response_time_seconds": 0.0,
+                "connected": False,
+                "queue_lengths": {"main_queue": 0, "deadletter_queue": 0},
+                "redis_info": {},
+                "test_operations": {"set_get_delete": False},
+                "error": "RedisQueue not available in this environment"
+            }
         
         try:
             redis_queue = RedisQueue(queue_name="jobs:main")

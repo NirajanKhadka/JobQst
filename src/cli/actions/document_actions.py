@@ -2,8 +2,8 @@
 Document Actions for AutoJobAgent CLI.
 
 Contains action processors for document generation operations:
-- AI-powered resume generation
-- AI-powered cover letter generation
+- Automated resume generation
+- Automated cover letter generation
 - Document customization
 - Worker-based parallel processing
 """
@@ -15,7 +15,7 @@ from rich.prompt import Prompt, Confirm
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from pathlib import Path
 
-from gemini_resume_generator import GeminiResumeGenerator
+from src.gemini_resume_generator import GeminiResumeGenerator
 from src.utils.profile_helpers import get_profile_path
 
 console = Console()
@@ -42,7 +42,7 @@ class DocumentActions:
             "3": "💌 Generate cover letters only (4 styles)",
             "4": "🎯 Generate single document type",
             "5": "📊 View existing documents",
-            "6": "🔄 Regenerate with enhanced prompts",
+            "6": "🔄 Regenerate with Improved prompts",
             "7": "🏠 Return to main menu"
         }
 
@@ -65,7 +65,7 @@ class DocumentActions:
             self._generate_single_document_action()
         elif choice == "5":  # View existing documents
             self._view_existing_documents_action()
-        elif choice == "6":  # Regenerate with enhanced prompts
+        elif choice == "6":  # Regenerate with Improved prompts
             self._regenerate_documents_action()
         elif choice == "7":  # Return to main menu
             return False
@@ -297,14 +297,14 @@ class DocumentActions:
         console.print(f"\n[dim]💡 Tip: Use option 1 to generate all documents with AI workers[/dim]")
 
     def _regenerate_documents_action(self) -> None:
-        """Regenerate documents with enhanced prompts."""
+        """Regenerate documents with Improved prompts."""
         console.print(Panel("🔄 Document Regeneration", style="bold yellow"))
         
         if not Confirm.ask("This will overwrite existing documents. Continue?", default=False):
             console.print("[yellow]Operation cancelled[/yellow]")
             return
 
-        console.print("[cyan]Regenerating all documents with enhanced AI prompts...[/cyan]")
+        console.print("[cyan]Regenerating all documents with Improved AI prompts...[/cyan]")
         
         try:
             generator = GeminiResumeGenerator(self.profile)

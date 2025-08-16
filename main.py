@@ -1,16 +1,16 @@
 """
-Main CLI Entry Point - Power User Interface
-This file provides the command-line interface for advanced job automation workflows.
+Main CLI Entry Point
+This file provides the command-line interface for job automation workflows.
 
-🎯 CLI Mode: Perfect for automation, scripting, and power users
+🎯 CLI Mode: For automation, scripting, and command-line users
 🌐 Dashboard: For visual interface, launch: streamlit run src/dashboard/unified_dashboard.py  
 🔄 Hybrid: Use both - monitor in dashboard while running CLI operations
 
-Performance Optimizations:
+Features:
 - Lazy imports for faster startup
-- Memory-efficient argument parsing
-- Optimized pipeline integration
-- Enhanced error handling with recovery
+- Argument parsing and validation
+- Pipeline integration
+- Error handling and logging
 """
 
 import sys
@@ -36,6 +36,43 @@ console = Console()
 # Performance: Lazy import flag for heavy modules
 _HEAVY_IMPORTS_LOADED = False
 
+
+def ensure_auto_job_env():
+    """Ensure we are running inside the 'auto_job' conda environment.
+    If not, attempt to relaunch via 'conda run -n auto_job'.
+    Prevent infinite loop via AUTO_JOB_ENV_ENSURED flag.
+    """
+    try:
+        if os.environ.get("AUTO_JOB_ENV_ENSURED") == "1":
+            return
+        current_env = (os.environ.get("CONDA_DEFAULT_ENV") or "").lower()
+        if current_env == "auto_job":
+            return
+        # Heuristic fallback: check venv/conda prefix path name
+        if "auto_job" in (sys.prefix or "").lower():
+            return
+
+        # Try to re-launch under conda env
+        console.print("[yellow]ℹ️ Not in 'auto_job' env. Attempting to relaunch under it...[/yellow]")
+        import subprocess
+        cmd = [
+            "conda", "run", "-n", "auto_job",
+            "python", __file__,
+            *sys.argv[1:]
+        ]
+        env = os.environ.copy()
+        env["AUTO_JOB_ENV_ENSURED"] = "1"
+        try:
+            subprocess.check_call(cmd, env=env)
+            sys.exit(0)
+        except Exception as e:
+            console.print(f"[red]⚠️ Failed to auto-activate 'auto_job' env: {e}[/red]")
+            console.print("[yellow]Please activate manually: conda activate auto_job[/yellow]")
+    except Exception:
+        # Silent safeguard: don't block execution if anything goes wrong
+        pass
+
+
 def _ensure_imports():
     """Lazy import heavy modules only when needed."""
     global _HEAVY_IMPORTS_LOADED
@@ -48,7 +85,7 @@ def _ensure_imports():
 
 
 def parse_arguments():
-    """Parse command line arguments with enhanced validation."""
+    """Parse command line arguments with Improved validation."""
     parser = argparse.ArgumentParser(
         description="AutoJobAgent - Job Automation System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -72,9 +109,13 @@ Performance Optimized Examples:
     )
     parser.add_argument(
         "--action",
-        choices=["scrape", "dashboard", "interactive", "benchmark", "apply", "process-jobs", "fetch-descriptions", "analyze-jobs", "generate-docs", "shutdown", "pipeline", "health-check", "fast-pipeline"],
+        choices=["scrape", "dashboard", "interactive", "benchmark", "apply", "process", "process-jobs", "fetch-descriptions", "analyze-jobs", "generate-docs", "shutdown", "pipeline", "health-check", "fast-pipeline", "jobspy-pipeline", "legacy-process-jobs"],
         default="interactive",
-        help="Action to perform: scrape (get jobs), apply (submit applications), process-jobs (optimized pipeline with 10 workers), fetch-descriptions (fetch only), analyze-jobs (analyze only), generate-docs (create documents), shutdown (stop dashboard), interactive (dashboard + CLI)",
+        help="Action to perform: interactive (DEFAULT: show menu), "
+             "process/process-jobs (two-stage CPU+GPU processing), "
+             "scrape (get jobs), apply (submit applications), "
+             "jobspy-pipeline (Improved pipeline with JobSpy integration), "
+             "dashboard (launch UI), generate-docs (create documents)",
     )
     parser.add_argument(
         "--sites", help="Comma-separated list of sites (eluta, indeed, linkedin, monster, towardsai)"
@@ -94,6 +135,15 @@ Performance Optimized Examples:
     parser.add_argument("--processing-method", choices=["auto", "gpu", "hybrid", "rule_based"], 
                        default="auto", help="Job processing method for fast pipeline")
     parser.add_argument("--external-workers", type=int, default=6, help="External scraping workers for fast pipeline")
+    
+    # JobSpy integration options
+    parser.add_argument("--jobspy-preset", choices=["fast", "comprehensive", "quality", "mississauga", "toronto", "remote", "canadian_cities", "canada_comprehensive", "tech_hubs"],
+                       default="quality", help="JobSpy configuration preset")
+    parser.add_argument("--enable-eluta", action="store_true", default=True, help="Enable Eluta scraper alongside JobSpy")
+    parser.add_argument("--jobspy-only", action="store_true", help="Use JobSpy only (fastest option)")
+    parser.add_argument("--multi-site-workers", action="store_true", help="Use multi-site worker architecture for optimal performance")
+    parser.add_argument("--hours-old", type=int, default=336, help="Maximum age of jobs in hours (default: 336 = 14 days)")
+    parser.add_argument("--max-jobs-total", type=int, help="Override maximum total jobs for comprehensive searches")
 
     return parser.parse_args()
 
@@ -138,6 +188,203 @@ async def run_optimized_scraping(profile: Dict[str, Any], args) -> bool:
         except Exception as e:
             console.print(f"\n❌ [red]Core Eluta scraping failed: {str(e)}[/red]")
             console.print(f"💡 [cyan]Tip: The new Core Eluta scraper includes 5-tab optimization for better performance[/cyan]")
+            return False
+
+
+async def run_two_stage_processing(profile: Dict[str, Any], args) -> bool:
+    """Run the two-stage job processing pipeline (NEW DEFAULT)."""
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("🚀 Starting Two-Stage Job Processing...", total=None)
+        try:
+            from src.analysis.two_stage_processor import get_two_stage_processor
+            from src.core.job_database import get_job_db
+            from src.scrapers.external_job_scraper import ExternalJobDescriptionScraper
+            
+            progress.update(task, description="📋 Loading jobs from database...")
+            
+            # Load jobs from database
+            db = get_job_db(profile["profile_name"])
+            jobs_data = db.get_jobs_for_processing(limit=args.jobs)
+            
+            if not jobs_data:
+                console.print("[yellow]⚠️ No jobs found in database. Run scraping first.[/yellow]")
+                return False
+            
+            progress.update(task, description=f"🔗 Enhancing {len(jobs_data)} jobs with descriptions...")
+            
+            # Enhance jobs with external descriptions
+            scraper = ExternalJobDescriptionScraper(num_workers=6)
+            job_urls = [job.get('url', '') for job in jobs_data if job.get('url')]
+            
+            if job_urls:
+                scraped_jobs = await scraper.scrape_external_jobs_parallel(job_urls)
+                
+                # Improved matching logic
+                for i, job in enumerate(jobs_data):
+                    if i < len(scraped_jobs) and scraped_jobs[i].get('description'):
+                        job['description'] = scraped_jobs[i]['description']
+            
+            progress.update(task, description="🧠 Initializing two-stage processor...")
+            
+            # Initialize two-stage processor with lenient settings
+            processor = get_two_stage_processor(profile, cpu_workers=10)
+            
+            progress.update(task, description="⚡ Processing jobs through CPU + GPU pipeline...")
+            
+            # Process jobs
+            results = await processor.process_jobs(jobs_data)
+            
+            progress.update(task, description="💾 Saving results to database...")
+            
+            # Save results back to database
+            for result in results:
+                # Determine DB primary key ID for reliable status updates
+                db_row_id = None
+                try:
+                    if getattr(result, 'job_data', None) and isinstance(result.job_data, dict):
+                        db_row_id = result.job_data.get('id')
+                    if not db_row_id and getattr(result, 'url', None):
+                        job_row = db.get_job_by_url(result.url)
+                        if job_row:
+                            db_row_id = job_row.get('id')
+                except Exception:
+                    db_row_id = None
+                
+                # Compute new status from recommendation
+                if result.recommendation == "apply":
+                    new_status = "ready_to_apply"
+                elif result.recommendation == "review":
+                    new_status = "needs_review"
+                else:
+                    new_status = "filtered_out"
+                
+                # Update status using primary key id when available
+                if db_row_id is not None:
+                    db.update_job_status(db_row_id, new_status)
+                else:
+                    # Fallback: update via generic update if we can resolve by URL
+                    try:
+                        if getattr(result, 'url', None):
+                            job_row = db.get_job_by_url(result.url)
+                            if job_row:
+                                db.update_job_status(job_row['id'], new_status)
+                    except Exception:
+                        pass
+                
+                # Save analysis data
+                analysis_data = {
+                    "compatibility_score": result.final_compatibility,
+                    "skills_found": result.final_skills,
+                    "recommendation": result.recommendation,
+                    "processing_method": "two_stage",
+                    "stages_completed": result.stages_completed
+                }
+                
+                # Prefer updating analysis by job_id if present, else fallback to direct update by row id
+                try:
+                    if getattr(result, 'job_id', None):
+                        db.update_job_analysis(result.job_id, analysis_data)
+                    elif db_row_id is not None:
+                        fallback_update = {
+                            "analysis_data": analysis_data,
+                            "compatibility_score": analysis_data["compatibility_score"],
+                            "processing_method": analysis_data["processing_method"],
+                            "status": "processed",
+                        }
+                        db.update_job(db_row_id, fallback_update)
+                except Exception:
+                    # Silent fallback to avoid breaking pipeline on analysis save
+                    pass
+            
+            jobs_processed = len(results)
+            apply_count = len([r for r in results if r.recommendation == "apply"])
+            review_count = len([r for r in results if r.recommendation == "review"])
+            
+            progress.update(task, description=f"🎉 Two-stage processing completed! {apply_count} jobs ready to apply")
+            
+            console.print(f"\n✅ [bold green]Two-stage processing completed![/bold green]")
+            console.print(f"📊 [cyan]Jobs processed: {jobs_processed}[/cyan]")
+            console.print(f"🎯 [cyan]Ready to apply: {apply_count}[/cyan]")
+            console.print(f"📋 [cyan]Need review: {review_count}[/cyan]")
+            console.print(f"💾 [cyan]Results saved to database[/cyan]")
+            
+            return True
+            
+        except Exception as e:
+            console.print(f"\n❌ [red]Two-stage processing failed: {str(e)}[/red]")
+            console.print(f"💡 [cyan]Tip: Make sure you have jobs in your database first[/cyan]")
+            return False
+
+
+async def run_Improved_jobspy_pipeline(profile: Dict[str, Any], args) -> bool:
+    """Run the Improved pipeline with JobSpy integration."""
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("🚀 Starting Enhanced JobSpy Pipeline...", total=None)
+        try:
+            from src.pipeline.Improved_fast_job_pipeline import ImprovedFastJobPipeline
+            
+            # Build config for Improved pipeline
+            pipeline_config = {
+                "enable_jobspy": True,
+                "enable_eluta": not getattr(args, "jobspy_only", False),  # Disable Eluta if jobspy-only
+                "enable_external_scraping": True,
+                "enable_processing": True,
+                "jobspy_preset": getattr(args, "jobspy_preset", "quality"),
+                "jobspy_max_jobs": getattr(args, "max_jobs_total", None) or args.jobs,
+                "external_workers": getattr(args, "external_workers", 6),
+                "processing_method": getattr(args, "processing_method", "auto"),
+                "save_to_database": True,
+                "enable_duplicate_check": True,
+                "hours_old": getattr(args, "hours_old", 336),  # 14 days default
+                "jobspy_sites": getattr(args, "sites", None),  # Pass sites filter to pipeline
+            }
+            
+            progress.update(task, description="⚙️ Initializing Improved Pipeline with JobSpy Integration...")
+            pipeline = ImprovedFastJobPipeline(profile["profile_name"], pipeline_config)
+            
+            progress.update(task, description="🔄 Running complete pipeline (JobSpy → External Scraping → AI Processing)...")
+            # Use the configured max jobs (respects --max-jobs-total parameter)
+            max_jobs_limit = pipeline_config["jobspy_max_jobs"]
+            results = await pipeline.run_complete_pipeline(max_jobs_limit)
+            
+            jobs_found = len(results) if results else 0
+            progress.update(task, description=f"🎉 Improved pipeline completed! Processed {jobs_found} jobs")
+            
+            if jobs_found > 0:
+                stats = pipeline.get_stats()
+                console.print(f"\n✅ [bold green]Enhanced JobSpy pipeline completed successfully![/bold green]")
+                console.print(f"📊 [cyan]Jobs processed: {jobs_found}[/cyan]")
+                console.print(f"🚀 [cyan]JobSpy jobs found: {stats.get('jobspy_jobs_found', 0)}[/cyan]")
+                console.print(f"🕷️ [cyan]Eluta jobs found: {stats.get('eluta_jobs_found', 0)}[/cyan]")
+                console.print(f"📄 [cyan]Descriptions fetched: {stats.get('descriptions_fetched', 0)}[/cyan]")
+                console.print(f"🧠 [cyan]Jobs processed: {stats.get('jobs_processed', 0)}[/cyan]")
+                console.print(f"🎯 [cyan]Ready to apply: {stats.get('jobs_ready_to_apply', 0)}[/cyan]")
+                console.print(f"⚡ [cyan]Speed: {stats.get('jobs_per_second', 0):.1f} jobs/sec[/cyan]")
+                console.print(f"🕰️ [cyan]Total time: {stats.get('total_processing_time', 0):.1f}s[/cyan]")
+                console.print(f"💾 [cyan]Saved to database: {stats.get('jobs_saved', 0)} jobs[/cyan]")
+                
+                # Show JobSpy integration report if available
+                if hasattr(pipeline, 'get_jobspy_report'):
+                    jobspy_report = pipeline.get_jobspy_report()
+                    if "JobSpy not used" not in jobspy_report:
+                        console.print(f"\n[bold green]📋 JobSpy Integration Report:[/bold green]")
+                        console.print(f"[cyan]{jobspy_report}[/cyan]")
+                
+                return True
+            else:
+                console.print(f"\n⚠️ [yellow]No jobs processed. Check JobSpy installation and internet connection.[/yellow]")
+                return False
+        except Exception as e:
+            console.print(f"\n❌ [red]Enhanced JobSpy pipeline failed: {str(e)}[/red]")
+            console.print(f"💡 [cyan]Tip: Make sure python-jobspy is installed: pip install python-jobspy[/cyan]")
             return False
 
 
@@ -298,6 +545,9 @@ def main(profile_name: str = "Nirajan", action: str = "interactive", **kwargs):
 
 
 if __name__ == "__main__":
+    # Ensure the correct conda environment is used
+    ensure_auto_job_env()
+
     # Parse command line arguments
     args = parse_arguments()
 
@@ -326,6 +576,13 @@ if __name__ == "__main__":
         console.print("  python main.py Nirajan --action apply                # Apply to queued jobs")
         console.print("  python main.py Nirajan --action benchmark            # Performance testing")
         
+        console.print("\n[green]🇨🇦 NEW: Canadian Cities JobSpy Integration:[/green]")
+        console.print("  python main.py Nirajan --action jobspy-pipeline --jobspy-preset canadian_cities")
+        console.print("  python main.py Nirajan --action jobspy-pipeline --jobspy-preset canada_comprehensive")
+        console.print("  python main.py Nirajan --action jobspy-pipeline --jobspy-preset tech_hubs")
+        console.print("  python main.py Nirajan --action jobspy-pipeline --jobspy-preset canadian_cities --max-jobs-total 1000")
+        console.print("  python main.py Nirajan --action jobspy-pipeline --jobspy-preset canada_comprehensive --jobspy-only")
+        
         console.print("\n[green]🚀 Performance Features:[/green]")
         console.print("  • NEW: Fast 3-phase pipeline (4-5x faster)")
         console.print("  • Parallel external job scraping (6+ workers)")
@@ -334,7 +591,7 @@ if __name__ == "__main__":
         console.print("  • Memory-optimized worker pools")
         console.print("  • Real-time performance monitoring")
         console.print("  • Adaptive error recovery")
-        console.print("  • Intelligent caching system")
+        console.print("  • Automated caching system")
         
         console.print("\n[yellow]💡 Pro Tip:[/yellow] Use --action fast-pipeline --external-workers 8 for maximum performance!")
         sys.exit(0)
@@ -475,9 +732,15 @@ if __name__ == "__main__":
         success = asyncio.run(run_fast_pipeline(profile, args))
         sys.exit(0 if success else 1)
         
+    elif args.action == "jobspy-pipeline":
+        # NEW: Improved pipeline with JobSpy integration
+        console.print("[bold blue]🚀 Improved Pipeline with JobSpy Integration[/bold blue]")
+        success = asyncio.run(run_Improved_jobspy_pipeline(profile, args))
+        sys.exit(0 if success else 1)
+        
     elif args.action == "scrape":
-        # Enhanced scraping with performance monitoring - NOW USES FAST PIPELINE BY DEFAULT
-        console.print("[bold blue]🔍 Enhanced Scraping Mode (Fast 3-Phase Pipeline)[/bold blue]")
+        # Improved scraping with performance monitoring - NOW USES FAST PIPELINE BY DEFAULT
+        console.print("[bold blue]🔍 Improved Scraping Mode (Fast 3-Phase Pipeline)[/bold blue]")
         
         # Override keywords if provided
         if args.keywords:
@@ -507,10 +770,8 @@ if __name__ == "__main__":
         # Start dashboard only
         dashboard_actions = DashboardActions(profile)
         dashboard_started = dashboard_actions.auto_start_dashboard_action()
-        if dashboard_started:
-            import webbrowser
-            console.print("[green]🌐 Opening Modern Dashboard in browser...[/green]")
-            webbrowser.open(f"http://localhost:8501/")
+        # Browser opening is handled by dashboard_actions, no need to open again here
+        sys.exit(0)  # Exit after starting dashboard to prevent falling through to interactive mode
             
     elif args.action == "benchmark":
         # Run performance benchmark
@@ -580,11 +841,11 @@ if __name__ == "__main__":
     elif args.action == "apply":
         # Run automated job applications
         console.print("[bold blue]🤖 Automated Job Application[/bold blue]")
-        console.print("[cyan]Applying to jobs from database with smart form filling...[/cyan]")
+        console.print("[cyan]Applying to jobs from database with Configurable form filling...[/cyan]")
 
         try:
             import asyncio
-            from src.ats.enhanced_universal_applier import apply_to_jobs_from_database
+            from src.ats.Improved_universal_applier import apply_to_jobs_from_database
 
             # Get max applications from batch size
             max_applications = args.batch if args.batch else 5
@@ -617,8 +878,24 @@ if __name__ == "__main__":
                 "[yellow]Please ensure you have jobs in the database and valid documents[/yellow]"
             )
             
-    elif args.action == "process-jobs":
-        console.print("[bold blue]🔄 Processing Scraped Jobs (Optimized Pipeline)[/bold blue]")
+    elif args.action in ["process", "process-jobs"]:
+        console.print("[bold blue]🔄 Two-Stage Job Processing (NEW DEFAULT)[/bold blue]")
+        try:
+            # Use the two-stage processor as the default processing method
+            success = asyncio.run(run_two_stage_processing(profile, args))
+            
+            if success:
+                console.print("[green]✅ Two-stage processing completed successfully![/green]")
+                console.print("[cyan]💡 Check the dashboard for results: http://localhost:8501[/cyan]")
+            else:
+                console.print("[yellow]⚠️ Two-stage processing completed with limited results[/yellow]")
+                
+        except Exception as e:
+            console.print(f"[red]❌ Two-stage processing failed: {e}[/red]")
+            console.print("[yellow]💡 Try running with --verbose for more details[/yellow]")
+            
+    elif args.action == "legacy-process-jobs":
+        console.print("[bold blue]🔄 Legacy Job Processing (Orchestrator)[/bold blue]")
         try:
             from src.orchestration.description_fetcher_orchestrator import process_scraped_jobs_with_orchestrator
             from src.orchestration.job_processor_orchestrator import process_jobs_with_orchestrator
@@ -646,6 +923,11 @@ if __name__ == "__main__":
             else:
                 console.print("[yellow]⚠️ No descriptions were fetched. Check if you have scraped jobs in database.[/yellow]")
                 
+        except ImportError as e:
+            console.print(f"[red]❌ Legacy orchestrator not available: {e}[/red]")
+            console.print("[yellow]💡 Use --action fast-pipeline or --action jobspy-pipeline instead[/yellow]")
+            console.print("[cyan]  python main.py Nirajan --action fast-pipeline --external-workers 6[/cyan]")
+            console.print("[cyan]  python main.py Nirajan --action jobspy-pipeline --jobspy-preset quality[/cyan]")
         except Exception as e:
             console.print(f"[red]❌ Job processing failed: {e}[/red]")
             
@@ -661,6 +943,10 @@ if __name__ == "__main__":
             console.print(f"[green]✅ Description fetching completed in {stats['processing_time']:.1f}s[/green]")
             console.print("[cyan]💡 Jobs now have status 'description_saved' and are ready for analysis[/cyan]")
                 
+        except ImportError as e:
+            console.print(f"[red]❌ Legacy orchestrator not available: {e}[/red]")
+            console.print("[yellow]💡 Use --action fast-pipeline for complete pipeline instead[/yellow]")
+            console.print("[cyan]  python main.py Nirajan --action fast-pipeline --external-workers 6[/cyan]")
         except Exception as e:
             console.print(f"[red]❌ Description fetching failed: {e}[/red]")
             
@@ -679,50 +965,15 @@ if __name__ == "__main__":
             else:
                 console.print("[yellow]⚠️ No jobs were analyzed. Run --action fetch-descriptions first.[/yellow]")
                 
+        except ImportError as e:
+            console.print(f"[red]❌ Legacy orchestrator not available: {e}[/red]")
+            console.print("[yellow]💡 Use --action process-jobs for complete two-stage processing instead[/yellow]")
+            console.print("[cyan]  python main.py Nirajan --action process-jobs --processing-method rule_based[/cyan]")
         except Exception as e:
             console.print(f"[red]❌ Job analysis failed: {e}[/red]")
             
-            if not jobs_to_process:
-                console.print("[yellow]⚠️ No jobs found that need processing[/yellow]")
-                console.print("[cyan]💡 All jobs appear to be fully processed[/cyan]")
-                console.print("[cyan]💡 Use --action scrape to get new jobs[/cyan]")
-            else:
-                console.print(f"[cyan]📋 Found {len(jobs_to_process)} jobs to process[/cyan]")
-                console.print(f"[cyan]🚀 Using Fast Pipeline orchestrator...[/cyan]")
-                
-                # Configure Fast Pipeline for processing existing jobs
-                pipeline_config = {
-                    "eluta_pages": 1,
-                    "eluta_jobs": 0,
-                    "external_workers": 0,
-                    "processing_method": "auto",
-                    "save_to_database": True,
-                    "enable_duplicate_check": False,
-                }
-                
-                pipeline = FastJobPipeline(profile_name, pipeline_config)
-                
-                # Process existing jobs (skip scraping phases)
-                processed_jobs = asyncio.run(pipeline._phase3_process_jobs(jobs_to_process))
-                
-                if processed_jobs:
-                    # Save updated jobs
-                    asyncio.run(pipeline._save_jobs_to_database(processed_jobs))
-                    
-                    stats = pipeline.get_stats()
-                    console.print(f"[bold green]✅ Processing completed![/bold green]")
-                    console.print(f"[cyan]📊 Jobs processed: {len(processed_jobs)}[/cyan]")
-                    console.print(f"[cyan]🧠 Method: {stats.get('processing_method_used', 'auto')}[/cyan]")
-                    console.print(f"[cyan]💾 Jobs saved: {stats.get('jobs_saved', len(processed_jobs))}[/cyan]")
-                else:
-                    console.print("[yellow]⚠️ No jobs were successfully processed[/yellow]")
-                    
-        except Exception as e:
-            console.print(f"[red]❌ Error processing jobs: {e}[/red]")
-            console.print("[yellow]💡 Try using --action scrape for fresh jobs[/yellow]")
-            
     elif args.action == "generate-docs":
-        console.print("[bold blue]📄 Generating AI-Powered Documents[/bold blue]")
+        console.print("[bold blue]📄 Generating Automated Documents[/bold blue]")
         try:
             # Use GeminiResumeGenerator directly (services.document_generator does not exist)
             from src.gemini_resume_generator import GeminiResumeGenerator

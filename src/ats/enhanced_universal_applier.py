@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced Universal Job Applier
+Improved Universal Job Applier
 A comprehensive job application system that works with ALL ATS and non-ATS systems.
 """
 
@@ -23,7 +23,8 @@ from .workday_handler import apply_workday
 from .greenhouse_handler import apply_greenhouse
 from .icims_handler import apply_icims
 from .lever_handler import apply_lever
-from .bamboohr_handler import apply_bamboohr
+# NOTE: BambooHR integration has been removed; do not import bamboohr_handler
+# from .bamboohr_handler import apply_bamboohr
 
 # Import form utilities
 from .form_utils import (
@@ -56,11 +57,11 @@ from src.core.job_database import get_job_db
 console = Console()
 
 
-class EnhancedUniversalApplier:
+class ImprovedUniversalApplier:
     """
-    Enhanced universal job applier that works with all ATS and non-ATS systems.
+    Improved universal job applier that works with all ATS and non-ATS systems.
     Features:
-    - Smart form detection and filling
+    - Configurable form detection and filling
     - Multi-step application handling
     - Document auto-upload
     - Comprehensive error recovery
@@ -68,7 +69,7 @@ class EnhancedUniversalApplier:
     """
 
     def __init__(self, profile_name: str = "Nirajan", profile_path: str = None, headless: bool = True, dry_run: bool = False):
-        """Initialize the enhanced universal applier."""
+        """Initialize the Improved universal applier."""
         self.profile_name = profile_name
         self.profile_path = profile_path
         self.headless = headless
@@ -106,7 +107,7 @@ class EnhancedUniversalApplier:
         self.applications_failed = []
         self.applications_manual = []
 
-        console.print(f"[cyan]🚀 Enhanced Universal Applier initialized for {profile_name}[/cyan]")
+        console.print(f"[cyan]🚀 Improved Universal Applier initialized for {profile_name}[/cyan]")
         if not dry_run:
             console.print(f"[cyan]📄 Resume: {self.resume_path}[/cyan]")
             console.print(f"[cyan]📄 Cover Letter: {self.cover_letter_path}[/cyan]")
@@ -229,7 +230,7 @@ class EnhancedUniversalApplier:
                 page = await context.new_page()
 
                 # Navigate to job page
-                console.print(f"[cyan]🌐 Navigating to job page...[/cyan]")
+                console.print(f"[cyan]\U0001f310 Navigating to job page...[/cyan]")
                 await page.goto(job["url"], timeout=self.timeout)
                 await page.wait_for_load_state("domcontentloaded")
                 await asyncio.sleep(2)
@@ -253,13 +254,14 @@ class EnhancedUniversalApplier:
                 elif ats_system == "lever":
                     return await apply_lever(page, job)
                 elif ats_system == "bamboohr":
-                    return await apply_bamboohr(page, job)
+                    # BambooHR integration removed: fall back to generic application flow
+                    return await self._apply_generic(page, job)
                 else:
                     # Generic application for unknown ATS
                     return await self._apply_generic(page, job)
 
             except Exception as e:
-                console.print(f"[red]❌ Browser error: {e}[/red]")
+                console.print(f"[red]\u274c Browser error: {e}[/red]")
                 return f"browser_error: {str(e)}"
             finally:
                 await context.close()
@@ -505,7 +507,7 @@ class EnhancedUniversalApplier:
 # Convenience functions
 async def apply_to_job(job: Dict, profile_name: str = "Nirajan") -> Dict:
     """Apply to a single job."""
-    applier = EnhancedUniversalApplier(profile_name)
+    applier = ImprovedUniversalApplier(profile_name)
     return await applier.apply_to_job(job)
 
 
@@ -513,7 +515,7 @@ async def apply_to_jobs_from_database(
     profile_name: str = "Nirajan", max_applications: int = 10
 ) -> Dict:
     """Apply to jobs from the database."""
-    applier = EnhancedUniversalApplier(profile_name)
+    applier = ImprovedUniversalApplier(profile_name)
 
     # Get jobs from database
     db = get_job_db(profile_name)

@@ -57,7 +57,7 @@ def fetch_job_links_playwright_and_save():
 
 
 def main():
-    # Example: Use robust keyword extraction utility (for future CLI integration)
+    # Example: Use reliable keyword extraction utility (for future CLI integration)
     from src.utils.keyword_extractor import get_keywords_for_profile
     profile_path = "profiles/Nirajan/Nirajan.json"  # TODO: make dynamic for CLI
     try:

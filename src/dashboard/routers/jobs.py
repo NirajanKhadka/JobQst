@@ -22,7 +22,7 @@ try:
     APPLIER_AVAILABLE = True
 except ImportError:
     try:
-        from src.ats.enhanced_universal_applier import EnhancedUniversalApplier as JobApplier
+        from src.ats.Improved_universal_applier import ImprovedUniversalApplier as JobApplier
         APPLIER_AVAILABLE = True
     except ImportError:
         APPLIER_AVAILABLE = False
@@ -47,7 +47,7 @@ class JobFilters(BaseModel):
     search: Optional[str] = None
 
 
-async def get_jobs_enhanced(
+async def get_jobs_Improved(
     request: Request,
     limit: int = 50,
     offset: int = 0,
@@ -146,7 +146,7 @@ async def get_jobs(
     Returns:
         Dictionary containing jobs, total count, and pagination info
     """
-    return await get_jobs_enhanced(
+    return await get_jobs_Improved(
         request, limit, offset, profile, site, search, applied, experience
     )
 

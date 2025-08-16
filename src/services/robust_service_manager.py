@@ -1,5 +1,5 @@
 """
-Robust Service Manager for AutoJobAgent Dashboard
+reliable Service Manager for AutoJobAgent Dashboard
 Handles reliable startup and monitoring of core services
 """
 
@@ -35,8 +35,8 @@ class ServiceInfo:
     error_message: Optional[str] = None
     last_check: Optional[float] = None
 
-class RobustServiceManager:
-    """Manages core services with robust error handling and recovery."""
+class reliableServiceManager:
+    """Manages core services with reliable error handling and recovery."""
     
     def __init__(self):
         self.services: Dict[str, ServiceInfo] = {}
@@ -109,7 +109,7 @@ class RobustServiceManager:
         return service_info.status
     
     def start_service(self, service_name: str) -> bool:
-        """Start a service with robust error handling."""
+        """Start a service with reliable error handling."""
         if service_name not in self.service_configs:
             logger.error(f"Unknown service: {service_name}")
             return False
@@ -393,9 +393,9 @@ class RobustServiceManager:
 # Global service manager instance
 _service_manager = None
 
-def get_service_manager() -> RobustServiceManager:
+def get_service_manager() -> reliableServiceManager:
     """Get the global service manager instance."""
     global _service_manager
     if _service_manager is None:
-        _service_manager = RobustServiceManager()
+        _service_manager = reliableServiceManager()
     return _service_manager

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 French Job Filter - Specialized filter for removing French jobs and Montreal jobs with penalty scoring.
-Provides intelligent job filtering based on language, location, and content analysis.
+Provides Automated job filtering based on language, location, and content analysis.
 """
 
 import re
@@ -25,7 +25,7 @@ class FilterResult:
 
 class FrenchJobFilter:
     """
-    Intelligent job filtering system that removes French jobs and Montreal jobs.
+    Automated job filtering system that removes French jobs and Montreal jobs.
     Provides penalty scoring for filtered jobs.
     """
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Modern User Profile Manager - Simple, robust, and easy to debug
-Enhanced with better error handling and modern Python patterns.
+Modern User Profile Manager - Simple, reliable, and easy to debug
+Improved with better error handling and modern Python patterns.
 """
 
 import json
@@ -56,8 +56,8 @@ class ProfileData:
 
 class ModernUserProfileManager:
     """
-    Modern user profile manager with simple, robust operations.
-    Enhanced error handling and easy debugging.
+    Modern user profile manager with simple, reliable operations.
+    Improved error handling and easy debugging.
     """
     
     def __init__(self, profiles_dir: str = "profiles"):
@@ -386,7 +386,7 @@ class ModernUserProfileManager:
     def analyze_and_update_profile(self, name: str, jobs: list = None) -> bool:
         """
         Analyze jobs and update the profile's intelligence (keywords, skills, etc.).
-        This is a stub for robust operation. It logs the call and updates keywords/skills if jobs are provided.
+        This is a stub for reliable operation. It logs the call and updates keywords/skills if jobs are provided.
         """
         try:
             logger.info(f"🔍 Analyzing and updating profile '{name}' with {len(jobs) if jobs else 0} jobs...")

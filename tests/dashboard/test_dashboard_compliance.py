@@ -233,7 +233,7 @@ class TestDashboardCompliance:
                 content = template_file.read_text(encoding='utf-8')
                 
                 # Check for problematic white font usage
-                # This is a simplified check - you could make it more sophisticated
+                # This is a simplified check - you could make it more effective
                 lines = content.split('\n')
                 for i, line in enumerate(lines, 1):
                     if 'color: white' in line or 'color: #fff' in line:

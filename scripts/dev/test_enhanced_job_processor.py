@@ -14,11 +14,11 @@ import multiprocessing as mp
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from src.orchestration.enhanced_job_processor import (
-    EnhancedJobProcessor,
+from src.orchestration.Improved_job_processor import (
+    ImprovedJobProcessor,
     ProcessingStatus,
     ProcessingStats,
-    get_enhanced_job_processor,
+    get_Improved_job_processor,
     process_jobs_for_profile
 )
 
@@ -27,8 +27,8 @@ def test_processor_initialization():
     print("🧪 Testing Enhanced Job Processor Initialization...")
     
     # Mock dependencies to avoid actual database/Ollama connections
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client') as mock_ollama:
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client') as mock_ollama:
         
         # Mock database
         mock_db = Mock()
@@ -41,7 +41,7 @@ def test_processor_initialization():
         mock_ollama.return_value = mock_ollama_client
         
         # Initialize processor
-        processor = EnhancedJobProcessor(
+        processor = ImprovedJobProcessor(
             profile_name="test_profile",
             worker_count=2,
             batch_size=5
@@ -65,8 +65,8 @@ def test_get_jobs_for_processing():
     """Test job retrieval for processing."""
     print("\n🧪 Testing Job Retrieval for Processing...")
     
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client'):
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client'):
         
         # Mock database with sample jobs
         mock_db = Mock()
@@ -89,7 +89,7 @@ def test_get_jobs_for_processing():
         mock_get_db.return_value = mock_db
         
         # Initialize processor
-        processor = EnhancedJobProcessor("test_profile")
+        processor = ImprovedJobProcessor("test_profile")
         
         # Test job retrieval
         jobs = processor._get_jobs_for_processing(limit=10)
@@ -113,8 +113,8 @@ def test_processing_status_and_stats():
     """Test processing status and statistics tracking."""
     print("\n🧪 Testing Processing Status and Statistics...")
     
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client'):
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client'):
         
         # Mock database
         mock_db = Mock()
@@ -122,7 +122,7 @@ def test_processing_status_and_stats():
         mock_get_db.return_value = mock_db
         
         # Initialize processor
-        processor = EnhancedJobProcessor("test_profile", worker_count=2, batch_size=3)
+        processor = ImprovedJobProcessor("test_profile", worker_count=2, batch_size=3)
         
         # Test initial status
         status = processor.get_processing_status()
@@ -157,8 +157,8 @@ def test_system_health_monitoring():
     """Test system health monitoring functionality."""
     print("\n🧪 Testing System Health Monitoring...")
     
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client') as mock_ollama:
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client') as mock_ollama:
         
         # Mock database
         mock_db = Mock()
@@ -172,7 +172,7 @@ def test_system_health_monitoring():
         mock_ollama.return_value = mock_ollama_client
         
         # Initialize processor
-        processor = EnhancedJobProcessor("test_profile")
+        processor = ImprovedJobProcessor("test_profile")
         
         # Get health information
         health = processor.get_system_health()
@@ -198,8 +198,8 @@ def test_configuration_updates():
     """Test processor configuration updates."""
     print("\n🧪 Testing Configuration Updates...")
     
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client'):
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client'):
         
         # Mock database
         mock_db = Mock()
@@ -207,7 +207,7 @@ def test_configuration_updates():
         mock_get_db.return_value = mock_db
         
         # Initialize processor
-        processor = EnhancedJobProcessor("test_profile", worker_count=2, batch_size=5)
+        processor = ImprovedJobProcessor("test_profile", worker_count=2, batch_size=5)
         
         # Test initial configuration
         assert processor.worker_count == 2
@@ -239,8 +239,8 @@ def test_stats_reset():
     """Test statistics reset functionality."""
     print("\n🧪 Testing Statistics Reset...")
     
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client'):
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client'):
         
         # Mock database
         mock_db = Mock()
@@ -248,7 +248,7 @@ def test_stats_reset():
         mock_get_db.return_value = mock_db
         
         # Initialize processor
-        processor = EnhancedJobProcessor("test_profile", worker_count=2, batch_size=5)
+        processor = ImprovedJobProcessor("test_profile", worker_count=2, batch_size=5)
         
         # Set some statistics
         processor.stats.total_jobs = 20
@@ -279,23 +279,23 @@ def test_convenience_functions():
     """Test convenience functions for integration."""
     print("\n🧪 Testing Convenience Functions...")
     
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client'):
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client'):
         
         # Mock database
         mock_db = Mock()
         mock_db.get_job_stats.return_value = {}
         mock_get_db.return_value = mock_db
         
-        # Test get_enhanced_job_processor function
-        processor = get_enhanced_job_processor("test_profile", worker_count=3, batch_size=7)
+        # Test get_Improved_job_processor function
+        processor = get_Improved_job_processor("test_profile", worker_count=3, batch_size=7)
         
-        assert isinstance(processor, EnhancedJobProcessor)
+        assert isinstance(processor, ImprovedJobProcessor)
         assert processor.profile_name == "test_profile"
         assert processor.worker_count == 3
         assert processor.batch_size == 7
         
-        print("✅ get_enhanced_job_processor works correctly")
+        print("✅ get_Improved_job_processor works correctly")
         print("✅ Configuration parameters passed properly")
         print("🎉 Convenience functions test passed!")
         return True
@@ -304,10 +304,10 @@ def test_multiprocessing_pool_integration():
     """Test multiprocessing pool integration (mocked)."""
     print("\n🧪 Testing Multiprocessing Pool Integration...")
     
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client'), \
-         patch('src.orchestration.enhanced_job_processor.Pool') as mock_pool_class, \
-         patch('src.orchestration.enhanced_job_processor.update_jobs_in_database') as mock_update_db:
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client'), \
+         patch('src.orchestration.Improved_job_processor.Pool') as mock_pool_class, \
+         patch('src.orchestration.Improved_job_processor.update_jobs_in_database') as mock_update_db:
         
         # Mock database
         mock_db = Mock()
@@ -332,7 +332,7 @@ def test_multiprocessing_pool_integration():
         mock_update_db.return_value = (2, 0)  # 2 successful, 0 failed
         
         # Initialize processor
-        processor = EnhancedJobProcessor("test_profile")
+        processor = ImprovedJobProcessor("test_profile")
         
         # Process jobs
         stats = processor.process_jobs_parallel(limit=10)
@@ -359,8 +359,8 @@ def test_error_handling():
     print("\n🧪 Testing Error Handling...")
     
     # Test database connection error during initialization
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client'):
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client'):
         
         # Mock database to raise error during validation
         mock_db = Mock()
@@ -368,22 +368,22 @@ def test_error_handling():
         mock_get_db.return_value = mock_db
         
         try:
-            processor = EnhancedJobProcessor("test_profile")
+            processor = ImprovedJobProcessor("test_profile")
             assert False, "Should have raised RuntimeError"
         except RuntimeError as e:
             assert "Database connection failed" in str(e)
             print("✅ Database connection error handled correctly")
     
     # Test successful initialization with job retrieval error
-    with patch('src.orchestration.enhanced_job_processor.get_job_db') as mock_get_db, \
-         patch('src.orchestration.enhanced_job_processor.get_gpu_ollama_client'):
+    with patch('src.orchestration.Improved_job_processor.get_job_db') as mock_get_db, \
+         patch('src.orchestration.Improved_job_processor.get_gpu_ollama_client'):
         
         # Mock database for successful initialization
         mock_db = Mock()
         mock_db.get_job_stats.return_value = {}
         mock_get_db.return_value = mock_db
         
-        processor = EnhancedJobProcessor("test_profile")
+        processor = ImprovedJobProcessor("test_profile")
         
         # Test job retrieval error
         mock_db.get_jobs_by_status.side_effect = Exception("Database query failed")
@@ -416,7 +416,7 @@ def main():
         print("✅ Multiprocessing.Pool(processes=2) integration verified!")
         print("✅ Job batching and distribution working!")
         print("✅ Statistics and monitoring functional!")
-        print("✅ Error handling is robust!")
+        print("✅ Error handling is reliable!")
         print("✅ Configuration management working!")
         print("✅ System health monitoring operational!")
         print("✅ Ready for production deployment!")

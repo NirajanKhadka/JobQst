@@ -18,7 +18,7 @@ def test_imports():
     
     tests = [
         ("Parallel Job Scraper", "from src.scrapers.parallel_job_scraper import ParallelJobScraper"),
-        ("Enhanced Eluta Scraper", "from src.scrapers.eluta_enhanced import ElutaEnhancedScraper"),
+        ("Improved Eluta Scraper", "from src.scrapers.eluta_Improved import ElutaImprovedScraper"),
         ("Debug Dashboard", "import debug_dashboard_issue"),
         ("Main Menu Functions", "from main import ultra_fast_scrape_action, deep_scrape_action, debug_dashboard_action"),
     ]
@@ -54,12 +54,12 @@ def test_imports():
         console.print(f"[bold red]❌ {total - passed} import tests failed![/bold red]")
         pytest.skip(f"{total - passed} import tests failed")
 
-def test_enhanced_scraper_features():
-    """Test enhanced scraper features."""
-    console.print("\n[bold blue]🔍 Testing Enhanced Scraper Features[/bold blue]")
+def test_Improved_scraper_features():
+    """Test Improved scraper features."""
+    console.print("\n[bold blue]🔍 Testing Improved Scraper Features[/bold blue]")
     
     try:
-        from src.scrapers.eluta_enhanced import ElutaEnhancedScraper
+        from src.scrapers.eluta_Improved import ElutaImprovedScraper
         
         # Create a test profile
         test_profile = {
@@ -71,9 +71,9 @@ def test_enhanced_scraper_features():
         }
         
         # Test scraper initialization
-        scraper = ElutaEnhancedScraper(test_profile, deep_scraping=True)
+        scraper = ElutaImprovedScraper(test_profile, deep_scraping=True)
         
-        console.print("[green]✅ Enhanced scraper initialized successfully[/green]")
+        console.print("[green]✅ Improved scraper initialized successfully[/green]")
         console.print(f"[cyan]   Deep scraping enabled: {scraper.deep_scraping}[/cyan]")
         console.print(f"[cyan]   Rate limit delay: {scraper.rate_limit_delay}[/cyan]")
         console.print(f"[cyan]   Max pages per keyword: {scraper.max_pages_per_keyword}[/cyan]")
@@ -81,7 +81,7 @@ def test_enhanced_scraper_features():
         assert True
         
     except Exception as e:
-        console.print(f"[red]❌ Enhanced scraper test failed: {e}[/red]")
+        console.print(f"[red]❌ Improved scraper test failed: {e}[/red]")
         pytest.skip("Feature not available")
 
 def test_ultra_parallel_scraper():
@@ -208,7 +208,7 @@ def main():
     
     tests = [
         ("Import Tests", test_imports),
-        ("Enhanced Scraper", test_enhanced_scraper_features),
+        ("Improved Scraper", test_Improved_scraper_features),
         ("Ultra Parallel Scraper", test_ultra_parallel_scraper),
         ("Main Menu Functions", test_main_menu_functions),
         ("Debug Dashboard", test_debug_dashboard),

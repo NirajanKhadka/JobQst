@@ -1,5 +1,5 @@
 """
-Dependency Checker for Enhanced Dashboard Components
+Dependency Checker for Improved Dashboard Components
 Checks for optional dependencies and provides installation guidance
 """
 
@@ -10,7 +10,7 @@ import sys
 from typing import Dict, List, Tuple
 
 def check_optional_dependencies() -> Dict[str, bool]:
-    """Check availability of optional dependencies for enhanced features."""
+    """Check availability of optional dependencies for Improved features."""
     
     dependencies = {
         'st_aggrid': False,
@@ -53,7 +53,7 @@ def render_dependency_status() -> None:
     missing = get_missing_dependencies()
     
     if not missing:
-        st.sidebar.success("✅ All enhanced features available!")
+        st.sidebar.success("✅ All Improved features available!")
         return
     
     st.sidebar.warning(f"⚠️ {len(missing)} optional dependencies missing")
@@ -100,12 +100,12 @@ def render_enhancement_installer() -> None:
         st.markdown("**Available Enhancements:**")
         
         enhancements = {
-            'st_aggrid': '📊 Advanced interactive tables with sorting, filtering, and selection',
+            'st_aggrid': '📊 Improved interactive tables with sorting, filtering, and selection',
             'streamlit_elements': '🎨 Modern UI components and layouts',
             'streamlit_autorefresh': '🔄 Automatic dashboard refresh capabilities',
             'plotly': '📈 Interactive charts and visualizations',
-            'numpy': '🔢 Advanced numerical computations',
-            'pandas': '📋 Enhanced data manipulation'
+            'numpy': '🔢 Improved numerical computations',
+            'pandas': '📋 Improved data manipulation'
         }
         
         for dep in missing:
@@ -149,13 +149,13 @@ def render_enhancement_installer() -> None:
                             st.error(f"❌ Failed to install {package}")
 
 def get_feature_availability() -> Dict[str, bool]:
-    """Get availability status of enhanced features."""
+    """Get availability status of Improved features."""
     deps = check_optional_dependencies()
     
     return {
-        'enhanced_tables': deps['st_aggrid'],
+        'Improved_tables': deps['st_aggrid'],
         'modern_ui': deps['streamlit_elements'],
         'auto_refresh': deps['streamlit_autorefresh'],
-        'advanced_charts': deps['plotly'],
+        'Improved_charts': deps['plotly'],
         'data_analysis': deps['numpy'] and deps['pandas']
     }

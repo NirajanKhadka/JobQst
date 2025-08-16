@@ -19,7 +19,7 @@ from rich.table import Table
 from rich.live import Live
 from rich.prompt import Prompt, Confirm
 
-from enhanced_application_agent import EnhancedApplicationAgent, run_application_agent
+from Improved_application_agent import ImprovedApplicationAgent, run_application_agent
 from background_gmail_monitor import BackgroundGmailMonitor
 from src.core.job_database import get_job_db
 
@@ -91,7 +91,7 @@ class MultiAgentOrchestrator:
             if Confirm.ask("Run agents sequentially? (Recommended for first time)", default=True):
                 await self._run_sequential_mode(max_applications, enhance_jobs, run_gmail_monitor)
             else:
-                # Option 2: Run agents in parallel (advanced)
+                # Option 2: Run agents in parallel (Improved)
                 await self._run_parallel_mode(max_applications, enhance_jobs, run_gmail_monitor)
 
         except KeyboardInterrupt:
@@ -168,9 +168,9 @@ class MultiAgentOrchestrator:
     async def _run_parallel_mode(
         self, max_applications: int, enhance_jobs: bool, run_gmail_monitor: bool
     ) -> None:
-        """Run agents in parallel (advanced mode)."""
+        """Run agents in parallel (Improved mode)."""
         console.print(Panel.fit("⚡ PARALLEL MODE", style="bold yellow"))
-        console.print("[yellow]⚠️ Advanced mode: Agents will run simultaneously[/yellow]")
+        console.print("[yellow]⚠️ Improved mode: Agents will run simultaneously[/yellow]")
 
         tasks = []
 

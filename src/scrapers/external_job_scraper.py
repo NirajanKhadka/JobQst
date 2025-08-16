@@ -13,12 +13,12 @@ from playwright.async_api import async_playwright, Page
 from rich.console import Console
 from rich.progress import Progress, TaskID
 
-from .enhanced_job_description_scraper import EnhancedJobDescriptionScraper
+from .enhanced_job_description_scraper import ImprovedJobDescriptionScraper
 
 console = Console()
 
 
-class ExternalJobDescriptionScraper(EnhancedJobDescriptionScraper):
+class ExternalJobDescriptionScraper(ImprovedJobDescriptionScraper):
     """
     Parallel scraper for external job sites (Workday, Greenhouse, company pages).
     Does NOT scrape Eluta directly - only external sites that Eluta URLs point to.

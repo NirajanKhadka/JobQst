@@ -109,7 +109,7 @@ class GreenhouseSubmitter(BaseSubmitter):
             ]
 
             try:
-                FormUtils.smart_attach(page, resume_selectors, resume_path)
+                FormUtils.Configurable_attach(page, resume_selectors, resume_path)
             except NeedsHumanException as e:
                 console.print(f"[yellow]{str(e)}[/yellow]")
                 self.wait_for_human(page, "Please upload resume manually then press Enter")

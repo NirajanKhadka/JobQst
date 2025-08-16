@@ -20,7 +20,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from src.core.session import SessionManager
-from src.utils.job_analysis_engine import run_intelligent_scraping
+from src.utils.job_analysis_engine import run_Automated_scraping
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -300,8 +300,8 @@ class ScrapingHandler:
             console.print("[cyan]🔄 Falling back to simple mode...[/cyan]")
             return self._run_simple_scraping(sites, keywords, days, pages, jobs)
 
-    def _run_enhanced_scraping(self, days: int, pages: int, jobs: int) -> bool:
-        """Run enhanced scraping with custom parameters using unified scraper."""
+    def _run_Improved_scraping(self, days: int, pages: int, jobs: int) -> bool:
+        """Run Improved scraping with custom parameters using unified scraper."""
         try:
             profile_name = self.profile.get("profile_name", "default")
             
@@ -323,23 +323,23 @@ class ScrapingHandler:
             # Execute async scraping
             jobs_data = asyncio.run(run_unified_eluta_scraper(profile_name, config))
             
-            console.print("[bold green]✅ Enhanced scraping completed successfully![/bold green]")
+            console.print("[bold green]✅ Improved scraping completed successfully![/bold green]")
             console.print(f"[cyan]📊 Total jobs scraped: {len(jobs_data) if jobs_data else 0}[/cyan]")
             
             return True
                 
         except Exception as e:
-            console.print(f"[red]❌ Error running enhanced scraping: {e}[/red]")
+            console.print(f"[red]❌ Error running Improved scraping: {e}[/red]")
             import traceback
             console.print(f"[red]Traceback: {traceback.format_exc()}[/red]")
             return False
 
-    def eluta_enhanced_click_popup_scrape(self) -> bool:
-        """Run Eluta unified scraping - saves directly to database."""
+    def eluta_Improved_click_popup_scrape(self) -> bool:
+        """Run Eluta scraping - saves directly to database."""
         import asyncio
         from src.scrapers.unified_eluta_scraper import run_unified_eluta_scraper
 
-        console.print("[cyan]🖱️ Running Eluta unified scraping...[/cyan]")
+        console.print("[cyan]🖱️ Running Eluta scraping...[/cyan]")
 
         try:
             profile_name = self.profile.get("profile_name", "default")
@@ -353,13 +353,13 @@ class ScrapingHandler:
                 db = ModernJobDatabase(f'profiles/{profile_name}/{profile_name}.db')
                 job_count = len(db.get_jobs())
                 
-                console.print(f"[bold green]✅ Enhanced scraping completed! {job_count} jobs in database![/bold green]")
+                console.print(f"[bold green]✅ Improved scraping completed! {job_count} jobs in database![/bold green]")
                 return True
             else:
-                console.print("[yellow]⚠️ Enhanced scraping found no jobs[/yellow]")
+                console.print("[yellow]⚠️ Improved scraping found no jobs[/yellow]")
                 return False
         except Exception as e:
-            console.print(f"[red]❌ Error in enhanced scraping: {e}[/red]")
+            console.print(f"[red]❌ Error in Improved scraping: {e}[/red]")
             return False
 
     def _validate_scraping_mode(self, mode: str) -> str:

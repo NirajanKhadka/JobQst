@@ -42,7 +42,7 @@ class DashboardManager:
                     "script": "src/dashboard/unified_dashboard.py",
                     "features": [
                         "Real-time metrics",
-                        "Advanced filtering", 
+                        "Improved filtering", 
                         "Clean charts",
                         "Document generation",
                         "60s refresh",
@@ -98,7 +98,7 @@ class DashboardManager:
         except requests.exceptions.RequestException:
             return False
 
-    def start_dashboard(self, dashboard_type: str = "modern", verbose: bool = False) -> bool:
+    def start_dashboard(self, dashboard_type: str = "modern", verbose: bool = False, profile_name: str = "Nirajan") -> bool:
         """Start a specific dashboard type."""
         config = self.get_dashboard_info(dashboard_type)
         if not config:
@@ -133,6 +133,9 @@ class DashboardManager:
                     str(config["port"]),
                     "--server.headless",
                     "true",
+                    "--",
+                    "--profile",
+                    profile_name,
                 ]
             else:
                 cmd = [sys.executable, str(script_path)]

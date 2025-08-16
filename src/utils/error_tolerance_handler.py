@@ -1,6 +1,6 @@
 """
 Error Tolerance Handler for AutoJobAgent
-Provides robust error handling, retry mechanisms, and system health monitoring.
+Provides reliable error handling, retry mechanisms, and system health monitoring.
 """
 
 import asyncio
@@ -160,14 +160,14 @@ def safe_execute(
     
     return fallback_value
 
-class RobustOperationManager:
+class reliableOperationManager:
     """
-    Manages robust operations with circuit breaker pattern and health monitoring.
+    Manages reliable operations with circuit breaker pattern and health monitoring.
     """
     
     def __init__(self, failure_threshold: int = 5, recovery_timeout: int = 60):
         """
-        Initialize the RobustOperationManager.
+        Initialize the reliableOperationManager.
         
         Args:
             failure_threshold: Number of failures before opening circuit
@@ -180,7 +180,7 @@ class RobustOperationManager:
         self.circuit_open = False
         self._lock = Lock()
         
-        logger.info(f"RobustOperationManager initialized with threshold={failure_threshold}")
+        logger.info(f"reliableOperationManager initialized with threshold={failure_threshold}")
     
     def execute(self, func: Callable, *args, **kwargs) -> Any:
         """
@@ -341,20 +341,20 @@ class SystemHealthMonitor:
                 metrics.status in ["healthy", "warning"])
 
 # Global instances for convenience
-_robust_manager = None
+_reliable_manager = None
 _health_monitor = None
 
-def get_error_tolerance_handler() -> RobustOperationManager:
+def get_error_tolerance_handler() -> reliableOperationManager:
     """
-    Get the global RobustOperationManager instance.
+    Get the global reliableOperationManager instance.
     
     Returns:
-        Global RobustOperationManager instance
+        Global reliableOperationManager instance
     """
-    global _robust_manager
-    if _robust_manager is None:
-        _robust_manager = RobustOperationManager()
-    return _robust_manager
+    global _reliable_manager
+    if _reliable_manager is None:
+        _reliable_manager = reliableOperationManager()
+    return _reliable_manager
 
 def get_system_health_monitor() -> SystemHealthMonitor:
     """

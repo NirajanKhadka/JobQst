@@ -80,7 +80,7 @@ class MainMenu:
             "5": "📄 AI Document Generation (Resumes & Cover Letters)",
             "6": "📊 Status & Dashboard",
             "7": "⚙️ System Status & Settings",
-            "8": "🔄 Process Existing Jobs (Enhanced with Fast Pipeline)",
+            "8": "🔄 Process Existing Jobs (Improved with Fast Pipeline)",
             "9": "🚪 Exit",
         }
 
@@ -129,7 +129,7 @@ class MainMenu:
         return True
 
     def _show_profile_info(self) -> None:
-        """Show current profile information with enhanced details."""
+        """Show current profile information with Improved details."""
         profile_name = self.profile.get("profile_name", "Unknown")
         name = self.profile.get("name", "Not set")
         email = self.profile.get("email", "Not set")
@@ -196,7 +196,7 @@ class MainMenu:
                 return
             
             console.print(f"[cyan]📋 Found {len(jobs_to_process)} jobs that need processing[/cyan]")
-            console.print(f"[cyan]🚀 Using Fast Pipeline orchestrator for enhanced processing[/cyan]")
+            console.print(f"[cyan]🚀 Using Fast Pipeline orchestrator for Improved processing[/cyan]")
             
             # Show processing options
             console.print(f"\n[bold]Processing Options:[/bold]")

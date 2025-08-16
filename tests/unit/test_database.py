@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Improved Database Tests - SQLite database operations with transaction limits
-Enhanced with dynamic transaction limits, modular design, and performance optimization
+Improved with dynamic transaction limits, modular design, and performance optimization
 Following DEVELOPMENT_STANDARDS.md principles
 """
 
@@ -61,7 +61,7 @@ except ImportError:
 
 
 class DatabaseMetrics:
-    """Enhanced database performance metrics with transaction limits."""
+    """Improved database performance metrics with transaction limits."""
 
     def __init__(self, transaction_limit: int = 10, query_limit: int = 50):
         self.transaction_limit = transaction_limit

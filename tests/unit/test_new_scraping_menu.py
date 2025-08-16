@@ -65,7 +65,7 @@ def test_site_display_mapping():
     
     site_display_names = {
         "eluta": "Eluta.ca (Canadian jobs with deep bot detection)",
-        "eluta_comprehensive": "Eluta Comprehensive (Enhanced Eluta scraper)",
+        "eluta_comprehensive": "Eluta Comprehensive (Improved Eluta scraper)",
         "parallel": "Parallel Scraper (Multi-threaded scraping)",
         "pipeline": "Pipeline Scraper (Modern job pipeline)",
         "indeed": "Indeed.ca (Global jobs with anti-detection)",

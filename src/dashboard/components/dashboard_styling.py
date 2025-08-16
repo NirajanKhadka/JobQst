@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Dashboard Styling Component
-Provides consistent styling and CSS for enhanced dashboard UI.
+Provides consistent styling and CSS for Improved dashboard UI.
 Edits require explicit user request.
 """
 
@@ -43,7 +43,7 @@ class DashboardStyling:
         <style>
         /* Component-Specific Extensions - Edits require explicit user request */
         
-        /* Enhanced metric containers for Streamlit */
+        /* Improved metric containers for Streamlit */
         [data-testid="metric-container"] {
             background: var(--bg-card) !important;
             border: 1px solid var(--border-color) !important;
@@ -59,7 +59,7 @@ class DashboardStyling:
             border-color: var(--accent-primary) !important;
         }
         
-        /* Enhanced expander styling */
+        /* Improved expander styling */
         .streamlit-expanderHeader {
             background: var(--bg-secondary) !important;
             border-radius: var(--radius-md) !important;
@@ -81,7 +81,7 @@ class DashboardStyling:
             border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
         }
         
-        /* Enhanced progress bars */
+        /* Improved progress bars */
         .stProgress > div > div {
             background: var(--bg-secondary) !important;
             border-radius: var(--radius-lg) !important;
@@ -92,7 +92,7 @@ class DashboardStyling:
             border-radius: var(--radius-lg) !important;
         }
         
-        /* Enhanced form elements */
+        /* Improved form elements */
         .stSelectbox > div > div {
             background: var(--bg-input) !important;
             border: 1px solid var(--border-color) !important;
@@ -112,13 +112,13 @@ class DashboardStyling:
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
         }
         
-        /* Enhanced checkbox styling */
+        /* Improved checkbox styling */
         .stCheckbox > label {
             font-weight: 600 !important;
             color: var(--text-primary) !important;
         }
         
-        /* Enhanced container spacing */
+        /* Improved container spacing */
         .element-container {
             margin-bottom: var(--spacing-md);
         }
@@ -143,7 +143,7 @@ class DashboardStyling:
             box-shadow: var(--shadow-md) !important;
         }
         
-        /* Enhanced status indicators */
+        /* Improved status indicators */
         .status-indicator {
             display: inline-flex;
             align-items: center;
@@ -172,7 +172,7 @@ class DashboardStyling:
             border: 1px solid var(--warning);
         }
         
-        /* Enhanced resource usage indicators */
+        /* Improved resource usage indicators */
         .resource-indicator {
             font-weight: 600;
         }
@@ -189,7 +189,7 @@ class DashboardStyling:
             color: var(--error) !important;
         }
         
-        /* Enhanced gradient headers */
+        /* Improved gradient headers */
         .component-gradient-header {
             background: var(--gradient-primary) !important;
             padding: var(--spacing-md);
@@ -257,7 +257,7 @@ class DashboardStyling:
     
     @staticmethod
     def create_metric_card(title: str, value: str, delta: str = None, color: str = "#007bff"):
-        """Create an enhanced metric card."""
+        """Create an Improved metric card."""
         delta_html = ""
         if delta:
             delta_color = "#28a745" if not delta.startswith("-") else "#dc3545"
@@ -281,7 +281,7 @@ class DashboardStyling:
     
     @staticmethod
     def create_service_card(name: str, status: str, description: str, metrics: dict = None):
-        """Create an enhanced service card."""
+        """Create an Improved service card."""
         status_color = "#28a745" if status == "running" else "#dc3545"
         status_icon = "🟢" if status == "running" else "🔴"
         

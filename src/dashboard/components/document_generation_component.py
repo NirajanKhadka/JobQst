@@ -1,6 +1,6 @@
 """
 Document Generation Component for AutoJobAgent Dashboard
-Provides UI interface for the AI-powered document generation service.
+Provides UI interface for the Automated document generation service.
 """
 
 import streamlit as st
@@ -111,8 +111,8 @@ class DocumentGenerationComponent:
                         help="Generate 4 cover letter styles only"):
                 self._start_generation_cover_letters()
         
-        # Advanced options
-        with st.expander("🎯 Advanced Options", expanded=False):
+        # Improved options
+        with st.expander("🎯 Improved Options", expanded=False):
             col1, col2 = st.columns(2)
             
             with col1:
@@ -134,7 +134,7 @@ class DocumentGenerationComponent:
                                       help="Number of AI workers for parallel processing")
                 
                 if st.button("🔄 Regenerate All", 
-                           help="Regenerate all documents with enhanced prompts"):
+                           help="Regenerate all documents with Improved prompts"):
                     self._start_regeneration(max_workers)
     
     def _render_status_section(self):
@@ -358,7 +358,7 @@ class DocumentGenerationComponent:
             
             st.session_state.generation_in_progress = True
             
-            with st.spinner("🔄 Regenerating all documents with enhanced prompts..."):
+            with st.spinner("🔄 Regenerating all documents with Improved prompts..."):
                 def regenerate_docs():
                     try:
                         generator.generate_documents_with_workers(max_workers=max_workers)

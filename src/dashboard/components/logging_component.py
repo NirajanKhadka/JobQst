@@ -56,7 +56,8 @@ class LogEntry:
 class LoggingComponent:
     """Modular logging component for dashboard integration."""
     
-    def __init__(self):
+    def __init__(self, key_prefix=""):
+        self.key_prefix = key_prefix
         self.log_sources = {
             "application": "logs/application.log",
             "scraper": "logs/scraper.log", 
@@ -65,19 +66,25 @@ class LoggingComponent:
             "gemini_api": "logs/gemini_api_call_log.json",
             "scheduler": "logs/scheduler/"
         }
-        
-        # Initialize session state for logs
+    
+    def _initialize_session_state(self):
+        """Initialize session state variables for logging component."""
+        # Initialize session state for logs - only for variables not managed by widgets
         if "log_entries" not in st.session_state:
             st.session_state.log_entries = []
-        if "log_auto_refresh" not in st.session_state:
-            st.session_state.log_auto_refresh = True
-        if "log_filter_level" not in st.session_state:
-            st.session_state.log_filter_level = "ALL"
-        if "log_filter_source" not in st.session_state:
-            st.session_state.log_filter_source = "ALL"
+        if "log_search_term" not in st.session_state:
+            st.session_state.log_search_term = ""
+        
+        # Widget-managed variables (these should not be manually initialized)
+        # - logging_auto_refresh (managed by checkbox with key "logging_auto_refresh")
+        # - log_filter_level (managed by selectbox with key "log_filter_level") 
+        # - log_filter_source (managed by selectbox with key "log_filter_source")
     
     def render_logging_dashboard(self):
         """Render the main logging dashboard."""
+        # Initialize session state first
+        self._initialize_session_state()
+        
         st.markdown("### 📋 System Logs")
         
         # Log controls
@@ -88,6 +95,9 @@ class LoggingComponent:
     
     def render_compact_logs(self, max_entries: int = 10, sources: List[str] = None):
         """Render a compact log view for embedding in other components."""
+        # Initialize session state first
+        self._initialize_session_state()
+        
         st.markdown("#### 📝 Recent Activity")
         
         logs = self._get_recent_logs(max_entries, sources)
@@ -112,39 +122,45 @@ class LoggingComponent:
         col1, col2, col3, col4, col5 = st.columns(5)
         
         with col1:
-            st.session_state.log_auto_refresh = st.checkbox(
-                "🔄 Auto Refresh", 
-                value=st.session_state.log_auto_refresh,
-                help="Automatically refresh logs every 5 seconds"
+            auto_refresh = st.checkbox(
+                "🔄 Auto Refresh",
+                value=st.session_state.get("log_auto_refresh", True),
+                help="Automatically refresh logs every 5 seconds",
+                key=f"{self.key_prefix}logging_auto_refresh" if self.key_prefix else "logging_auto_refresh"
             )
         
         with col2:
-            st.session_state.log_filter_level = st.selectbox(
+            level_filter = st.selectbox(
                 "📊 Level Filter",
                 ["ALL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-                index=0 if st.session_state.log_filter_level == "ALL" else 
-                      ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"].index(st.session_state.log_filter_level) + 1
+                index=0 if st.session_state.get("log_filter_level", "ALL") == "ALL" else
+                      ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"].index(st.session_state.get("log_filter_level", "ALL")) + 1,
+                key=f"{self.key_prefix}log_filter_level" if self.key_prefix else "log_filter_level"
             )
         
         with col3:
             available_sources = ["ALL"] + list(self.log_sources.keys())
-            st.session_state.log_filter_source = st.selectbox(
+            source_filter = st.selectbox(
                 "🎯 Source Filter",
                 available_sources,
-                index=available_sources.index(st.session_state.log_filter_source)
+                index=available_sources.index(st.session_state.get("log_filter_source", "ALL")),
+                key=f"{self.key_prefix}log_filter_source" if self.key_prefix else "log_filter_source"
             )
         
         with col4:
-            if st.button("🔄 Refresh Now", use_container_width=True):
+            if st.button("🔄 Refresh Now", use_container_width=True,
+                        key=f"{self.key_prefix}refresh_now" if self.key_prefix else "refresh_now"):
                 self._refresh_logs()
         
         with col5:
-            if st.button("🗑️ Clear Display", use_container_width=True):
+            if st.button("🗑️ Clear Display", use_container_width=True,
+                        key=f"{self.key_prefix}clear_display" if self.key_prefix else "clear_display"):
                 st.session_state.log_entries = []
                 st.rerun()
         
         # Search functionality
-        search_term = st.text_input("🔍 Search logs", placeholder="Enter search term...")
+        search_term = st.text_input("🔍 Search logs", placeholder="Enter search term...",
+                                   key=f"{self.key_prefix}log_search" if self.key_prefix else "log_search")
         
         if search_term:
             st.session_state.log_search_term = search_term
@@ -153,8 +169,8 @@ class LoggingComponent:
     
     def _render_log_display(self):
         """Render the main log display area."""
-        # Auto-refresh logic
-        if st.session_state.log_auto_refresh:
+        # Auto-refresh logic - use the actual widget key
+        if st.session_state.get("logging_auto_refresh", True):
             # Use a placeholder for auto-refresh
             placeholder = st.empty()
             with placeholder.container():
@@ -233,15 +249,20 @@ class LoggingComponent:
     
     def _get_filtered_logs(self) -> List[LogEntry]:
         """Get logs with applied filters."""
+        # Ensure session state is initialized
+        self._initialize_session_state()
+        
         logs = self._get_all_logs()
         
         # Apply level filter
-        if st.session_state.log_filter_level != "ALL":
-            logs = [log for log in logs if log.level == st.session_state.log_filter_level]
+        log_filter_level = st.session_state.get("log_filter_level", "ALL")
+        if log_filter_level != "ALL":
+            logs = [log for log in logs if log.level == log_filter_level]
         
         # Apply source filter
-        if st.session_state.log_filter_source != "ALL":
-            logs = [log for log in logs if log.source == st.session_state.log_filter_source]
+        log_filter_source = st.session_state.get("log_filter_source", "ALL")
+        if log_filter_source != "ALL":
+            logs = [log for log in logs if log.source == log_filter_source]
         
         # Apply search filter
         if hasattr(st.session_state, 'log_search_term') and st.session_state.log_search_term:

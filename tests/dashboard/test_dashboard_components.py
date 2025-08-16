@@ -24,7 +24,7 @@ from src.dashboard.components.sidebar import render_sidebar
 from src.dashboard.components.metrics import render_metrics
 from src.dashboard.components.job_table import render_job_table
 from src.dashboard.components.charts import render_charts
-from src.dashboard.components.orchestration_component import EnhancedOrchestrationComponent
+from src.dashboard.components.orchestration_component import ImprovedOrchestrationComponent
 from src.dashboard.components.document_generation_component import DocumentGenerationComponent
 from src.dashboard.unified_dashboard import main as dashboard_main
 
@@ -213,7 +213,7 @@ class TestDashboardComponents:
     def test_orchestration_component(self, mock_streamlit):
         """Test orchestration component."""
         try:
-            component = EnhancedOrchestrationComponent("test_profile")
+            component = ImprovedOrchestrationComponent("test_profile")
             assert hasattr(component, 'render')
         except ImportError:
             # Component might not be available

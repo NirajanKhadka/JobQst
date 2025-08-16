@@ -39,7 +39,7 @@ async def get_pipeline_health() -> Dict[str, Any]:
 @router.get("/system-health")
 async def get_system_health(profile: Optional[str] = Query(None, description="Profile to check")) -> Dict[str, Any]:
     """
-    Get system health status using the enhanced system health checker.
+    Get system health status using the Improved system health checker.
     
     Args:
         profile: Optional profile name to check specific profile health

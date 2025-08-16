@@ -64,7 +64,7 @@ class SimpleJobURLFilter:
         
         # Known job board domains (even if they don't have job keywords in URL)
         job_board_domains = [
-            'workday', 'greenhouse', 'lever', 'bamboohr', 'smartrecruiters',
+            'workday', 'greenhouse', 'lever', 'bamboohr', 'Configurablerecruiters',
             'jobvite', 'icims', 'taleo', 'successfactors', 'cornerstone',
             'bombardier.com', 'microsoft.com', 'google.com', 'amazon.com'
         ]

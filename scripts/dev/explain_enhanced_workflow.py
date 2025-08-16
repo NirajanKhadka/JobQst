@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-Detailed explanation of how the Enhanced 2-Worker System works.
+Detailed explanation of how the Improved 2-Worker System works.
 This will trace through the entire workflow step by step.
 """
 
 import time
 from src.core.job_database import get_job_db
-from src.orchestration.enhanced_job_processor import EnhancedJobProcessor
+from src.orchestration.Improved_job_processor import ImprovedJobProcessor
 from src.orchestration.job_worker import worker_function, validate_job_data, convert_hybrid_result_to_job_data
 from src.analysis.hybrid_processor import HybridProcessingEngine
 from src.analysis.custom_data_extractor import CustomDataExtractor
 import multiprocessing as mp
 
-def explain_enhanced_workflow():
-    """Step-by-step explanation of the enhanced 2-worker system."""
+def explain_Improved_workflow():
+    """Step-by-step explanation of the Improved 2-worker system."""
     
-    print("🔍 ENHANCED 2-WORKER SYSTEM - DETAILED WORKFLOW EXPLANATION")
+    print("🔍 Improved 2-WORKER SYSTEM - DETAILED WORKFLOW EXPLANATION")
     print("=" * 70)
     
     print("\n📋 STEP 1: SYSTEM INITIALIZATION")
     print("-" * 40)
-    print("🔧 What happens when EnhancedJobProcessor starts:")
+    print("🔧 What happens when ImprovedJobProcessor starts:")
     print("   1. Creates database connection (ModernJobDatabase)")
     print("   2. Initializes GPU Ollama client (tries to connect)")
     print("   3. Sets up multiprocessing with spawn method (Windows compatible)")
@@ -29,7 +29,7 @@ def explain_enhanced_workflow():
     
     # Demonstrate initialization
     try:
-        processor = EnhancedJobProcessor("Nirajan", worker_count=2, batch_size=3)
+        processor = ImprovedJobProcessor("Nirajan", worker_count=2, batch_size=3)
         print("   ✅ Processor initialized successfully")
         print(f"   📊 Configuration: {processor.worker_count} workers, batch size {processor.batch_size}")
     except Exception as e:
@@ -126,7 +126,7 @@ def explain_enhanced_workflow():
     print("      e. Parse requirements and benefits")
     print("   2. LLM ENHANCEMENT (if Ollama available):")
     print("      a. Send job description to AI model")
-    print("      b. Get advanced analysis (skills, requirements, compatibility)")
+    print("      b. Get Improved analysis (skills, requirements, compatibility)")
     print("      c. Merge AI results with custom logic")
     print("   3. FALLBACK (if Ollama unavailable):")
     print("      a. Use only custom logic results")
@@ -223,7 +223,7 @@ def explain_why_it_works():
     """Explain why this system is effective."""
     
     print("\n" + "=" * 70)
-    print("🎯 WHY THE ENHANCED 2-WORKER SYSTEM IS EFFECTIVE")
+    print("🎯 WHY THE Improved 2-WORKER SYSTEM IS EFFECTIVE")
     print("=" * 70)
     
     print("\n💪 STRENGTHS:")
@@ -232,12 +232,12 @@ def explain_why_it_works():
     print("   - Each worker uses separate CPU core")
     print("   - Jobs processed simultaneously, not sequentially")
     
-    print("\n2. 🧠 INTELLIGENT ANALYSIS:")
+    print("\n2. 🧠 Automated ANALYSIS:")
     print("   - Custom logic handles structured data reliably")
-    print("   - AI enhancement adds advanced insights")
+    print("   - AI enhancement adds Improved insights")
     print("   - Hybrid approach gets best of both worlds")
     
-    print("\n3. 🛡️ ROBUST ERROR HANDLING:")
+    print("\n3. 🛡️ reliable ERROR HANDLING:")
     print("   - System continues even if AI fails")
     print("   - Individual job failures don't crash system")
     print("   - Comprehensive logging for debugging")
@@ -260,5 +260,5 @@ def explain_why_it_works():
     print("   ✅ Zero critical errors in testing")
 
 if __name__ == "__main__":
-    explain_enhanced_workflow()
+    explain_Improved_workflow()
     explain_why_it_works()

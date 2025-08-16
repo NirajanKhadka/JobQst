@@ -65,7 +65,7 @@ class WorkerStatusTracker:
             "processor_worker_3": "Tertiary job processor - ensures high availability processing",
             "processor_worker_4": "Additional job processor - scales processing capacity",
             "processor_worker_5": "Additional job processor - maximum throughput processing",
-            "document_generator": "AI-powered document generator - creates resumes and cover letters",
+            "document_generator": "Automated document generator - creates resumes and cover letters",
             "job_scraper": "Web scraper - collects job postings from various job boards",
             "applicator": "Automated job application submitter - applies to jobs via ATS systems",
             "scheduler": "Task scheduler - manages automated job processing workflows",
@@ -81,7 +81,7 @@ class WorkerStatusTracker:
             'available_models': [],
             'analysis_method_distribution': {
                 'ai': 0,
-                'enhanced_rule_based': 0,
+                'Improved_rule_based': 0,
                 'fallback': 0
             },
             'last_successful_ai': None,
@@ -603,7 +603,7 @@ class WorkerStatusTracker:
         if "processor_worker" in worker_name:
             return f"Job processor worker - analyzes and classifies scraped jobs"
         elif "document" in worker_name.lower():
-            return f"Document generation worker - creates AI-powered resumes and cover letters"
+            return f"Document generation worker - creates Automated resumes and cover letters"
         elif "scraper" in worker_name.lower():
             return f"Web scraper worker - collects job postings from job boards"
         elif "applicator" in worker_name.lower():

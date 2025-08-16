@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Comprehensive TowardsAI Scraper
-Scrapes job listings from https://jobs.towardsai.net with robust error handling and timeout management.
+Scrapes job listings from https://jobs.towardsai.net with reliable error handling and timeout management.
 """
 
 import asyncio
@@ -27,7 +27,7 @@ console = Console()
 
 class ComprehensiveTowardsAIScraper:
     """
-    Comprehensive TowardsAI scraper with robust error handling and timeout management.
+    Comprehensive TowardsAI scraper with reliable error handling and timeout management.
     """
 
     def __init__(self, profile_name: str = "Nirajan"):
@@ -155,7 +155,7 @@ class ComprehensiveTowardsAIScraper:
             await self._search_for_keyword(page, keyword)
             
             # Find job elements
-            job_elements = await self._find_job_elements_robust(page)
+            job_elements = await self._find_job_elements_reliable(page)
             
             if not job_elements:
                 console.print(f"[yellow]No job elements found for '{keyword}'[/yellow]")
@@ -166,7 +166,7 @@ class ComprehensiveTowardsAIScraper:
             # Process each job element
             for job_number, job_element in enumerate(job_elements[:max_jobs], 1):
                 try:
-                    job_data = await self._extract_job_data_robust(
+                    job_data = await self._extract_job_data_reliable(
                         page, job_element, job_number, keyword
                     )
 
@@ -241,7 +241,7 @@ class ComprehensiveTowardsAIScraper:
         except Exception as e:
             console.print(f"[yellow]Search failed for '{keyword}': {e}[/yellow]")
 
-    async def _find_job_elements_robust(self, page) -> List:
+    async def _find_job_elements_reliable(self, page) -> List:
         """Find job elements using multiple selectors with fallbacks."""
         job_elements = []
         
@@ -288,10 +288,10 @@ class ComprehensiveTowardsAIScraper:
             console.print(f"[red]Fallback selector failed: {e}[/red]")
             return []
 
-    async def _extract_job_data_robust(
+    async def _extract_job_data_reliable(
         self, page, job_element, job_number: int, keyword: str
     ) -> Dict:
-        """Extract job data from a job element with robust error handling."""
+        """Extract job data from a job element with reliable error handling."""
         try:
             job_data = {
                 "title": "",
@@ -311,7 +311,7 @@ class ComprehensiveTowardsAIScraper:
             }
 
             # Extract job URL first
-            job_url = await self._extract_job_url_robust(job_element, page, job_number)
+            job_url = await self._extract_job_url_reliable(job_element, page, job_number)
             if not job_url:
                 return {}
             
@@ -414,8 +414,8 @@ class ComprehensiveTowardsAIScraper:
             console.print(f"[red]Error extracting job data for job {job_number}: {e}[/red]")
             return {}
 
-    async def _extract_job_url_robust(self, job_element, page, job_number: int) -> str:
-        """Extract job URL with robust timeout handling."""
+    async def _extract_job_url_reliable(self, job_element, page, job_number: int) -> str:
+        """Extract job URL with reliable timeout handling."""
         try:
             # If the element itself is a link
             if await job_element.get_attribute("href"):

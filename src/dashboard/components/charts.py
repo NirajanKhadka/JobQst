@@ -209,7 +209,7 @@ def _render_fallback_charts(df: pd.DataFrame) -> None:
     Args:
         df: DataFrame containing job data
     """
-    st.info("Using simplified charts (install plotly for enhanced visualizations)")
+    st.info("Using simplified charts (install plotly for Improved visualizations)")
     
     col1, col2 = st.columns(2)
     

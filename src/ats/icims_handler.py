@@ -1,6 +1,6 @@
 """
 iCIMS ATS Handler
-Provides the iCIMS-specific application logic for EnhancedUniversalApplier.
+Provides the iCIMS-specific application logic for ImprovedUniversalApplier.
 """
 
 from typing import Dict

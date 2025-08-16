@@ -45,8 +45,8 @@ class ProjectCleaner:
                     'analyze_problematic_job.py',
                     'analyze_workday_jobs.py',
                     'debug_eluta_selectors.py',
-                    'explain_enhanced_workflow.py',
-                    'test_enhanced_job_processor.py',
+                    'explain_Improved_workflow.py',
+                    'test_Improved_job_processor.py',
                     'test_hybrid_processor.py',
                     'test_job_worker.py',
                     'test_extractor_simple.py'
@@ -85,9 +85,9 @@ class ProjectCleaner:
                 'destination': 'archive/scrapers',
                 'files': [
                     'improved_test_scraper.py',
-                    'robust_eluta_scraper.py',
+                    'reliable_eluta_scraper.py',
                     'simple_test_scraper.py',
-                    'smart_job_scraper.py'
+                    'Configurable_job_scraper.py'
                 ]
             },
             'archive_tests': {
@@ -100,7 +100,7 @@ class ProjectCleaner:
                     'test_eluta_scraping.py',
                     'test_eluta_selectors.py',
                     'test_eluta_url.py',
-                    'test_enhanced_dashboard.py',
+                    'test_Improved_dashboard.py',
                     'test_fixed_eluta_scraper.py',
                     'test_fixed_scraper.py',
                     'test_fresh_scraping.py',
@@ -112,7 +112,7 @@ class ProjectCleaner:
                     'test_openhermes_integration.py',
                     'test_popup_fix.py',
                     'test_recent_opportunities_fix.py',
-                    'test_robust_scrapers.py',
+                    'test_reliable_scrapers.py',
                     'test_scraper_with_limit.py',
                     'test_scraper_with_url_filter.py',
                     'test_url_filter_integration.py',
@@ -218,10 +218,10 @@ Tools for debugging, analysis, and development workflow.
 - `analyze_problematic_job.py` - Debug specific job issues
 - `analyze_workday_jobs.py` - Workday-specific analysis
 - `debug_eluta_selectors.py` - Debug scraping selectors
-- `explain_enhanced_workflow.py` - Workflow documentation
+- `explain_Improved_workflow.py` - Workflow documentation
 
 ## Testing & Validation
-- `test_enhanced_job_processor.py` - Test main processor
+- `test_Improved_job_processor.py` - Test main processor
 - `test_hybrid_processor.py` - Test hybrid processing
 - `test_job_worker.py` - Test worker functionality
 - `test_extractor_simple.py` - Test data extraction

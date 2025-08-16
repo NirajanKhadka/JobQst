@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced Error Handling System for AutoJobAgent
+Improved Error Handling System for AutoJobAgent
 Provides comprehensive error handling, retry mechanisms, fallback strategies, and detailed logging.
 """
 
@@ -93,20 +93,20 @@ from src.utils.error_tolerance_handler import (
 )
 
 
-class RobustOperations:
-    """Collection of robust operations with built-in error handling."""
+class reliableOperations:
+    """Collection of reliable operations with built-in error handling."""
 
     @staticmethod
     @with_retry(max_attempts=3)
     def read_file(filepath: Union[str, Path], encoding: str = "utf-8") -> str:
-        """Robustly read a file with retry logic."""
+        """reliablely read a file with retry logic."""
         with open(filepath, "r", encoding=encoding) as f:
             return f.read()
 
     @staticmethod
     @with_retry(max_attempts=3)
     def write_file(filepath: Union[str, Path], content: str, encoding: str = "utf-8") -> bool:
-        """Robustly write to a file with retry logic."""
+        """reliablely write to a file with retry logic."""
         # Ensure directory exists
         Path(filepath).parent.mkdir(parents=True, exist_ok=True)
 
@@ -117,14 +117,14 @@ class RobustOperations:
     @staticmethod
     @with_retry(max_attempts=3)
     def load_json(filepath: Union[str, Path]) -> Dict:
-        """Robustly load JSON with retry logic."""
+        """reliablely load JSON with retry logic."""
         with open(filepath, "r", encoding="utf-8") as f:
             return json.load(f)
 
     @staticmethod
     @with_retry(max_attempts=3)
     def save_json(data: Dict, filepath: Union[str, Path]) -> bool:
-        """Robustly save JSON with retry logic."""
+        """reliablely save JSON with retry logic."""
         # Ensure directory exists
         Path(filepath).parent.mkdir(parents=True, exist_ok=True)
 
@@ -134,7 +134,7 @@ class RobustOperations:
 
 
 # Create global instance
-robust_ops = RobustOperations()
+reliable_ops = reliableOperations()
 
 
 def display_error_dashboard():
@@ -177,7 +177,7 @@ def display_error_dashboard():
 
 if __name__ == "__main__":
     # Test the error handling system
-    console.print("[bold blue]🧪 Testing Enhanced Error Handling System[/bold blue]")
+    console.print("[bold blue]🧪 Testing Improved Error Handling System[/bold blue]")
 
     @with_retry(max_attempts=2)
     def test_retry_function():

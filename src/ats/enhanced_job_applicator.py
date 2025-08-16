@@ -1,19 +1,19 @@
 """
 Enhanced Job Applicator Module
 
-This module provides enhanced job application functionality with advanced features
-like intelligent form filling, error recovery, and application tracking.
+This module provides enhanced job application functionality with Improved features
+like Automated form filling, error recovery, and application tracking.
 """
 
 from typing import Dict, Any, Optional, List
 from .base_submitter import BaseSubmitter
 
 
-class EnhancedJobApplicator:
+class ImprovedJobApplicator:
     """
-    Enhanced job application system with advanced features.
+    Enhanced job application system with Improved features.
 
-    Provides intelligent form filling, error recovery, application tracking,
+    Provides Automated form filling, error recovery, application tracking,
     and multi-ATS support with fallback mechanisms.
     """
 
@@ -123,9 +123,9 @@ class EnhancedJobApplicator:
         return retry_results
 
 
-def create_enhanced_applicator(
+def create_Improved_applicator(
     profile_name: str, config: Optional[Dict[str, Any]] = None
-) -> EnhancedJobApplicator:
+) -> ImprovedJobApplicator:
     """
     Factory function to create an enhanced job applicator.
 
@@ -134,6 +134,6 @@ def create_enhanced_applicator(
         config: Configuration dictionary
 
     Returns:
-        EnhancedJobApplicator instance
+        ImprovedJobApplicator instance
     """
-    return EnhancedJobApplicator(profile_name, config)
+    return ImprovedJobApplicator(profile_name, config)

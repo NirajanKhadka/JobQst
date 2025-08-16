@@ -147,7 +147,7 @@ class CustomDataExtractor:
             
             # Experience levels
             r'(?i)(0-2|1-3|2-5|3-7|5-10|10\+)\s*years?',
-            r'(?i)(beginner|intermediate|advanced|expert)',
+            r'(?i)(beginner|intermediate|Improved|expert)',
             r'(?i)(intern|internship|co-op|new grad|graduate)',
         ]
     

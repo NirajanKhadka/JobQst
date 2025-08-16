@@ -34,7 +34,7 @@ class WorkdaySubmitter(BaseSubmitter):
 
             page.wait_for_timeout(3000)
 
-            if not self._click_apply_button_enhanced(page):
+            if not self._click_apply_button_Improved(page):
                 console.print("[yellow]Could not find Apply button[/yellow]")
                 return "Manual"
 
@@ -53,8 +53,8 @@ class WorkdaySubmitter(BaseSubmitter):
         finally:
             page.close()
 
-    def _click_apply_button_enhanced(self, page: Page) -> bool:
-        """Enhanced Apply button detection and clicking."""
+    def _click_apply_button_Improved(self, page: Page) -> bool:
+        """Improved Apply button detection and clicking."""
         apply_selectors = [
             "button:has-text('Apply')",
             "a:has-text('Apply')",

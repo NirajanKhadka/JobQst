@@ -162,9 +162,10 @@ def get_submitter(ats_type: str, browser_context=None):
             return ICIMSSubmitter(browser_context)
             
         elif ats_type == 'bamboohr':
-            from .bamboohr import BambooHRSubmitter
-            return BambooHRSubmitter(browser_context)
-            
+            # BambooHR integration has been removed. Use fallback submitter to maintain functionality.
+            logger.warning("BambooHR integration removed; using Generic fallback submitter")
+            return _get_fallback_submitter(browser_context)
+        
         elif ats_type == 'lever':
             # Note: Lever submitter is currently incomplete
             logger.warning("Lever ATS submitter is not fully implemented, using fallback")
@@ -235,8 +236,8 @@ def get_supported_ats_types() -> Dict[str, Dict[str, Any]]:
         'bamboohr': {
             'name': 'BambooHR',
             'patterns': ATS_PATTERNS['bamboohr'],
-            'status': 'active',
-            'description': 'BambooHR HR software with ATS'
+            'status': 'removed',
+            'description': 'BambooHR integration removed; routes to Generic fallback submitter'
         },
         'lever': {
             'name': 'Lever',
@@ -244,4 +245,4 @@ def get_supported_ats_types() -> Dict[str, Dict[str, Any]]:
             'status': 'incomplete',
             'description': 'Lever recruiting platform (implementation in progress)'
         }
-    } 
+    }

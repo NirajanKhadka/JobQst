@@ -2,7 +2,7 @@
 Sourcegraph Client for Code Search and Navigation
 
 This module provides a Python interface to Sourcegraph, replacing the custom MCP
-implementation with a more robust and feature-rich code search solution.
+implementation with a more reliable and feature-rich code search solution.
 """
 
 import requests

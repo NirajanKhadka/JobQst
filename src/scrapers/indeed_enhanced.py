@@ -1,8 +1,8 @@
 """
-Enhanced Indeed Scraper for AutoJobAgent.
+Improved Indeed Scraper for AutoJobAgent.
 
-This module provides an enhanced version of the Indeed scraper with
-improved error handling, better job data extraction, and advanced features.
+This module provides an Improved version of the Indeed scraper with
+improved error handling, better job data extraction, and Improved features.
 """
 
 import asyncio
@@ -19,8 +19,8 @@ from src.core.job_filters import remove_duplicates
 logger = logging.getLogger(__name__)
 
 
-class EnhancedIndeedScraper:
-    """Enhanced Indeed scraper with improved functionality."""
+class ImprovedIndeedScraper:
+    """Improved Indeed scraper with improved functionality."""
 
     def __init__(self, profile: Optional[Dict] = None, **kwargs):
         self.profile = profile or {}
@@ -238,7 +238,7 @@ class EnhancedIndeedScraper:
                 "company": company.strip(),
                 "location": location.strip(),
                 "url": job_url,
-                "source": "indeed_enhanced",
+                "source": "indeed_Improved",
                 "scraped_at": time.time(),
                 "profile_name": self.profile_name,
             }
@@ -330,7 +330,7 @@ async def scrape_indeed_jobs(
     """
     profile = {"profile_name": profile_name}
 
-    async with EnhancedIndeedScraper(profile, **kwargs) as scraper:
+    async with ImprovedIndeedScraper(profile, **kwargs) as scraper:
         jobs = await scraper.scrape_jobs(keywords)
         stats = scraper.get_statistics()
 
@@ -339,4 +339,4 @@ async def scrape_indeed_jobs(
 
 
 # Alias for backward compatibility
-IndeedEnhancedScraper = EnhancedIndeedScraper
+IndeedImprovedScraper = ImprovedIndeedScraper

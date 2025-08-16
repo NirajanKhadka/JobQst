@@ -167,3 +167,44 @@ class DBQueries:
             (limit,),
         )
         return [dict(row) for row in cursor.fetchall()]
+
+    def get_job_count(
+        self,
+        site: Optional[str] = None,
+        filters: Optional[Dict] = None,
+        search_query: Optional[str] = None,
+    ) -> int:
+        query = "SELECT COUNT(*) FROM jobs"
+        params: List[Union[str, int]] = []
+        conditions = []
+
+        if site:
+            conditions.append("site = ?")
+            params.append(site)
+
+        if search_query:
+            search_term = f"%{search_query}%"
+            conditions.append("(title LIKE ? OR company LIKE ? OR summary LIKE ?)")
+            params.extend([search_term, search_term, search_term])
+
+        if filters:
+            for key, value in filters.items():
+                if key == "applied" and isinstance(value, bool):
+                    conditions.append("applied = ?")
+                    params.append(1 if value else 0)
+                elif key == "experience" and value:
+                    conditions.append("experience_level = ?")
+                    params.append(value)
+                elif key == "site" and value:
+                    conditions.append("site = ?")
+                    params.append(value)
+
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        try:
+            cursor = self.conn.execute(query, params)
+            return cursor.fetchone()[0]
+        except sqlite3.OperationalError as e:
+            console.print(f"[red]Error fetching job count: {e}[/red]")
+            return 0

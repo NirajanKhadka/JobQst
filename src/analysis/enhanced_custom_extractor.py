@@ -1,14 +1,14 @@
-# --- Sample Unit Test for EnhancedCustomExtractor ---
+# --- Sample Unit Test for ImprovedCustomExtractor ---
 import unittest
 
-class TestEnhancedCustomExtractor(unittest.TestCase):
+class TestImprovedCustomExtractor(unittest.TestCase):
     def setUp(self):
-        self.extractor = get_enhanced_custom_extractor()
+        self.extractor = get_Improved_custom_extractor()
 
     def test_empty_input(self):
         """Test extraction with empty input."""
         result = self.extractor.extract_job_data({})
-        self.assertIsInstance(result, EnhancedExtractionResult)
+        self.assertIsInstance(result, ImprovedExtractionResult)
         self.assertIsNone(result.title)
         self.assertEqual(result.skills, [])
 
@@ -22,7 +22,7 @@ class TestEnhancedCustomExtractor(unittest.TestCase):
     def test_malformed_input(self):
         """Test extraction with malformed input (wrong type)."""
         result = self.extractor.extract_job_data(None)
-        self.assertIsInstance(result, EnhancedExtractionResult)
+        self.assertIsInstance(result, ImprovedExtractionResult)
         self.assertIsNone(result.title)
 
     def test_typical_job_description(self):
@@ -44,7 +44,7 @@ class TestEnhancedCustomExtractor(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 """
-Enhanced Custom Data Extractor with Web Validation
+Improved Custom Data Extractor with Web Validation
 Provides 95%+ reliability for structured data extraction with internet validation.
 """
 
@@ -83,8 +83,8 @@ class ValidationResult:
     details: str = ""
 
 @dataclass
-class EnhancedExtractionResult:
-    """Enhanced result with validation and confidence scoring."""
+class ImprovedExtractionResult:
+    """Improved result with validation and confidence scoring."""
     # Core extracted data
     title: Optional[str] = None
     company: Optional[str] = None
@@ -98,7 +98,7 @@ class EnhancedExtractionResult:
     overall_confidence: float = 0.0
     field_confidences: Dict[str, float] = field(default_factory=dict)
     validation_results: Dict[str, ValidationResult] = field(default_factory=dict)
-    extraction_method: str = "enhanced_custom"
+    extraction_method: str = "Improved_custom"
     processing_time: float = 0.0
     patterns_used: Dict[str, str] = field(default_factory=dict)
     web_validated_fields: List[str] = field(default_factory=list)
@@ -268,19 +268,19 @@ class WebValidator:
             )
 
 # Convenience function for easy import
-def get_enhanced_custom_extractor() -> 'EnhancedCustomExtractor':
+def get_Improved_custom_extractor() -> 'ImprovedCustomExtractor':
     """
-    Get a configured enhanced custom extractor instance.
+    Get a configured Improved custom extractor instance.
     
     Returns:
-        Configured EnhancedCustomExtractor instance
+        Configured ImprovedCustomExtractor instance
     """
-    return EnhancedCustomExtractor()
+    return ImprovedCustomExtractor()
 
 
-class EnhancedCustomExtractor:
+class ImprovedCustomExtractor:
     """
-    Enhanced custom data extractor with hierarchical patterns and web validation.
+    Improved custom data extractor with hierarchical patterns and web validation.
     Targets 95%+ reliability for structured data extraction.
     """
     
@@ -466,23 +466,23 @@ class EnhancedCustomExtractor:
         for level, patterns in raw_patterns.items():
             self.skills_patterns[level] = [re.compile(p, re.IGNORECASE | re.MULTILINE) for p in patterns]
     
-    def extract_job_data(self, job_data: Dict[str, Any]) -> EnhancedExtractionResult:
+    def extract_job_data(self, job_data: Dict[str, Any]) -> ImprovedExtractionResult:
         """
-        Extract job data with enhanced reliability and validation.
+        Extract job data with Improved reliability and validation.
         Handles edge cases for empty, minimal, or malformed input.
-        Adds robust error handling and detailed logging for reliability.
+        Adds reliable error handling and detailed logging for reliability.
         Args:
             job_data (Dict[str, Any]): Dictionary containing job information.
         Returns:
-            EnhancedExtractionResult: Comprehensive analysis of extracted job data.
+            ImprovedExtractionResult: Comprehensive analysis of extracted job data.
         """
         start_time = time.time()
         try:
             if not job_data or not isinstance(job_data, dict):
                 self.logger.warning("Received empty or invalid job_data input.")
-                return EnhancedExtractionResult()
+                return ImprovedExtractionResult()
             content = self._prepare_content(job_data)
-            result = EnhancedExtractionResult()
+            result = ImprovedExtractionResult()
             # Extract core fields with error handling
             try:
                 result.title = self._extract_title(content)
@@ -526,16 +526,16 @@ class EnhancedCustomExtractor:
             result.overall_confidence = self._calculate_overall_confidence(result)
             # Set metadata
             result.processing_time = time.time() - start_time
-            self.logger.info(f"Enhanced extraction completed with {result.overall_confidence:.2f} confidence")
+            self.logger.info(f"Improved extraction completed with {result.overall_confidence:.2f} confidence")
             return result
         except Exception as e:
             self.logger.critical(f"Critical error in extract_job_data: {e}")
-            return EnhancedExtractionResult()
+            return ImprovedExtractionResult()
     
     def _prepare_content(self, job_data: Dict[str, Any]) -> str:
         """
         Prepare job content for extraction.
-        Handles missing fields and ensures robust concatenation.
+        Handles missing fields and ensures reliable concatenation.
         Args:
             job_data (Dict[str, Any]): Job data dictionary.
         Returns:
@@ -1049,7 +1049,7 @@ class EnhancedCustomExtractor:
         
         return list(skills)
     
-    def _validate_extraction(self, result: EnhancedExtractionResult) -> None:
+    def _validate_extraction(self, result: ImprovedExtractionResult) -> None:
         """Validate extraction results and add validation metadata."""
         # Validate company with web search if available
         if result.company:
@@ -1067,7 +1067,7 @@ class EnhancedCustomExtractor:
             'skills': 0.7 if result.skills else 0.0,
         }
     
-    def _calculate_overall_confidence(self, result: EnhancedExtractionResult) -> float:
+    def _calculate_overall_confidence(self, result: ImprovedExtractionResult) -> float:
         """Calculate overall confidence score."""
         weights = {
             'title': 0.28,
@@ -1094,6 +1094,6 @@ class EnhancedCustomExtractor:
 
 
 # Convenience function for easy import
-def get_enhanced_custom_extractor() -> EnhancedCustomExtractor:
-    """Get a configured enhanced custom extractor instance."""
-    return EnhancedCustomExtractor()
+def get_Improved_custom_extractor() -> ImprovedCustomExtractor:
+    """Get a configured Improved custom extractor instance."""
+    return ImprovedCustomExtractor()

@@ -56,9 +56,9 @@ def test_scraper_imports():
     
     scraper_tests = [
         ("scrapers.base_scraper", "BaseJobScraper", "Base scraper class"),
-        ("scrapers.eluta_enhanced", "ElutaEnhancedScraper", "Enhanced Eluta scraper"),
+        ("scrapers.eluta_Improved", "ElutaImprovedScraper", "Improved Eluta scraper"),
         ("scrapers.ultra_parallel_scraper", "UltraParallelScraper", "Ultra parallel scraper"),
-        ("scrapers.indeed_enhanced", "EnhancedIndeedScraper", "Enhanced Indeed scraper"),
+        ("scrapers.indeed_Improved", "ImprovedIndeedScraper", "Improved Indeed scraper"),
     ]
     
     results = []
@@ -165,7 +165,7 @@ def test_removed_dependencies():
     
     removed_modules = [
         "scrapers.parallel_scraper",
-        "scrapers.smart_parallel_scraper",
+        "scrapers.Configurable_parallel_scraper",
         "comprehensive_eluta_scraper",
         "standalone_scraper",
         "production_comprehensive_scraper"

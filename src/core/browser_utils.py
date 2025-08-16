@@ -264,8 +264,8 @@ class FormUtils:
         return False
 
     @staticmethod
-    def smart_attach(page: Page, selectors: List[str], file_path: str) -> bool:
-        """Smart file attachment that tries multiple selectors."""
+    def Configurable_attach(page: Page, selectors: List[str], file_path: str) -> bool:
+        """Configurable file attachment that tries multiple selectors."""
         for selector in selectors:
             try:
                 if page.is_visible(selector):

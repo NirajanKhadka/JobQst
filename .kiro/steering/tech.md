@@ -7,17 +7,17 @@
 - **SQLite** - Primary database for local data storage and job management
 - **Playwright** - Browser automation for web scraping with JavaScript link handling
 - **Streamlit** - Dashboard and web interface framework
-- **Rich** - Enhanced CLI output and logging
+- **Rich** - Improved CLI output and logging
 
 ### AI & Document Generation
 - **Ollama + Llama3 7B** - Primary AI service for job analysis and compatibility scoring
-- **Enhanced Rule-Based Analysis** - Intelligent fallback when AI is unavailable
+- **Improved Rule-Based Analysis** - Automated fallback when AI is unavailable
 - **ReliableJobProcessorAnalyzer** - Fault-tolerant AI analysis with automatic fallbacks
 - **python-docx** - Document manipulation and generation
 - **reportlab** - PDF generation capabilities
 
 ### Web Scraping & Automation
-- **Playwright MCP** - Model Context Protocol for enhanced browser automation (in migration)
+- **Playwright MCP** - Model Context Protocol for Improved browser automation (in migration)
 - **BeautifulSoup4** - HTML parsing and data extraction
 - **requests** - HTTP client for API interactions
 - **asyncio** - Asynchronous programming for concurrent operations
@@ -26,7 +26,7 @@
 - **Streamlit** - Primary web interface framework
 - **pandas** - Data manipulation and analysis
 - **plotly** - Interactive charts and visualizations
-- **streamlit-aggrid** - Enhanced data tables
+- **streamlit-aggrid** - Improved data tables
 - **streamlit-autorefresh** - Real-time dashboard updates
 
 ### Development & Quality

@@ -358,7 +358,7 @@ class TestScrapingErrorHandling:
         elapsed = time.time() - start_time
         
         # Should have some delay between requests (rate limiting)
-        # This is a basic check - in real implementation, would be more sophisticated
+        # This is a basic check - in real implementation, would be more effective
         assert elapsed >= 0.0  # Basic sanity check
 
 

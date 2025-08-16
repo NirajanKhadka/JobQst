@@ -37,10 +37,10 @@ class WorkdayFormFiller:
 
                 if not self._move_to_next_step():
                     console.print("[cyan]No more steps found, attempting to submit...[/cyan]")
-                    return "Applied" if self._submit_application_enhanced() else "Manual"
+                    return "Applied" if self._submit_application_Improved() else "Manual"
 
             console.print("[yellow]Maximum steps reached, attempting final submission...[/yellow]")
-            return "Applied" if self._submit_application_enhanced() else "Manual"
+            return "Applied" if self._submit_application_Improved() else "Manual"
 
         except Exception as e:
             console.print(f"[red]Error in dynamic form filling: {e}[/red]")
@@ -65,6 +65,6 @@ class WorkdayFormFiller:
         # Logic from _move_to_next_step in WorkdaySubmitter
         return False
 
-    def _submit_application_enhanced(self) -> bool:
-        # Logic from _submit_application_enhanced in WorkdaySubmitter
+    def _submit_application_Improved(self) -> bool:
+        # Logic from _submit_application_Improved in WorkdaySubmitter
         return False

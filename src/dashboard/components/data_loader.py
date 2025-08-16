@@ -1,7 +1,7 @@
 """
-Enhanced Data Loader for AutoJobAgent Dashboard
+Improved Data Loader for AutoJobAgent Dashboard
 
-This module provides enhanced data loading functionality with AI analysis integration,
+This module provides Improved data loading functionality with AI analysis integration,
 ensuring all job data includes comprehensive analysis results for the dashboard.
 """
 
@@ -18,14 +18,14 @@ if str(project_root) not in sys.path:
 
 from src.core.job_database import get_job_db
 from src.utils.profile_helpers import load_profile
-from src.ai.enhanced_job_analyzer import EnhancedJobAnalyzer
+from src.ai.Improved_job_analyzer import ImprovedJobAnalyzer
 
 logger = logging.getLogger(__name__)
 
 
 def load_job_data(profile_name: str) -> pd.DataFrame:
     """
-    Load job data with enhanced AI analysis for the dashboard.
+    Load job data with Improved AI analysis for the dashboard.
     
     Args:
         profile_name: Name of the profile to load data for
@@ -78,14 +78,14 @@ def _enhance_job_data(df: pd.DataFrame, profile: Dict) -> pd.DataFrame:
         profile: User profile
         
     Returns:
-        Enhanced DataFrame
+        Improved DataFrame
     """
     try:
         # Initialize enhanced job analyzer
-        analyzer = EnhancedJobAnalyzer(profile, use_llama=True, fallback_to_rule_based=True)
+        analyzer = ImprovedJobAnalyzer(profile, use_llama=True, fallback_to_rule_based=True)
         
         # Add AI analysis for jobs that don't have it
-        enhanced_jobs = []
+        Improved_jobs = []
         
         for idx, row in df.iterrows():
             job_dict = row.to_dict()
@@ -114,12 +114,12 @@ def _enhance_job_data(df: pd.DataFrame, profile: Dict) -> pd.DataFrame:
                     analysis = job_dict.get("llm_analysis", {})
                     job_dict["confidence"] = analysis.get("confidence", 0.8)
             
-            enhanced_jobs.append(job_dict)
+            Improved_jobs.append(job_dict)
         
         # Convert back to DataFrame
-        enhanced_df = pd.DataFrame(enhanced_jobs)
+        Improved_df = pd.DataFrame(Improved_jobs)
         
-        return enhanced_df
+        return Improved_df
         
     except Exception as e:
         logger.error(f"Error enhancing job data: {e}")

@@ -1,8 +1,8 @@
 """
-JobBank Enhanced Scraper Module
+JobBank Improved Scraper Module
 
-This module provides enhanced scraping capabilities for JobBank,
-with advanced job search and data extraction features.
+This module provides Improved scraping capabilities for JobBank,
+with Improved job search and data extraction features.
 """
 
 from typing import Dict, Any, List, Optional
@@ -11,12 +11,12 @@ from .scraping_models import ScrapingTask, JobData
 from .session_manager import SessionManager
 
 
-class JobBankEnhancedScraper:
+class JobBankImprovedScraper:
     """
-    Enhanced scraper for JobBank job board.
+    Improved scraper for JobBank job board.
 
-    Provides advanced job search, data extraction, and
-    intelligent filtering for JobBank jobs.
+    Provides Improved job search, data extraction, and
+    Automated filtering for JobBank jobs.
     """
 
     def __init__(self, profile_name: str, config: Optional[Dict[str, Any]] = None):
@@ -133,9 +133,9 @@ class JobBankEnhancedScraper:
         }
 
 
-def create_jobbank_enhanced_scraper(
+def create_jobbank_Improved_scraper(
     profile_name: str, config: Optional[Dict[str, Any]] = None
-) -> JobBankEnhancedScraper:
+) -> JobBankImprovedScraper:
     """
     Factory function to create an enhanced JobBank scraper.
 
@@ -144,6 +144,6 @@ def create_jobbank_enhanced_scraper(
         config: Configuration dictionary
 
     Returns:
-        JobBankEnhancedScraper instance
+        JobBankImprovedScraper instance
     """
-    return JobBankEnhancedScraper(profile_name, config)
+    return JobBankImprovedScraper(profile_name, config)

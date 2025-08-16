@@ -1,6 +1,6 @@
 """
 Lever ATS Handler
-Provides the Lever-specific application logic for EnhancedUniversalApplier.
+Provides the Lever-specific application logic for ImprovedUniversalApplier.
 """
 
 from typing import Dict

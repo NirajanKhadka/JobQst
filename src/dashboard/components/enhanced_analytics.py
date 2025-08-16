@@ -1,5 +1,5 @@
 """
-Enhanced Analytics Component for AutoJobAgent Dashboard
+Improved Analytics Component for AutoJobAgent Dashboard
 
 This module provides comprehensive analytics including:
 - AI analysis metrics and insights
@@ -18,14 +18,14 @@ from collections import Counter
 import numpy as np
 
 
-def render_enhanced_analytics(df: pd.DataFrame) -> None:
+def render_Improved_analytics(df: pd.DataFrame) -> None:
     """
     Render comprehensive analytics dashboard with AI insights.
     
     Args:
         df: DataFrame containing job data with AI analysis
     """
-    st.subheader("📈 Enhanced Analytics & AI Insights")
+    st.subheader("📈 Improved Analytics & AI Insights")
     
     if df.empty:
         st.info("No job data available for analysis")

@@ -17,8 +17,8 @@ from rich.panel import Panel
 console = Console()
 
 
-class EnhancedJobDescriptionScraper:
-    """Enhanced scraper for detailed job descriptions and experience requirements."""
+class ImprovedJobDescriptionScraper:
+    """Improved scraper for detailed job descriptions and experience requirements."""
 
     def __init__(self):
         self.experience_patterns = {
@@ -185,7 +185,7 @@ class EnhancedJobDescriptionScraper:
         }
 
         try:
-            # Enhanced selectors for different ATS systems
+            # Improved selectors for different ATS systems
             selectors = {
                 "title": [
                     # Workday specific
@@ -629,7 +629,7 @@ async def scrape_job_description_async(job_url: str) -> Dict[str, Any]:
             # Set longer timeout for better reliability
             page.set_default_timeout(45000)
             
-            scraper = EnhancedJobDescriptionScraper()
+            scraper = ImprovedJobDescriptionScraper()
             result = await scraper.scrape_job_description(job_url, page)
             
             # Extract company from URL if not found

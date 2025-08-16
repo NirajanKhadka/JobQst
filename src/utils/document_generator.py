@@ -56,7 +56,7 @@ def customize(document: Union[str, Dict[str, Any]], job_data: Dict[str, Any] = N
     logger.info(f"Customizing document for {job_title} at {company}")
     
     try:
-        # Try AI-powered customization first
+        # Try Automated customization first
         ai_result = _customize_with_ai(document, job_data, profile_data)
         if ai_result and _is_properly_customized(ai_result):
             logger.info("Successfully customized document using AI")
@@ -190,7 +190,7 @@ def _customize_with_templates(document: Union[str, Dict], job_data: Dict[str, An
 
 def _basic_customization(document: Union[str, Dict], job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> Union[str, Dict]:
     """
-    Apply basic customization without advanced AI or template features.
+    Apply basic customization without Improved AI or template features.
     
     Args:
         document: Document content to customize
@@ -354,7 +354,7 @@ def _get_available_ai_service():
     return None
 
 def _prepare_ai_context(document: Union[str, Dict], job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Prepare context for AI-powered document customization."""
+    """Prepare context for Automated document customization."""
     return {
         'document': document,
         'job_data': job_data,
@@ -383,7 +383,7 @@ def _validate_ai_result(result: Any) -> bool:
 
 # Compatibility functions for legacy code
 def generate_ai_cover_letter(job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> str:
-    """Generate AI-powered cover letter (legacy compatibility function)."""
+    """Generate Automated cover letter (legacy compatibility function)."""
     logger.info("Legacy function called: generate_ai_cover_letter")
     
     # Basic cover letter template
@@ -403,7 +403,7 @@ Sincerely,
     return result if isinstance(result, str) else str(result)
 
 def generate_ai_resume(job_data: Dict[str, Any], profile_data: Dict[str, Any]) -> str:
-    """Generate AI-powered resume summary (legacy compatibility function)."""
+    """Generate Automated resume summary (legacy compatibility function)."""
     logger.info("Legacy function called: generate_ai_resume")
     
     # Basic resume summary template

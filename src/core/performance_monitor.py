@@ -70,7 +70,7 @@ class PerformanceMonitor:
         if PSUTIL_AVAILABLE:
             self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
             self.monitor_thread.start()
-            console.print("[cyan]⚡ Advanced performance monitoring started[/cyan]")
+            console.print("[cyan]⚡ Improved performance monitoring started[/cyan]")
         else:
             console.print("[cyan]⚡ Basic performance monitoring started[/cyan]")
     
@@ -184,6 +184,6 @@ class PerformanceMonitor:
         
         # psutil recommendation
         if not PSUTIL_AVAILABLE:
-            recommendations.append("📦 Install psutil for advanced performance monitoring: pip install psutil")
+            recommendations.append("📦 Install psutil for Improved performance monitoring: pip install psutil")
         
         return recommendations

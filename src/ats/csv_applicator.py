@@ -16,7 +16,7 @@ class CSVJobApplicator:
     """
     CSV Job Applicator - Alias for CSVApplicator for backward compatibility.
 
-    Handles job applications from CSV files with enhanced functionality.
+    Handles job applications from CSV files with Improved functionality.
     """
 
     def __init__(self, profile_name: str, csv_file_path: Optional[str] = None):

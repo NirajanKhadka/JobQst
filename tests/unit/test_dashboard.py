@@ -35,7 +35,7 @@ def test_profiles_endpoint_and_nirajan_presence():
 #!/usr/bin/env python3
 """
 Improved Dashboard Tests - UI and data visualization with job limits
-Enhanced with dynamic UI limits, modular design, and performance optimization
+Improved with dynamic UI limits, modular design, and performance optimization
 Following DEVELOPMENT_STANDARDS.md principles
 """
 
@@ -82,7 +82,7 @@ except ImportError:
 
 
 class DashboardMetrics:
-    """Enhanced dashboard performance metrics with UI element limits."""
+    """Improved dashboard performance metrics with UI element limits."""
 
     def __init__(self, ui_limit: int = 10, components_limit: int = 20):
         self.ui_limit = ui_limit

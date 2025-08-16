@@ -65,10 +65,10 @@ class TestScrapers:
     def test_eluta_scraper_import(self):
         """Test that Eluta scraper exists."""
         try:
-            from src.scrapers.enhanced_eluta_scraper import EnhancedElutaScraper
-            assert EnhancedElutaScraper is not None
+            from src.scrapers.Improved_eluta_scraper import ImprovedElutaScraper
+            assert ImprovedElutaScraper is not None
         except ImportError:
-            pytest.skip("Eluta enhanced scraper not available")
+            pytest.skip("Eluta Improved scraper not available")
 
 
 class TestDashboard:

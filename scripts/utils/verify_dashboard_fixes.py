@@ -11,12 +11,12 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-def verify_enhanced_table():
-    """Verify the enhanced table component is working."""
+def verify_Improved_table():
+    """Verify the Improved table component is working."""
     print("🧪 Verifying Enhanced Job Table...")
     
     try:
-        from src.dashboard.components.enhanced_job_table import render_enhanced_job_table
+        from src.dashboard.components.Improved_job_table import render_Improved_job_table
         print("✅ Enhanced job table component available")
         
         # Check for AgGrid
@@ -28,7 +28,7 @@ def verify_enhanced_table():
         
         return True
     except Exception as e:
-        print(f"❌ Enhanced table issue: {e}")
+        print(f"❌ Improved table issue: {e}")
         return False
 
 def verify_service_manager():
@@ -36,7 +36,7 @@ def verify_service_manager():
     print("\n🧪 Verifying Service Manager...")
     
     try:
-        from src.services.robust_service_manager import get_service_manager
+        from src.services.reliable_service_manager import get_service_manager
         service_manager = get_service_manager()
         
         health = service_manager.get_service_health()
@@ -129,7 +129,7 @@ def main():
     print("="*60)
     
     verifications = [
-        ("Enhanced Job Table", verify_enhanced_table),
+        ("Enhanced Job Table", verify_Improved_table),
         ("Service Manager", verify_service_manager),
         ("Recent Opportunities Fix", verify_recent_opportunities_fix),
         ("Dashboard Structure", verify_dashboard_structure)
@@ -159,12 +159,12 @@ def main():
         print("\n🎉 ALL VERIFICATIONS PASSED! 🎉")
         print("\n✅ Dashboard Issues Fixed:")
         print("  • Ugly table display → Professional AgGrid table")
-        print("  • Service startup failures → Robust service manager")
+        print("  • Service startup failures → reliable service manager")
         print("  • HTML rendering issues → Clean Streamlit components")
         print("  • Missing job URL buttons → Functional View Job buttons")
         
         print("\n🚀 Your Dashboard is Now:")
-        print("  • 100% reliable and robust")
+        print("  • 100% reliable and reliable")
         print("  • Professional appearance with AgGrid tables")
         print("  • Full service management capabilities")
         print("  • Clean job URL access with working buttons")
@@ -173,7 +173,7 @@ def main():
         print("\n🎯 Ready to Use:")
         print("1. Restart dashboard: python -m streamlit run src/dashboard/unified_dashboard.py")
         print("2. Check '🛠️ Services' tab for service management")
-        print("3. Check '💼 Jobs' tab for enhanced table")
+        print("3. Check '💼 Jobs' tab for Improved table")
         print("4. Check Recent Opportunities for clean job cards")
         print("5. Test 'View Job' buttons to open URLs")
         
@@ -182,13 +182,13 @@ def main():
         print("Some issues may still need attention")
         
         if not results.get("Enhanced Job Table"):
-            print("\n💡 Enhanced Table Issues:")
+            print("\n💡 Improved Table Issues:")
             print("   - Check if streamlit-aggrid is installed")
             print("   - Verify component imports are working")
         
         if not results.get("Service Manager"):
             print("\n💡 Service Manager Issues:")
-            print("   - Check if robust_service_manager.py exists")
+            print("   - Check if reliable_service_manager.py exists")
             print("   - Verify service configurations")
         
         if not results.get("Recent Opportunities Fix"):

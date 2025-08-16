@@ -45,8 +45,8 @@ def run_interactive_mode(profile: Dict[str, Any], args) -> int:
     console.print(
         Panel(
             "[bold green]🤖 AutoJobAgent v2.0[/bold green]\n"
-            "[cyan]Intelligent Job Application Automation[/cyan]\n"
-            "[yellow]Modular Architecture • AI-Powered • Production Ready[/yellow]",
+            "[cyan]Automated Job Application Automation[/cyan]\n"
+            "[yellow]Modular Architecture • Automated • Production Ready[/yellow]",
             style="bold blue",
         )
     )

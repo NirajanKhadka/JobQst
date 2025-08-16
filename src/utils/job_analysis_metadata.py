@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AnalysisMetadata:
     """Analysis metadata structure"""
-    method: str  # 'mistral_7b', 'llama3', 'enhanced_rule_based', 'fallback'
+    method: str  # 'mistral_7b', 'llama3', 'Improved_rule_based', 'fallback'
     timestamp: str
     duration_ms: Optional[float] = None
     confidence: Optional[float] = None
@@ -32,7 +32,7 @@ class JobAnalysisMetadataHandler:
         self.analysis_method_stats = {
             'mistral_7b': 0,
             'llama3': 0,
-            'enhanced_rule_based': 0,
+            'Improved_rule_based': 0,
             'fallback': 0,
             'unknown': 0
         }
@@ -232,7 +232,7 @@ class JobAnalysisMetadataHandler:
                 continue
             
             # Include if analyzed with fallback methods
-            if current_method in ['enhanced_rule_based', 'fallback', 'unknown']:
+            if current_method in ['Improved_rule_based', 'fallback', 'unknown']:
                 candidates.append(job)
             
             # Include if analyzed with lower-priority AI method
@@ -306,7 +306,7 @@ class JobAnalysisMetadataHandler:
             recommendations.append("Moderate AI service usage - consider optimizing connection reliability")
         
         # Check fallback usage
-        fallback_count = distribution['distribution'].get('enhanced_rule_based', 0) + \
+        fallback_count = distribution['distribution'].get('Improved_rule_based', 0) + \
                         distribution['distribution'].get('fallback', 0)
         fallback_percentage = (fallback_count / total) * 100
         
@@ -328,7 +328,7 @@ class JobAnalysisMetadataHandler:
         self.analysis_method_stats = {
             'mistral_7b': 0,
             'llama3': 0,
-            'enhanced_rule_based': 0,
+            'Improved_rule_based': 0,
             'fallback': 0,
             'unknown': 0
         }
@@ -390,7 +390,7 @@ if __name__ == "__main__":
             'analyzer_version': 'reliable_v1.0'
         },
         {
-            'analysis_method': 'enhanced_rule_based',
+            'analysis_method': 'Improved_rule_based',
             'analysis_timestamp': datetime.now().isoformat(),
             'confidence': 0.65,
             'duration_ms': 150.0,

@@ -73,7 +73,7 @@ class ModernJobDatabase:
                     analysis_data TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    -- Enhanced 2-worker system fields
+                    -- Improved 2-worker system fields
                     employment_type TEXT,
                     required_skills TEXT,
                     job_requirements TEXT,
@@ -94,10 +94,46 @@ class ModernJobDatabase:
             """
             )
             
+            # Add missing columns for backward compatibility
+            self._add_missing_columns(conn)
+            
             # Create indexes for duplicate checking performance
             conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_url ON jobs(url)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_title_company ON jobs(title, company)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_title_location ON jobs(title, location)")
+    
+    def _add_missing_columns(self, conn):
+        """Add missing columns for backward compatibility."""
+        try:
+            # Get existing columns
+            cursor = conn.execute("PRAGMA table_info(jobs)")
+            existing_columns = {row[1] for row in cursor.fetchall()}
+            
+            # List of columns that should exist
+            required_columns = [
+                ('processed_at', 'TEXT'),
+                ('processing_worker_id', 'INTEGER'),
+                ('processing_time', 'REAL DEFAULT 0.0'),
+                ('error_message', 'TEXT'),
+                ('compatibility_score', 'REAL DEFAULT 0.0'),
+                ('analysis_confidence', 'REAL DEFAULT 0.0'),
+                ('processing_method', 'TEXT DEFAULT "unknown"'),
+                ('fallback_used', 'INTEGER DEFAULT 0')
+            ]
+            
+            # Add missing columns
+            for column_name, column_type in required_columns:
+                if column_name not in existing_columns:
+                    try:
+                        conn.execute(f"ALTER TABLE jobs ADD COLUMN {column_name} {column_type}")
+                        logger.info(f"Added missing column: {column_name}")
+                    except sqlite3.OperationalError as e:
+                        if "duplicate column name" not in str(e):
+                            logger.warning(f"Could not add column {column_name}: {e}")
+            
+            conn.commit()
+        except Exception as e:
+            logger.error(f"Error adding missing columns: {e}")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_scraped_at ON jobs(scraped_at)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status)")
             conn.commit()
@@ -166,7 +202,7 @@ class ModernJobDatabase:
 
     def _is_duplicate(self, conn, job_record: JobRecord) -> bool:
         """
-        Enhanced duplicate checking with multiple criteria.
+        Improved duplicate checking with multiple criteria.
         
         Checks in order of reliability:
         1. URL match (most reliable)
@@ -182,23 +218,33 @@ class ModernJobDatabase:
         
         # Secondary check: Title + Company match
         if job_record.title and job_record.company:
-            cursor = conn.execute(
-                "SELECT id FROM jobs WHERE LOWER(title) = LOWER(?) AND LOWER(company) = LOWER(?)", 
-                (job_record.title.strip(), job_record.company.strip())
-            )
-            if cursor.fetchone():
-                logger.info(f"Duplicate found by title+company: {job_record.title} at {job_record.company}")
-                return True
+            # Safely convert to string and handle potential None/float values
+            title_str = str(job_record.title).strip() if job_record.title is not None else ""
+            company_str = str(job_record.company).strip() if job_record.company is not None else ""
+            
+            if title_str and company_str:
+                cursor = conn.execute(
+                    "SELECT id FROM jobs WHERE LOWER(title) = LOWER(?) AND LOWER(company) = LOWER(?)", 
+                    (title_str, company_str)
+                )
+                if cursor.fetchone():
+                    logger.info(f"Duplicate found by title+company: {title_str} at {company_str}")
+                    return True
         
         # Tertiary check: Title + Location match (for cases where company name varies)
         if job_record.title and job_record.location and not job_record.company:
-            cursor = conn.execute(
-                "SELECT id FROM jobs WHERE LOWER(title) = LOWER(?) AND LOWER(location) = LOWER(?)", 
-                (job_record.title.strip(), job_record.location.strip())
-            )
-            if cursor.fetchone():
-                logger.info(f"Duplicate found by title+location: {job_record.title} in {job_record.location}")
-                return True
+            # Safely convert to string and handle potential None/float values
+            title_str = str(job_record.title).strip() if job_record.title is not None else ""
+            location_str = str(job_record.location).strip() if job_record.location is not None else ""
+            
+            if title_str and location_str:
+                cursor = conn.execute(
+                    "SELECT id FROM jobs WHERE LOWER(title) = LOWER(?) AND LOWER(location) = LOWER(?)", 
+                    (title_str, location_str)
+                )
+                if cursor.fetchone():
+                    logger.info(f"Duplicate found by title+location: {title_str} in {location_str}")
+                    return True
         
         return False
 
@@ -214,10 +260,11 @@ class ModernJobDatabase:
         """
         try:
             with self._get_connection() as conn:
-                job_url = job_data.get("url", "").strip()
-                job_title = job_data.get("title", "").strip()
-                job_company = job_data.get("company", "").strip()
-                job_location = job_data.get("location", "").strip()
+                # Safely convert to string and handle potential None/float values
+                job_url = str(job_data.get("url", "")).strip() if job_data.get("url") is not None else ""
+                job_title = str(job_data.get("title", "")).strip() if job_data.get("title") is not None else ""
+                job_company = str(job_data.get("company", "")).strip() if job_data.get("company") is not None else ""
+                job_location = str(job_data.get("location", "")).strip() if job_data.get("location") is not None else ""
                 
                 # Primary check: URL match
                 if job_url:
@@ -347,6 +394,10 @@ class ModernJobDatabase:
         with self._get_connection() as conn:
             cursor = conn.execute("SELECT COUNT(*) FROM jobs")
             return cursor.fetchone()[0]
+    
+    def get_job_count(self, **kwargs) -> int:
+        with self._get_connection() as conn:
+            return DBQueries(conn).get_job_count(**kwargs)
 
     def get_companies(self) -> List[str]:
         """Get list of unique companies."""
@@ -415,6 +466,48 @@ class ModernJobDatabase:
                 cursor = conn.execute("SELECT * FROM jobs WHERE status = ?", (status,))
             return [dict(row) for row in cursor.fetchall()]
 
+    def get_job_by_url(self, url: str) -> Optional[Dict]:
+        """Get job by URL for duplicate checking."""
+        if not url:
+            return None
+        
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM jobs WHERE url = ? LIMIT 1", (url,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def update_job_metadata(self, job_id: int, metadata: Dict) -> bool:
+        """Update job metadata fields."""
+        try:
+            with self._get_connection() as conn:
+                # Build update query dynamically based on provided metadata
+                update_fields = []
+                values = []
+                
+                for field, value in metadata.items():
+                    if field != 'id':  # Don't update ID
+                        update_fields.append(f"{field} = ?")
+                        # Convert lists/dicts to JSON strings
+                        if isinstance(value, (list, dict)):
+                            import json
+                            value = json.dumps(value)
+                        values.append(value)
+                
+                if not update_fields:
+                    return False
+                
+                # Add updated_at timestamp
+                update_fields.append("updated_at = CURRENT_TIMESTAMP")
+                values.append(job_id)
+                
+                query = f"UPDATE jobs SET {', '.join(update_fields)} WHERE id = ?"
+                conn.execute(query, values)
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error updating job metadata {job_id}: {e}")
+            return False
+
     def update_job(self, job_id: int, job_data: Dict) -> bool:
         """Update job with new data by ID."""
         try:
@@ -474,6 +567,96 @@ class ModernJobDatabase:
         except Exception as e:
             logger.error(f"Error updating job URL: {e}")
             return False
+
+    def get_jobs_for_processing(self, limit: int = 50) -> List[Dict]:
+        """Get jobs that need processing (scraped but not processed)."""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.execute("""
+                    SELECT * FROM jobs 
+                    WHERE status IN ('scraped', 'new') 
+                    AND (processed_at IS NULL OR processed_at = '')
+                    ORDER BY created_at DESC 
+                    LIMIT ?
+                """, (limit,))
+                return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"Error getting jobs for processing: {e}")
+            return []
+
+    def update_job_analysis(self, job_id: str, analysis_data: Dict):
+        """Update job analysis data."""
+        try:
+            with self._get_connection() as conn:
+                # Convert analysis_data to JSON string for storage
+                analysis_json = json.dumps(analysis_data)
+                
+                # Update the job with analysis data
+                conn.execute("""
+                    UPDATE jobs 
+                    SET analysis_data = ?,
+                        compatibility_score = ?,
+                        processing_method = ?,
+                        processed_at = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE job_id = ?
+                """, (
+                    analysis_json,
+                    analysis_data.get('compatibility_score', 0.0),
+                    analysis_data.get('processing_method', 'unknown'),
+                    datetime.now().isoformat(),
+                    job_id
+                ))
+                conn.commit()
+                logger.info(f"Updated analysis data for job {job_id}")
+        except Exception as e:
+            logger.error(f"Error updating job analysis for {job_id}: {e}")
+
+    def get_system_status(self) -> Dict:
+        """Get system status including database statistics."""
+        try:
+            with self._get_connection() as conn:
+                # Get basic job counts
+                cursor = conn.execute("SELECT COUNT(*) FROM jobs")
+                total_jobs = cursor.fetchone()[0]
+                
+                cursor = conn.execute("SELECT COUNT(*) FROM jobs WHERE status = 'scraped'")
+                scraped_jobs = cursor.fetchone()[0]
+                
+                cursor = conn.execute("SELECT COUNT(*) FROM jobs WHERE status = 'processed'")
+                processed_jobs = cursor.fetchone()[0]
+                
+                cursor = conn.execute("SELECT COUNT(*) FROM jobs WHERE application_status = 'applied'")
+                applied_jobs = cursor.fetchone()[0]
+                
+                # Get recent activity
+                cursor = conn.execute("""
+                    SELECT COUNT(*) FROM jobs 
+                    WHERE created_at > datetime('now', '-24 hours')
+                """)
+                recent_jobs = cursor.fetchone()[0]
+                
+                return {
+                    "database_status": "healthy",
+                    "total_jobs": total_jobs,
+                    "scraped_jobs": scraped_jobs,
+                    "processed_jobs": processed_jobs,
+                    "applied_jobs": applied_jobs,
+                    "recent_jobs_24h": recent_jobs,
+                    "database_path": str(self.db_path),
+                    "database_size_mb": self.db_path.stat().st_size / (1024 * 1024) if self.db_path.exists() else 0
+                }
+        except Exception as e:
+            logger.error(f"Error getting system status: {e}")
+            return {
+                "database_status": "error",
+                "error": str(e),
+                "total_jobs": 0,
+                "scraped_jobs": 0,
+                "processed_jobs": 0,
+                "applied_jobs": 0,
+                "recent_jobs_24h": 0
+            }
 
     def close(self):
         while not self._connection_pool.empty():

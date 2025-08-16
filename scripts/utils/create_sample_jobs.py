@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create sample jobs for testing the enhanced 2-worker system."""
+"""Create sample jobs for testing the Improved 2-worker system."""
 
 from src.core.job_database import get_job_db
 import time
@@ -92,7 +92,7 @@ def create_sample_jobs():
             'scraped_at': str(time.time()),
             'status': 'scraped',
             'job_description': '''
-            We're looking for a talented Full Stack Developer to help build our next-generation platform.
+            We're looking for a talented Full Stack Developer to help build our Updated platform.
             
             Requirements:
             • 4+ years of full stack development experience
@@ -193,7 +193,7 @@ def create_sample_jobs():
         }
     ]
     
-    print("Creating sample jobs for enhanced 2-worker system demonstration...")
+    print("Creating sample jobs for Improved 2-worker system demonstration...")
     
     for job in sample_jobs:
         success = db.add_job(job)

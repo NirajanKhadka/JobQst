@@ -1,6 +1,6 @@
 """
 BambooHR ATS Handler
-Provides the BambooHR-specific application logic for EnhancedUniversalApplier.
+Provides the BambooHR-specific application logic for ImprovedUniversalApplier.
 """
 
 from typing import Dict

@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any
 from src.scrapers.scraping_models import JobData, JobStatus
-from src.ai.enhanced_job_analyzer import EnhancedJobAnalyzer
+from src.ai.Improved_job_analyzer import ImprovedJobAnalyzer
 
 # Set up structured logging
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ async def analysis_stage(
     analysis_queue: asyncio.Queue,
     storage_queue: asyncio.Queue,
     metrics,
-    analyzer: EnhancedJobAnalyzer,
+    analyzer: ImprovedJobAnalyzer,
     thread_pool,
 ):
     """

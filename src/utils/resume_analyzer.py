@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Intelligent Resume Analyzer for AutoJobAgent.
+Automated Resume Analyzer for AutoJobAgent.
 This module automatically extracts keywords, skills, and experience level from resumes
-to enable smart, targeted job scraping.
+to enable Configurable, targeted job scraping.
 """
 
 import re
@@ -19,7 +19,7 @@ console = Console()
 
 class ResumeAnalyzer:
     """
-    Intelligent resume analyzer that extracts relevant keywords and skills
+    Automated resume analyzer that extracts relevant keywords and skills
     for targeted job searching.
     """
 
@@ -293,7 +293,7 @@ class ResumeAnalyzer:
     def generate_search_keywords(
         self, skills: Dict[str, List[str]], job_titles: List[str], experience_level: str
     ) -> List[str]:
-        """Generate intelligent search keywords based on extracted information."""
+        """Generate Automated search keywords based on extracted information."""
         keywords = []
 
         # Add experience-appropriate job titles
@@ -332,9 +332,9 @@ class ResumeAnalyzer:
 
     def analyze_resume(self, profile: Dict) -> Dict:
         """
-        Analyze resume and generate intelligent keywords and job targeting info.
+        Analyze resume and generate Automated keywords and job targeting info.
         """
-        console.print("[bold blue]🧠 Analyzing resume for intelligent job targeting...[/bold blue]")
+        console.print("[bold blue]🧠 Analyzing resume for Automated job targeting...[/bold blue]")
 
         # Get resume path
         profile_dir = Path(profile.get("profile_dir", f"profiles/{profile['profile_name']}"))
@@ -361,7 +361,7 @@ class ResumeAnalyzer:
         job_titles = self.extract_job_titles(resume_text)
         experience_level = self.determine_experience_level(resume_text)
 
-        # Generate intelligent keywords
+        # Generate Automated keywords
         keywords = self.generate_search_keywords(skills, job_titles, experience_level)
 
         # Create analysis result
@@ -369,7 +369,7 @@ class ResumeAnalyzer:
             "extracted_skills": skills,
             "relevant_job_titles": job_titles,
             "experience_level": experience_level,
-            "intelligent_keywords": keywords,
+            "Automated_keywords": keywords,
             "resume_length": len(resume_text),
             "analysis_timestamp": Path(__file__).stat().st_mtime,
         }
@@ -390,7 +390,7 @@ class ResumeAnalyzer:
             "extracted_skills": {"existing": existing_skills},
             "relevant_job_titles": existing_keywords,
             "experience_level": "entry",  # Default assumption
-            "intelligent_keywords": existing_keywords[:10],
+            "Automated_keywords": existing_keywords[:10],
             "resume_length": 0,
             "analysis_timestamp": 0,
         }
@@ -424,7 +424,7 @@ class ResumeAnalyzer:
                 console.print(f"   • {title}")
 
         # Generated keywords
-        keywords = analysis["intelligent_keywords"]
+        keywords = analysis["Automated_keywords"]
         console.print(f"\n[bold]🔍 Generated Search Keywords:[/bold]")
         for i, keyword in enumerate(keywords, 1):
             console.print(f"   {i}. [green]{keyword}[/green]")
@@ -448,7 +448,7 @@ if __name__ == "__main__":
         analysis = analyzer.analyze_resume(profile)
 
         console.print(f"\n[bold]🎉 Analysis complete![/bold]")
-        console.print(f"Generated {len(analysis['intelligent_keywords'])} intelligent keywords")
+        console.print(f"Generated {len(analysis['Automated_keywords'])} Automated keywords")
 
     except Exception as e:
         console.print(f"[red]❌ Error: {e}[/red]")

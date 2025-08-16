@@ -100,7 +100,8 @@ def render_profile_settings(profile_name: str):
             copy_from_current = st.checkbox(
                 "Copy settings from current profile",
                 value=True,
-                help="Copy configuration from the current profile to the new one"
+                help="Copy configuration from the current profile to the new one",
+                key="settings_copy_from_current"
             )
         
         with col2:
@@ -141,13 +142,15 @@ def render_scraper_settings():
         headless_mode = st.checkbox(
             "Headless Mode",
             value=True,
-            help="Run browser in headless mode (faster, no GUI)"
+            help="Run browser in headless mode (faster, no GUI)",
+            key="settings_headless_mode"
         )
         
         respect_robots = st.checkbox(
             "Respect robots.txt",
             value=True,
-            help="Follow robots.txt rules when scraping"
+            help="Follow robots.txt rules when scraping",
+            key="settings_respect_robots"
         )
     
     with col2:
@@ -175,8 +178,8 @@ def render_scraper_settings():
             help="Preferred locations (comma-separated)"
         )
     
-    # Advanced settings
-    with st.expander("🔧 Advanced Settings"):
+    # Improved settings
+    with st.expander("🔧 Improved Settings"):
         col1, col2 = st.columns(2)
         
         with col1:
@@ -282,13 +285,15 @@ def render_ai_settings():
         enable_job_analysis = st.checkbox(
             "Enable Job Analysis",
             value=True,
-            help="Use AI to analyze job descriptions and calculate match scores"
+            help="Use AI to analyze job descriptions and calculate match scores",
+            key="settings_enable_job_analysis"
         )
         
         enable_document_generation = st.checkbox(
             "Enable Document Generation",
             value=True,
-            help="Use AI to generate personalized resumes and cover letters"
+            help="Use AI to generate personalized resumes and cover letters",
+            key="settings_enable_document_generation"
         )
         
         analysis_batch_size = st.number_input(
@@ -307,8 +312,8 @@ def render_ai_settings():
             help="Minimum match score to consider a job worth applying to"
         )
     
-    # Advanced AI settings
-    with st.expander("🔧 Advanced AI Settings"):
+    # Improved AI settings
+    with st.expander("🔧 Improved AI Settings"):
         col1, col2 = st.columns(2)
         
         with col1:
@@ -333,7 +338,8 @@ def render_ai_settings():
             enable_fallback = st.checkbox(
                 "Enable Rule-based Fallback",
                 value=True,
-                help="Use rule-based analysis when AI is unavailable"
+                help="Use rule-based analysis when AI is unavailable",
+                key="settings_enable_fallback"
             )
             
             ai_timeout = st.number_input(
@@ -403,7 +409,8 @@ def render_system_settings():
         enable_caching = st.checkbox(
             "Enable Caching",
             value=True,
-            help="Cache results to improve performance"
+            help="Cache results to improve performance",
+            key="settings_enable_caching"
         )
         
         cache_ttl_hours = st.number_input(
@@ -427,13 +434,15 @@ def render_system_settings():
         enable_metrics = st.checkbox(
             "Enable Metrics Collection",
             value=True,
-            help="Collect performance and usage metrics"
+            help="Collect performance and usage metrics",
+            key="settings_enable_metrics"
         )
         
         auto_cleanup = st.checkbox(
             "Auto Cleanup Old Data",
             value=True,
-            help="Automatically clean up old job data and logs"
+            help="Automatically clean up old job data and logs",
+            key="settings_auto_cleanup"
         )
         
         cleanup_days = st.number_input(
@@ -452,7 +461,8 @@ def render_system_settings():
             db_backup_enabled = st.checkbox(
                 "Enable Database Backups",
                 value=True,
-                help="Automatically backup database"
+                help="Automatically backup database",
+                key="settings_db_backup_enabled"
             )
             
             backup_frequency = st.selectbox(
@@ -474,7 +484,8 @@ def render_system_settings():
             vacuum_db = st.checkbox(
                 "Auto Vacuum Database",
                 value=True,
-                help="Automatically optimize database performance"
+                help="Automatically optimize database performance",
+                key="settings_vacuum_db"
             )
     
     # Notification settings
@@ -485,20 +496,23 @@ def render_system_settings():
             enable_notifications = st.checkbox(
                 "Enable Notifications",
                 value=False,
-                help="Enable system notifications"
+                help="Enable system notifications",
+                key="settings_enable_notifications"
             )
             
             notify_on_completion = st.checkbox(
                 "Notify on Job Completion",
                 value=True,
-                help="Notify when scraping/processing completes"
+                help="Notify when scraping/processing completes",
+                key="settings_notify_on_completion"
             )
         
         with col2:
             notify_on_errors = st.checkbox(
                 "Notify on Errors",
                 value=True,
-                help="Notify when errors occur"
+                help="Notify when errors occur",
+                key="settings_notify_on_errors"
             )
             
             notification_method = st.selectbox(

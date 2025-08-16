@@ -1,8 +1,8 @@
 """
-Monster Enhanced Scraper Module
+Monster Improved Scraper Module
 
-This module provides enhanced scraping capabilities for Monster,
-with advanced job search and data extraction features.
+This module provides Improved scraping capabilities for Monster,
+with Improved job search and data extraction features.
 """
 
 from typing import Dict, Any, List, Optional
@@ -11,17 +11,17 @@ from .scraping_models import ScrapingTask, JobData
 from .session_manager import SessionManager
 
 
-class MonsterEnhancedScraper:
+class MonsterImprovedScraper:
     """
-    Enhanced scraper for Monster job board.
+    Improved scraper for Monster job board.
 
-    Provides advanced job search, data extraction, and
-    intelligent filtering for Monster jobs.
+    Provides Improved job search, data extraction, and
+    Automated filtering for Monster jobs.
     """
 
     def __init__(self, profile_name: str, config: Optional[Dict[str, Any]] = None):
         """
-        Initialize the enhanced Monster scraper.
+        Initialize the Improved Monster scraper.
 
         Args:
             profile_name: Name of the user profile
@@ -133,17 +133,17 @@ class MonsterEnhancedScraper:
         }
 
 
-def create_monster_enhanced_scraper(
+def create_monster_Improved_scraper(
     profile_name: str, config: Optional[Dict[str, Any]] = None
-) -> MonsterEnhancedScraper:
+) -> MonsterImprovedScraper:
     """
-    Factory function to create an enhanced Monster scraper.
+    Factory function to create an Improved Monster scraper.
 
     Args:
         profile_name: Name of the user profile
         config: Configuration dictionary
 
     Returns:
-        MonsterEnhancedScraper instance
+        MonsterImprovedScraper instance
     """
-    return MonsterEnhancedScraper(profile_name, config)
+    return MonsterImprovedScraper(profile_name, config)

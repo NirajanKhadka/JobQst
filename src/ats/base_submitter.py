@@ -150,7 +150,7 @@ class BaseSubmitter(ABC):
             "input[type=file][accept*=docx]",
         ]
 
-        return FormUtils.smart_attach(page, resume_selectors, resume_path)
+        return FormUtils.Configurable_attach(page, resume_selectors, resume_path)
 
     def upload_cover_letter(self, page: Page, cover_letter_path: str) -> bool:
         """
@@ -173,7 +173,7 @@ class BaseSubmitter(ABC):
         ]
 
         try:
-            return FormUtils.smart_attach(page, cover_letter_selectors, cover_letter_path)
+            return FormUtils.Configurable_attach(page, cover_letter_selectors, cover_letter_path)
         except NeedsHumanException:
             # Cover letter is often optional, so don't raise an exception
             console.print("[yellow]Could not upload cover letter automatically[/yellow]")

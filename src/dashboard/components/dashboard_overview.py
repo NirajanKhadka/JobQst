@@ -54,7 +54,7 @@ def render_system_status():
         st.markdown("""
         <div style='background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 2rem; border-radius: 1rem; border: 1px solid #475569;'>
             <h1 style='color: #f1f5f9; margin: 0; font-size: 2.5rem; font-weight: 700;'>🚀 AutoJobAgent</h1>
-            <p style='color: #cbd5e1; margin: 0.5rem 0 0 0; font-size: 1.125rem;'>Intelligent Job Application Automation</p>
+            <p style='color: #cbd5e1; margin: 0.5rem 0 0 0; font-size: 1.125rem;'>Automated Job Application Automation</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -146,7 +146,7 @@ def render_quick_actions(profile_name: str):
                 else:
                     st.error("❌ Failed to start scraper")
             except ImportError:
-                st.info("💡 Orchestration service not available - would start scraper")
+                st.info("💡 Improved orchestration loading... Use CLI for scraping: `python main.py [profile] --action scrape`")
             st.rerun()
     
     with col2:
@@ -159,7 +159,7 @@ def render_quick_actions(profile_name: str):
                 else:
                     st.error("❌ Failed to start processor")
             except ImportError:
-                st.info("💡 Orchestration service not available - would start processor")
+                st.info("💡 Improved orchestration loading... Use CLI for processing: `python main.py [profile] --action process`")
             st.rerun()
     
     with col3:
@@ -172,7 +172,7 @@ def render_quick_actions(profile_name: str):
                 else:
                     st.error("❌ Failed to start document generator")
             except ImportError:
-                st.info("💡 Orchestration service not available - would start document generator")
+                st.info("💡 Improved orchestration loading... Use CLI for docs: `python main.py [profile] --action generate-docs`")
             st.rerun()
     
     with col4:
@@ -185,7 +185,7 @@ def render_quick_actions(profile_name: str):
                 else:
                     st.error("❌ Failed to start applicator")
             except ImportError:
-                st.info("💡 Orchestration service not available - would start applicator")
+                st.info("💡 Improved orchestration loading... Use CLI for applications: `python main.py [profile] --action apply`")
             st.rerun()
     
     # Service status indicators

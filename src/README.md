@@ -2,9 +2,18 @@
 
 ## 📋 Overview
 **Purpose**: Contains all core application source code for AutoJobAgent  
-**Architecture**: Microservices-based with event-driven communication  
-**Status**: ✅ **ORGANIZED** - Clean modular structure following standards  
-**Last Updated**: July 13, 2025
+**Architecture**: Modular structure with clear separation of concerns  
+**Status**: ✅ **CLEANED UP** - Reorganized following development standards  
+**Last Updated**: February 8, 2025
+
+## 🧹 Recent Cleanup (February 2025)
+- ✅ Moved loose script files to `scripts/` directory
+- ✅ Organized utilities in proper `src/utils/` structure  
+- ✅ Consolidated database tools into single script
+- ✅ Cleaned up __pycache__ directories and log files
+- ✅ Improved file organization following project standards
+
+See [CLEANUP_SUMMARY.md](./CLEANUP_SUMMARY.md) for detailed cleanup information.
 
 ---
 
@@ -130,7 +139,7 @@ src/
 - Test suite repair and modernization
 - Documentation consolidation (6-doc policy)
 - Performance optimization and monitoring
-- Enhanced error handling and recovery
+- Improved error handling and recovery
 
 ---
 
@@ -182,9 +191,9 @@ src/
 │   ├── job_helpers.py        # Job utilities
 │   └── file_operations.py    # File I/O operations
 ├── 🗂️ ai/                 # AI/ML components
-│   ├── enhanced_analyzer.py  # AI job analysis
+│   ├── Improved_analyzer.py  # AI job analysis
 │   ├── llama/               # Llama model integration
-│   └── embeddings/          # Text embeddings
+│   └── Text features/          # Text Text features
 ├── 🗂️ services/           # Background services
 │   ├── orchestrator.py    # Service orchestration
 │   ├── worker_pool.py     # Worker management

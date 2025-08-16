@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Properly analyze Workday ATS jobs and demonstrate enhanced processing."""
+"""Properly analyze Workday ATS jobs and demonstrate Improved processing."""
 
 from src.core.job_database import get_job_db
 from src.analysis.custom_data_extractor import CustomDataExtractor
@@ -55,9 +55,9 @@ def analyze_workday_jobs():
             print(f"   Skills: {result.skills[:3]}..." if result.skills else "   Skills: []")
             print(f"   Confidence: {result.confidence:.2f}")
             
-            # Show what the enhanced 2-worker system would extract
+            # Show what the Improved 2-worker system would extract
             if description:
-                print(f"\n🚀 ENHANCED 2-WORKER ANALYSIS:")
+                print(f"\n🚀 Improved 2-WORKER ANALYSIS:")
                 
                 # Extract key information that AI would find
                 skills_found = []
@@ -96,7 +96,7 @@ def demonstrate_proper_workday_processing():
     
     cibc_job = None
     for job in jobs:
-        if 'cibc' in job.get('url', '').lower() and 'Data-Scientist--Advanced-Analytics-and-AI' in job.get('url', ''):
+        if 'cibc' in job.get('url', '').lower() and 'Data-Scientist--Improved-Analytics-and-AI' in job.get('url', ''):
             cibc_job = job
             break
     
@@ -107,12 +107,12 @@ def demonstrate_proper_workday_processing():
     print("📋 PROCESSING: CIBC Data Scientist Job")
     print("-" * 40)
     
-    # Show what the enhanced 2-worker system SHOULD extract
+    # Show what the Improved 2-worker system SHOULD extract
     url = cibc_job.get('url', '')
     description = cibc_job.get('job_description', '')
     
     # Extract proper title from URL
-    proper_title = "Data Scientist - Advanced Analytics and AI"
+    proper_title = "Data Scientist - Improved Analytics and AI"
     proper_company = "CIBC"
     
     print(f"✅ CORRECTED DATA:")
@@ -136,8 +136,8 @@ def demonstrate_proper_workday_processing():
     requirements = []
     if '1-3 years of experience' in description:
         requirements.append("1-3 years of experience with ML/AI toolkits")
-    if 'advanced degree' in description.lower():
-        requirements.append("Advanced degree in quantitative field")
+    if 'Improved degree' in description.lower():
+        requirements.append("Improved degree in quantitative field")
     if 'genai and llms' in description.lower():
         requirements.append("Understanding of GenAI and LLMs")
     

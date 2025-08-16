@@ -7,7 +7,7 @@ This module manages the Ollama LLM service for text generation and model managem
 
 ## Usage Pattern (Improved)
 - Always call `ensure_ollama_running()` before using `generate_with_ollama()` to guarantee the service is available.
-- This ensures robust, automated LLM-powered document generation and avoids connection errors.
+- This ensures reliable, automated LLM-powered document generation and avoids connection errors.
 
 Example:
     from src.core.ollama_manager import ensure_ollama_running, generate_with_ollama

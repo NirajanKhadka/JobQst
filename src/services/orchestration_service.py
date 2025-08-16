@@ -4,12 +4,22 @@ Integrates with actual worker systems instead of mock data.
 """
 
 import logging
-import psutil
+# Make psutil optional to avoid ImportError breaking the dashboard
+try:
+    import psutil  # type: ignore
+    HAS_PSUTIL = True
+except Exception:
+    psutil = None  # type: ignore
+    HAS_PSUTIL = False
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 from .real_worker_monitor_service import RealWorkerMonitorService
 from ..core.job_database import get_job_db
-from ..orchestration.enhanced_job_processor import EnhancedJobProcessor
+# ImprovedJobProcessor may be optional; import lazily when needed
+try:
+    from ..orchestration.Improved_job_processor import ImprovedJobProcessor  # type: ignore
+except Exception:
+    ImprovedJobProcessor = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +34,7 @@ class OrchestrationService:
         self.real_services = {
             "scraper": "Web scraping service for job discovery",
             "job_processor": "2-worker multiprocessing job analysis system", 
-            "document_generator": "AI-powered document generation service",
+            "document_generator": "Automated document generation service",
             "applicator": "Automated job application submission service"
         }
         
@@ -63,8 +73,8 @@ class OrchestrationService:
     def _start_job_processor(self, profile_name: str) -> bool:
         """Start the real 2-worker job processor."""
         try:
-            if self.job_processor is None:
-                self.job_processor = EnhancedJobProcessor(profile_name=profile_name)
+            if self.job_processor is None and ImprovedJobProcessor is not None:
+                self.job_processor = ImprovedJobProcessor(profile_name=profile_name)
             
             # Start processing in background (would need threading in real implementation)
             logger.info(f"Started 2-worker job processor for profile {profile_name}")
@@ -138,27 +148,26 @@ class OrchestrationService:
             else:
                 overall_status = "partial"
             
-            # Get real system resources
+            # Get real system resources (guard when psutil missing)
+            system_resources = {
+                "cpu_usage": 0.0,
+                "memory_usage": 0.0,
+                "disk_usage": 0.0,
+            }
             try:
-                cpu_usage = psutil.cpu_percent(interval=0.1)
-                memory = psutil.virtual_memory()
-                disk = psutil.disk_usage('/')
-                
-                system_resources = {
-                    "cpu_usage": round(cpu_usage, 1),
-                    "memory_usage": round(memory.percent, 1),
-                    "disk_usage": round(disk.percent, 1),
-                    "memory_available": round(memory.available / (1024**3), 1),  # GB
-                    "disk_free": round(disk.free / (1024**3), 1)  # GB
-                }
+                if HAS_PSUTIL:
+                    cpu_usage = psutil.cpu_percent(interval=0.1)
+                    memory = psutil.virtual_memory()
+                    disk = psutil.disk_usage('/')
+                    system_resources.update({
+                        "cpu_usage": round(cpu_usage, 1),
+                        "memory_usage": round(memory.percent, 1),
+                        "disk_usage": round(disk.percent, 1),
+                        "memory_available": round(memory.available / (1024**3), 1),  # GB
+                        "disk_free": round(disk.free / (1024**3), 1)  # GB
+                    })
             except Exception as e:
                 logger.warning(f"Could not get system resources: {e}")
-                system_resources = {
-                    "cpu_usage": 0.0,
-                    "memory_usage": 0.0,
-                    "disk_usage": 0.0,
-                    "error": "Resource monitoring unavailable"
-                }
             
             return {
                 "overall_status": overall_status,
@@ -227,9 +236,15 @@ class OrchestrationService:
                     "reason": f"Jobs ready for application ({processed_jobs - applied_jobs} jobs)"
                 })
             
-            # Resource-based triggers
-            cpu_percent = psutil.cpu_percent(interval=0.1)
-            memory_percent = psutil.virtual_memory().percent
+            # Resource-based triggers (guard when psutil missing)
+            cpu_percent = 0.0
+            memory_percent = 0.0
+            try:
+                if HAS_PSUTIL:
+                    cpu_percent = psutil.cpu_percent(interval=0.1)
+                    memory_percent = psutil.virtual_memory().percent
+            except Exception:
+                pass
             
             if cpu_percent > 85 or memory_percent > 85:
                 actions.append({

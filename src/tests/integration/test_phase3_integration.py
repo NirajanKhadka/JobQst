@@ -254,7 +254,7 @@ class TestPhase3Integration:
     
     @pytest.mark.asyncio
     async def test_pipeline_stages_integration(self, mock_database):
-        """Test integration of enhanced pipeline stages."""
+        """Test integration of Improved pipeline stages."""
         # Mock queues and dependencies
         processing_queue = asyncio.Queue()
         analysis_queue = asyncio.Queue()
@@ -366,7 +366,7 @@ class TestPhase3Integration:
             pytest.fail(f"Import error indicates compatibility issue: {e}")
     
     @pytest.mark.asyncio
-    async def test_error_handling_robustness(self):
+    async def test_error_handling_reliableness(self):
         """Test error handling in Phase 3 components."""
         # Test health monitor with connection failures
         with patch('src.pipeline.redis_queue.RedisQueue') as mock_redis_class:

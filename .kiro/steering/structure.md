@@ -32,7 +32,7 @@ src/
 │
 ├── scrapers/                # Web scraping engines
 │   ├── comprehensive_eluta_scraper.py    # Primary Eluta scraper
-│   ├── enhanced_job_description_scraper.py # Job detail extraction
+│   ├── Improved_job_description_scraper.py # Job detail extraction
 │   ├── modern_job_pipeline.py            # Async scraping pipeline
 │   ├── mcp_browser_client.py             # MCP browser automation
 │   └── [site]_scraper.py                 # Individual site scrapers

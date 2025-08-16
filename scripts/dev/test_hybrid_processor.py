@@ -313,7 +313,7 @@ def main():
         print("✅ Hybrid Processing Engine is working correctly!")
         print("✅ Custom logic + LLM integration successful!")
         print("✅ Fallback mechanisms work properly!")
-        print("✅ Data merging logic is robust!")
+        print("✅ Data merging logic is reliable!")
         print("✅ Processing statistics available!")
         print("✅ Ready for multiprocessing integration!")
         
