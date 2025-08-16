@@ -1,0 +1,835 @@
+# 🛠️ JobLens Troubleshooting Guide
+
+**Last Updated:** July 27, 2025  
+**Status:** 🟢 ACTIVE
+
+## 📋 Table of Contents
+1. [Environment Setup Issues](#environment-setup-issues)
+2. [Scraping Problems](#scraping-problems)
+3. [Dashboard Errors](#dashboard-errors)
+4. [Document Generation](#document-generation)
+5. [Scraper Issues](#scraper-issues)
+6. [Performance Optimization](#performance-optimization)
+7. [Diagnostic Tools](#diagnostic-tools)
+8. [FAQ](#faq)
+
+---
+
+## 1. Environment Setup Issues <a name="environment-setup-issues"></a>
+
+### Python Environment Problems
+**Symptoms:** Import errors, version conflicts
+```bash
+# Verify Python version
+python --version  # Requires 3.10+
+```
+
+**Solutions:**
+- Recreate virtual environment:
+  ```bash
+  python -m venv .venv
+  source .venv/bin/activate  # Linux/Mac
+  .\.venv\Scripts\activate   # Windows
+  pip install -r requirements.txt
+  ```
+- Fix path issues:
+  ```python
+  import sys
+  sys.path.append('src')
+  ```
+
+### Dependency Installation
+**Symptoms:** Missing packages, SSL errors
+```bash
+# Install with verbose output
+pip install -r requirements.txt -v
+
+# Update certificates
+pip install --upgrade certifi
+```
+
+---
+
+## 2. Scraping Problems <a name="scraping-problems"></a>
+
+### Browser Automation Failures
+**Symptoms:** Scrapers not launching, empty results
+```bash
+# Install browser dependencies
+playwright install
+playwright install-deps
+```
+
+**Solutions:**
+- Update scraping configuration:
+  ```python
+  # config/scraping_config.json
+  {
+    "rate_limit": 5,
+    "timeout": 60,
+    "headless": true,
+    "user_agent": "custom-agent"
+  }
+  ```
+
+### IP Blocking/Rate Limiting
+**Symptoms:** Repeated request failures
+**Solutions:**
+- Rotate user agents
+- Implement proxy rotation
+- Increase delay between requests
+
+---
+
+## 3. Dashboard Errors <a name="dashboard-errors"></a>
+
+### Dashboard Not Loading
+**Symptoms:** Blank screen, unresponsive UI, port conflicts
+```bash
+# Check port usage and kill conflicting processes
+netstat -ano | findstr :8501  # Windows
+lsof -i :8501                 # Linux/Mac
+kill -9 $(lsof -t -i:8501)   # Kill process using port
+
+# Start dashboard with different configuration
+streamlit run src/dashboard/unified_dashboard.py --server.port 8502 --server.headless true
+```
+
+**Common Dashboard Fixes:**
+```python
+# Fix Streamlit configuration issues
+# Create .streamlit/config.toml
+[server]
+port = 8501
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false
+
+# Clear Streamlit cache
+import streamlit as st
+st.cache_data.clear()
+st.cache_resource.clear()
+```
+
+### Data Not Displaying
+**Symptoms:** Empty job lists, missing metrics, database connection errors
+```python
+# Debug database connection
+from src.core.job_database import get_job_db
+
+def debug_database():
+    try:
+        db = get_job_db("Nirajan")
+        stats = db.get_stats()
+        print(f"Database stats: {stats}")
+        
+        # Test basic operations
+        jobs = db.get_jobs_by_status("scraped", limit=5)
+        print(f"Found {len(jobs)} scraped jobs")
+        
+        return True
+    except Exception as e:
+        print(f"Database error: {e}")
+        return False
+
+# Fix common database issues
+def fix_database_issues():
+    # Recreate database if corrupted
+    import os
+    db_path = "data/jobs.db"
+    if os.path.exists(db_path):
+        backup_path = f"{db_path}.backup"
+        os.rename(db_path, backup_path)
+        print(f"Database backed up to {backup_path}")
+    
+    # Initialize fresh database
+    db = get_job_db("Nirajan")
+    print("Fresh database initialized")
+```
+
+### Dashboard Performance Issues
+**Symptoms:** Slow loading, high memory usage, UI freezing
+```python
+# Optimize dashboard performance
+import streamlit as st
+
+# Use session state for expensive operations
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def load_job_data():
+    db = get_job_db("Nirajan")
+    return db.get_jobs_by_status("scraped", limit=100)
+
+# Implement pagination for large datasets
+def paginate_jobs(jobs, page_size=20):
+    if 'page_num' not in st.session_state:
+        st.session_state.page_num = 0
+    
+    start_idx = st.session_state.page_num * page_size
+    end_idx = start_idx + page_size
+    return jobs[start_idx:end_idx]
+
+# Reduce auto-refresh frequency
+if 'last_refresh' not in st.session_state:
+    st.session_state.last_refresh = time.time()
+
+# Only refresh every 30 seconds
+if time.time() - st.session_state.last_refresh > 30:
+    st.rerun()
+    st.session_state.last_refresh = time.time()
+```
+
+---
+
+## 4. Document Generation <a name="document-generation"></a>
+
+### Template Placeholders in Output
+**Symptoms:** Unfilled templates, missing data
+**Solutions:**
+- Update profile data in `profiles/`
+- Validate resume templates
+- Check Gemini API status
+
+### PDF Generation Failures
+**Symptoms:** Formatting issues, failed conversions
+**Solutions:**
+```bash
+# Check dependencies
+pip list | grep pdfkit
+
+# Use text fallback
+python src/utils/document_fallback.py
+```
+
+---
+
+## 5. Scraper Issues <a name="scraper-issues"></a>
+
+### JobSpy Installation Issues
+**Symptoms:** Import errors, module not found, scraping failures
+```bash
+# Check JobSpy installation
+python -c "from jobspy import scrape_jobs; print('JobSpy Available')"
+
+# Verify Python version compatibility
+python --version  # Requires 3.10+
+```
+
+**Solutions:**
+```bash
+# Install/reinstall JobSpy
+pip uninstall python-jobspy
+pip install python-jobspy
+
+# Fix common dependency conflicts
+pip install --upgrade requests beautifulsoup4 lxml
+
+# Test basic functionality
+python -c "from jobspy import scrape_jobs; jobs = scrape_jobs(site_name='indeed', search_term='python', location='Canada', results_wanted=5); print(f'Found {len(jobs)} jobs')"
+```
+
+### Eluta Scraper Browser Issues
+**Symptoms:** Browser crashes, tab management problems, popup handling failures
+```bash
+# Install/reinstall Playwright browsers
+playwright uninstall
+playwright install chromium
+playwright install-deps  # Linux dependencies
+```
+
+**Solutions:**
+```python
+# Fix tab management issues
+eluta_config = {
+    "max_tabs": 3,  # Reduce if memory issues
+    "headless": True,  # Always use headless in production
+    "timeout": 30,  # Increase for slow connections
+    "delay": 2.0   # Increase delay between requests
+}
+
+# Handle popup issues
+async def handle_popups(page):
+    try:
+        # Close common popups
+        await page.click('button[aria-label="Close"]', timeout=2000)
+        await page.click('.popup-close', timeout=2000)
+    except:
+        pass  # Ignore if no popups
+```
+
+### Dual Scraper Fallback Issues
+**Symptoms:** Both scrapers failing, no jobs found, fallback not triggering
+```python
+# Debug fallback logic
+async def debug_scraper_fallback():
+    try:
+        # Test JobSpy first
+        jobs = await jobspy_scraper.scrape_jobs(['python'], limit=5)
+        if len(jobs) >= 3:  # Minimum threshold
+            return jobs
+        logger.warning(f"JobSpy returned only {len(jobs)} jobs, trying Eluta")
+    except Exception as e:
+        logger.error(f"JobSpy failed: {e}")
+    
+    # Fallback to Eluta
+    try:
+        jobs = await eluta_scraper.scrape_all_keywords(limit=10)
+        logger.info(f"Eluta fallback returned {len(jobs)} jobs")
+        return jobs
+    except Exception as e:
+        logger.error(f"Both scrapers failed: {e}")
+        return []
+
+# Network connectivity check
+def check_connectivity():
+    test_urls = [
+        "https://www.indeed.com",
+        "https://www.eluta.ca",
+        "https://www.google.com"
+    ]
+    for url in test_urls:
+        try:
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                return True
+        except:
+            continue
+    return False
+```
+
+### Worker Pool Issues
+**Symptoms:** Workers hanging, memory leaks, resource exhaustion
+```python
+# Fix worker pool configuration
+async def fix_worker_pools():
+    # Limit concurrent workers
+    max_workers = min(6, os.cpu_count())  # Don't exceed CPU cores
+    
+    # Implement proper cleanup
+    async with asyncio.Semaphore(max_workers) as semaphore:
+        async with semaphore:
+            # Worker logic with timeout
+            try:
+                result = await asyncio.wait_for(
+                    worker_function(), 
+                    timeout=60  # 1 minute timeout per job
+                )
+                return result
+            except asyncio.TimeoutError:
+                logger.error("Worker timeout - killing task")
+                return None
+
+# Memory management for large datasets
+def process_in_batches(jobs, batch_size=50):
+    for i in range(0, len(jobs), batch_size):
+        batch = jobs[i:i + batch_size]
+        yield process_batch(batch)
+        # Force garbage collection between batches
+        import gc
+        gc.collect()
+```
+
+---
+
+## 6. Performance Optimization <a name="performance-optimization"></a>
+
+### High Memory Usage
+**Symptoms:** System slowdown, out of memory errors, browser crashes
+```python
+# Monitor memory usage
+import psutil
+import gc
+
+def monitor_memory():
+    process = psutil.Process()
+    memory_mb = process.memory_info().rss / 1024 / 1024
+    print(f"Memory usage: {memory_mb:.1f} MB")
+    
+    if memory_mb > 1000:  # Over 1GB
+        print("High memory usage detected - forcing cleanup")
+        gc.collect()
+        return True
+    return False
+
+# Fix memory leaks in scrapers
+async def scrape_with_memory_management():
+    browser = None
+    try:
+        browser = await playwright.chromium.launch()
+        
+        # Process in smaller batches
+        for batch in chunked(job_urls, 10):
+            results = await process_batch(batch)
+            
+            # Force cleanup between batches
+            gc.collect()
+            
+            # Monitor memory and restart browser if needed
+            if monitor_memory():
+                await browser.close()
+                browser = await playwright.chromium.launch()
+                
+    finally:
+        if browser:
+            await browser.close()
+```
+
+### CPU Performance Issues
+**Symptoms:** High CPU usage, slow processing, system unresponsiveness
+```python
+# Optimize CPU-intensive operations
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+# Use thread pool for CPU-bound tasks
+def cpu_intensive_task(job_data):
+    # Process job data
+    return processed_data
+
+async def process_jobs_optimized(jobs):
+    # Limit concurrent CPU tasks
+    max_workers = min(4, os.cpu_count() // 2)
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        loop = asyncio.get_event_loop()
+        tasks = [
+            loop.run_in_executor(executor, cpu_intensive_task, job)
+            for job in jobs
+        ]
+        
+        # Process with progress tracking
+        results = []
+        for task in asyncio.as_completed(tasks):
+            result = await task
+            results.append(result)
+            
+            # Add small delay to prevent CPU saturation
+            await asyncio.sleep(0.01)
+        
+        return results
+
+# Two-stage processing optimization
+async def optimize_two_stage_processing():
+    # Stage 1: Fast CPU processing (limit workers)
+    stage1_workers = min(6, os.cpu_count())
+    
+    # Stage 2: GPU processing (if available)
+    if torch.cuda.is_available():
+        # Use GPU for Text analysis
+        batch_size = 32  # Optimize for GPU memory
+    else:
+        # Fallback to CPU with limited workers
+        stage1_workers = min(3, os.cpu_count() // 2)
+```
+
+### Database Performance Issues
+**Symptoms:** Slow queries, database locks, connection timeouts
+```python
+# Optimize database operations
+def optimize_database_performance():
+    # Create indexes for common queries
+    with db._get_connection() as conn:
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status_date ON jobs(status, scraped_at)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_company_title ON jobs(company, title)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_match_score ON jobs(match_score DESC)")
+        conn.commit()
+
+# Batch database operations
+def batch_database_operations(jobs, batch_size=100):
+    for i in range(0, len(jobs), batch_size):
+        batch = jobs[i:i + batch_size]
+        
+        with db._get_connection() as conn:
+            conn.executemany(
+                "INSERT OR REPLACE INTO jobs (...) VALUES (...)",
+                [job_to_tuple(job) for job in batch]
+            )
+            conn.commit()
+        
+        # Small delay between batches
+        time.sleep(0.1)
+
+# Connection pool optimization
+def optimize_connection_pool():
+    # Increase pool size for high-load scenarios
+    pool_size = min(10, os.cpu_count() * 2)
+    
+    # Implement connection health checks
+    def test_connection(conn):
+        try:
+            conn.execute("SELECT 1")
+            return True
+        except:
+            return False
+```
+
+---
+
+## 7. Diagnostic Tools <a name="diagnostic-tools"></a>
+
+### System Health Checks
+```python
+# Comprehensive system diagnostics
+def run_system_diagnostics():
+    print("🔍 JobLens System Diagnostics")
+    print("=" * 50)
+    
+    # 1. Python Environment
+    import sys
+    print(f"Python Version: {sys.version}")
+    print(f"Python Path: {sys.executable}")
+    
+    # 2. Database Health
+    try:
+        from src.core.job_database import get_job_db
+        db = get_job_db("Nirajan")
+        stats = db.get_stats()
+        print(f"✅ Database: {stats['total_jobs']} jobs, {stats['database_size_mb']:.1f} MB")
+    except Exception as e:
+        print(f"❌ Database Error: {e}")
+    
+    # 3. Scraper Availability
+    try:
+        from jobspy import scrape_jobs
+        print("✅ JobSpy: Available")
+    except ImportError:
+        print("❌ JobSpy: Not installed")
+    
+    try:
+        from playwright.async_api import async_playwright
+        print("✅ Playwright: Available")
+    except ImportError:
+        print("❌ Playwright: Not installed")
+    
+    # 4. System Resources
+    import psutil
+    cpu_percent = psutil.cpu_percent(interval=1)
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage('.')
+    
+    print(f"💻 CPU Usage: {cpu_percent}%")
+    print(f"🧠 Memory: {memory.percent}% ({memory.available // 1024 // 1024} MB free)")
+    print(f"💾 Disk: {disk.percent}% ({disk.free // 1024 // 1024 // 1024} GB free)")
+    
+    # 5. Network Connectivity
+    import requests
+    try:
+        response = requests.get("https://www.google.com", timeout=5)
+        print("✅ Network: Connected")
+    except:
+        print("❌ Network: Connection issues")
+
+# Run diagnostics
+if __name__ == "__main__":
+    run_system_diagnostics()
+```
+
+### Component-Specific Diagnostics
+```python
+# Test individual components
+async def test_scrapers():
+    print("🕷️ Testing Scrapers")
+    
+    # Test JobSpy
+    try:
+        from jobspy import scrape_jobs
+        jobs = scrape_jobs(
+            site_name="indeed",
+            search_term="python",
+            location="Canada",
+            results_wanted=3
+        )
+        print(f"✅ JobSpy: Found {len(jobs)} jobs")
+    except Exception as e:
+        print(f"❌ JobSpy Error: {e}")
+    
+    # Test Eluta
+    try:
+        from src.scrapers.unified_eluta_scraper import ElutaScraper
+        scraper = ElutaScraper("Nirajan", {"pages": 1, "jobs": 5})
+        jobs = await scraper.scrape_all_keywords(limit=5)
+        print(f"✅ Eluta: Found {len(jobs)} jobs")
+    except Exception as e:
+        print(f"❌ Eluta Error: {e}")
+
+def test_database():
+    print("🗄️ Testing Database")
+    
+    try:
+        from src.core.job_database import get_job_db
+        db = get_job_db("test_profile")
+        
+        # Test basic operations
+        test_job = {
+            "job_id": "test_123",
+            "title": "Test Job",
+            "company": "Test Company",
+            "url": "https://test.com/job/123"
+        }
+        
+        # Add job
+        success = db.add_job(test_job)
+        print(f"✅ Add Job: {'Success' if success else 'Failed'}")
+        
+        # Retrieve job
+        retrieved = db.get_job("test_123")
+        print(f"✅ Get Job: {'Success' if retrieved else 'Failed'}")
+        
+        # Get stats
+        stats = db.get_stats()
+        print(f"✅ Database Stats: {stats['total_jobs']} total jobs")
+        
+    except Exception as e:
+        print(f"❌ Database Error: {e}")
+
+def test_dashboard():
+    print("📊 Testing Dashboard Components")
+    
+    try:
+        import streamlit as st
+        print("✅ Streamlit: Available")
+        
+        # Test dashboard components
+        from src.dashboard.components.Improved_job_table import render_Improved_job_table
+        print("✅ Job Table Component: Available")
+        
+        from src.dashboard.components.scraping_config_component import render_scraping_config
+        print("✅ Scraping Config Component: Available")
+        
+    except Exception as e:
+        print(f"❌ Dashboard Error: {e}")
+```
+
+### Performance Benchmarking
+```python
+# Benchmark system performance
+import time
+import asyncio
+
+async def benchmark_scrapers():
+    print("⚡ Performance Benchmarks")
+    
+    # Benchmark JobSpy
+    start_time = time.time()
+    try:
+        from jobspy import scrape_jobs
+        jobs = scrape_jobs(
+            site_name="indeed",
+            search_term="python",
+            location="Canada",
+            results_wanted=10
+        )
+        jobspy_time = time.time() - start_time
+        jobspy_rate = len(jobs) / jobspy_time if jobspy_time > 0 else 0
+        print(f"📈 JobSpy: {len(jobs)} jobs in {jobspy_time:.1f}s ({jobspy_rate:.1f} jobs/sec)")
+    except Exception as e:
+        print(f"❌ JobSpy Benchmark Failed: {e}")
+    
+    # Benchmark Eluta
+    start_time = time.time()
+    try:
+        from src.scrapers.unified_eluta_scraper import ElutaScraper
+        scraper = ElutaScraper("Nirajan", {"pages": 1, "jobs": 10})
+        jobs = await scraper.scrape_all_keywords(limit=10)
+        eluta_time = time.time() - start_time
+        eluta_rate = len(jobs) / eluta_time if eluta_time > 0 else 0
+        print(f"📈 Eluta: {len(jobs)} jobs in {eluta_time:.1f}s ({eluta_rate:.1f} jobs/sec)")
+    except Exception as e:
+        print(f"❌ Eluta Benchmark Failed: {e}")
+
+# Database performance test
+def benchmark_database():
+    print("🗄️ Database Performance")
+    
+    from src.core.job_database import get_job_db
+    db = get_job_db("benchmark_test")
+    
+    # Test batch insert performance
+    test_jobs = [
+        {
+            "job_id": f"test_{i}",
+            "title": f"Test Job {i}",
+            "company": f"Company {i}",
+            "url": f"https://test.com/job/{i}"
+        }
+        for i in range(100)
+    ]
+    
+    start_time = time.time()
+    for job in test_jobs:
+        db.add_job(job)
+    insert_time = time.time() - start_time
+    
+    print(f"📈 Database: 100 inserts in {insert_time:.1f}s ({100/insert_time:.1f} ops/sec)")
+    
+    # Test query performance
+    start_time = time.time()
+    jobs = db.get_jobs_by_status("scraped", limit=100)
+    query_time = time.time() - start_time
+    
+    print(f"📈 Database: Query 100 jobs in {query_time:.3f}s")
+```
+
+---
+
+## 8. FAQ <a name="faq"></a>
+
+### How do I reset the system completely?
+```python
+# Complete system reset script
+def reset_system():
+    import os
+    import shutil
+    
+    print("🔄 Resetting JobLens System")
+    
+    # 1. Backup current data
+    backup_dir = f"backup_{int(time.time())}"
+    os.makedirs(backup_dir, exist_ok=True)
+    
+    # Backup database
+    if os.path.exists("data/jobs.db"):
+        shutil.copy2("data/jobs.db", f"{backup_dir}/jobs.db")
+        print(f"✅ Database backed up to {backup_dir}/")
+    
+    # 2. Clear generated documents
+    for profile_dir in os.listdir("profiles"):
+        docs_path = f"profiles/{profile_dir}/generated_documents"
+        if os.path.exists(docs_path):
+            shutil.rmtree(docs_path)
+            print(f"✅ Cleared documents for {profile_dir}")
+    
+    # 3. Clear cache directories
+    cache_dirs = ["cache", "temp", "logs"]
+    for cache_dir in cache_dirs:
+        if os.path.exists(cache_dir):
+            shutil.rmtree(cache_dir)
+            os.makedirs(cache_dir, exist_ok=True)
+            print(f"✅ Cleared {cache_dir}/")
+    
+    # 4. Reset database
+    if os.path.exists("data/jobs.db"):
+        os.remove("data/jobs.db")
+        print("✅ Database reset")
+    
+    # 5. Initialize fresh system
+    from src.core.job_database import get_job_db
+    db = get_job_db("Nirajan")  # Initialize fresh database
+    print("✅ Fresh database initialized")
+    
+    print(f"🎉 System reset complete. Backup saved to {backup_dir}/")
+
+# Run reset
+if __name__ == "__main__":
+    reset_system()
+```
+
+### Why is my dashboard showing display issues?
+```python
+# Fix common dashboard display problems
+import streamlit as st
+
+# 1. Fix dark theme issues
+st.markdown("""
+<style>
+    .main { background-color: #0e1117; color: #fafafa; }
+    .stSelectbox > div > div { background-color: #262730; }
+    .stTextInput > div > div > input { background-color: #262730; color: #fafafa; }
+    .stDataFrame { background-color: #262730; }
+</style>
+""", unsafe_allow_html=True)
+
+# 2. Fix table display issues
+def fix_table_display(df):
+    # Ensure proper column types
+    if 'match_score' in df.columns:
+        df['match_score'] = pd.to_numeric(df['match_score'], errors='coerce')
+    
+    # Handle missing values
+    df = df.fillna('')
+    
+    # Limit text length for display
+    for col in ['title', 'company', 'summary']:
+        if col in df.columns:
+            df[col] = df[col].astype(str).str[:100] + '...'
+    
+    return df
+
+# 3. Fix memory issues with large datasets
+@st.cache_data(ttl=300)
+def load_jobs_cached(status, limit=100):
+    from src.core.job_database import get_job_db
+    db = get_job_db("Nirajan")
+    return db.get_jobs_by_status(status, limit=limit)
+```
+
+### Common Error Messages and Solutions
+
+**Error: "ModuleNotFoundError: No module named 'jobspy'"**
+```bash
+pip install python-jobspy
+# If still failing, try:
+pip install --upgrade python-jobspy
+python -c "from jobspy import scrape_jobs; print('Success')"
+```
+
+**Error: "playwright._impl._api_types.Error: Browser closed"**
+```python
+# Fix browser lifecycle management
+async def fix_browser_issues():
+    browser = None
+    try:
+        browser = await playwright.chromium.launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-dev-shm-usage']
+        )
+        # Use browser...
+    finally:
+        if browser and not browser.is_closed():
+            await browser.close()
+```
+
+**Error: "sqlite3.OperationalError: database is locked"**
+```python
+# Fix database locking issues
+import time
+import sqlite3
+
+def safe_database_operation(operation, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            return operation()
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e) and attempt < max_retries - 1:
+                time.sleep(0.1 * (2 ** attempt))  # Exponential backoff
+                continue
+            raise
+```
+
+**Error: "streamlit.errors.StreamlitAPIException: st.cache_data"**
+```python
+# Fix Streamlit caching issues
+import streamlit as st
+
+# Clear all caches
+st.cache_data.clear()
+st.cache_resource.clear()
+
+# Use proper cache decorators
+@st.cache_data(ttl=300, show_spinner=False)
+def cached_function(param):
+    return expensive_operation(param)
+```
+
+### Where are active issues tracked?
+- **Current Issues**: [ISSUE_TRACKER.md](ISSUE_TRACKER.md)
+- **Performance Issues**: Check system diagnostics above
+- **Known Limitations**: See [ARCHITECTURE.md](ARCHITECTURE.md#limitations)
+- **Feature Requests**: Submit via GitHub issues
+
+---
+
+**Maintainer:** JobLens Development Team  
+**Documentation:** [ARCHITECTURE.md](ARCHITECTURE.md) | [DEVELOPMENT_STANDARDS.md](DEVELOPMENT_STANDARDS.md)
