@@ -43,22 +43,6 @@ class TestUtilityModules:
             pytest.fail(f"Failed to import file operations: {e}")
 
 
-class TestDocumentModifier:
-    """Test document modifier functionality."""
-    
-    def test_document_modifier_import(self):
-        """Test that document modifier can be imported."""
-        try:
-            from src.document_modifier.document_modifier import customize, DocumentModifier
-            assert callable(customize)
-            assert DocumentModifier is not None
-        except ImportError as e:
-            if "lxml" in str(e):
-                pytest.skip("Document modifier not available - missing lxml dependency")
-            else:
-                pytest.fail(f"Failed to import document modifier: {e}")
-
-
 class TestScrapers:
     """Test scraper module imports."""
     

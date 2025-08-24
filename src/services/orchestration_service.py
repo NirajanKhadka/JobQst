@@ -33,9 +33,7 @@ class OrchestrationService:
         # Real services that actually exist in the codebase
         self.real_services = {
             "scraper": "Web scraping service for job discovery",
-            "job_processor": "2-worker multiprocessing job analysis system", 
-            "document_generator": "Automated document generation service",
-            "applicator": "Automated job application submission service"
+            "job_processor": "2-worker multiprocessing job analysis system"
         }
         
         logger.info("Real OrchestrationService initialized")
@@ -219,22 +217,7 @@ class OrchestrationService:
                     "reason": f"Scraped jobs ({scraped_jobs}) need processing"
                 })
             
-            # Document generator triggers - start if we have processed jobs without documents
-            unprocessed_docs = processed_jobs - applied_jobs
-            if unprocessed_docs > 5:
-                actions.append({
-                    "service": "document_generator", 
-                    "action": "start",
-                    "reason": f"Jobs need documents ({unprocessed_docs} jobs)"
-                })
-            
-            # Applicator triggers - start if we have jobs ready to apply
-            if applied_jobs < processed_jobs and processed_jobs > 0:
-                actions.append({
-                    "service": "applicator",
-                    "action": "start", 
-                    "reason": f"Jobs ready for application ({processed_jobs - applied_jobs} jobs)"
-                })
+            # Services removed: document generation and job application no longer available
             
             # Resource-based triggers (guard when psutil missing)
             cpu_percent = 0.0
@@ -303,9 +286,7 @@ class OrchestrationService:
             "enabled": self.auto_management_enabled,
             "triggers": {
                 "scraper_job_threshold": 50,
-                "processor_job_threshold": 10, 
-                "document_job_threshold": 5,
-                "applicator_doc_threshold": 3
+                "processor_job_threshold": 10
             },
             "limits": {
                 "max_cpu_percent": 85,

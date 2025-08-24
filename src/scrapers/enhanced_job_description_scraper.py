@@ -655,9 +655,8 @@ async def scrape_job_description_async(job_url: str) -> Dict[str, Any]:
             await browser.close()
 
 
-if __name__ == "__main__":
-    # Test the scraper
-    import asyncio
+# For testing this scraper, use: python -m pytest tests/scrapers/
+# Example usage available in tests/ directory
 
     test_url = "https://www.example.com/job-posting"
     result = asyncio.run(scrape_job_description_async(test_url))

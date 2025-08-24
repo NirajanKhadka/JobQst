@@ -175,9 +175,8 @@ def display_error_dashboard():
             )
 
 
-if __name__ == "__main__":
-    # Test the error handling system
-    console.print("[bold blue]🧪 Testing Improved Error Handling System[/bold blue]")
+# Main functionality moved to CLI module or tests
+# Import and use the functions directly
 
     @with_retry(max_attempts=2)
     def test_retry_function():

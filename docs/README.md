@@ -1,23 +1,23 @@
 ---
-post_title: "JobLens Documentation Index"
+post_title: "JobQst Documentation Index"
 author1: "Nirajan Khadka"
 post_slug: "documentation-index"
 microsoft_alias: "nirajank"
 featured_image: ""
 categories: ["documentation", "index", "navigation"]
-tags: ["docs", "guide", "reference", "architecture", "api"]
-ai_note: "Documentation navigation hub for JobLens"
-summary: "Central documentation index and navigation for the JobLens job discovery and ranking system"
-post_date: "2025-08-08"
+tags: ["docs", "guide", "reference", "architecture", "api", "ai", "dashboard"]
+ai_note: "Documentation navigation hub for JobQst AI-powered job discovery platform"
+summary: "Central documentation index and navigation for the JobQst AI-powered job discovery platform with multi-site scraping and intelligent analysis"
+post_date: "2025-08-23"
 ---
 
-# 📚 JobLens Documentation Hub
+# 📚 JobQst Documentation Hub
 
 **Job Application Automation System**  
-**Last Updated:** August 8, 2025  
-**Status:** 🟢 **ACTIVE DEVELOPMENT** - Dual Scraper Architecture
+**Last Updated:** August 23, 2025  
+**Status:** 🟢 **ACTIVE DEVELOPMENT** - AI-Powered Architecture
 
-> **JobLens** focuses on job discovery, matching, and ranking with dual scraper support (JobSpy + Eluta) and an optional dashboard.
+> **JobQst** focuses on job discovery, matching, and ranking with AI-powered analysis and multi-site scraping support.
 
 ---
 

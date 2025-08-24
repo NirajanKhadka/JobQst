@@ -530,10 +530,8 @@ def monitor_performance(func_name: str = None):
     return decorator
 
 
-if __name__ == "__main__":
-    # Example usage
-    monitor = PerformanceMonitor()
-    monitor.start_monitoring()
+# Main functionality moved to CLI module or tests
+# Import and use the functions directly
 
     try:
         # Simulate some activity

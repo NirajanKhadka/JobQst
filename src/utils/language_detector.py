@@ -338,5 +338,5 @@ def test_language_detector():
             print(f"  All Languages: {lang_list}")
 
 
-if __name__ == "__main__":
-    test_language_detector()
+# Main functionality moved to CLI module or tests
+# Import and use the functions directly

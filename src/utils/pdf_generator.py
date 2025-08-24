@@ -289,11 +289,8 @@ def convert_text_to_pdf(text_file_path: Path, output_pdf_path: Path, document_ty
         return False
 
 
-if __name__ == "__main__":
-    # Test the PDF generator
-    test_content = """
-**NIRAJAN KHADKA**
-Mississauga, ON | Nirajan.Tech@gmail.com | 437-344-5361
+# Main functionality moved to CLI module or tests
+# Import and use the functions directly
 
 **EDUCATION**
 Bachelor of Science in Computer Science, University of Toronto, 2024

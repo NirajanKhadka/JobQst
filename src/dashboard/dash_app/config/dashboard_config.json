@@ -1,0 +1,42 @@
+{
+  "app": {
+    "title": "JobLens Dashboard",
+    "theme": "bootstrap",
+    "debug": true,
+    "host": "127.0.0.1",
+    "port": 8050,
+    "auto_reload": true
+  },
+  "data": {
+    "refresh_interval": 30000,
+    "max_jobs_display": 1000,
+    "cache_timeout": 300,
+    "export_formats": ["csv", "excel", "json"]
+  },
+  "ui": {
+    "items_per_page": 25,
+    "chart_height": 400,
+    "sidebar_width": 250,
+    "date_format": "%Y-%m-%d",
+    "datetime_format": "%Y-%m-%d %H:%M:%S"
+  },
+  "features": {
+    "auto_save": true,
+    "real_time_updates": true,
+    "export_enabled": true,
+    "filters_enabled": true,
+    "analytics_enabled": true
+  },
+  "alerts": {
+    "show_success": true,
+    "show_errors": true,
+    "auto_dismiss": true,
+    "dismiss_timeout": 5000
+  },
+  "performance": {
+    "lazy_loading": true,
+    "pagination": true,
+    "virtual_scrolling": false,
+    "compression": true
+  }
+}

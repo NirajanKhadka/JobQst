@@ -1,0 +1,21 @@
+{
+  "cleanup_actions": [
+    "Removed Duplicate/outdated cleanup script: comprehensive_cleanup.py",
+    "Removed Duplicate/outdated cleanup script: cleanup_workspace.py",
+    "Removed Duplicate/outdated cleanup script: targeted_cleanup_script.py",
+    "Removed Duplicate/outdated cleanup script: comprehensive_code_analysis.py",
+    "Removed Completed/analysis documentation: comprehensive_analysis_report.txt",
+    "Removed Completed/analysis documentation: comprehensive_analysis_results.json"
+  ],
+  "removed_files": [
+    "comprehensive_cleanup.py",
+    "cleanup_workspace.py",
+    "targeted_cleanup_script.py",
+    "comprehensive_code_analysis.py",
+    "comprehensive_analysis_report.txt",
+    "comprehensive_analysis_results.json"
+  ],
+  "consolidated_files": [],
+  "total_size_saved": 287828,
+  "timestamp": "1756004806.1038666"
+}

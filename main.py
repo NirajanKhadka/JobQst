@@ -18,11 +18,15 @@ import os
 import time
 import argparse
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.traceback import install
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Install rich traceback for better error display
 install(show_locals=True)
@@ -109,13 +113,14 @@ Performance Optimized Examples:
     )
     parser.add_argument(
         "--action",
-        choices=["scrape", "dashboard", "interactive", "benchmark", "apply", "process", "process-jobs", "fetch-descriptions", "analyze-jobs", "generate-docs", "shutdown", "pipeline", "health-check", "fast-pipeline", "jobspy-pipeline", "legacy-process-jobs"],
+        choices=["scrape", "dashboard", "interactive", "benchmark", "apply", "process", "process-jobs", "fetch-descriptions", "analyze-jobs", "generate-docs", "shutdown", "pipeline", "health-check", "fast-pipeline", "jobspy-pipeline", "legacy-process-jobs", "analyze-resume"],
         default="interactive",
         help="Action to perform: interactive (DEFAULT: show menu), "
              "process/process-jobs (two-stage CPU+GPU processing), "
              "scrape (get jobs), apply (submit applications), "
              "jobspy-pipeline (Improved pipeline with JobSpy integration), "
-             "dashboard (launch UI), generate-docs (create documents)",
+             "dashboard (launch UI), generate-docs (create documents), "
+             "analyze-resume (analyze resume and suggest profile improvements)",
     )
     parser.add_argument(
         "--sites", help="Comma-separated list of sites (eluta, indeed, linkedin, monster, towardsai)"
@@ -971,6 +976,59 @@ if __name__ == "__main__":
             console.print("[cyan]  python main.py Nirajan --action process-jobs --processing-method rule_based[/cyan]")
         except Exception as e:
             console.print(f"[red]❌ Job analysis failed: {e}[/red]")
+            
+    elif args.action == "analyze-resume":
+        console.print("[bold blue]📄 Analyzing Resume and Profile[/bold blue]")
+        try:
+            from src.services.simple_resume_analyzer import SimpleResumeAnalyzer
+            
+            analyzer = SimpleResumeAnalyzer()
+            profile_dir = f"profiles/{profile_name}"
+            
+            # Analyze the profile and resume
+            results = analyzer.analyze_profile_resume_match(profile_dir)
+            
+            if 'error' in results:
+                console.print(f"[red]❌ Error: {results['error']}[/red]")
+                sys.exit(1)
+            
+            # Display results
+            console.print(f"[green]✅ Analysis Complete![/green]")
+            console.print(f"[cyan]📁 Profile: {results['profile_analyzed']}[/cyan]")
+            console.print(f"[cyan]📄 Resume: {results['resume_analyzed']}[/cyan]")
+            
+            summary = results['match_summary']
+            console.print(f"\n[bold]📊 Summary:[/bold]")
+            console.print(f"  • Resume has {summary['total_resume_skills']} technical skills")
+            console.print(f"  • Profile has {summary['skills_in_profile']} skills")
+            console.print(f"  • Found {summary['new_skills_found']} new skills to add")
+            console.print(f"  • Recommended {summary['skills_to_add']} additional skills")
+            
+            suggestions = results['suggestions']
+            
+            if suggestions.get('new_skills_from_resume'):
+                console.print(f"\n[bold green]💡 New Skills Found in Resume:[/bold green]")
+                for skill in suggestions['new_skills_from_resume'][:10]:
+                    console.print(f"  • {skill}")
+                    
+            if suggestions.get('recommended_additions'):
+                console.print(f"\n[bold blue]🔧 Recommended Related Technologies:[/bold blue]")
+                for tech in suggestions['recommended_additions'][:5]:
+                    console.print(f"  • {tech}")
+                    
+            if suggestions.get('experience_level_update'):
+                console.print(f"\n[bold yellow]📈 Experience Level Update:[/bold yellow]")
+                console.print(f"  Resume suggests: {suggestions['experience_level_update']}")
+                
+            # Save results
+            output_file = f"profiles/{profile_name}/resume_analysis.json"
+            import json
+            with open(output_file, 'w') as f:
+                json.dump(results, f, indent=2)
+            console.print(f"\n[green]💾 Full analysis saved to: {output_file}[/green]")
+            
+        except Exception as e:
+            console.print(f"[red]❌ Resume analysis failed: {e}[/red]")
             
     elif args.action == "generate-docs":
         console.print("[bold blue]📄 Generating Automated Documents[/bold blue]")

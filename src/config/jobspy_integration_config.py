@@ -22,7 +22,7 @@ class JobSpyIntegrationConfig:
     combine_with_existing_scrapers: bool = True
     jobspy_weight: float = 0.6  # 60% JobSpy, 40% existing scrapers
     enable_cross_validation: bool = True
-    enable_Improved_deduplication: bool = True
+    enable_enhanced_deduplication: bool = True
     
     # Pipeline integration
     use_jobspy_in_phase1: bool = True
@@ -87,6 +87,65 @@ JOBSPY_LOCATION_SETS = {
         "Toronto, ON", "Vancouver, BC", "Waterloo, ON", "Kitchener, ON",
         "Calgary, AB", "Ottawa, ON", "Montreal, QC", "Edmonton, AB",
         "Halifax, NS", "Victoria, BC", "Burnaby, BC", "Richmond, BC"
+    ],
+    "custom_canadian_locations": [
+        # Nova Scotia
+        "Pictou County, NS",
+        
+        # Ontario
+        "North Bay, ON", "Sudbury, ON", "Timmins, ON", 
+        "Sault Ste. Marie, ON", "Thunder Bay, ON",
+        
+        # Manitoba  
+        "Steinbach, MB", "Altona, MB", "Rhineland, MB", "Brandon, MB",
+        
+        # Saskatchewan
+        "Moose Jaw, SK",
+        
+        # Alberta
+        "Claresholm, AB",
+        
+        # British Columbia
+        "West Kootenay, BC", "North Okanagan Shuswap, BC", "Peace Liard, BC"
+    ],
+    # USA Location Sets
+    "usa_major_cities": [
+        # Major metropolitan areas
+        "New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX",
+        "Phoenix, AZ", "Philadelphia, PA", "San Antonio, TX", "San Diego, CA",
+        "Dallas, TX", "San Jose, CA", "Austin, TX", "Jacksonville, FL",
+        "Fort Worth, TX", "Columbus, OH", "Charlotte, NC", "San Francisco, CA",
+        "Indianapolis, IN", "Seattle, WA", "Denver, CO", "Washington, DC",
+        "Boston, MA", "Nashville, TN", "Baltimore, MD", "Louisville, KY",
+        "Portland, OR", "Oklahoma City, OK", "Milwaukee, WI", "Las Vegas, NV",
+        "Albuquerque, NM", "Tucson, AZ", "Fresno, CA", "Sacramento, CA",
+        "Kansas City, MO", "Mesa, AZ", "Atlanta, GA", "Omaha, NE",
+        "Colorado Springs, CO", "Raleigh, NC", "Miami, FL", "Oakland, CA",
+        "Minneapolis, MN", "Tulsa, OK", "Cleveland, OH", "Wichita, KS",
+        "Arlington, TX"
+    ],
+    "usa_tech_hubs": [
+        # Focus on US tech centers
+        "San Francisco, CA", "San Jose, CA", "Seattle, WA", "Austin, TX",
+        "New York, NY", "Boston, MA", "Los Angeles, CA", "Denver, CO",
+        "Chicago, IL", "Atlanta, GA", "Washington, DC", "Portland, OR",
+        "Raleigh, NC", "Boulder, CO", "Pittsburgh, PA", "Nashville, TN"
+    ],
+    "usa_comprehensive": [
+        # All major US cities for maximum coverage
+        "New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX",
+        "Phoenix, AZ", "Philadelphia, PA", "San Antonio, TX", "San Diego, CA",
+        "Dallas, TX", "San Jose, CA", "Austin, TX", "Jacksonville, FL",
+        "Fort Worth, TX", "Columbus, OH", "Charlotte, NC", "San Francisco, CA",
+        "Indianapolis, IN", "Seattle, WA", "Denver, CO", "Washington, DC",
+        "Boston, MA", "Nashville, TN", "Baltimore, MD", "Louisville, KY",
+        "Portland, OR", "Oklahoma City, OK", "Milwaukee, WI", "Las Vegas, NV",
+        "Albuquerque, NM", "Tucson, AZ", "Fresno, CA", "Sacramento, CA",
+        "Kansas City, MO", "Mesa, AZ", "Atlanta, GA", "Omaha, NE",
+        "Colorado Springs, CO", "Raleigh, NC", "Miami, FL", "Oakland, CA",
+        "Minneapolis, MN", "Tulsa, OK", "Cleveland, OH", "Wichita, KS",
+        "Arlington, TX", "Tampa, FL", "New Orleans, LA", "Honolulu, HI",
+        "Anchorage, AK", "Virginia Beach, VA", "St. Louis, MO", "Detroit, MI"
     ]
 }
 
@@ -126,8 +185,8 @@ JOBSPY_QUERY_PRESETS = {
     ],
     "comprehensive": [
         "Data Analyst", "Data Scientist", "Machine Learning Engineer", "Python Developer",
-        "Software Developer", "Business Analyst", "Data Engineer", "Software Engineer",
-        "Full Stack Developer", "Backend Developer", "Analytics Specialist", "BI Developer"
+        "Software Developer", "Business Analyst", "Data Engineer", 
+       "Analytics Specialist", "BI Developer"
     ],
     "entry_level": [
         "Junior Data Analyst", "Entry Level Analyst", "Associate Analyst",
@@ -149,9 +208,7 @@ JOBSPY_SITE_COMBINATIONS = {
     "comprehensive": ["indeed", "linkedin", "glassdoor"],
     "linkedin_focused": ["linkedin"],
     "indeed_focused": ["indeed"],
-    "maximum_coverage": ["indeed", "linkedin", "glassdoor", "zip_recruiter"],
-    "five_sites": ["indeed", "linkedin", "glassdoor", "zip_recruiter", "google"],
-    "all_sites": ["indeed", "linkedin", "glassdoor", "zip_recruiter", "google", "bayt", "naukri", "bdjobs"]
+    "maximum_coverage": ["indeed", "linkedin", "glassdoor", "zip_recruiter"]
 }
 
 def get_profile_optimized_config(profile: Dict[str, Any]) -> JobSpyIntegrationConfig:
@@ -220,7 +277,7 @@ def get_profile_optimized_config(profile: Dict[str, Any]) -> JobSpyIntegrationCo
         combine_with_existing_scrapers=True,
         jobspy_weight=0.7,  # Favor JobSpy due to proven results
         enable_cross_validation=True,
-        enable_Improved_deduplication=True,
+        enable_enhanced_deduplication=True,
         use_jobspy_in_phase1=True,
         use_jobspy_parallel=False,
         jobspy_fallback_enabled=True
@@ -238,7 +295,7 @@ def get_fast_discovery_config() -> JobSpyIntegrationConfig:
         combine_with_existing_scrapers=False,  # JobSpy only for speed
         jobspy_weight=1.0,
         enable_cross_validation=False,
-        enable_Improved_deduplication=True,
+        enable_enhanced_deduplication=True,
         use_jobspy_in_phase1=True,
         use_jobspy_parallel=False,
         jobspy_fallback_enabled=True
@@ -258,7 +315,7 @@ def get_comprehensive_discovery_config() -> JobSpyIntegrationConfig:
         combine_with_existing_scrapers=True,
         jobspy_weight=0.6,
         enable_cross_validation=True,
-        enable_Improved_deduplication=True,
+        enable_enhanced_deduplication=True,
         use_jobspy_in_phase1=True,
         use_jobspy_parallel=True,  # Use parallel for maximum coverage
         jobspy_fallback_enabled=True
@@ -276,7 +333,7 @@ def get_quality_focused_config() -> JobSpyIntegrationConfig:
         combine_with_existing_scrapers=True,
         jobspy_weight=0.8,  # High weight for quality
         enable_cross_validation=True,
-        enable_Improved_deduplication=True,
+        enable_enhanced_deduplication=True,
         use_jobspy_in_phase1=True,
         use_jobspy_parallel=False,
         jobspy_fallback_enabled=True
@@ -315,7 +372,7 @@ JOBSPY_CONFIG_PRESETS = {
         combine_with_existing_scrapers=True,
         jobspy_weight=0.8,
         enable_cross_validation=True,
-        enable_Improved_deduplication=True,
+        enable_enhanced_deduplication=True,
         use_jobspy_in_phase1=True,
         use_jobspy_parallel=True,  # Parallel for max coverage
         jobspy_fallback_enabled=True
@@ -332,7 +389,7 @@ JOBSPY_CONFIG_PRESETS = {
         combine_with_existing_scrapers=False,  # JobSpy only for speed
         jobspy_weight=1.0,
         enable_cross_validation=True,
-        enable_Improved_deduplication=True,
+        enable_enhanced_deduplication=True,
         use_jobspy_in_phase1=True,
         use_jobspy_parallel=True,
         jobspy_fallback_enabled=True
@@ -347,9 +404,72 @@ JOBSPY_CONFIG_PRESETS = {
         combine_with_existing_scrapers=True,
         jobspy_weight=0.7,
         enable_cross_validation=True,
-        enable_Improved_deduplication=True,
+        enable_enhanced_deduplication=True,
         use_jobspy_in_phase1=True,
         use_jobspy_parallel=False,
+        jobspy_fallback_enabled=True
+    ),
+    "custom_canadian_locations": lambda: JobSpyIntegrationConfig(
+        enable_jobspy=True,
+        jobspy_priority="high",
+        jobspy_max_jobs=400,
+        jobspy_locations=JOBSPY_LOCATION_SETS["custom_canadian_locations"],
+        jobspy_search_terms=JOBSPY_SEARCH_TERM_SETS["python_focused"] + JOBSPY_SEARCH_TERM_SETS["general_development"],
+        jobspy_sites=JOBSPY_SITE_COMBINATIONS["comprehensive"],
+        combine_with_existing_scrapers=True,
+        jobspy_weight=0.8,
+        enable_cross_validation=True,
+        enable_enhanced_deduplication=True,
+        use_jobspy_in_phase1=True,
+        use_jobspy_parallel=True,
+        jobspy_fallback_enabled=True
+    ),
+    # USA Configuration Presets
+    "usa_comprehensive": lambda: JobSpyIntegrationConfig(
+        enable_jobspy=True,
+        jobspy_priority="high", 
+        jobspy_max_jobs=1000,  # Maximum jobs for all cities
+        jobspy_locations=JOBSPY_LOCATION_SETS["usa_comprehensive"],
+        jobspy_search_terms=JOBSPY_SEARCH_TERM_SETS["python_focused"] + 
+                           JOBSPY_SEARCH_TERM_SETS["general_development"] + 
+                           JOBSPY_SEARCH_TERM_SETS["data_science"],
+        jobspy_sites=JOBSPY_SITE_COMBINATIONS["maximum_coverage"],
+        combine_with_existing_scrapers=False,  # JobSpy only for speed
+        jobspy_weight=1.0,
+        enable_cross_validation=True,
+        enable_enhanced_deduplication=True,
+        use_jobspy_in_phase1=True,
+        use_jobspy_parallel=True,
+        jobspy_fallback_enabled=True
+    ),
+    "usa_tech_hubs": lambda: JobSpyIntegrationConfig(
+        enable_jobspy=True,
+        jobspy_priority="high",
+        jobspy_max_jobs=500,
+        jobspy_locations=JOBSPY_LOCATION_SETS["usa_tech_hubs"],
+        jobspy_search_terms=JOBSPY_SEARCH_TERM_SETS["python_focused"] + JOBSPY_SEARCH_TERM_SETS["specialized_roles"],
+        jobspy_sites=JOBSPY_SITE_COMBINATIONS["linkedin_focused"],  # LinkedIn for tech roles
+        combine_with_existing_scrapers=True,
+        jobspy_weight=0.7,
+        enable_cross_validation=True,
+        enable_enhanced_deduplication=True,
+        use_jobspy_in_phase1=True,
+        use_jobspy_parallel=False,
+        jobspy_fallback_enabled=True
+    ),
+    "usa_major_cities": lambda: JobSpyIntegrationConfig(
+        enable_jobspy=True,
+        jobspy_priority="high",
+        jobspy_max_jobs=750,
+        jobspy_locations=JOBSPY_LOCATION_SETS["usa_major_cities"],
+        jobspy_search_terms=JOBSPY_SEARCH_TERM_SETS["python_focused"] + JOBSPY_SEARCH_TERM_SETS["general_development"],
+        jobspy_sites=JOBSPY_SITE_COMBINATIONS["comprehensive"],
+        combine_with_existing_scrapers=True,
+        jobspy_weight=0.8,
+        enable_cross_validation=True,
+        enable_enhanced_deduplication=True,
+        use_jobspy_in_phase1=True,
+        use_jobspy_parallel=True,
         jobspy_fallback_enabled=True
     )
 }
@@ -373,7 +493,7 @@ def create_custom_config(
         combine_with_existing_scrapers=True,
         jobspy_weight=0.6,
         enable_cross_validation=True,
-        enable_Improved_deduplication=True,
+        enable_enhanced_deduplication=True,
         use_jobspy_in_phase1=True,
         use_jobspy_parallel=False,
         jobspy_fallback_enabled=True

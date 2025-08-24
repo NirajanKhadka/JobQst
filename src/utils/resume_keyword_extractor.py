@@ -374,24 +374,5 @@ def extract_keywords_from_resume(resume_path: str, profile_name: str = None) -> 
     }
 
 
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) < 2:
-        print("Usage: python resume_keyword_extractor.py <resume_file> [profile_name]")
-        print("Example: python resume_keyword_extractor.py resume.pdf Nirajan")
-        sys.exit(1)
-
-    resume_path = sys.argv[1]
-    profile_name = sys.argv[2] if len(sys.argv) > 2 else None
-
-    result = extract_keywords_from_resume(resume_path, profile_name)
-
-    if "error" not in result:
-        print(f"\n🎉 Keyword extraction completed!")
-        print(f"📝 Found {len(result['job_keywords'])} job keywords")
-        if result["profile_saved"]:
-            print(f"💾 Keywords saved to profile: {profile_name}")
-    else:
-        print(f"❌ Extraction failed: {result['error']}")
-        sys.exit(1)
+# CLI usage moved to proper CLI module
+# To use: from src.utils.resume_keyword_extractor import extract_keywords_from_resume

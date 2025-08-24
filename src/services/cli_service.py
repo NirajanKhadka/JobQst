@@ -26,8 +26,6 @@ class CLIService:
             "scrape_eluta": CLICommand("scrape_eluta", "python main.py {profile} --action scrape --site eluta", "Scrape jobs from Eluta", "scraping"),
             "scrape_indeed": CLICommand("scrape_indeed", "python main.py {profile} --action scrape --site indeed", "Scrape jobs from Indeed", "scraping"),
             "process_jobs": CLICommand("process_jobs", "python main.py {profile} --action process", "Process scraped jobs with AI", "processing"),
-            "generate_docs": CLICommand("generate_docs", "python main.py {profile} --action generate-docs", "Generate resumes and cover letters", "documents"),
-            "apply_jobs": CLICommand("apply_jobs", "python main.py {profile} --action apply", "Submit job applications", "applications"),
         }
         self.command_history = []
         self.running_commands = {}

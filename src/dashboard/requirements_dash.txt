@@ -1,0 +1,14 @@
+# JobLens Dash Dashboard Requirements
+dash>=2.14.0
+dash-bootstrap-components>=1.5.0
+plotly>=5.15.0
+pandas>=2.0.0
+psycopg2-binary>=2.9.0
+python-dotenv>=1.0.0
+dash-extensions>=1.0.0
+dash-ag-grid>=2.4.0
+dash-iconify>=0.1.2
+requests>=2.31.0
+pathlib
+datetime
+logging

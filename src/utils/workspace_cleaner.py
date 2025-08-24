@@ -163,11 +163,5 @@ def cleanup_cache_only(workspace_root: str = ".") -> Dict:
     return cleaner.clean_cache_files()
 
 
-if __name__ == "__main__":
-    # Test the cleaner
-    import logging
-
-    logging.basicConfig(level=logging.INFO)
-
-    stats = cleanup_workspace()
-    print(f"Cleanup completed: {stats}")
+# Example usage and testing moved to tests/
+# To test this module: python -m pytest tests/unit/test_workspace_cleaner.py

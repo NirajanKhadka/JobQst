@@ -1,0 +1,228 @@
+/* Enhanced JobLens Dashboard Styles */
+
+/* Modern dark theme with better contrast */
+body {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #e0e0e0;
+}
+
+/* Enhanced external link styling */
+.external-job-link,
+a[target="_blank"] {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    color: white !important;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+}
+
+.external-job-link:hover,
+a[target="_blank"]:hover {
+    background: linear-gradient(45deg, #0056b3, #003d82);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+}
+
+/* Enhanced job summary tooltip styling */
+.job-summary-tooltip {
+    position: fixed !important;
+    background: rgba(33, 37, 41, 0.95);
+    border: 2px solid #007bff;
+    border-radius: 12px;
+    padding: 16px;
+    max-width: 400px;
+    z-index: 9999;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    animation: tooltipFadeIn 0.3s ease;
+}
+
+.tooltip-content {
+    color: #e0e0e0;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+}
+
+.tooltip-close {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.tooltip-close:hover {
+    background: #bb2d3b;
+    transform: scale(1.1);
+}
+
+.tooltip-text {
+    margin-top: 4px;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced salary column styling */
+td[data-dash-column="salary"],
+.dash-cell[data-dash-column="salary"] {
+    background: linear-gradient(45deg, #28a745, #20c997) !important;
+    color: white !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 4px rgba(40,167,69,0.3) !important;
+}
+
+/* Button enhancements */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #0056b3, #003d82);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+}
+
+.btn-info {
+    background: linear-gradient(45deg, #17a2b8, #138496);
+    border: none;
+    box-shadow: 0 2px 4px rgba(23,162,184,0.3);
+}
+
+.btn-info:hover {
+    background: linear-gradient(45deg, #138496, #0f6674);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(23,162,184,0.4);
+}
+
+/* Table enhancements */
+.dash-table-container {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
+    border: 1px solid #333 !important;
+}
+
+.dash-table-container .dash-spreadsheet-container {
+    background: #1e1e1e !important;
+}
+
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner {
+    background: #1e1e1e !important;
+}
+
+/* Header styling */
+.dash-header {
+    background: linear-gradient(45deg, #007bff, #0056b3) !important;
+    color: white !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    padding: 16px !important;
+}
+
+/* Row hover effects */
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner table tbody tr:hover {
+    background: rgba(0,123,255,0.1) !important;
+    transition: background 0.2s ease !important;
+}
+
+/* Scrollbar styling */
+.dash-table-container ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.dash-table-container ::-webkit-scrollbar-track {
+    background: #2d2d2d;
+    border-radius: 4px;
+}
+
+.dash-table-container ::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 4px;
+}
+
+.dash-table-container ::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}
+
+/* Enhanced status badges */
+.dash-cell:contains("🆕"), .dash-cell:contains("✅"), 
+.dash-cell:contains("📤"), .dash-cell:contains("🔍"),
+.dash-cell:contains("❌"), .dash-cell:contains("📁") {
+    font-weight: bold !important;
+    text-align: center !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+}
+
+/* Loading and interaction improvements */
+.dash-spinner {
+    border-color: #007bff !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .job-summary-tooltip {
+        max-width: 300px;
+        font-size: 12px;
+    }
+    
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+/* Ensure external links work properly */
+.dash-table-container a[href]:not([href^="#"]) {
+    color: #007bff !important;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(0, 123, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.dash-table-container a[href]:not([href^="#"]):hover {
+    background: rgba(0, 123, 255, 0.2);
+    color: #0056b3 !important;
+    text-decoration: underline;
+}

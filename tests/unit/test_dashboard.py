@@ -509,13 +509,13 @@ from pathlib import Path
 
 # Import orchestrators (assume they are importable from src.cli.handlers)
 from src.cli.handlers.scraping_handler import ScrapingOrchestrator
-from src.cli.handlers.application_handler import ApplicationOrchestrator
+# ApplicationOrchestrator removed
 from src.cli.handlers.dashboard_handler import DashboardOrchestrator
 from src.cli.handlers.system_handler import SystemOrchestrator
 
 @pytest.mark.parametrize("Orchestrator,logfile", [
     (ScrapingOrchestrator, "logs/scraping_orchestrator.log"),
-    (ApplicationOrchestrator, "logs/application_orchestrator.log"),
+    # (ApplicationOrchestrator, "logs/application_orchestrator.log"),  # Removed
     (DashboardOrchestrator, "logs/dashboard_orchestrator.log"),
     (SystemOrchestrator, "logs/system_orchestrator.log"),
 ])

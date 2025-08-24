@@ -26,37 +26,29 @@ class ScrapingActions:
         self.scraping_handler = ScrapingHandler(profile)
 
     def show_scraping_menu(self, args) -> None:
-        """Show Improved scraping menu with NEW Fast 3-Phase Pipeline."""
-        console.print(Panel("🚀 Fast 3-Phase Pipeline Scraping Menu (4.6x Faster)", style="bold blue"))
+        """Show JobSpy scraping menu with parallel processing options."""
+        console.print(Panel("🚀 JobSpy Scraping Menu (Parallel Processing)", style="bold blue"))
 
-        # Show system capabilities and new pipeline info
-        console.print(f"[green]🆕 NEW: Fast 3-Phase Pipeline (4.6x performance improvement)[/green]")
+        # Show system capabilities
+        console.print(f"[green]🚀 JobSpy: Parallel scraping across multiple sites[/green]")
         console.print(f"[cyan]📋 Keywords: {len(self.profile.get('keywords', []))} loaded from profile[/cyan]")
-        console.print(f"[cyan]⚡ Phase 1: Eluta URLs → Phase 2: Parallel External Scraping → Phase 3: GPU Processing[/cyan]")
+        console.print(f"[cyan]⚡ Sites: Indeed, LinkedIn, Glassdoor (parallel processing)[/cyan]")
 
-        # Site selection first
-        console.print(f"\n[bold]Available Job Sites:[/bold]")
-        site_options = {
-            "1": "🇨🇦 Eluta.ca (NEW Fast Pipeline - Recommended)",
-            "2": "🌍 Indeed.ca (Coming soon - uses Eluta for now)",
-            "3": "💼 LinkedIn Jobs (Coming soon - uses Eluta for now)",
-            "4": "🏛️ JobBank.gc.ca (Coming soon - uses Eluta for now)",
-            "5": "👹 Monster.ca (Coming soon - uses Eluta for now)",
-            "6": "🏢 Workday (Coming soon - uses Eluta for now)",
-            "7": "⚡ Multi-site parallel (Future feature - uses Eluta for now)",
+        # Scraping mode selection
+        console.print(f"\n[bold]Scraping Modes:[/bold]")
+        mode_options = {
+            "1": "🚀 JobSpy Standard (Default parallel processing)",
+            "2": "⚡ JobSpy High Performance (Maximum parallel workers)",
         }
 
-        for key, value in site_options.items():
+        for key, value in mode_options.items():
             console.print(f"  [bold cyan]{key}[/bold cyan]: {value}")
 
         console.print()
-        console.print("[yellow]💡 All options currently use the new Fast 3-Phase Pipeline with Eluta[/yellow]")
-        site_choice = Prompt.ask("Select site", choices=list(site_options.keys()), default="1")
+        console.print("[green]💡 JobSpy automatically scrapes multiple sites in parallel[/green]")
+        mode_choice = Prompt.ask("Select scraping mode", choices=list(mode_options.keys()), default="1")
 
-        if site_choice == "7":
-            self.multi_site_scrape_action(args)
-        else:
-            self.single_site_scrape_action(args, site_choice)
+        self._execute_jobspy_scraping(mode_choice)
 
     def single_site_scrape_action(self, args, site: str, bot_method: str = "1") -> None:
         """Handle single site scraping action using Fast 3-Phase Pipeline."""
@@ -107,25 +99,61 @@ class ScrapingActions:
             console.print("[yellow]⚠️ Fast pipeline completed with limited results[/yellow]")
             console.print("[cyan]💡 Try standard mode or check your internet connection[/cyan]")
 
-    def _execute_fast_pipeline_scraping(self, method_choice: str) -> None:
-        """Execute Fast 3-Phase Pipeline scraping with the selected method."""
-        if method_choice == "1":
-            # Standard fast pipeline
-            console.print("[cyan]🚀 Using Fast 3-Phase Pipeline (Standard Mode)...[/cyan]")
-            console.print("[cyan]📋 4 external workers, auto processing method[/cyan]")
-            success = self.scraping_handler.run_scraping(mode="simple")
-        else:
-            # High performance fast pipeline
-            console.print("[cyan]⚡ Using Fast 3-Phase Pipeline (High Performance Mode)...[/cyan]")
-            console.print("[cyan]📋 6 external workers, maximum speed configuration[/cyan]")
-            success = self.scraping_handler.run_scraping(mode="multi_worker")
+    def _execute_jobspy_scraping(self, method_choice: str) -> None:
+        """Execute JobSpy scraping with parallel processing."""
+        try:
+            from src.scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper
+            
+            if method_choice == "1":
+                # Standard JobSpy
+                console.print("[cyan]🚀 Using JobSpy Standard Mode...[/cyan]")
+                console.print("[cyan]📋 Parallel scraping: Indeed, LinkedIn, Glassdoor[/cyan]")
+                max_jobs = 50
+            else:
+                # High performance JobSpy
+                console.print("[cyan]⚡ Using JobSpy High Performance Mode...[/cyan]")
+                console.print("[cyan]📋 Maximum parallel workers across all sites[/cyan]")
+                max_jobs = 100
 
-        if success:
-            console.print("[green]✅ Fast pipeline completed successfully![/green]")
-            console.print("[cyan]💡 Check your database - jobs are automatically saved and processed![/cyan]")
-        else:
-            console.print("[yellow]⚠️ Fast pipeline completed with limited results[/yellow]")
-            console.print("[cyan]💡 Try the other pipeline mode or check your internet connection[/cyan]")
+            # Initialize JobSpy scraper
+            scraper = JobSpyImprovedScraper(self.profile.get('profile_name', 'default'))
+            
+            # Run async scraping
+            import asyncio
+            jobs = asyncio.run(scraper.scrape_jobs_Improved(max_jobs=max_jobs))
+            
+            if jobs and len(jobs) > 0:
+                console.print(f"[green]✅ JobSpy scraping completed successfully![/green]")
+                console.print(f"[cyan]📊 Jobs found: {len(jobs)}[/cyan]")
+                console.print(f"[cyan]💾 Jobs saved to database automatically[/cyan]")
+                
+                # Show sample jobs
+                for i, job in enumerate(jobs[:3], 1):
+                    title = job.get('title', 'Unknown')[:40]
+                    company = job.get('company', 'Unknown')[:20]
+                    location = job.get('location', 'Unknown')[:15]
+                    console.print(f"  {i}. {title}... at {company} ({location})")
+                
+                if len(jobs) > 3:
+                    console.print(f"  ... and {len(jobs) - 3} more jobs")
+            else:
+                console.print("[yellow]⚠️ JobSpy completed with limited results[/yellow]")
+                console.print("[cyan]💡 Try adjusting your profile keywords or location settings[/cyan]")
+                
+        except ImportError:
+            console.print("[red]❌ JobSpy not available. Install with: pip install python-jobspy[/red]")
+            console.print("[cyan]💡 Falling back to Eluta scraper...[/cyan]")
+            # Fallback to existing scraping
+            success = self.scraping_handler.run_scraping(mode="simple" if method_choice == "1" else "multi_worker")
+            if success:
+                console.print("[green]✅ Fallback scraping completed![/green]")
+        except Exception as e:
+            console.print(f"[red]❌ JobSpy error: {e}[/red]")
+            console.print("[cyan]💡 Falling back to Eluta scraper...[/cyan]")
+            # Fallback to existing scraping
+            success = self.scraping_handler.run_scraping(mode="simple" if method_choice == "1" else "multi_worker")
+            if success:
+                console.print("[green]✅ Fallback scraping completed![/green]")
 
     def automated_scrape_action(self, args=None) -> None:
         """Execute automated scraping action using simplified architecture."""

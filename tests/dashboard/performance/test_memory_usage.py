@@ -122,7 +122,7 @@ class TestMemoryUsage:
         # Measure memory usage during operations
         memory_snapshots = []
         
-        with patch.object(data_service._config_service, 'get_profiles', return_value=profiles), \
+        with patch.object(data_service, 'get_profiles', return_value=list(profiles.keys())), \
              patch('src.dashboard.services.data_service.get_job_db', return_value=mock_db):
             
             # Initial memory
@@ -130,17 +130,17 @@ class TestMemoryUsage:
             memory_snapshots.append(("initial", psutil.Process().memory_info().rss))
             
             # Load job data (should cache large dataset)
-            jobs = data_service.get_job_data("TestUser")
+            jobs = data_service.load_job_data("TestUser")
             gc.collect()
             memory_snapshots.append(("after_job_load", psutil.Process().memory_info().rss))
             
             # Generate statistics (additional processing)
-            stats = data_service.get_job_statistics("TestUser")
+            stats = data_service.get_job_metrics("TestUser")
             gc.collect()
             memory_snapshots.append(("after_statistics", psutil.Process().memory_info().rss))
             
             # Convert to DataFrame (memory-intensive operation)
-            df = data_service.get_job_data_as_dataframe("TestUser")
+            df = data_service.load_job_data("TestUser")  # This already returns DataFrame
             gc.collect()
             memory_snapshots.append(("after_dataframe", psutil.Process().memory_info().rss))
             
@@ -176,7 +176,8 @@ class TestMemoryUsage:
         assert total_increase < 10, f"Memory leak detected: {total_increase:.2f}MB increase"
     
     @pytest.mark.performance
-    def test_system_service_memory_patterns(self, memory_baseline, large_test_data):
+    @pytest.mark.asyncio
+    async def test_system_service_memory_patterns(self, memory_baseline, large_test_data):
         """Test system service memory usage patterns."""
         system_service = get_system_service()
         
@@ -199,7 +200,7 @@ class TestMemoryUsage:
                 
                 # Multiple calls to trigger caching
                 for _ in range(5):
-                    metrics = system_service.get_system_metrics()
+                    metrics = await system_service.get_system_metrics()
                 
                 gc.collect()
                 memory_after = psutil.Process().memory_info().rss
@@ -250,7 +251,9 @@ class TestMemoryUsage:
                         "timestamp": datetime.now().isoformat(),
                         "additional_data": ["item"] * 100
                     }
-                    service._cache_timestamps[cache_key] = datetime.now()
+                    # Only set timestamps if service has this attribute
+                    if hasattr(service, '_cache_timestamps'):
+                        service._cache_timestamps[cache_key] = datetime.now()
             
             gc.collect()
             memory_after = psutil.Process().memory_info().rss
@@ -308,16 +311,16 @@ class TestMemoryUsage:
             ]
             mock_db.get_job_count.return_value = 25
             
-            with patch.object(data_service._config_service, 'get_profiles',
-                             return_value={"User1": {"name": "Test"}}), \
+            with patch.object(data_service, 'get_profiles',
+                             return_value=["User1"]), \
                  patch('src.dashboard.services.data_service.get_job_db', return_value=mock_db), \
                  patch('psutil.cpu_percent', return_value=30.0 + iteration), \
                  patch('psutil.virtual_memory', return_value=Mock(percent=40.0)), \
                  patch('psutil.process_iter', return_value=[]):
                 
                 # Data service operations
-                data_service.get_job_data("User1")
-                data_service.get_job_statistics("User1")
+                data_service.load_job_data("User1")
+                data_service.get_job_metrics("User1")
                 data_service.get_health_status()
                 
                 # System service operations
@@ -403,12 +406,12 @@ class TestMemoryUsage:
         mock_db = Mock()
         mock_db.get_all_jobs.return_value = large_test_data["jobs"][:50]
         
-        with patch.object(data_service._config_service, 'get_profiles',
-                         return_value={"User1": {"name": "Test"}}), \
+        with patch.object(data_service, 'get_profiles',
+                         return_value=["User1"]), \
              patch('src.dashboard.services.data_service.get_job_db', return_value=mock_db):
             
             # Perform operations after GC
-            jobs = data_service.get_job_data("User1")
+            jobs = data_service.load_job_data("User1")
             data_service.clear_cache()
         
         # Final garbage collection

@@ -250,5 +250,5 @@ async def test_external_scraper():
         console.print(f"[green]- {result.get('title', 'Unknown')} at {result.get('company', 'Unknown')}[/green]")
 
 
-if __name__ == "__main__":
-    asyncio.run(test_external_scraper())
+# For testing this scraper, use: python -m pytest tests/scrapers/
+# Example usage available in tests/ directory

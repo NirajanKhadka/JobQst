@@ -17,10 +17,10 @@ def test_imports():
     console.print("[bold blue]🧪 Testing New Feature Imports[/bold blue]")
     
     tests = [
-        ("Parallel Job Scraper", "from src.scrapers.parallel_job_scraper import ParallelJobScraper"),
-        ("Improved Eluta Scraper", "from src.scrapers.eluta_Improved import ElutaImprovedScraper"),
-        ("Debug Dashboard", "import debug_dashboard_issue"),
-        ("Main Menu Functions", "from main import ultra_fast_scrape_action, deep_scrape_action, debug_dashboard_action"),
+        ("JobSpy Enhanced Scraper", "from src.scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper"),
+        ("Unified Eluta Scraper", "from src.scrapers.unified_eluta_scraper import ElutaScraper"),
+        ("Main Entry Point", "from main import main"),
+        ("Job Database", "from src.core.job_database import get_job_db"),
     ]
     
     results = []
@@ -54,12 +54,12 @@ def test_imports():
         console.print(f"[bold red]❌ {total - passed} import tests failed![/bold red]")
         pytest.skip(f"{total - passed} import tests failed")
 
-def test_Improved_scraper_features():
-    """Test Improved scraper features."""
-    console.print("\n[bold blue]🔍 Testing Improved Scraper Features[/bold blue]")
+def test_enhanced_scraper_features():
+    """Test enhanced scraper features."""
+    console.print("\n[bold blue]🔍 Testing Enhanced Scraper Features[/bold blue]")
     
     try:
-        from src.scrapers.eluta_Improved import ElutaImprovedScraper
+        from src.scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper
         
         # Create a test profile
         test_profile = {
@@ -71,25 +71,23 @@ def test_Improved_scraper_features():
         }
         
         # Test scraper initialization
-        scraper = ElutaImprovedScraper(test_profile, deep_scraping=True)
+        scraper = JobSpyImprovedScraper(test_profile)
         
-        console.print("[green]✅ Improved scraper initialized successfully[/green]")
-        console.print(f"[cyan]   Deep scraping enabled: {scraper.deep_scraping}[/cyan]")
-        console.print(f"[cyan]   Rate limit delay: {scraper.rate_limit_delay}[/cyan]")
-        console.print(f"[cyan]   Max pages per keyword: {scraper.max_pages_per_keyword}[/cyan]")
+        console.print("[green]✅ Enhanced scraper initialized successfully[/green]")
+        console.print(f"[cyan]   Profile: {scraper.profile_name}[/cyan]")
         
         assert True
         
     except Exception as e:
-        console.print(f"[red]❌ Improved scraper test failed: {e}[/red]")
+        console.print(f"[red]❌ Enhanced scraper test failed: {e}[/red]")
         pytest.skip("Feature not available")
 
-def test_ultra_parallel_scraper():
-    """Test ultra parallel scraper initialization."""
-    console.print("\n[bold blue]⚡ Testing Ultra Parallel Scraper[/bold blue]")
+def test_eluta_scraper():
+    """Test eluta scraper initialization."""
+    console.print("\n[bold blue]⚡ Testing Eluta Scraper[/bold blue]")
     
     try:
-        from src.scrapers.parallel_job_scraper import ParallelJobScraper
+        from src.scrapers.unified_eluta_scraper import ElutaScraper
 
         # Create a test profile
         test_profile = {
@@ -100,32 +98,30 @@ def test_ultra_parallel_scraper():
         }
 
         # Test scraper initialization
-        scraper = ParallelJobScraper(test_profile, max_workers=2)
+        scraper = ElutaScraper(test_profile)
 
-        console.print("[green]✅ Parallel job scraper initialized successfully[/green]")
-        console.print(f"[cyan]   Max workers: {scraper.max_workers}[/cyan]")
-        console.print(f"[cyan]   Batch size: {scraper.batch_size}[/cyan]")
-        console.print(f"[cyan]   Concurrent browsers: {scraper.concurrent_browsers}[/cyan]")
-        console.print(f"[cyan]   Keywords to process: {len(scraper.keywords)}[/cyan]")
+        console.print("[green]✅ Eluta scraper initialized successfully[/green]")
+        console.print(f"[cyan]   Profile: {scraper.profile_name}[/cyan]")
+        console.print(f"[cyan]   Keywords: {len(scraper.keywords)}[/cyan]")
         
         assert True
         
     except Exception as e:
-        console.print(f"[red]❌ Ultra parallel scraper test failed: {e}[/red]")
+        console.print(f"[red]❌ Eluta scraper test failed: {e}[/red]")
         pytest.skip("Feature not available")
 
 def test_main_menu_functions():
-    """Test that new main menu functions exist."""
-    console.print("\n[bold blue]📋 Testing Main Menu Functions[/bold blue]")
+    """Test that main functions exist."""
+    console.print("\n[bold blue]📋 Testing Main Functions[/bold blue]")
     
     try:
         import main
         
-        # Check if new functions exist
+        # Check if functions exist
         functions_to_check = [
-            'ultra_fast_scrape_action',
-            'deep_scrape_action', 
-            'debug_dashboard_action'
+            'main',
+            'parse_arguments', 
+            'run_health_check'
         ]
         
         for func_name in functions_to_check:
@@ -135,36 +131,29 @@ def test_main_menu_functions():
                 console.print(f"[red]❌ {func_name} missing[/red]")
                 pytest.skip("Feature not available")
         
-        console.print("[green]✅ All main menu functions exist[/green]")
+        console.print("[green]✅ All main functions exist[/green]")
         assert True
         
     except Exception as e:
-        console.print(f"[red]❌ Main menu function test failed: {e}[/red]")
+        console.print(f"[red]❌ Main function test failed: {e}[/red]")
         pytest.skip("Feature not available")
 
-def test_debug_dashboard():
-    """Test debug dashboard script."""
-    console.print("\n[bold blue]🔍 Testing Debug Dashboard Script[/bold blue]")
+def test_database_functions():
+    """Test database functionality."""
+    console.print("\n[bold blue]🔍 Testing Database Functions[/bold blue]")
     
     try:
-        import debug_dashboard_issue
+        from src.core.job_database import get_job_db
         
-        # Check if main functions exist
-        functions = ['investigate_database_issue', 'check_dashboard_database_connection', 'suggest_fixes']
+        # Test database initialization
+        db = get_job_db("test")
         
-        for func_name in functions:
-            if hasattr(debug_dashboard_issue, func_name):
-                console.print(f"[green]✅ {func_name} exists[/green]")
-            else:
-                console.print(f"[red]❌ {func_name} missing[/red]")
-                pytest.skip("Feature not available")
-        
-        console.print("[green]✅ Debug dashboard script is ready[/green]")
+        console.print("[green]✅ Database functions work[/green]")
         assert True
         
     except Exception as e:
-        console.print(f"[red]❌ Debug dashboard test failed: {e}[/red]")
-        pytest.skip("Feature not available")
+        console.print(f"[red]❌ Database test failed: {e}[/red]")
+        pytest.skip("Database not available")
 
 def run_performance_benchmark():
     """Run a quick performance benchmark."""
@@ -204,14 +193,14 @@ def run_performance_benchmark():
 def main():
     """Run all tests."""
     console.print(Panel("🧪 New Features Test Suite", style="bold blue"))
-    console.print("[cyan]Testing all new high-performance features...[/cyan]\n")
+    console.print("[cyan]Testing working features...[/cyan]\n")
     
     tests = [
         ("Import Tests", test_imports),
-        ("Improved Scraper", test_Improved_scraper_features),
-        ("Ultra Parallel Scraper", test_ultra_parallel_scraper),
-        ("Main Menu Functions", test_main_menu_functions),
-        ("Debug Dashboard", test_debug_dashboard),
+        ("Enhanced Scraper", test_enhanced_scraper_features),
+        ("Eluta Scraper", test_eluta_scraper),
+        ("Main Functions", test_main_menu_functions),
+        ("Database Functions", test_database_functions),
         ("Performance Benchmark", run_performance_benchmark),
     ]
     
@@ -239,13 +228,13 @@ def main():
     console.print(f"\n[bold]Results: {passed}/{total} tests passed[/bold]")
     
     if passed == total:
-        console.print("[bold green]🎉 All tests passed! New features are ready to use.[/bold green]")
-        console.print("\n[cyan]💡 Try the new features:[/cyan]")
-        console.print("   python main.py Nirajan  # Choose option 2 for ultra-fast scraping")
-        console.print("   python main.py Nirajan  # Choose option 3 for deep scraping")
-        console.print("   python main.py Nirajan  # Choose option 10 for dashboard debugging")
+        console.print("[bold green]🎉 All tests passed![/bold green]")
+        console.print("\n[cyan]💡 Features working:[/cyan]")
+        console.print("   - JobSpy Enhanced Scraper")
+        console.print("   - Unified Eluta Scraper") 
+        console.print("   - Database functionality")
     else:
-        console.print(f"[bold red]❌ {total - passed} tests failed. Check the errors above.[/bold red]")
+        console.print(f"[bold red]❌ {total - passed} tests failed.[/bold red]")
     
     return 0 if passed == total else 1
 

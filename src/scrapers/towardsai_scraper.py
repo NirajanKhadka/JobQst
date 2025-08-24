@@ -56,27 +56,4 @@ def fetch_job_links_playwright_and_save():
     print(f"Saved {len(set(links))} job links to {out_path}")
 
 
-def main():
-    # Example: Use reliable keyword extraction utility (for future CLI integration)
-    from src.utils.keyword_extractor import get_keywords_for_profile
-    profile_path = "profiles/Nirajan/Nirajan.json"  # TODO: make dynamic for CLI
-    try:
-        keywords = get_keywords_for_profile(profile_path)
-        print(f"[INFO] Loaded/extracted keywords: {keywords}")
-    except Exception as e:
-        print(f"[ERROR] Keyword extraction failed: {e}")
-        keywords = []
-    print("Choose scraping method:")
-    print("1. Playwright (save job links to file)")
-    print("2. Requests + BeautifulSoup (return up to 11 jobs)")
-    choice = input("Enter 1 or 2: ").strip()
-    if choice == '1':
-        fetch_job_links_playwright_and_save()
-    else:
-        jobs = get_jobs_bs4(limit=11)
-        print(f"[BS4] Found {len(jobs)} jobs:")
-        for job in jobs:
-            print(f"- {job['title']}: {job['link']}")
-
-if __name__ == "__main__":
-    main() 
+# Main function removed - use scraper class directly

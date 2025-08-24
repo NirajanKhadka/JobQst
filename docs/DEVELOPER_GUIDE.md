@@ -1,233 +1,418 @@
 ---
-post_title: "JobLens Developer Guide"
+post_title: "JobQst Developer Guide"
 author1: "Nirajan Khadka"
-post_slug: "developer-guide"
+post_slug: "jobqst-developer-guide"
 microsoft_alias: "nirajank"
 featured_image: ""
-categories: ["development", "setup", "scrapers"]
-tags: ["development", "setup", "jobspy", "eluta", "workflow"]
-ai_note: "Complete development setup and workflow guide for dual scraper architecture."
-summary: "Complete development setup for dual scraper architecture with JobSpy and Eluta integration"
-post_date: "2025-07-17"
+categories: ["development", "ai", "automation", "architecture"]
+tags: ["jobqst", "ai-powered", "multi-site-scraping", "semantic-analysis", "clean-architecture"]
+ai_note: "Complete developer guide for JobQst intelligent job discovery platform with clean, modern architecture."
+summary: "Comprehensive development guide for JobQst AI-powered job discovery platform"
+post_date: "2025-08-23"
 ---
 
-## 🚀 JobLens Developer Guide
+# 🚀 JobQst Developer Guide
 
-*Complete development setup for dual scraper architecture with JobSpy and Eluta integration*
+*Complete development guide for the intelligent, AI-powered job discovery platform*
 
-This guide covers the development setup for JobLens dual-scraper architecture (JobSpy + Eluta) for job discovery, matching, and ranking.
+This guide covers development setup, architecture patterns, and best practices for JobQst - featuring clean single-entry-point architecture, AI-powered job analysis, and multi-site parallel scraping.
 
 ## 📋 Table of Contents
 
 1. [Quick Setup](#quick-setup)
-2. [Dual Scraper Development](#dual-scraper-development)
-3. [Pipeline Development](#pipeline-development)
-4. [Code Structure](#code-structure)
-5. [Testing Framework](#testing-framework)
-6. [Performance Optimization](#performance-optimization)
-7. [Deployment](#deployment)
-8. [Troubleshooting](#troubleshooting)
-9. [Configuration Management](#configuration-management)
-10. [Additional Resources](#additional-resources)
-11. [Documentation Navigation](#documentation-navigation)
+2. [Clean Architecture Overview](#clean-architecture-overview)
+3. [AI-Powered Development](#ai-powered-development)
+4. [Multi-Site Scraping](#multi-site-scraping)
+5. [Testing & Quality](#testing--quality)
+6. [Performance & Optimization](#performance--optimization)
+7. [Dashboard Development](#dashboard-development)
+8. [Deployment & Production](#deployment--production)
+9. [Troubleshooting](#troubleshooting)
+10. [Contributing Guidelines](#contributing-guidelines)
 
 ---
 
 ## 🚀 Quick Setup
 
 ### **Prerequisites**
-- Python 3.10+ (3.11 recommended)
-- Git
-- VS Code, Cursor, or compatible IDE (recommended)
+- **Python 3.11+** (Required for modern features)
+- **Git** for version control
+- **Conda** (Recommended for environment management)
+- **VS Code/Cursor** with Python extensions (Recommended)
 
-
-### **Development Environment Setup**
+### **Environment Setup**
 ```bash
-# Clone repository
-git clone <repository-url>
-cd automate_job
+# Clone the repository
+git clone https://github.com/NirajanKhadka/JobQst.git
+cd JobQst
 
-# Create virtual environment
-python -m venv .venv
-
-# Activate environment
-# Windows (PowerShell)
-.\.venv\Scripts\Activate.ps1
-# Windows (cmd)
-.\.venv\Scripts\activate.bat
-# Linux/Mac
-source .venv/bin/activate
+# Create conda environment (recommended)
+conda create -n auto_job python=3.11
+conda activate auto_job
 
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Install JobSpy for primary scraper
+# Install JobSpy for multi-site scraping (Indeed, LinkedIn, Glassdoor, ZipRecruiter)
 pip install python-jobspy
 
-# Install Playwright for Eluta scraper
+# Install Playwright for browser automation
 playwright install chromium
 
-# Verify JobSpy installation
+# Verify installation
 python -c "from jobspy import scrape_jobs; print('JobSpy Available: True')"
-
-# Verify Eluta scraper
 python -c "from src.scrapers.unified_eluta_scraper import ElutaScraper; print('Eluta Scraper Available: True')"
 
-# Launch development dashboard
-python -m streamlit run src/dashboard/unified_dashboard.py --server.port 8501 --server.runOnSave true
+# Test system functionality
+python main.py TestProfile --action jobspy-pipeline --jobspy-preset usa_comprehensive --sites indeed,linkedin
+```
 
-# Test dual scraper setup
-python main.py Nirajan --action jobspy-pipeline --jobspy-preset fast
+### **Dashboard Development**
+
+```bash
+# Start the Dash dashboard (Primary interface)
+conda run -n auto_job python src/dashboard/dash_app/app.py
+
+# Or use VS Code tasks (Ctrl+Shift+P → Tasks: Run Task)
+# - Start Dash Dashboard
+
+# Alternative: Use CLI dashboard action
+python main.py TestProfile --action dashboard
+
+# Dashboard will be available at:
+# http://localhost:8050 (Dash default port)
+```
+# - Start Dashboard Frontend
 ```
 
 ---
 
-## 🔧 Dual Scraper Development
+## 🔧 AI-Powered Architecture
 
-### **Architecture Overview**
+### **System Overview**
 
-AutoJobAgent uses a dual scraper architecture with JobSpy as the primary multi-site scraper and Eluta as the reliable fallback.
+JobLens uses a modern AI-powered architecture with intelligent multi-site scraping, semantic analysis, and real-time dashboard capabilities.
 
 ```
-src/scrapers/                           # Scraper implementations
-├── jobspy_Improved_scraper.py          # Primary: JobSpy multi-site
-├── multi_site_jobspy_workers.py        # JobSpy worker coordination
-├── unified_eluta_scraper.py            # Secondary: Eluta fallback
-├── external_job_scraper.py             # External description enhancement
+src/core/                               # Core components
+├── user_profile_manager.py             # Profile management system
+├── job_database.py                     # Database abstraction layer
+└── processor.py                        # Job processing engine
 
+src/scrapers/                           # Multi-site scraping
+├── jobspy_enhanced_scraper.py          # Primary: 4-site parallel scraper
+├── multi_site_jobspy_workers.py        # Parallel worker coordination
+├── unified_eluta_scraper.py            # Fallback: Eluta.ca scraper
+└── external_job_scraper.py             # Enhanced job descriptions
 
-src/pipeline/                           # Pipeline orchestration
-├── Improved_fast_job_pipeline.py       # Primary: 3-phase pipeline
-├── fast_job_pipeline.py                # Secondary: Eluta-only pipeline
-└── jobspy_streaming_orchestrator.py    # JobSpy coordination
+src/services/                           # AI and analytics
+├── ai_integration_service.py           # AI-powered analysis
+├── smart_deduplication_service.py      # Intelligent duplicate removal
+├── job_analytics_service.py            # Advanced analytics
+└── location_detection_service.py       # Location intelligence
 
-src/config/                             # Configuration management
-├── jobspy_integration_config.py        # JobSpy presets and settings
-└── ai_service_config.py                # AI processing configuration
+src/pipeline/                           # Processing pipeline
+├── fast_job_pipeline.py                # Main processing pipeline
+└── jobspy_streaming_orchestrator.py    # Stream processing
+
+dashboard/                              # Modern React/FastAPI dashboard
+├── backend/                            # FastAPI backend
+└── frontend/                           # React frontend
 ```
 
 ### **Development Workflow**
 
-#### **1. JobSpy Scraper Development**
+#### **1. Multi-Site JobSpy Development**
 
 ```python
-# Basic JobSpy scraper usage
-from src.scrapers.jobspy_Improved_scraper import JobSpyImprovedScraper
+# Modern JobSpy integration with 4 sites in parallel
+from src.scrapers.jobspy_enhanced_scraper import JobSpyEnhancedScraper
 
 # Initialize with profile
-scraper = JobSpyImprovedScraper("Nirajan")
+scraper = JobSpyEnhancedScraper("TestProfile")
 
-# Run with preset configuration
-jobs = await scraper.scrape_with_preset("quality")
+# Run USA comprehensive search across all 4 sites
+jobs = await scraper.scrape_with_preset("usa_comprehensive")
 
-# Custom configuration
-custom_config = JobSpyConfig(
-    locations=["Toronto, ON", "Mississauga, ON"],
-    search_terms=["python developer", "software engineer"],
-    sites=["indeed", "linkedin"],
-    results_per_search=50
+# Custom multi-site configuration
+from src.config.jobspy_integration_config import JobSpyConfig
+
+config = JobSpyConfig(
+    locations=["New York, NY", "San Francisco, CA", "Toronto, ON"],
+    search_terms=["python developer", "software engineer", "data scientist"],
+    sites=["indeed", "linkedin", "glassdoor", "zip_recruiter"],  # All 4 sites
+    results_per_search=100,
+    country_code="USA"  # or "Canada"
 )
-jobs = await scraper.scrape_jobs(custom_config)
+jobs = await scraper.scrape_jobs(config)
 ```
 
-#### **2. Multi-Site Worker Development**
+#### **2. AI Integration Development**
 
 ```python
-# Multi-site worker coordination
-from src.scrapers.multi_site_jobspy_workers import MultiSiteJobSpyWorkers
+# AI-powered job analysis
+from src.services.ai_integration_service import AIIntegrationService
 
-# Initialize workers
-workers = MultiSiteJobSpyWorkers(config)
+# Initialize AI service
+ai_service = AIIntegrationService("TestProfile")
 
-# Run parallel site workers
-result = await workers.run_all_workers()
+# Analyze job compatibility
+score = await ai_service.analyze_job_compatibility(job_data, user_profile)
 
-# Access individual site results
-indeed_jobs = result.worker_results[0].jobs_data
-linkedin_jobs = result.worker_results[1].jobs_data
+# Smart deduplication
+from src.services.smart_deduplication_service import SmartDeduplicationService
+dedup_service = SmartDeduplicationService()
+unique_jobs = await dedup_service.remove_duplicates(jobs_list)
+
+# Location intelligence
+from src.services.location_detection_service import LocationDetectionService
+location_service = LocationDetectionService()
+location_data = await location_service.analyze_location(job_location)
 ```
 
-#### **3. Eluta Scraper Development**
+#### **3. Dashboard Development**
 
 ```python
-# Eluta scraper for fallback/supplementary use
-from src.scrapers.unified_eluta_scraper import ElutaScraper
+# FastAPI backend development
+# dashboard/backend/app/main.py
+from fastapi import FastAPI, Depends
+from app.routers import jobs, analytics, profiles
 
-# Initialize scraper
-scraper = ElutaScraper("Nirajan", {"jobs": 20, "pages": 3})
+app = FastAPI(title="JobLens API", version="2.0.0")
+app.include_router(jobs.router, prefix="/api/jobs")
+app.include_router(analytics.router, prefix="/api/analytics")
 
-# Run scraping
-jobs = await scraper.scrape_all_keywords()
+# React frontend development
+# dashboard/frontend/src/components/JobCard.tsx
+import { Job } from '../types/Job';
+import { FitScoreIndicator } from './FitScoreIndicator';
 
-# Access statistics
-print(f"Jobs found: {scraper.stats['jobs_found']}")
-print(f"Success rate: {scraper.stats['success_rate']}")
+export const JobCard: React.FC<{ job: Job }> = ({ job }) => {
+  return (
+    <div className="job-card">
+      <h3>{job.title}</h3>
+      <FitScoreIndicator score={job.fit_score} />
+    </div>
+  );
+};
 ```
 
-#### **4. Improved Pipeline Development**
+#### **4. Testing Development**
 
 ```python
-# 3-phase Improved pipeline with dual scrapers
-from src.pipeline.Improved_fast_job_pipeline import ImprovedFastJobPipeline
+# Unit testing with pytest
+import pytest
+from src.scrapers.jobspy_enhanced_scraper import JobSpyEnhancedScraper
 
-# Initialize pipeline
-pipeline = ImprovedFastJobPipeline("Nirajan", {
-    "enable_jobspy": True,
-    "enable_eluta": True,
-    "jobspy_preset": "quality",
-    "external_workers": 6,
-    "processing_method": "auto"
-})
+@pytest.mark.asyncio
+async def test_jobspy_scraper():
+    scraper = JobSpyEnhancedScraper("TestProfile")
+    jobs = await scraper.scrape_with_preset("usa_comprehensive")
+    assert len(jobs) > 0
+    assert all(job.get('title') for job in jobs)
 
-# Run complete pipeline
-results = await pipeline.run_complete_pipeline()
+# Integration testing
+def test_pipeline_integration():
+    from src.pipeline.fast_job_pipeline import FastJobPipeline
+    pipeline = FastJobPipeline("TestProfile")
+    result = pipeline.run_complete_pipeline()
+    assert result["status"] == "success"
 
-# Access phase results
-jobspy_jobs = results["phase1_jobspy"]
-eluta_jobs = results["phase1_eluta"] 
-Improved_jobs = results["phase2_external"]
-processed_jobs = results["phase3_ai"]
+# Performance testing
+def test_multi_site_performance():
+    import time
+    start_time = time.time()
+    # Run multi-site scraper
+    duration = time.time() - start_time
+    assert duration < 300  # Should complete within 5 minutes
 ```
 
-#### **5. Configuration Development**
+#### **5. CLI Development**
 
 ```python
-# JobSpy configuration presets
-from src.config.jobspy_integration_config import JOBSPY_CONFIG_PRESETS
+# Main CLI entry point (main.py)
+import click
+from src.core.user_profile_manager import UserProfileManager
 
-# Access preset configurations
-fast_config = JOBSPY_CONFIG_PRESETS["fast"]
-quality_config = JOBSPY_CONFIG_PRESETS["quality"]
-comprehensive_config = JOBSPY_CONFIG_PRESETS["comprehensive"]
-
-# Create custom preset
-custom_preset = {
-    "locations": ["Your Target Areas"],
-    "search_terms": ["Your Keywords"],
-    "sites": ["indeed", "linkedin"],
-    "max_jobs": 100,
-    "hours_old": 168
-}
+@click.command()
+@click.argument('profile_name')
+@click.option('--action', required=True, help='Action to perform')
+@click.option('--sites', default='indeed,linkedin,glassdoor,zip_recruiter')
+def main(profile_name, action, sites):
+    """JobLens - AI-Powered Job Discovery Platform"""
+    
+    # Modern CLI commands
+    if action == "jobspy-pipeline":
+        # Multi-site parallel scraping
+        run_jobspy_pipeline(profile_name, sites.split(','))
+    elif action == "analyze-jobs":
+        # AI-powered analysis
+        run_job_analysis(profile_name)
+    elif action == "dashboard":
+        # Launch modern dashboard
+        launch_dashboard(profile_name)
 ```
-#### **4. External Job Description Enhancement**
+
+---
+
+## 🧪 Testing Guide
+
+### **Running Tests**
+
+```bash
+# Run all tests
+conda run -n auto_job python -m pytest
+
+# Run specific test categories
+pytest tests/unit/ -v                    # Unit tests
+pytest tests/integration/ -v             # Integration tests
+pytest tests/scrapers/ -v                # Scraper tests
+
+# Run with coverage
+pytest --cov=src tests/ --cov-report=html
+
+# VS Code integration
+# Use task: "Run all tests (pytest)"
+```
+
+```
+
+### **Test Categories**
 
 ```python
-# External job description scraper for Improved content
-from src.scrapers.external_job_scraper import ExternalJobDescriptionScraper
+# Performance tests
+@pytest.mark.performance
+def test_scraper_performance():
+    """Test scraper performance metrics"""
+    pass
 
-# Initialize external scraper with workers
-external_scraper = ExternalJobDescriptionScraper(
-    profile_name="Nirajan",
-    max_workers=6
-)
+# Integration tests  
+@pytest.mark.integration
+def test_pipeline_integration():
+    """Test full pipeline integration"""
+    pass
 
-# Enhance job descriptions from URLs
-job_urls = ["https://company.com/job1", "https://company.com/job2"]
-Improved_jobs = await external_scraper.scrape_job_descriptions(job_urls)
-
-# Access Improved content
-for job in Improved_jobs:
-    print(f"Title: {job['title']}")
-    print(f"Description: {job['description']}")
-    print(f"Requirements: {job['requirements']}")
+# API tests
+@pytest.mark.api
+def test_dashboard_api():
+    """Test dashboard API endpoints"""
+    pass
 ```
+
+---
+
+## 📊 Performance Monitoring
+
+### **Metrics & Analytics**
+
+```python
+# Performance tracking
+from src.services.job_analytics_service import JobAnalyticsService
+
+analytics = JobAnalyticsService("TestProfile")
+
+# Track scraping performance
+metrics = analytics.get_scraping_metrics()
+print(f"Jobs per minute: {metrics['jobs_per_minute']}")
+print(f"Success rate: {metrics['success_rate']}%")
+
+# Monitor AI processing
+ai_metrics = analytics.get_ai_processing_metrics()
+print(f"Analysis speed: {ai_metrics['analyses_per_second']}")
+```
+
+### **System Health Checks**
+
+```bash
+# Health check scripts
+python scripts/production_health_check.ps1
+
+# Database integrity
+python check_db.py
+
+# Performance audit
+python scripts/maintenance/performance_audit.py
+```
+
+---
+
+## 🚀 Deployment Guide
+
+### **Production Setup**
+
+```bash
+# Production environment
+conda create -n auto_job_prod python=3.11
+conda activate auto_job_prod
+pip install -r requirements.txt
+
+# Configure production settings
+export JOBSPY_RATE_LIMIT=30
+export AI_BATCH_SIZE=50
+export DASHBOARD_HOST=0.0.0.0
+export DASHBOARD_PORT=8000
+
+# Launch production dashboard
+uvicorn dashboard.backend.app.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+### **Docker Deployment**
+
+```bash
+# Build and run with Docker
+docker-compose -f docker-compose.yml up -d
+
+# Scale services
+docker-compose up --scale scraper-worker=4 --scale ai-processor=2
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### **Common Issues**
+
+1. **JobSpy Installation Issues**
+   ```bash
+   pip uninstall python-jobspy
+   pip install python-jobspy --no-cache-dir
+   ```
+
+2. **Playwright Browser Issues** 
+   ```bash
+   playwright install chromium --force
+   ```
+
+3. **Dashboard Connection Issues**
+   ```bash
+   # Check ports
+   netstat -tulpn | grep :8000
+   
+   # Restart services
+   pkill -f uvicorn
+   conda run -n auto_job uvicorn dashboard.backend.app.main:app --reload
+   ```
+
+---
+
+## 🤝 Contributing Guidelines
+
+### **Code Standards**
+
+- **Python 3.11+** with type hints
+- **Black** for code formatting
+- **Pylint** for code analysis  
+- **Pytest** for testing
+- **Async/await** for I/O operations
+
+### **Pull Request Process**
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Write tests for new functionality
+4. Ensure all tests pass: `pytest tests/ -v`
+5. Submit pull request with clear description
+
+---
+
+*Last Updated: 2025-01-23 | JobLens v2.0.0*

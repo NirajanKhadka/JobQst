@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unit tests for web scraping functionality.
+Unit tests for scraper functionality.
 Tests scraper components following TESTING_STANDARDS.md
 """
 
@@ -13,9 +13,9 @@ from typing import Dict, List, Any
 from tests.test_helpers import test_data_loader
 
 
-# Mock ModernJobPipeline to avoid complex dependencies
-class MockModernJobPipeline:
-    """Mock pipeline for testing scraping functionality."""
+# Mock scraper to test scraping functionality
+class MockJobScraper:
+    """Mock scraper for testing scraping functionality."""
     
     def __init__(self, profile: Dict[str, Any] = None, config: Dict[str, Any] = None):
         self.profile = profile or {}
@@ -124,24 +124,24 @@ class MockModernJobPipeline:
 
 
 # Use mock for all tests  
-ModernJobPipeline = MockModernJobPipeline
+JobScraper = MockJobScraper
 
 
 @pytest.mark.unit
-class TestModernJobPipeline:
-    """Test modern job pipeline functionality."""
+class TestJobScraper:
+    """Test job scraper functionality."""
     
-    def test_pipeline_initialization(self):
-        """Test that pipeline initializes correctly."""
-        pipeline = ModernJobPipeline()
+    def test_scraper_initialization(self):
+        """Test that scraper initializes correctly."""
+        scraper = JobScraper()
         
-        assert hasattr(pipeline, 'browser')
-        assert hasattr(pipeline, 'stats')
-        assert pipeline.stats['jobs_processed'] == 0
+        assert hasattr(scraper, 'browser')
+        assert hasattr(scraper, 'stats')
+        assert scraper.stats['jobs_processed'] == 0
     
     @pytest.mark.asyncio
-    @patch('src.scrapers.modern_job_pipeline.async_playwright')
-    async def test_pipeline_browser_setup(self, mock_playwright):
+    @patch('src.scrapers.modern_job_scraper.async_playwright')
+    async def test_scraper_browser_setup(self, mock_playwright):
         """Test browser setup and configuration."""
         # Mock playwright
         mock_browser = Mock()
@@ -152,14 +152,14 @@ class TestModernJobPipeline:
         mock_browser.new_context.return_value = mock_context
         mock_context.new_page.return_value = mock_page
         
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         # Test browser initialization would work
-        assert pipeline is not None
+        assert scraper is not None
     
     def test_job_data_validation(self):
         """Test job data structure validation."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         valid_job = {
             "title": "Python Developer",
@@ -174,14 +174,14 @@ class TestModernJobPipeline:
         }
         
         # Valid job should pass validation
-        assert pipeline._validate_job_data(valid_job) is True
+        assert scraper._validate_job_data(valid_job) is True
         
         # Invalid job should fail validation  
-        assert pipeline._validate_job_data(invalid_job) is False
+        assert scraper._validate_job_data(invalid_job) is False
     
     def test_duplicate_job_detection(self):
         """Test duplicate job detection logic."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         job1 = {
             "title": "Python Developer",
@@ -198,13 +198,13 @@ class TestModernJobPipeline:
         }
         
         # First job should not be duplicate
-        assert pipeline._is_duplicate_job(job1, []) is False
+        assert scraper._is_duplicate_job(job1, []) is False
         
         # Same job should be duplicate
-        assert pipeline._is_duplicate_job(job2, [job1]) is True
+        assert scraper._is_duplicate_job(job2, [job1]) is True
         
         # Different URL should not be duplicate
-        assert pipeline._is_duplicate_job(job3, [job1]) is False
+        assert scraper._is_duplicate_job(job3, [job1]) is False
 
 
 @pytest.mark.unit
@@ -213,7 +213,7 @@ class TestScrapingUtilities:
     
     def test_extract_job_title_from_html(self):
         """Test job title extraction from HTML."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         html_content = """
         <div class="job-title">Senior Python Developer</div>
@@ -224,15 +224,15 @@ class TestScrapingUtilities:
         mock_element = Mock()
         mock_element.text_content.return_value = "Senior Python Developer"
         
-        with patch.object(pipeline, '_extract_text_by_selector') as mock_extract:
+        with patch.object(scraper, '_extract_text_by_selector') as mock_extract:
             mock_extract.return_value = "Senior Python Developer"
             
-            title = pipeline._extract_job_title(html_content)
+            title = scraper._extract_job_title(html_content)
             assert title == "Senior Python Developer"
     
     def test_extract_company_name_from_html(self):
         """Test company name extraction from HTML."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         test_cases = [
             ('<span class="company">TechCorp Inc.</span>', "TechCorp Inc."),
@@ -241,15 +241,15 @@ class TestScrapingUtilities:
         ]
         
         for html_content, expected_company in test_cases:
-            with patch.object(pipeline, '_extract_text_by_selector') as mock_extract:
+            with patch.object(scraper, '_extract_text_by_selector') as mock_extract:
                 mock_extract.return_value = expected_company
                 
-                company = pipeline._extract_company_name(html_content)
+                company = scraper._extract_company_name(html_content)
                 assert company == expected_company
     
     def test_extract_location_from_html(self):
         """Test location extraction from HTML."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         location_variations = [
             "Toronto, ON",
@@ -260,15 +260,15 @@ class TestScrapingUtilities:
         ]
         
         for location in location_variations:
-            with patch.object(pipeline, '_extract_text_by_selector') as mock_extract:
+            with patch.object(scraper, '_extract_text_by_selector') as mock_extract:
                 mock_extract.return_value = location
                 
-                extracted_location = pipeline._extract_location(f'<span class="location">{location}</span>')
+                extracted_location = scraper._extract_location(f'<span class="location">{location}</span>')
                 assert extracted_location == location
     
     def test_clean_job_description_text(self):
         """Test job description cleaning and normalization."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         messy_description = """
         
@@ -283,7 +283,7 @@ class TestScrapingUtilities:
         
         """
         
-        cleaned = pipeline._clean_description(messy_description)
+        cleaned = scraper._clean_description(messy_description)
         
         # Should remove extra whitespace and normalize
         assert "Python developer" in cleaned
@@ -298,32 +298,32 @@ class TestScrapingErrorHandling:
     
     def test_network_timeout_handling(self):
         """Test handling of network timeouts."""
-        pipeline = MockModernJobPipeline()
+        scraper = MockJobScraper()
         
-        with patch.object(pipeline, '_make_request') as mock_request:
+        with patch.object(scraper, '_make_request') as mock_request:
             mock_request.side_effect = TimeoutError("Network timeout")
             
-            result = pipeline._safe_scrape_page("https://test.com")
+            result = scraper._safe_scrape_page("https://test.com")
             
             # Should handle timeout gracefully
             assert result is None or result == []
     
     def test_invalid_html_handling(self):
         """Test handling of malformed HTML."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         malformed_html = "<div><span>Unclosed tags<div><p>Bad HTML"
         
         # Should not crash on malformed HTML
         try:
-            jobs = pipeline._extract_jobs_from_html(malformed_html)
+            jobs = scraper._extract_jobs_from_html(malformed_html)
             assert isinstance(jobs, list)
         except Exception as e:
             pytest.fail(f"Should handle malformed HTML gracefully, but got: {e}")
     
     def test_missing_job_elements_handling(self):
         """Test handling when job elements are missing."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         incomplete_html = """
         <div class="job">
@@ -332,7 +332,7 @@ class TestScrapingErrorHandling:
         </div>
         """
         
-        jobs = pipeline._extract_jobs_from_html(incomplete_html)
+        jobs = scraper._extract_jobs_from_html(incomplete_html)
         
         # Should either skip incomplete jobs or fill with defaults
         if jobs:
@@ -342,18 +342,18 @@ class TestScrapingErrorHandling:
     
     def test_scraping_rate_limiting(self):
         """Test that scraping respects rate limits."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         import time
         start_time = time.time()
         
         # Simulate multiple requests
-        with patch.object(pipeline, '_make_request') as mock_request:
+        with patch.object(scraper, '_make_request') as mock_request:
             mock_request.return_value = "<html></html>"
             
             # Make several requests
             for i in range(3):
-                pipeline._safe_scrape_page(f"https://test.com/page/{i}")
+                scraper._safe_scrape_page(f"https://test.com/page/{i}")
         
         elapsed = time.time() - start_time
         
@@ -368,7 +368,7 @@ class TestScrapingPerformance:
     
     def test_single_page_scraping_performance(self, performance_timer):
         """Test single page scraping performance."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         # Mock a page with multiple jobs
         mock_html = """
@@ -382,16 +382,16 @@ class TestScrapingPerformance:
         """ * 10  # 10 jobs
         
         with performance_timer:
-            with patch.object(pipeline, '_make_request') as mock_request:
+            with patch.object(scraper, '_make_request') as mock_request:
                 mock_request.return_value = mock_html
-                jobs = pipeline._safe_scrape_page("https://test.com")
+                jobs = scraper._safe_scrape_page("https://test.com")
         
         # Should complete quickly (< 1 second)
         assert performance_timer.elapsed < 1.0, f"Single page scraping took {performance_timer.elapsed:.3f}s"
     
     def test_job_processing_throughput(self, performance_timer):
         """Test job processing throughput."""
-        pipeline = ModernJobPipeline()
+        scraper = JobScraper()
         
         # Create mock job data
         mock_jobs_data = []
@@ -409,13 +409,13 @@ class TestScrapingPerformance:
         with performance_timer:
             processed_jobs = []
             for job_html in mock_jobs_data:
-                with patch.object(pipeline, '_extract_job_from_element') as mock_extract:
+                with patch.object(scraper, '_extract_job_from_element') as mock_extract:
                     mock_extract.return_value = {
                         "title": f"Job {len(processed_jobs)}",
                         "company": f"Company {len(processed_jobs)}",
                         "location": "Toronto, ON"
                     }
-                    job = pipeline._extract_job_from_element(job_html)
+                    job = scraper._extract_job_from_element(job_html)
                     if job:
                         processed_jobs.append(job)
         

@@ -50,11 +50,12 @@ class MultiSiteResult:
 class SiteWorker:
     """Base class for site-specific workers"""
     
-    def __init__(self, site: str, max_jobs_per_location: int = 20, per_site_concurrency: int = 3, rate_limit_delay: float = 0.1):
+    def __init__(self, site: str, max_jobs_per_location: int = 20, per_site_concurrency: int = 3, rate_limit_delay: float = 0.1, country: str = 'usa'):
         self.site = site
         self.max_jobs_per_location = max_jobs_per_location
         self.per_site_concurrency = max(1, int(per_site_concurrency))
         self.rate_limit_delay = max(0.0, float(rate_limit_delay))
+        self.country = country.lower()
         self.logger = logging.getLogger(f"SiteWorker.{site}")
     
     async def search_jobs(self, locations: List[str], search_terms: List[str], per_site_concurrency: Optional[int] = None, max_total_jobs: Optional[int] = None) -> WorkerResult:
@@ -83,6 +84,9 @@ class SiteWorker:
             
             loop = asyncio.get_event_loop()
             
+            def _scrape(term: str, location: str) -> Optional[pd.DataFrame]:
+                return self._scrape_jobs_sync(term, location)
+            
             async def _schedule_next(it, executor, pending, meta_map):
                 try:
                     term, location = next(it)
@@ -91,8 +95,8 @@ class SiteWorker:
                 # Respect gentle pacing between submissions
                 if self.rate_limit_delay:
                     await asyncio.sleep(self.rate_limit_delay)
-                future = executor.submit(self._scrape_jobs_sync, term, location)
-                t = asyncio.wrap_future(future)
+                task = loop.run_in_executor(executor, _scrape, term, location)
+                t = asyncio.create_task(task)
                 pending.add(t)
                 meta_map[t] = (term, location)
                 return True
@@ -210,7 +214,7 @@ class SiteWorker:
                 site_name=[self.site],  # Only this site
                 results_wanted=self.max_jobs_per_location,
                 hours_old=336,  # 14 days
-                country_indeed='Canada',
+                country_indeed=self.country,  # Dynamic country support
                 hyperlinks=True,
                 description_format='markdown'  # Changed from 'text' to 'markdown'
             )
@@ -221,18 +225,20 @@ class SiteWorker:
 class MultiSiteJobSpyWorkers:
     """Orchestrates multiple site workers for optimal performance"""
     
-    def __init__(self, profile_name: str = "default", max_jobs_per_site_location: int = 20, per_site_concurrency: int = 3):
+    def __init__(self, profile_name: str = "default", max_jobs_per_site_location: int = 20, per_site_concurrency: int = 3, country: str = 'usa'):
         self.profile_name = profile_name
         self.max_jobs_per_site_location = max_jobs_per_site_location
         self.per_site_concurrency = max(1, int(per_site_concurrency))
+        self.country = country.lower()
         self.db = ModernJobDatabase(profile_name)
         self.logger = logging.getLogger("MultiSiteJobSpyWorkers")
         
         # Create site-specific workers
         self.workers = {
-            'indeed': SiteWorker('indeed', max_jobs_per_site_location, per_site_concurrency=self.per_site_concurrency),
-            'linkedin': SiteWorker('linkedin', max_jobs_per_site_location, per_site_concurrency=self.per_site_concurrency),
-            'glassdoor': SiteWorker('glassdoor', max_jobs_per_site_location, per_site_concurrency=self.per_site_concurrency)
+            'indeed': SiteWorker('indeed', max_jobs_per_site_location, per_site_concurrency=self.per_site_concurrency, country=self.country),
+            'linkedin': SiteWorker('linkedin', max_jobs_per_site_location, per_site_concurrency=self.per_site_concurrency, country=self.country),
+            'glassdoor': SiteWorker('glassdoor', max_jobs_per_site_location, per_site_concurrency=self.per_site_concurrency, country=self.country),
+            'zip_recruiter': SiteWorker('zip_recruiter', max_jobs_per_site_location, per_site_concurrency=self.per_site_concurrency, country=self.country)
         }
     
     async def run_comprehensive_search(
@@ -257,7 +263,7 @@ class MultiSiteJobSpyWorkers:
         
         # Default to all sites if none specified
         if sites is None:
-            sites = ['indeed', 'linkedin', 'glassdoor']
+            sites = ['indeed', 'linkedin', 'glassdoor', 'zip_recruiter']
         
         self.logger.info("🚀 Starting Multi-Site JobSpy Workers")
         self.logger.info(f"📍 Locations: {len(locations)} ({location_set})")
@@ -304,34 +310,19 @@ class MultiSiteJobSpyWorkers:
         combined_df = pd.DataFrame()
         if all_jobs_data:
             combined_df = pd.concat(all_jobs_data, ignore_index=True)
-            # Improved deduplication across all sites
+            # Final deduplication across all sites
             initial_count = len(combined_df)
-            
-            # Step 1: Remove duplicates by URL (if available)
             if 'job_url' in combined_df.columns:
-                # Remove rows with non-null URLs that are duplicates
-                url_mask = combined_df['job_url'].notna() & (combined_df['job_url'] != '')
-                url_dupes_removed = combined_df[url_mask].drop_duplicates(subset=['job_url'], keep='first')
-                no_url_jobs = combined_df[~url_mask]
-                combined_df = pd.concat([url_dupes_removed, no_url_jobs], ignore_index=True)
-            
-            # Step 2: Remove duplicates by title + company combination
-            if 'title' in combined_df.columns and 'company' in combined_df.columns:
-                # Create a normalized title+company key for deduplication
-                combined_df['_dedup_key'] = (
-                    combined_df['title'].astype(str).str.lower().str.strip() + 
-                    '|' + 
-                    combined_df['company'].astype(str).str.lower().str.strip()
-                )
-                combined_df = combined_df.drop_duplicates(subset=['_dedup_key'], keep='first')
-                combined_df = combined_df.drop(columns=['_dedup_key'])  # Remove helper column
-            
+                combined_df = combined_df.drop_duplicates(subset=['job_url'], keep='first')
             final_count = len(combined_df)
             
-            self.logger.info(f"🔄 Improved deduplication: {initial_count} → {final_count} jobs")
-            if initial_count > final_count:
-                removed = initial_count - final_count
-                self.logger.info(f"   Removed {removed} duplicates ({removed/initial_count:.1%})")
+            self.logger.info(f"🔄 Cross-site deduplication: {initial_count} → {final_count} jobs")
+            
+            # Auto-save to database using batch processing
+            if not combined_df.empty:
+                self.logger.info("💾 Auto-saving jobs to database...")
+                saved_count = self.save_jobs_to_database(combined_df)
+                self.logger.info(f"✅ Auto-saved {saved_count} new jobs to database")
         
         total_time = time.time() - start_time
         success_rate = len(successful_results) / len(sites) if sites else 0
@@ -440,53 +431,60 @@ class MultiSiteJobSpyWorkers:
         return jobs_df
     
     def save_jobs_to_database(self, jobs_df: pd.DataFrame) -> int:
-        """Save jobs to database with proper error handling"""
+        """Save jobs to database using optimized batch insert"""
         
         if jobs_df.empty:
             self.logger.warning("No jobs to save to database")
             return 0
         
         try:
-            saved_count = 0
+            # Convert DataFrame to list of job dictionaries
+            jobs_data = []
             
             for _, job in jobs_df.iterrows():
-                try:
-                    # Convert job data to the format expected by the database
-                    job_data = {
-                        'title': job.get('title', ''),
-                        'company': job.get('company', ''),
-                        'location': job.get('location', ''),
-                        'url': job.get('job_url', ''),
-                        'description': job.get('description', job.get('description_fetched', '')),
-                        'site': job.get('source_site', 'jobspy'),
-                        'date_posted': job.get('date_posted', ''),
-                        'salary': job.get('compensation', ''),
-                    }
-                    
-                    # Check if job already exists
-                    existing_job = self.db.get_job_by_url(job_data['url'])
-                    if existing_job:
-                        # Update metadata
-                        self.db.update_job_metadata(existing_job[0], {
-                            'last_seen': datetime.now().isoformat(),
-                            'source_site': job_data['site'],
-                            'search_term': job.get('search_term', ''),
-                            'search_location': job.get('search_location', '')
-                        })
-                    else:
-                        # Save new job
-                        self.db.save_job(job_data)
-                        saved_count += 1
-                        
-                except Exception as e:
-                    self.logger.warning(f"Failed to save job {job.get('title', 'Unknown')}: {e}")
-                    continue
+                job_data = {
+                    'title': job.get('title', ''),
+                    'company': job.get('company', ''),
+                    'location': job.get('location', ''),
+                    'url': job.get('job_url', ''),
+                    'job_description': job.get('description', job.get('description_fetched', '')),
+                    'site': job.get('source_site', 'jobspy'),
+                    'scraped_at': job.get('date_posted', datetime.now().isoformat()),
+                    'salary_range': job.get('compensation', ''),
+                    'search_keyword': job.get('search_term', ''),
+                    'raw_data': job.to_dict(),  # Store full job data as JSON
+                    'job_type': job.get('job_type', ''),
+                    'remote_option': str(job.get('is_remote', False)),
+                    'status': 'new'  # Set initial status for processing pipeline
+                }
+                jobs_data.append(job_data)
             
-            self.logger.info(f"💾 Saved {saved_count} new jobs to database")
-            return saved_count
+            # Use batch insert for much better performance
+            batch_result = self.db.add_jobs_batch(
+                jobs_data, 
+                batch_size=100,  # Process in chunks of 100
+                skip_duplicates=True,
+                default_status='new'
+            )
+            
+            # Log detailed results
+            self.logger.info(f"💾 Batch save completed:")
+            self.logger.info(f"   📊 Total processed: {batch_result.total_processed}")
+            self.logger.info(f"   ✅ Inserted: {batch_result.inserted_count}")
+            self.logger.info(f"   ⏭️ Skipped duplicates: {batch_result.skipped_duplicates}")
+            self.logger.info(f"   ❌ Failed: {batch_result.failed_count}")
+            self.logger.info(f"   ⚡ Time: {batch_result.processing_time:.2f}s")
+            self.logger.info(f"   🆔 Batch ID: {batch_result.batch_id}")
+            
+            if batch_result.errors:
+                self.logger.warning(f"Batch errors: {len(batch_result.errors)} issues")
+                for error in batch_result.errors[:3]:  # Show first 3 errors
+                    self.logger.debug(f"   Error: {error}")
+            
+            return batch_result.inserted_count
             
         except Exception as e:
-            self.logger.error(f"❌ Database save failed: {e}")
+            self.logger.error(f"❌ Database batch save failed: {e}")
             return 0
 
 # Convenience function for easy usage
@@ -497,7 +495,8 @@ async def run_multi_site_search(
     sites: Optional[List[str]] = None,
     max_jobs_per_site_location: int = 20,
     per_site_concurrency: int = 3,
-    max_total_jobs: Optional[int] = None
+    max_total_jobs: Optional[int] = None,
+    country: str = 'usa'
 ) -> MultiSiteResult:
     """
     Run comprehensive multi-site job search
@@ -510,215 +509,14 @@ async def run_multi_site_search(
         max_jobs_per_site_location: Max jobs per site per location
         per_site_concurrency: Concurrent scrape calls per site
         max_total_jobs: Early-stop threshold per site
+        country: Country for job search (usa, canada, etc.)
     
     Returns:
         MultiSiteResult with comprehensive job data
     """
     
-    workers = MultiSiteJobSpyWorkers(profile_name, max_jobs_per_site_location, per_site_concurrency)
+    workers = MultiSiteJobSpyWorkers(profile_name, max_jobs_per_site_location, per_site_concurrency, country)
     return await workers.run_comprehensive_search(location_set, query_preset, sites, per_site_concurrency=per_site_concurrency, max_total_jobs=max_total_jobs)
 
-class JobSpyController:
-    """Controller for managing JobSpy worker operations and testing"""
-    
-    def __init__(self, profile_name: str = "Nirajan"):
-        self.profile_name = profile_name
-        self.logger = logging.getLogger("JobSpyController")
-    
-    async def test_configuration(
-        self,
-        target_jobs: int = 50,
-        keywords: List[str] = None,
-        sites: List[str] = None,
-        location_set: str = "toronto_extended",
-        per_site_concurrency: int = 3,
-        jobs_per_keyword: int = 10
-    ):
-        """
-        Test JobSpy with specific configuration
-        
-        Args:
-            target_jobs: Target number of jobs to find
-            keywords: List of search keywords 
-            sites: List of sites to search
-            location_set: Location set from config
-            per_site_concurrency: Concurrent requests per site
-            jobs_per_keyword: Jobs to find per keyword
-        """
-        
-        # Set defaults
-        if keywords is None:
-            keywords = ["Python Developer", "Data Analyst", "Machine Learning Engineer", "SQL Developer", "Business Analyst"]
-        if sites is None:
-            # Use 5 different sites by default
-            sites = ["indeed", "linkedin", "glassdoor", "zip_recruiter", "google"]
-        
-        # Add test keywords to config temporarily
-        from src.config.jobspy_integration_config import JOBSPY_QUERY_PRESETS
-        test_preset_name = f"test_{len(keywords)}_keywords"
-        JOBSPY_QUERY_PRESETS[test_preset_name] = keywords
-        
-        # Calculate limits - with 5 sites, target fewer jobs per site
-        max_total_per_site = max(10, target_jobs // len(sites))
-        
-        print("🧪 JobSpy Test Configuration")
-        print("=" * 50)
-        print(f"📊 Target jobs: {target_jobs}")
-        print(f"🎯 Keywords ({len(keywords)}): {', '.join(keywords)}")
-        print(f"🌐 Sites ({len(sites)}): {', '.join(sites)}")
-        print(f"📍 Location set: {location_set}")
-        print(f"⚙️ Per-site concurrency: {per_site_concurrency}")
-        print(f"📈 Jobs per keyword: {jobs_per_keyword}")
-        print(f"🔢 Max per site: {max_total_per_site}")
-        
-        start_time = time.time()
-        
-        try:
-            result = await run_multi_site_search(
-                profile_name=self.profile_name,
-                location_set=location_set,
-                query_preset=test_preset_name,
-                sites=sites,
-                max_jobs_per_site_location=jobs_per_keyword,
-                per_site_concurrency=per_site_concurrency,
-                max_total_jobs=max_total_per_site
-            )
-            
-            total_time = time.time() - start_time
-            
-            # Display results
-            self._display_test_results(result, target_jobs, keywords, sites, total_time)
-            
-            return result
-            
-        except Exception as e:
-            self.logger.error(f"Test failed: {e}")
-            print(f"❌ Test failed: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
-        finally:
-            # Clean up test preset
-            if test_preset_name in JOBSPY_QUERY_PRESETS:
-                del JOBSPY_QUERY_PRESETS[test_preset_name]
-    
-    def _display_test_results(self, result, target_jobs: int, keywords: List[str], sites: List[str], total_time: float):
-        """Display comprehensive test results"""
-        
-        print("\n" + "=" * 70)
-        print("🎉 TEST RESULTS")
-        print("=" * 70)
-        
-        print(f"📊 Total unique jobs found: {result.total_jobs}")
-        print(f"🎯 Target vs Actual: {target_jobs} → {result.total_jobs}")
-        print(f"⏱️  Total time: {total_time:.1f}s")
-        print(f"🚀 Speed: {result.total_jobs/total_time:.1f} jobs/sec")
-        print(f"✅ Success rate: {result.success_rate:.1%}")
-        
-        # Site breakdown
-        print(f"\n🌐 Site breakdown:")
-        for worker_result in result.worker_results:
-            efficiency = worker_result.jobs_found / worker_result.processing_time if worker_result.processing_time > 0 else 0
-            print(f"   {worker_result.site.upper()}: {worker_result.jobs_found} jobs in {worker_result.processing_time:.1f}s ({efficiency:.1f} jobs/sec)")
-        
-        # Sample jobs
-        if not result.combined_data.empty:
-            print(f"\n📋 Sample jobs found:")
-            sample_size = min(5, len(result.combined_data))
-            for i, (_, job) in enumerate(result.combined_data.head(sample_size).iterrows()):
-                print(f"   {i+1}. {job.get('title', 'N/A')} at {job.get('company', 'N/A')} ({job.get('source_site', 'N/A')})")
-        
-        # Keyword distribution
-        if 'search_term' in result.combined_data.columns:
-            print(f"\n🎯 Jobs per keyword:")
-            keyword_counts = result.combined_data['search_term'].value_counts()
-            for keyword, count in keyword_counts.items():
-                print(f"   {keyword}: {count} jobs")
-        
-        # Site distribution  
-        if 'source_site' in result.combined_data.columns:
-            print(f"\n🌐 Jobs per site:")
-            site_counts = result.combined_data['source_site'].value_counts()
-            for site, count in site_counts.items():
-                print(f"   {site.upper()}: {count} jobs")
-        
-        # Performance assessment
-        print(f"\n📈 Performance Assessment:")
-        if result.total_jobs >= target_jobs * 0.8:
-            print("🟢 EXCELLENT: Met or exceeded target")
-        elif result.total_jobs >= target_jobs * 0.6:
-            print("🟡 GOOD: Close to target")
-        elif result.total_jobs >= target_jobs * 0.4:
-            print("🟠 FAIR: Below target but reasonable")
-        else:
-            print("🔴 POOR: Well below target")
-
-
-def get_jobspy_controller(profile_name: str = "Nirajan") -> JobSpyController:
-    """Get a JobSpy controller instance"""
-    return JobSpyController(profile_name)
-
-
-if __name__ == "__main__":
-    import sys
-    
-    # Parse command line arguments for testing
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "test":
-            # Test mode with parameters
-            async def test_mode():
-                controller = JobSpyController("Nirajan")
-                
-                # Parse test parameters
-                target_jobs = int(sys.argv[2]) if len(sys.argv) > 2 else 50
-                keywords = sys.argv[3].split(",") if len(sys.argv) > 3 else None
-                sites = sys.argv[4].split(",") if len(sys.argv) > 4 else None
-                
-                await controller.test_configuration(
-                    target_jobs=target_jobs,
-                    keywords=keywords,
-                    sites=sites
-                )
-            
-            asyncio.run(test_mode())
-        
-        elif sys.argv[1] == "demo":
-            # Demo with different configurations
-            async def demo_mode():
-                controller = JobSpyController("Nirajan")
-                
-                print("🎯 Demo 1: 50 jobs, 5 keywords, 2 sites")
-                await controller.test_configuration(
-                    target_jobs=50,
-                    keywords=["Python Developer", "Data Analyst", "Machine Learning Engineer", "SQL Developer", "Business Analyst"],
-                    sites=["indeed", "linkedin"]
-                )
-                
-                print("\n" + "="*50 + "\n")
-                
-                print("🎯 Demo 2: 30 jobs, 3 keywords, 1 site")
-                await controller.test_configuration(
-                    target_jobs=30,
-                    keywords=["Python Developer", "Data Scientist", "Software Engineer"],
-                    sites=["linkedin"]
-                )
-            
-            asyncio.run(demo_mode())
-    
-    else:
-        # Default example
-        async def main():
-            result = await run_multi_site_search(
-                profile_name="Nirajan",
-                location_set="canada_comprehensive",
-                query_preset="comprehensive", 
-                max_jobs_per_site_location=30,
-                per_site_concurrency=4,
-                max_total_jobs=800
-            )
-            
-            print(f"🎉 Found {result.total_jobs} jobs in {result.total_time:.1f}s")
-            print(f"🚀 Speed: {result.total_jobs/max(result.total_time, 1e-6):.1f} jobs/sec")
-            print(f"✅ Success rate: {result.success_rate:.1%}")
-        
-        asyncio.run(main())
+# For testing this scraper, use: python -m pytest tests/scrapers/
+# Example usage available in tests/ directory

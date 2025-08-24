@@ -64,5 +64,5 @@ def run_Automated_scraping(profile_name: str, max_jobs: int = 20):
     print(f"Found {len(jobs)} suitable jobs.")
 
 
-if __name__ == "__main__":
-    run_Automated_scraping("Nirajan")
+# Main functionality moved to CLI module or tests
+# Import and use the functions directly

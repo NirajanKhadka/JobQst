@@ -438,9 +438,8 @@ def analyze_profile_resume(profile: Dict) -> Dict:
     return analyzer.analyze_resume(profile)
 
 
-if __name__ == "__main__":
-    # Test the analyzer
-    from . import profile_helpers
+# Main functionality moved to CLI module or tests
+# Import and use the functions directly
 
     try:
         profile = profile_helpers.load_profile("Nirajan")

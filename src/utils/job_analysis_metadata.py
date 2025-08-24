@@ -376,49 +376,5 @@ def generate_analysis_report() -> Dict[str, Any]:
     return handler.generate_analysis_report()
 
 
-if __name__ == "__main__":
-    # Test the metadata handler
-    handler = JobAnalysisMetadataHandler()
-    
-    # Simulate some analysis results
-    test_results = [
-        {
-            'analysis_method': 'mistral_7b',
-            'analysis_timestamp': datetime.now().isoformat(),
-            'confidence': 0.85,
-            'duration_ms': 2500.0,
-            'analyzer_version': 'reliable_v1.0'
-        },
-        {
-            'analysis_method': 'Improved_rule_based',
-            'analysis_timestamp': datetime.now().isoformat(),
-            'confidence': 0.65,
-            'duration_ms': 150.0,
-            'analyzer_version': 'reliable_v1.0'
-        },
-        {
-            'analysis_method': 'llama3',
-            'analysis_timestamp': datetime.now().isoformat(),
-            'confidence': 0.78,
-            'duration_ms': 3200.0,
-            'analyzer_version': 'reliable_v1.0'
-        }
-    ]
-    
-    # Process test results
-    for result in test_results:
-        job_data = {'id': 'test_job', 'title': 'Test Job'}
-        updated_job = handler.update_job_with_metadata(job_data, result)
-        print(f"Updated job with {result['analysis_method']} metadata")
-    
-    # Generate report
-    report = handler.generate_analysis_report()
-    print("\nAnalysis Report:")
-    print(f"Total analyses: {report['summary']['total_analyses']}")
-    print(f"AI success rate: {report['summary']['ai_success_rate']}%")
-    print(f"Health status: {report['summary']['health_status']}")
-    print(f"Primary method: {report['summary']['primary_method']}")
-    
-    print("\nRecommendations:")
-    for rec in report['recommendations']:
-        print(f"  - {rec}")
+# Main functionality moved to CLI module or tests
+# Import and use the functions directly

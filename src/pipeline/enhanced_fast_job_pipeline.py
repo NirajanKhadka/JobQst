@@ -24,7 +24,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeEl
 
 # Import pipeline components
 from ..scrapers.unified_eluta_scraper import ElutaScraper
-from ..scrapers.jobspy_Improved_scraper import JobSpyImprovedScraper, JOBSPY_AVAILABLE
+from ..scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper, JOBSPY_AVAILABLE
 from ..scrapers.external_job_scraper import ExternalJobDescriptionScraper
 from ..analysis.two_stage_processor import get_two_stage_processor
 from ..core.job_database import get_job_db
@@ -62,7 +62,7 @@ class ImprovedFastJobPipeline:
             "jobspy_max_jobs": 100,
             
             # Existing scraper settings
-            "enable_eluta": True,
+            "enable_eluta": False,  # Disabled as requested
             "eluta_pages": 3,
             "eluta_jobs": 50,
             
@@ -267,7 +267,7 @@ class ImprovedFastJobPipeline:
                 "max_total_jobs": limit or self.jobspy_config.jobspy_max_jobs
             }
             
-            from ..scrapers.jobspy_Improved_scraper import JobSpyConfig
+            from ..scrapers.jobspy_enhanced_scraper import JobSpyConfig
             jobspy_scraper_config = JobSpyConfig(
                 locations=jobspy_config_dict["locations"],
                 search_terms=jobspy_config_dict["search_terms"],
@@ -658,5 +658,5 @@ async def test_Improved_pipeline():
         print(pipeline.get_jobspy_report())
 
 
-if __name__ == "__main__":
-    asyncio.run(test_Improved_pipeline())
+# Pipeline testing moved to tests/pipeline/
+# Use pipeline classes directly in your code

@@ -1,79 +1,275 @@
-# 🛠️ JobLens Troubleshooting Guide
+# 🛠️ JobQst Troubleshooting Guide
 
-**Last Updated:** July 27, 2025  
-**Status:** 🟢 ACTIVE
+**Last Updated:** August 23, 2025  
+**Status:** 🟢 ACTIVE | **Version:** 2.0.0
 
 ## 📋 Table of Contents
 1. [Environment Setup Issues](#environment-setup-issues)
-2. [Scraping Problems](#scraping-problems)
-3. [Dashboard Errors](#dashboard-errors)
-4. [Document Generation](#document-generation)
-5. [Scraper Issues](#scraper-issues)
+2. [JobSpy Integration Problems](#jobspy-integration-problems)
+3. [AI Service Issues](#ai-service-issues)
+4. [Dashboard Problems](#dashboard-problems)
+5. [Multi-Site Scraping Issues](#multi-site-scraping-issues)
 6. [Performance Optimization](#performance-optimization)
-7. [Diagnostic Tools](#diagnostic-tools)
-8. [FAQ](#faq)
+7. [Database Issues](#database-issues)
+8. [Diagnostic Tools](#diagnostic-tools)
+9. [Common Error Codes](#common-error-codes)
+10. [FAQ](#faq)
 
 ---
 
 ## 1. Environment Setup Issues <a name="environment-setup-issues"></a>
 
-### Python Environment Problems
-**Symptoms:** Import errors, version conflicts
+### Conda Environment Problems
+**Symptoms:** Import errors, package conflicts, wrong Python version
 ```bash
-# Verify Python version
-python --version  # Requires 3.10+
+# Verify environment setup
+conda info --envs
+conda activate auto_job
+python --version  # Should be 3.11+
 ```
 
 **Solutions:**
-- Recreate virtual environment:
+- **Recreate conda environment:**
   ```bash
-  python -m venv .venv
-  source .venv/bin/activate  # Linux/Mac
-  .\.venv\Scripts\activate   # Windows
+  conda deactivate
+  conda env remove -n auto_job
+  conda create -n auto_job python=3.11
+  conda activate auto_job
   pip install -r requirements.txt
   ```
-- Fix path issues:
-  ```python
-  import sys
-  sys.path.append('src')
+
+- **Fix activation issues:**
+  ```bash
+  # Windows PowerShell
+  conda init powershell
+  # Then restart terminal
+  
+  # Alternative activation
+  conda run -n auto_job python main.py TestProfile --action dashboard
   ```
 
-### Dependency Installation
-**Symptoms:** Missing packages, SSL errors
+### JobSpy Installation Issues
+**Symptoms:** `ModuleNotFoundError: No module named 'jobspy'`
 ```bash
-# Install with verbose output
-pip install -r requirements.txt -v
+# Install JobSpy with force reinstall
+pip uninstall python-jobspy -y
+pip install python-jobspy --no-cache-dir
 
-# Update certificates
-pip install --upgrade certifi
+# Verify installation
+python -c "from jobspy import scrape_jobs; print('JobSpy installed successfully')"
+```
+
+### Playwright Browser Issues
+**Symptoms:** Browser automation failures, missing chromium
+```bash
+# Install browser dependencies
+playwright install chromium --force
+
+# For Ubuntu/Debian systems
+sudo apt-get install libnss3 libatk-bridge2.0-0 libdrm2 libgtk-3-0 libgbm1
+
+# Verify browser installation
+playwright --version
 ```
 
 ---
 
-## 2. Scraping Problems <a name="scraping-problems"></a>
+## 2. JobSpy Integration Problems <a name="jobspy-integration-problems"></a>
 
-### Browser Automation Failures
-**Symptoms:** Scrapers not launching, empty results
-```bash
-# Install browser dependencies
-playwright install
-playwright install-deps
+### Multi-Site Connection Failures
+**Symptoms:** Some job sites failing, incomplete results
+```python
+# Test individual site connectivity
+from src.scrapers.jobspy_enhanced_scraper import JobSpyEnhancedScraper
+
+scraper = JobSpyEnhancedScraper("TestProfile")
+# Test each site individually
+test_sites = ["indeed", "linkedin", "glassdoor", "zip_recruiter"]
+for site in test_sites:
+    try:
+        result = await scraper.test_site_connection(site)
+        print(f"{site}: {'✓' if result else '✗'}")
+    except Exception as e:
+        print(f"{site}: Error - {e}")
 ```
 
 **Solutions:**
-- Update scraping configuration:
+- **Rate limiting issues:**
   ```python
-  # config/scraping_config.json
-  {
-    "rate_limit": 5,
-    "timeout": 60,
-    "headless": true,
-    "user_agent": "custom-agent"
+  # Adjust rate limits in config
+  JOBSPY_CONFIG = {
+      "rate_limit_delay": 10,  # seconds between requests
+      "max_retries": 3,
+      "timeout": 60
   }
   ```
 
-### IP Blocking/Rate Limiting
-**Symptoms:** Repeated request failures
+- **Site-specific blocks:**
+  ```bash
+  # Use preset with fewer sites
+  python main.py TestProfile --action jobspy-pipeline --sites indeed,linkedin
+  ```
+
+### JobSpy Configuration Errors
+**Symptoms:** "Invalid configuration" errors, unexpected behavior
+```python
+# Validate configuration
+from src.config.jobspy_integration_config import validate_config
+
+config = {
+    "sites": ["indeed", "linkedin"],
+    "locations": ["New York, NY"],
+    "search_terms": ["python developer"],
+    "country_code": "USA"
+}
+
+is_valid, errors = validate_config(config)
+if not is_valid:
+    print("Config errors:", errors)
+```
+
+---
+
+## 3. AI Service Issues <a name="ai-service-issues"></a>
+
+### AI Processing Failures
+**Symptoms:** Jobs not getting compatibility scores, AI analysis stuck
+```python
+# Test AI service connectivity
+from src.services.ai_integration_service import AIIntegrationService
+
+ai_service = AIIntegrationService("TestProfile")
+test_result = await ai_service.test_connection()
+print(f"AI Service Status: {test_result}")
+```
+
+**Solutions:**
+- **Memory issues:**
+  ```python
+  # Reduce batch size for AI processing
+  AI_CONFIG = {
+      "batch_size": 25,  # Reduced from 50
+      "max_concurrent": 2,  # Reduced from 4
+      "timeout": 120
+  }
+  ```
+
+- **Model loading errors:**
+  ```bash
+  # Clear AI cache and restart
+  rm -rf cache/embeddings/*
+  python main.py TestProfile --action analyze-jobs --force-refresh
+  ```
+
+### Semantic Scoring Issues
+**Symptoms:** All jobs getting same score, unrealistic compatibility ratings
+```python
+# Debug semantic scoring
+from src.services.ai_integration_service import AIIntegrationService
+
+ai_service = AIIntegrationService("TestProfile")
+debug_scores = await ai_service.debug_semantic_scoring(
+    job_text="Python developer position",
+    profile_keywords=["python", "developer", "backend"]
+)
+print("Debug scores:", debug_scores)
+```
+
+---
+
+## 4. Dashboard Problems <a name="dashboard-problems"></a>
+
+### Dash Dashboard Issues
+**Symptoms:** Dashboard not starting, component errors, data not loading
+```bash
+# Test dashboard startup
+conda run -n auto_job python src/dashboard/dash_app/app.py
+
+# Check dashboard port (default 8050)
+curl http://localhost:8050
+
+# Use VS Code task
+# Ctrl+Shift+P → Tasks: Run Task → "Start Dash Dashboard"
+```
+
+**Solutions:**
+- **Port conflicts:**
+  ```bash
+  # Check what's using port 8050
+  netstat -tulpn | grep :8050
+  
+  # Kill processes using the port
+  lsof -ti:8050 | xargs kill -9
+  ```
+
+- **Component import errors:**
+  ```python
+  # Test component imports
+  from src.dashboard.dash_app.components.sidebar import create_sidebar
+  from src.dashboard.dash_app.layouts.jobs_layout import create_jobs_layout
+  print("Dashboard components loaded successfully")
+  ```
+
+- **Data loading issues:**
+  ```python
+  # Test data loading
+  from src.core.job_database import JobDB
+  
+  db = JobDB("TestProfile")
+  connection_status = db.test_connection()
+  print(f"Database Status: {connection_status}")
+  ```
+
+### Dashboard Performance Issues
+**Symptoms:** Slow loading, high memory usage, unresponsive interface
+```python
+# Optimize dashboard configuration
+DASH_CONFIG = {
+    "serve_locally": True,
+    "suppress_callback_exceptions": True,
+    "update_title": None,  # Disable title updates for performance
+}
+```
+
+# Check Node.js version
+node --version  # Should be 16+ or 18+
+
+# Debug build
+npm run dev --verbose
+```
+
+---
+
+## 5. Multi-Site Scraping Issues <a name="multi-site-scraping-issues"></a>
+
+### Parallel Worker Failures
+**Symptoms:** Some workers failing, inconsistent results
+```python
+# Debug worker coordination
+from src.scrapers.multi_site_jobspy_workers import MultiSiteJobSpyWorkers
+
+workers = MultiSiteJobSpyWorkers(config)
+worker_status = await workers.diagnose_workers()
+for site, status in worker_status.items():
+    print(f"{site}: {status}")
+```
+
+**Solutions:**
+- **Reduce concurrency:**
+  ```python
+  # Lower concurrent workers
+  config.max_concurrent_workers = 2  # Instead of 4
+  ```
+
+- **Site-specific timeouts:**
+  ```python
+  SITE_TIMEOUTS = {
+      "indeed": 60,
+      "linkedin": 90,  # LinkedIn often slower
+      "glassdoor": 60,
+      "zip_recruiter": 45
+  }
+  ```
 **Solutions:**
 - Rotate user agents
 - Implement proxy rotation
@@ -183,29 +379,7 @@ if time.time() - st.session_state.last_refresh > 30:
 
 ---
 
-## 4. Document Generation <a name="document-generation"></a>
-
-### Template Placeholders in Output
-**Symptoms:** Unfilled templates, missing data
-**Solutions:**
-- Update profile data in `profiles/`
-- Validate resume templates
-- Check Gemini API status
-
-### PDF Generation Failures
-**Symptoms:** Formatting issues, failed conversions
-**Solutions:**
-```bash
-# Check dependencies
-pip list | grep pdfkit
-
-# Use text fallback
-python src/utils/document_fallback.py
-```
-
----
-
-## 5. Scraper Issues <a name="scraper-issues"></a>
+## 4. Scraper Issues <a name="scraper-issues"></a>
 
 ### JobSpy Installation Issues
 **Symptoms:** Import errors, module not found, scraping failures
@@ -333,7 +507,7 @@ def process_in_batches(jobs, batch_size=50):
 
 ---
 
-## 6. Performance Optimization <a name="performance-optimization"></a>
+## 5. Performance Optimization <a name="performance-optimization"></a>
 
 ### High Memory Usage
 **Symptoms:** System slowdown, out of memory errors, browser crashes
@@ -467,7 +641,7 @@ def optimize_connection_pool():
 
 ---
 
-## 7. Diagnostic Tools <a name="diagnostic-tools"></a>
+## 6. Diagnostic Tools <a name="diagnostic-tools"></a>
 
 ### System Health Checks
 ```python
@@ -674,7 +848,7 @@ def benchmark_database():
 
 ---
 
-## 8. FAQ <a name="faq"></a>
+## 7. FAQ <a name="faq"></a>
 
 ### How do I reset the system completely?
 ```python

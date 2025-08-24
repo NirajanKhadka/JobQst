@@ -1,7 +1,6 @@
 from src.utils.profile_helpers import load_profile, get_available_profiles
 from src.utils.job_helpers import generate_job_hash, is_duplicate_job, sort_jobs
 from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_to_csv
-from src.document_modifier.document_modifier import customize, DocumentModifier
 from src.core.exceptions import NeedsHumanException
 
 """
@@ -18,9 +17,8 @@ from rich.console import Console
 # Import specific functions for common functionality
 from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json
 from src.utils.job_helpers import generate_job_hash, is_duplicate_job
-from src.document_modifier.document_modifier import customize
 from src.core.browser_utils import FormUtils
-from src.utils.document_generator import customize
+# Document customization removed
 
 console = Console()
 

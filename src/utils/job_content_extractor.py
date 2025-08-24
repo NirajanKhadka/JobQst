@@ -533,38 +533,4 @@ class JobContentExtractor:
         return None
 
 # CLI function for easy testing
-def main():
-    """Main CLI function"""
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Extract job content using small models")
-    parser.add_argument("--max-jobs", type=int, default=5, help="Maximum jobs to process")
-    parser.add_argument("--model", default="llama3.2:1b", help="Model to use for extraction")
-    parser.add_argument("--delay", type=float, default=2.0, help="Delay between requests")
-    parser.add_argument("--job-id", type=int, help="Extract specific job ID")
-    
-    args = parser.parse_args()
-    
-    extractor = JobContentExtractor(model=args.model)
-    
-    if args.job_id:
-        print(f"🎯 Extracting content for job {args.job_id}")
-        result = extractor.extract_single_job(args.job_id)
-        if result:
-            print(f"✅ Extracted: {result.title} at {result.company}")
-            print(f"🎯 Confidence: {result.confidence:.2f}")
-            print(f"📊 Skills: {result.skills}")
-        else:
-            print("❌ Extraction failed")
-    else:
-        print(f"🚀 Processing up to {args.max_jobs} jobs with {args.model}")
-        stats = extractor.process_jobs(args.max_jobs, args.delay)
-        
-        print(f"\n📊 Results:")
-        print(f"✅ Successful: {stats['successful']}")
-        print(f"❌ Failed: {stats['failed']}")
-        print(f"⏭️ Skipped: {stats['skipped']}")
-        print(f"📈 Total Processed: {stats['processed']}")
-
-if __name__ == "__main__":
-    main()
+# Main function removed - use module functions directly

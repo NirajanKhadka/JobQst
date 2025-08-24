@@ -65,9 +65,7 @@ class WorkerStatusTracker:
             "processor_worker_3": "Tertiary job processor - ensures high availability processing",
             "processor_worker_4": "Additional job processor - scales processing capacity",
             "processor_worker_5": "Additional job processor - maximum throughput processing",
-            "document_generator": "Automated document generator - creates resumes and cover letters",
             "job_scraper": "Web scraper - collects job postings from various job boards",
-            "applicator": "Automated job application submitter - applies to jobs via ATS systems",
             "scheduler": "Task scheduler - manages automated job processing workflows",
             "health_monitor": "System health monitor - tracks application performance",
             "ai_service_monitor": "AI service health monitor - tracks Ollama and AI analysis status"
@@ -602,12 +600,8 @@ class WorkerStatusTracker:
         # Pattern matching for dynamic worker names
         if "processor_worker" in worker_name:
             return f"Job processor worker - analyzes and classifies scraped jobs"
-        elif "document" in worker_name.lower():
-            return f"Document generation worker - creates Automated resumes and cover letters"
         elif "scraper" in worker_name.lower():
             return f"Web scraper worker - collects job postings from job boards"
-        elif "applicator" in worker_name.lower():
-            return f"Job application worker - submits applications via ATS systems"
         elif "scheduler" in worker_name.lower():
             return f"Task scheduler worker - manages automated workflows"
         elif "monitor" in worker_name.lower():

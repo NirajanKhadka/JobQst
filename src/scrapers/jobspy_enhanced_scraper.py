@@ -131,69 +131,92 @@ class JobSpyImprovedScraper:
     
     async def scrape_jobs_Improved(self, max_jobs: int = None) -> List[Dict[str, Any]]:
         """
-        Enhanced job scraping using JobSpy with Configurable search strategy.
+        Enhanced job scraping using JobSpy with parallel processing.
         Returns jobs compatible with AutoJobAgent database schema.
         """
-        console.print("[bold blue]🚀 Starting JobSpy Improved Scraping[/bold blue]")
+        console.print("[bold blue]🚀 Starting JobSpy Parallel Scraping[/bold blue]")
         console.print(f"[cyan]📍 Targeting {len(self.config.locations)} locations[/cyan]")
         console.print(f"[cyan]🔍 Using {len(self.config.search_terms)} search terms[/cyan]")
+        console.print(f"[green]⚡ Parallel processing: Multiple sites simultaneously[/green]")
         
         self.stats["start_time"] = datetime.now()
-        all_jobs = pd.DataFrame()
         
         # Override max jobs if specified
         target_jobs = max_jobs or self.config.max_total_jobs
         
-        # Configurable search strategy (prioritized combinations)
+        # Generate search combinations
         search_combinations = self._generate_search_combinations()
         
         console.print(f"[yellow]📋 Planned searches: {len(search_combinations)} combinations[/yellow]")
         console.print(f"[yellow]🎯 Target jobs: {target_jobs}[/yellow]")
         
-        for i, (location, search_term, priority) in enumerate(search_combinations):
-            if len(all_jobs) >= target_jobs:
-                console.print(f"[green]🎉 Target reached! Found {len(all_jobs)} jobs[/green]")
-                break
-            
-            console.print(f"\n[cyan][{i+1}/{len(search_combinations)}] Priority: {priority}[/cyan]")
-            
-            jobs_batch = await self._search_single_combination(location, search_term)
-            
-            if jobs_batch is not None and len(jobs_batch) > 0:
-                all_jobs = pd.concat([all_jobs, jobs_batch], ignore_index=True)
-                
-                # Configurable deduplication
-                if self.config.enable_deduplication and len(all_jobs) > 0:
-                    initial_count = len(all_jobs)
-                    all_jobs = all_jobs.drop_duplicates(subset=['title', 'company'], keep='first')
-                    final_count = len(all_jobs)
-                    
-                    if initial_count != final_count:
-                        console.print(f"[yellow]🔄 Removed {initial_count - final_count} duplicates[/yellow]")
-                
-                console.print(f"[cyan]📊 Total unique jobs: {len(all_jobs)}[/cyan]")
-            
-            # Progress indicator
-            if (i + 1) % 5 == 0:
-                console.print(f"[green]📈 Progress: {i+1}/{len(search_combinations)} searches completed[/green]")
+        # Run searches in parallel batches
+        all_jobs = await self._run_parallel_searches(search_combinations, target_jobs)
         
         # Final statistics
         self.stats["end_time"] = datetime.now()
         self.stats["processing_time"] = (self.stats["end_time"] - self.stats["start_time"]).total_seconds()
         self.stats["unique_jobs_found"] = len(all_jobs)
         
-        console.print(f"\n[bold green]✅ JobSpy scraping completed![/bold green]")
+        console.print(f"\n[bold green]✅ JobSpy parallel scraping completed![/bold green]")
         console.print(f"[cyan]📊 Total searches: {self.stats['total_searches']}[/cyan]")
         console.print(f"[cyan]✅ Successful: {self.stats['successful_searches']}[/cyan]")
         console.print(f"[cyan]❌ Failed: {self.stats['failed_searches']}[/cyan]")
         console.print(f"[cyan]🎯 Unique jobs found: {len(all_jobs)}[/cyan]")
-        console.print(f"[cyan]⏱️ Processing time: {self.stats['processing_time']:.1f}s[/cyan]")
+        console.print(f"[cyan]⚡ Processing time: {self.stats['processing_time']:.1f}s[/cyan]")
         
         # Convert to AutoJobAgent format and save to database
         jobs_list = self._convert_to_autojob_format(all_jobs)
         await self._save_jobs_to_database(jobs_list)
         
         return jobs_list
+    
+    async def _run_parallel_searches(self, search_combinations: List[tuple], target_jobs: int) -> pd.DataFrame:
+        """Run JobSpy searches in parallel batches for better performance."""
+        all_jobs = pd.DataFrame()
+        batch_size = 3  # Process 3 searches simultaneously
+        
+        for i in range(0, len(search_combinations), batch_size):
+            if len(all_jobs) >= target_jobs:
+                console.print(f"[green]🎉 Target reached! Found {len(all_jobs)} jobs[/green]")
+                break
+                
+            batch = search_combinations[i:i + batch_size]
+            console.print(f"\n[cyan]🔄 Processing batch {i//batch_size + 1}: {len(batch)} parallel searches[/cyan]")
+            
+            # Run batch searches in parallel
+            tasks = [
+                self._search_single_combination(location, search_term)
+                for location, search_term, priority in batch
+            ]
+            
+            batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Process batch results
+            for j, result in enumerate(batch_results):
+                if isinstance(result, Exception):
+                    console.print(f"[red]❌ Batch search {j+1} failed: {result}[/red]")
+                    continue
+                    
+                if result is not None and len(result) > 0:
+                    all_jobs = pd.concat([all_jobs, result], ignore_index=True)
+                    
+                    # Deduplication
+                    if self.config.enable_deduplication and len(all_jobs) > 0:
+                        initial_count = len(all_jobs)
+                        all_jobs = all_jobs.drop_duplicates(subset=['title', 'company'], keep='first')
+                        final_count = len(all_jobs)
+                        
+                        if initial_count != final_count:
+                            console.print(f"[yellow]🔄 Removed {initial_count - final_count} duplicates[/yellow]")
+            
+            console.print(f"[cyan]📊 Total unique jobs after batch: {len(all_jobs)}[/cyan]")
+            
+            # Small delay between batches to be respectful
+            if i + batch_size < len(search_combinations):
+                await asyncio.sleep(1)
+        
+        return all_jobs
     
     def _generate_search_combinations(self) -> List[tuple]:
         """Generate prioritized search combinations based on JobSpy success patterns."""
@@ -351,24 +374,33 @@ class JobSpyImprovedScraper:
     async def _save_jobs_to_database(self, jobs: List[Dict[str, Any]]) -> int:
         """Save jobs to AutoJobAgent database with duplicate checking."""
         if not jobs:
+            console.print("[yellow]⚠️ No jobs to save to database[/yellow]")
             return 0
         
         console.print(f"[cyan]💾 Saving {len(jobs)} jobs to database...[/cyan]")
+        logger.info(f"🔄 Starting database save process for {len(jobs)} jobs")
         
         saved_count = 0
         
-        for job in jobs:
+        for i, job in enumerate(jobs):
             try:
+                logger.info(f"🔄 Processing job {i+1}/{len(jobs)}: {job.get('title', 'Unknown')} at {job.get('company', 'Unknown')}")
+                
                 # Check for existing job to avoid duplicates
                 existing_job = self.db.get_job_by_url(job.get('url', ''))
                 
                 if not existing_job:
                     # Save new job
-                    job_id = self.db.add_job(job)
-                    if job_id:
+                    logger.info(f"💾 Saving new job: {job.get('title', 'Unknown')}")
+                    success = self.db.add_job(job)
+                    if success:
                         saved_count += 1
+                        logger.info(f"✅ Successfully saved job {i+1}")
+                    else:
+                        logger.warning(f"⚠️ Failed to save job {i+1}: add_job returned False")
                 else:
                     # Update existing job with new search metadata
+                    logger.info(f"🔄 Updating existing job: {job.get('title', 'Unknown')}")
                     self.db.update_job_metadata(existing_job['id'], {
                         'search_term': job.get('search_term'),
                         'search_location': job.get('search_location'),
@@ -376,13 +408,15 @@ class JobSpyImprovedScraper:
                     })
                     
             except Exception as e:
-                logger.error(f"Error saving job to database: {e}")
+                logger.error(f"❌ Error saving job {i+1} to database: {e}")
+                logger.error(f"Job data: {job}")
                 continue
         
         self.stats["jobs_saved_to_db"] = saved_count
         
         console.print(f"[green]✅ Saved {saved_count} new jobs to database[/green]")
         console.print(f"[yellow]🔄 Updated {len(jobs) - saved_count} existing jobs[/yellow]")
+        logger.info(f"📊 Database save complete: {saved_count} saved, {len(jobs) - saved_count} updated")
         
         return saved_count
     
@@ -484,17 +518,5 @@ TORONTO_CONFIG = JobSpyConfig(
     enable_deduplication=True
 )
 
-if __name__ == "__main__":
-    # Test the JobSpy Improved Scraper
-    import asyncio
-    
-    async def test_scraper():
-        scraper = JobSpyImprovedScraper("Nirajan", MISSISSAUGA_CONFIG)
-        jobs = await scraper.scrape_jobs_Improved(50)
-        
-        print(f"\nTest Results:")
-        print(f"Jobs found: {len(jobs)}")
-        print(f"Statistics: {scraper.get_stats()}")
-        print(f"\nReport:\n{scraper.generate_report()}")
-    
-    asyncio.run(test_scraper())
+# For testing this scraper, use: python -m pytest tests/scrapers/
+# Example usage available in tests/ directory

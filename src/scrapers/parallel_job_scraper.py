@@ -55,5 +55,5 @@ async def run_parallel_scraping(
     return await scraper.start_parallel_scraping(max_jobs_per_keyword)
 
 
-if __name__ == "__main__":
-    asyncio.run(run_parallel_scraping())
+# For testing this scraper, use: python -m pytest tests/scrapers/
+# Example usage available in tests/ directory

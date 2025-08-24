@@ -14,6 +14,8 @@ from pathlib import Path
 import traceback
 
 # Configure structured logging
+# Ensure logs directory exists before creating file handlers
+Path("logs").mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -445,27 +447,5 @@ def log_ai_error(service_name: str, error_type: str, error_message: str,
 
 
 if __name__ == "__main__":
-    # Test the AI service logger
-    ai_logger = AIServiceLogger()
-    
-    # Simulate some events
-    ai_logger.log_connection_check("mistral_local", True, 150.5)
-    ai_logger.log_analysis_attempt("mistral_local", True, 2500.0, "mistral_7b", 0.75)
-    ai_logger.log_connection_check("llama_local", False, 5000.0, "Connection timeout")
-    ai_logger.log_fallback_usage("mistral_7b", "Improved_rule_based", "Connection failed")
-    ai_logger.log_analysis_attempt("system", True, 50.0, "Improved_rule_based", 0.65)
-    
-    print("AI Service Logger Test Results:")
-    print("\nMetrics:")
-    metrics = ai_logger.get_metrics()
-    for key, value in metrics.items():
-        print(f"  {key}: {value}")
-    
-    print("\nUser-Friendly Status:")
-    status = ai_logger.get_user_friendly_status()
-    for key, value in status.items():
-        print(f"  {key}: {value}")
-    
-    print("\nRecent Events:")
-    for event in ai_logger.get_recent_events(5):
-        print(f"  {event.timestamp}: {event.event_type} - {event.service_name} ({'✅' if event.success else '❌'})")
+    # Test functionality moved to tests/unit/test_ai_service_logger.py
+    pass

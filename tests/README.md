@@ -1,4 +1,4 @@
-# 🧪 JobLens Test Suite
+# 🧪 JobQst Test Suite
 
 > **Comprehensive testing infrastructure following TESTING_STANDARDS.md**
 

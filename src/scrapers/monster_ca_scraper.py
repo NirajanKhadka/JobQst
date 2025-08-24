@@ -647,45 +647,4 @@ class MonsterCAScraper:
             console.print("[yellow]No entry-level jobs found.[/yellow]")
 
 
-# Main execution function
-async def main():
-    """Main function to run Monster CA scraper with interactive options."""
-    console.print(Panel.fit(
-        "🇨🇦 MONSTER CA JOB SCRAPER\n"
-        "Canadian job opportunities from Monster.ca",
-        style="bold blue"
-    ))
-    
-    # Interactive configuration
-    from rich.prompt import Prompt, Confirm
-    
-    profile_name = Prompt.ask("Profile name", default="Nirajan")
-    max_jobs_per_keyword = int(Prompt.ask("Max jobs per keyword", default="20"))
-    
-    # Initialize scraper
-    scraper = MonsterCAScraper(profile_name)
-    
-    # Display search preview
-    console.print(f"\n[cyan]Profile: {profile_name}[/cyan]")
-    console.print(f"[cyan]Search terms: {len(scraper.search_terms)}[/cyan]")
-    console.print(f"[cyan]Locations: {len(scraper.locations)}[/cyan]")
-    console.print(f"[cyan]Max jobs per keyword: {max_jobs_per_keyword}[/cyan]")
-    
-    if Confirm.ask(f"\nStart Monster CA scraping?", default=True):
-        start_time = time.time()
-        jobs = await scraper.scrape_all_keywords(max_jobs_per_keyword=max_jobs_per_keyword)
-        end_time = time.time()
-        duration = end_time - start_time
-        
-        if jobs:
-            console.print(f"\n[bold green]🎉 Monster CA Scraping Complete![/bold green]")
-            console.print(f"[green]✅ {len(jobs)} entry-level jobs found in {duration:.1f} seconds[/green]")
-            console.print(f"[green]✅ Jobs saved to profile database: {profile_name}[/green]")
-        else:
-            console.print("[yellow]⚠️ No jobs found. Check search parameters and site availability.[/yellow]")
-    else:
-        console.print("[yellow]👋 Monster CA scraping cancelled[/yellow]")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+# Main function removed - use scraper class directly

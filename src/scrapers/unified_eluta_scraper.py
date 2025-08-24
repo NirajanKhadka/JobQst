@@ -875,55 +875,7 @@ async def run_core_eluta_scraper(profile_name: str, config: Optional[Dict] = Non
     return await run_unified_eluta_scraper(profile_name, config)
 
 
-def main():
-    """CLI entry point for direct execution."""
-    import argparse
-    
-    parser = argparse.ArgumentParser(
-        description="Eluta Job Scraper - Single Unified Implementation",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python unified_eluta_scraper.py Nirajan --jobs 10 --headless
-  python unified_eluta_scraper.py MyProfile --pages 3 --jobs 15
-        """
-    )
-    
-    parser.add_argument("profile", nargs="?", default="Nirajan", 
-                       help="Profile name (default: Nirajan)")
-    parser.add_argument("--headless", action="store_true", 
-                       help="Run browser in headless mode")
-    parser.add_argument("--pages", type=int, default=5, 
-                       help="Pages per keyword (default: 5)")
-    parser.add_argument("--jobs", type=int, default=20, 
-                       help="Jobs per keyword (default: 20)")
-    parser.add_argument("--delay", type=float, default=1.0, 
-                       help="Delay between requests (default: 1.0)")
-    parser.add_argument("--max-tabs", type=int, default=5, 
-                       help="Max tabs before cleanup (default: 5)")
-    
-    args = parser.parse_args()
-    
-    config = {
-        "headless": args.headless,
-        "pages": args.pages,
-        "jobs": args.jobs,
-        "delay": args.delay,
-        "max_tabs": args.max_tabs,
-    }
-    
-    try:
-        results = asyncio.run(run_unified_eluta_scraper(args.profile, config))
-        console.print(f"\n[bold green]🎉 Scraping completed: {len(results)} jobs saved to database![/bold green]")
-    except KeyboardInterrupt:
-        console.print("\n[yellow]⚠️ Scraping interrupted by user[/yellow]")
-    except Exception as e:
-        console.print(f"\n[red]❌ Scraping failed: {e}[/red]")
-        logger.error(f"Scraping failed: {e}")
-
-
-if __name__ == "__main__":
-    main()
+# Main function removed - use scraper class directly
 
 class UnifiedElutaScraper(ElutaScraper):
     """Backward-compat alias for ElutaScraper used in older tests."""

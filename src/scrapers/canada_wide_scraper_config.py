@@ -298,10 +298,8 @@ def get_optimized_search_locations(site_name: str, original_location: str = "Can
     return [optimized]
 
 
-if __name__ == "__main__":
-    # Test the configuration
-    config = CanadaWideScraperConfig()
-    config.display_canada_coverage_info()
+# For testing this scraper, use: python -m pytest tests/scrapers/
+# Example usage available in tests/ directory
 
     # Test site-specific configurations
     console.print("\n[bold]🧪 Testing Site Configurations:[/bold]")

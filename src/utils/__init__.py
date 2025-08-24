@@ -1,15 +1,7 @@
 """
 Utils module for AutoJobAgent.
-Provides utility functions for document generation, job analysis, and other core functionality.
+Provides utility functions for job analysis, and other core functionality.
 """
-
-"""
-Utils module for AutoJobAgent.
-Provides utility functions for document generation, job analysis, and other core functionality.
-"""
-
-# Import key functions - dependencies are now properly installed
-from src.document_modifier.document_modifier import customize
 
 # Import core utilities
 # from .job_analysis_engine import JobAnalysisEngine  # Not available
@@ -34,7 +26,6 @@ from .file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_t
 from src.core.job_filters import JobFilter, filter_entry_level_jobs, remove_duplicates
 
 __all__ = [
-    "customize",
     "ErrorTracker",
     "reliableOperations",
     "ManualReviewManager",

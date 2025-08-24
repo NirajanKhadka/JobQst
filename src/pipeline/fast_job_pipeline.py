@@ -212,5 +212,5 @@ async def test_fast_pipeline():
     console.print(f"[green]✅ Test complete: {len(results)} job URLs collected[/green]")
 
 
-if __name__ == "__main__":
-    asyncio.run(test_fast_pipeline())
+# Pipeline testing moved to tests/pipeline/
+# Use pipeline classes directly in your code

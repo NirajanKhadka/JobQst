@@ -5,16 +5,16 @@ Handles the main interactive menu system.
 """
 
 from typing import Dict
+from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 import logging
+import time
 
 from ..actions.scraping_actions import ScrapingActions
-from ..actions.application_actions import ApplicationActions
 from ..actions.dashboard_actions import DashboardActions
 from ..actions.system_actions import SystemActions
-from ..actions.document_actions import DocumentActions
 
 console = Console()
 
@@ -53,35 +53,25 @@ class MainMenu:
     def __init__(self, profile: Dict):
         self.profile = profile
         self.scraping_actions = ScrapingActions(profile)
-        self.application_actions = ApplicationActions(profile)
         self.dashboard_actions = DashboardActions(profile)
         self.system_actions = SystemActions(profile)
-        self.document_actions = DocumentActions(profile)
 
     def show_interactive_menu(self) -> str:
-        """Show the improved main interactive menu with NEW Fast 3-Phase Pipeline."""
+        """Show the simplified main interactive menu."""
         console.clear()
         console.print(Panel("🤖 AutoJobAgent - Main Menu", style="bold blue"))
         
-        # Show new features banner
-        console.print("[green]🆕 NEW: Fast 3-Phase Pipeline - 4.6x Performance Improvement![/green]")
-        console.print("[cyan]⚡ Phase 1: Eluta URLs → Phase 2: Parallel External Scraping → Phase 3: GPU Processing[/cyan]")
-        console.print("[dim]💡 All scraping now uses the new fast pipeline automatically[/dim]")
-
         # Show profile info
         self._show_profile_info()
 
         console.print("\n[bold]Available Actions:[/bold]")
         options = {
-            "1": "🚀 Job Scraping (NEW Fast 3-Phase Pipeline - 4.6x faster)",
-            "2": "📝 Apply to Jobs from Queue",
-            "3": "🎯 Apply to Specific Job URL",
-            "4": "📂 Apply Jobs from External Source (CSV or Link)",
-            "5": "📄 AI Document Generation (Resumes & Cover Letters)",
-            "6": "📊 Status & Dashboard",
-            "7": "⚙️ System Status & Settings",
-            "8": "🔄 Process Existing Jobs (Improved with Fast Pipeline)",
-            "9": "🚪 Exit",
+            "1": "🚀 Scrape Jobs",
+            "2": "📊 Dashboard", 
+            "3": "⚙️ System Status",
+            "4": "🔄 Process Jobs",
+            "5": "👤 Profile Settings",
+            "q": "🚪 Exit",
         }
 
         for key, value in options.items():
@@ -95,41 +85,35 @@ class MainMenu:
         """Handle menu choice and execute corresponding action.
 
         Args:
-            choice: Menu choice (1-9)
+            choice: Menu choice (1-5, q)
             args: Command line arguments
 
         Returns:
             bool: True to continue menu loop, False to exit
         """
-        if choice == "1":  # Job Scraping with site selection
+        if choice == "1":  # Job Scraping with JobSpy + Fast Pipeline
             self.scraping_actions.show_scraping_menu(args)
-        elif choice == "2":  # Apply from queue
-            self.application_actions.apply_from_queue_action(args)
-        elif choice == "3":  # Apply to specific URL
-            self.application_actions.apply_to_specific_url_action(args)
-        elif choice == "4":  # Apply jobs from external (CSV or link)
-            self.application_actions.apply_jobs_from_external_action(args)
-        elif choice == "5":  # AI Document Generation
-            self.document_actions.run_document_menu()
-        elif choice == "6":  # Status & Dashboard
+        elif choice == "2":  # Status & Dashboard
             self.dashboard_actions.show_status_and_dashboard_action()
-        elif choice == "7":  # System status & settings
+        elif choice == "3":  # System status & settings
             self.system_actions.system_status_and_settings_action()
-        elif choice == "8":  # Process existing jobs with Fast Pipeline
+        elif choice == "4":  # Auto-Process Jobs with Smart Detection
             import asyncio
-            asyncio.run(self._process_existing_jobs_action(args))
-        elif choice == "9":  # Exit
-            console.print("[green]Goodbye![green]")
+            asyncio.run(self._auto_process_jobs_action(args))
+        elif choice == "5":  # Profile Management with Auto-Watch
+            self._profile_management_action(args)
+        elif choice == "q":  # Exit
+            console.print("[green]Goodbye![/green]")
             return False
 
         # Don't pause after exit
-        if choice != "9":
+        if choice != "q":
             input("\nPress Enter to continue...")
 
         return True
 
     def _show_profile_info(self) -> None:
-        """Show current profile information with Improved details."""
+        """Show current profile information in a condensed format."""
         profile_name = self.profile.get("profile_name", "Unknown")
         name = self.profile.get("name", "Not set")
         email = self.profile.get("email", "Not set")
@@ -138,35 +122,50 @@ class MainMenu:
         console.print(f"[bold]📧 Name:[/bold] {name}")
         console.print(f"[bold]📧 Email:[/bold] {email}")
 
-        # Show keywords
+        # Show keywords (condensed)
         keywords = self.profile.get("keywords", [])
         if keywords:
-            console.print(f"[bold]🔍 Keywords:[/bold] {', '.join(keywords[:3])}")
+            kw_display = ', '.join(keywords[:3])
+            console.print(f"[bold]🔍 Keywords:[/bold] {kw_display}")
             if len(keywords) > 3:
                 console.print(f"[dim]... and {len(keywords) - 3} more[/dim]")
         
-        # Show database info
+        # Show database info (condensed)
         try:
             from src.core.job_database import get_job_db
             db = get_job_db(profile_name)
             job_count = db.get_job_count()
             console.print(f"[bold]💾 Database:[/bold] {job_count} jobs stored")
             
-            # Show recent activity
+            # Check for unprocessed jobs
             if job_count > 0:
-                recent_jobs = db.get_jobs()[-3:] if len(db.get_jobs()) >= 3 else db.get_jobs()
+                unprocessed_count = db.get_unprocessed_job_count()
+                
+                if unprocessed_count > 0:
+                    console.print(
+                        f"[yellow]⚠️ {unprocessed_count} unprocessed jobs "
+                        f"detected[/yellow]"
+                    )
+                    console.print("[cyan]💡 Use option 4 to process them[/cyan]")
+                else:
+                    console.print("[green]✅ All jobs processed[/green]")
+                
+                # Show recent activity (condensed)
+                recent_jobs = db.get_jobs(limit=3)
                 if recent_jobs:
-                    console.print(f"[dim]📋 Recent: {', '.join([job.get('title', 'Unknown')[:20] + '...' for job in recent_jobs])}[/dim]")
+                    titles = [
+                        job.get('title', 'Unknown')[:20] + '...'
+                        for job in recent_jobs
+                    ]
+                    console.print(
+                        f"[dim]� Recent: {', '.join(titles)}[/dim]"
+                    )
         except Exception:
-            console.print(f"[bold]💾 Database:[/bold] Not accessible")
-        
-        # Show fast pipeline status
-        console.print(f"[green]🚀 Fast Pipeline:[/green] Ready (4.6x performance boost)")
-        console.print(f"[dim]💡 Use option 1 for the new Fast 3-Phase Pipeline[/dim]")
+            console.print("[bold]� Database:[/bold] Not accessible")
 
-    async def _process_existing_jobs_action(self, args) -> None:
-        """Process existing jobs in database using Fast Pipeline orchestrator."""
-        console.print(Panel("🔄 Process Existing Jobs with Fast Pipeline", style="bold blue"))
+    async def _auto_process_jobs_action(self, args) -> None:
+        """Auto-detect and process unprocessed jobs using Fast Pipeline orchestrator."""
+        console.print(Panel("🔄 Auto-Process Jobs (Smart Detection)", style="bold blue"))
         
         try:
             profile_name = self.profile.get("profile_name", "default")
@@ -175,23 +174,12 @@ class MainMenu:
             from src.core.job_database import get_job_db
             db = get_job_db(profile_name)
             
-            # Get jobs that need processing (status = 'scraped' or incomplete processing)
-            all_jobs = db.get_all_jobs()
-            
-            # Filter jobs that need processing
-            jobs_to_process = []
-            for job in all_jobs:
-                status = job.get('status', '')
-                # Process jobs that are scraped but not fully processed
-                if (status == 'scraped' or 
-                    not job.get('required_skills') or 
-                    not job.get('compatibility_score') or
-                    job.get('compatibility_score', 0) == 0):
-                    jobs_to_process.append(job)
+            # Get jobs that need processing using proper database query
+            jobs_to_process = db.get_jobs_for_processing(limit=5000)  # Get all unprocessed jobs
             
             if not jobs_to_process:
-                console.print("[yellow]⚠️ No jobs found that need processing[/yellow]")
-                console.print("[cyan]💡 All jobs in database appear to be fully processed[/cyan]")
+                console.print("[green]✅ No unprocessed jobs found[/green]")
+                console.print("[cyan]💡 All jobs in database are fully processed[/cyan]")
                 console.print("[cyan]💡 Use option 1 to scrape new jobs[/cyan]")
                 return
             
@@ -211,7 +199,11 @@ class MainMenu:
                 console.print(f"  [bold cyan]{key}[/bold cyan]: {value}")
             
             console.print()
-            process_choice = Prompt.ask("Select processing method", choices=list(process_options.keys()), default="4")
+            try:
+                process_choice = Prompt.ask("Select processing method", choices=list(process_options.keys()), default="4")
+            except (EOFError, KeyboardInterrupt):
+                console.print("[yellow]Using default processing method: Auto-select[/yellow]")
+                process_choice = "4"
             
             # Map choice to processing method
             method_map = {
@@ -222,58 +214,270 @@ class MainMenu:
             }
             processing_method = method_map.get(process_choice, "rule_based")  # Default to fast rule-based
             
-            # Use Fast Pipeline to process existing jobs
-            import asyncio
-            from src.pipeline.fast_job_pipeline import FastJobPipeline
-            
-            # Configure pipeline for processing existing jobs
-            pipeline_config = {
-                "eluta_pages": 1,  # Not scraping new jobs
-                "eluta_jobs": 0,   # Not scraping new jobs
-                "external_workers": 0,  # Not scraping descriptions
-                "processing_method": processing_method,
-                "save_to_database": True,
-                "enable_duplicate_check": False,  # These are existing jobs
-            }
-            
-            pipeline = FastJobPipeline(profile_name, pipeline_config)
+            # Use TwoStageJobProcessor to process existing jobs
+            from src.analysis.two_stage_processor import TwoStageJobProcessor
             
             console.print(f"[cyan]🔄 Processing {len(jobs_to_process)} existing jobs with {processing_method} method...[/cyan]")
             
-            # Process jobs directly (skip scraping phases)
-            processed_jobs = await pipeline._phase3_process_jobs(jobs_to_process)
+            # Initialize processor with user profile
+            processor = TwoStageJobProcessor(
+                user_profile=self.profile,
+                cpu_workers=8,  # Adjust based on system
+                max_concurrent_stage2=2
+            )
+            
+            # Process jobs using two-stage processor
+            processed_jobs = await processor.process_jobs(jobs_to_process)
             
             if processed_jobs:
                 # Save updated jobs to database
-                await pipeline._save_jobs_to_database(processed_jobs)
+                saved_count = 0
+                for result in processed_jobs:
+                    try:
+                        # Convert TwoStageResult to job dict for database
+                        job_dict = {
+                            'id': result.job_id,
+                            'url': result.url,
+                            'title': result.stage1.title if result.stage1 else 'Unknown',
+                            'company': result.stage1.company if result.stage1 else 'Unknown',
+                            'location': result.stage1.location if result.stage1 else 'Unknown',
+                            'salary_range': result.stage1.salary_range if result.stage1 else None,
+                            'compatibility_score': result.final_compatibility,
+                            'required_skills': result.final_skills,
+                            'requirements': result.final_requirements,
+                            'status': 'processed',
+                            'processing_method': processing_method,
+                            'processed_at': time.strftime("%Y-%m-%d %H:%M:%S"),
+                            'recommendation': result.recommendation
+                        }
+                        
+                        # Update original job data with processed results
+                        if result.job_data:
+                            job_dict.update(result.job_data)
+                        
+                        # Get the job ID for the update operation
+                        job_id = result.job_data.get('id') if result.job_data else None
+                        if job_id:
+                            db.update_job(job_id, job_dict)
+                            saved_count += 1
+                        else:
+                            # Try to find job by job_id string
+                            if hasattr(result, 'job_id') and result.job_id:
+                                # Fallback: update by job_id (string identifier)
+                                try:
+                                    existing_jobs = db.get_jobs(limit=1000)
+                                    for job in existing_jobs:
+                                        if str(job.get('id', '')) == str(result.job_id):
+                                            db.update_job(job['id'], job_dict)
+                                            saved_count += 1
+                                            break
+                                except Exception:
+                                    pass
+                    except Exception as e:
+                        console.print(f"[yellow]⚠️ Failed to save job {result.job_id}: {e}[/yellow]")
                 
-                stats = pipeline.get_stats()
                 console.print(f"[bold green]✅ Processing completed successfully![/bold green]")
                 console.print(f"[cyan]📊 Jobs processed: {len(processed_jobs)}[/cyan]")
-                console.print(f"[cyan]🧠 Processing method: {stats.get('processing_method_used', processing_method)}[/cyan]")
-                console.print(f"[cyan]💾 Jobs updated in database: {stats.get('jobs_saved', len(processed_jobs))}[/cyan]")
+                console.print(f"[cyan]🧠 Processing method: {processing_method}[/cyan]")
+                console.print(f"[cyan]💾 Jobs updated in database: {saved_count}[/cyan]")
                 
                 # Show sample of processed jobs
                 if processed_jobs:
-                    console.print(f"\n[bold]📋 Sample Processed Jobs:[/bold]")
-                    for i, job in enumerate(processed_jobs[:3], 1):
-                        title = job.get('title', 'Unknown')[:40]
-                        company = job.get('company', 'Unknown')[:20]
-                        score = job.get('compatibility_score', 0)
-                        skills_count = len(job.get('required_skills', []))
-                        console.print(f"  {i}. {title}... at {company} (Score: {score:.2f}, Skills: {skills_count})")
+                    console.print("\n[bold]📋 Sample Processed Jobs:[/bold]")
+                    for i, result in enumerate(processed_jobs[:3], 1):
+                        # Safely extract title and company with None checks
+                        title = 'Unknown'
+                        company = 'Unknown'
+                        
+                        try:
+                            if result.stage1 and hasattr(result.stage1, 'title') and result.stage1.title:
+                                title = str(result.stage1.title)[:40]
+                            elif result.job_data and result.job_data.get('title'):
+                                title = str(result.job_data['title'])[:40]
+                            
+                            if result.stage1 and hasattr(result.stage1, 'company') and result.stage1.company:
+                                company = str(result.stage1.company)[:20]
+                            elif result.job_data and result.job_data.get('company'):
+                                company = str(result.job_data['company'])[:20]
+                            
+                            score = getattr(result, 'final_compatibility', 0.0)
+                            skills_count = len(getattr(result, 'final_skills', []))
+                            console.print(
+                                f"  {i}. {title}... at {company} "
+                                f"(Score: {score:.2f}, Skills: {skills_count})"
+                            )
+                        except Exception as e:
+                            console.print(f"  {i}. Error displaying job: {e}")
+                            continue
                     
                     if len(processed_jobs) > 3:
-                        console.print(f"  ... and {len(processed_jobs) - 3} more jobs")
+                        console.print(
+                            f"  ... and {len(processed_jobs) - 3} more jobs"
+                        )
             else:
                 console.print("[yellow]⚠️ No jobs were successfully processed[/yellow]")
                 console.print("[cyan]💡 Try a different processing method or check job data quality[/cyan]")
                 
         except Exception as e:
-            console.print(f"[red]❌ Error processing existing jobs: {e}[/red]")
-            console.print("[yellow]💡 Try using option 1 to scrape fresh jobs instead[/yellow]")
+            console.print("[red]❌ Error in job processing[/red]")
+            console.print(f"[red]Error details: {str(e)}[/red]")
             import traceback
-            console.print(f"[dim]Debug info: {traceback.format_exc()}[/dim]")
+            console.print(f"[dim]Traceback: {traceback.format_exc()}[/dim]")
+
+    def _profile_management_action(self, args):
+        """Unified profile management with auto-watch resume functionality."""
+        from src.cli.actions.profile_actions import ProfileActions
+        from rich.prompt import Prompt, Confirm
+        from pathlib import Path
+        
+        console.print(Panel("👤 Profile Management (Auto-Watch Resume)", style="bold green"))
+        
+        # Get profile name
+        profile_name = Prompt.ask("Enter profile name")
+        profile_path = Path("profiles") / profile_name
+        
+        # Check if profile exists
+        if profile_path.exists():
+            console.print(f"[cyan]📁 Profile '{profile_name}' already exists[/cyan]")
+            
+            # Check for existing resume files
+            resume_files = []
+            for ext in ['*.pdf', '*.doc', '*.docx', '*.txt']:
+                resume_files.extend(profile_path.glob(ext))
+            
+            if resume_files:
+                console.print(f"[green]📄 Found {len(resume_files)} resume file(s)[/green]")
+                if Confirm.ask("Scan existing resume files now?", default=True):
+                    # Scan existing resumes
+                    from types import SimpleNamespace
+                    profile_args = SimpleNamespace(profile=profile_name)
+                    profile_actions = ProfileActions(self.profile)
+                    success = profile_actions.scan_resume_action(profile_args)
+                    
+                    if success:
+                        console.print("[green]✅ Profile updated from existing resume![/green]")
+                        return
+            
+            # Ask if they want to watch for new resume files
+            if Confirm.ask("Watch folder for new resume files?", default=True):
+                self._start_resume_watch(profile_path, profile_name)
+            
+        else:
+            # Create new profile
+            console.print(f"[cyan]📁 Creating new profile '{profile_name}'[/cyan]")
+            
+            # Create profile directory and template
+            profile_path.mkdir(parents=True, exist_ok=True)
+            
+            # Copy template
+            template_path = Path("profiles/profile_template.json")
+            profile_file = profile_path / "profile.json"
+            
+            if template_path.exists():
+                import json
+                import time
+                with open(template_path, 'r', encoding='utf-8') as f:
+                    profile_data = json.load(f)
+                
+                profile_data["profile_name"] = profile_name
+                profile_data["name"] = profile_name
+                profile_data["created_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+                
+                with open(profile_file, 'w', encoding='utf-8') as f:
+                    json.dump(profile_data, f, indent=2)
+            
+            console.print(f"[green]✅ Profile '{profile_name}' created successfully![/green]")
+            console.print(f"[cyan]📁 Location: {profile_path}[/cyan]")
+            
+            # Start watching for resume files
+            self._start_resume_watch(profile_path, profile_name)
+    
+    def _start_resume_watch(self, profile_path: Path, profile_name: str):
+        """Start watching for resume files with auto-processing."""
+        from src.cli.actions.profile_actions import ProfileActions
+        
+        console.print("\n" + "="*60)
+        console.print(Panel(
+            f"👀 [bold green]WATCHING FOR RESUME FILES[/bold green]\n\n"
+            f"📁 Profile folder: [cyan]{profile_path}[/cyan]\n"
+            f"📄 [yellow]Drop your resume file here (PDF, DOC, DOCX, TXT)[/yellow]\n"
+            f"🤖 [green]It will be automatically processed![/green]\n\n"
+            f"[dim]Press Enter after copying your resume file to process it immediately[/dim]\n"
+            f"[dim]Or press Ctrl+C to stop watching[/dim]",
+            title=f"Profile: {profile_name}",
+            border_style="green"
+        ))
+        
+        try:
+            # Check if resume already exists
+            resume_files = []
+            for ext in ['*.pdf', '*.doc', '*.docx', '*.txt']:
+                resume_files.extend(profile_path.glob(ext))
+            
+            if resume_files:
+                console.print(f"[green]📄 Resume file detected: {resume_files[0].name}[/green]")
+                input("Press Enter to process it...")
+                
+                # Process the resume
+                from types import SimpleNamespace
+                profile_args = SimpleNamespace(profile=profile_name)
+                profile_actions = ProfileActions(self.profile)
+                success = profile_actions.scan_resume_action(profile_args)
+                
+                if success:
+                    console.print("[green]✅ Resume processed successfully![/green]")
+                    console.print("[cyan]💡 Keywords and skills extracted automatically[/cyan]")
+                else:
+                    console.print("[red]❌ Resume processing failed![/red]")
+                return
+            
+            # Set up file watcher for new files
+            from src.cli.actions.profile_actions import ResumeWatcher
+            from watchdog.observers import Observer
+            import time
+            
+            event_handler = ResumeWatcher(str(profile_path), profile_name)
+            observer = Observer()
+            observer.schedule(event_handler, str(profile_path), recursive=False)
+            observer.start()
+            
+            try:
+                while True:
+                    user_input = input("Press Enter after copying resume (or 'q' to quit): ")
+                    if user_input.lower() == 'q':
+                        break
+                    
+                    # Check for new resume files
+                    new_resume_files = []
+                    for ext in ['*.pdf', '*.doc', '*.docx', '*.txt']:
+                        new_resume_files.extend(profile_path.glob(ext))
+                    
+                    if new_resume_files:
+                        console.print(f"[green]📄 Processing resume: {new_resume_files[0].name}[/green]")
+                        
+                        # Process the resume
+                        from types import SimpleNamespace
+                        profile_args = SimpleNamespace(profile=profile_name)
+                        profile_actions = ProfileActions(self.profile)
+                        success = profile_actions.scan_resume_action(profile_args)
+                        
+                        if success:
+                            console.print("[green]✅ Resume processed successfully![/green]")
+                            console.print("[cyan]💡 Keywords and skills extracted automatically[/cyan]")
+                            break
+                        else:
+                            console.print("[red]❌ Resume processing failed![/red]")
+                    else:
+                        console.print("[yellow]⚠️ No resume files found. Please copy your resume to the folder.[/yellow]")
+                        
+            except KeyboardInterrupt:
+                console.print("\n🛑 [yellow]Stopped watching for files.[/yellow]")
+            finally:
+                observer.stop()
+                observer.join()
+                
+        except Exception as e:
+            console.print(f"[red]❌ Error in profile management: {e}[/red]")
 
     def run_interactive_mode(self, args) -> int:
         """Run the interactive menu mode."""

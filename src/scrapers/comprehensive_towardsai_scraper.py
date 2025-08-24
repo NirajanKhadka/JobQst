@@ -532,21 +532,4 @@ class ComprehensiveTowardsAIScraper:
             console.print(f"[green]✅ {saved_count}/{len(jobs)} jobs saved to database![/green]")
 
 
-async def main():
-    """Main function to run TowardsAI scraping."""
-    scraper = ComprehensiveTowardsAIScraper("Nirajan")
-    
-    try:
-        jobs = await scraper.scrape_all_keywords(max_jobs_per_keyword=15)
-        
-        console.print(f"\n✅ TowardsAI scraping complete! Found {len(jobs)} jobs")
-        console.print("Jobs saved to database and ready for processing")
-        
-    except KeyboardInterrupt:
-        console.print("\n⚠️ Scraping interrupted by user")
-    except Exception as e:
-        console.print(f"\n❌ Scraping failed: {e}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+async # Main function removed - use scraper class directly

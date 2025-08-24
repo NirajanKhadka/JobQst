@@ -63,8 +63,7 @@ class RealWorkerMonitorService:
             "processor_worker_2": "Secondary job processor - backup processing", 
             "processor_worker_3": "Tertiary job processor - high availability",
             "processor_worker_4": "Additional job processor - scale capacity",
-            "processor_worker_5": "Additional job processor - max throughput",
-            "applicator": "Automated job application submitter"
+            "processor_worker_5": "Additional job processor - max throughput"
         }
         
         # Try to discover existing processes (only if psutil available)
@@ -97,7 +96,6 @@ class RealWorkerMonitorService:
             "processor_worker_1": ["python", "src/simple_job_processor_llama3.py"],
             "processor_worker_2": ["python", "src/simple_job_processor_llama3.py", "--secondary"],
             "processor_worker_3": ["python", "src/simple_job_processor_llama3.py", "--tertiary"],
-            "applicator": ["python", "src/apply_jobs.py"],
             # Add more mappings as needed
         }
         cmd = script_map.get(service_name)

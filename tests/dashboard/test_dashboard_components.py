@@ -25,7 +25,7 @@ from src.dashboard.components.metrics import render_metrics
 from src.dashboard.components.job_table import render_job_table
 from src.dashboard.components.charts import render_charts
 from src.dashboard.components.orchestration_component import ImprovedOrchestrationComponent
-from src.dashboard.components.document_generation_component import DocumentGenerationComponent
+# DocumentGenerationComponent removed
 from src.dashboard.unified_dashboard import main as dashboard_main
 
 
@@ -220,13 +220,8 @@ class TestDashboardComponents:
             pytest.skip("Orchestration component not available")
     
     def test_document_generation_component(self, mock_streamlit):
-        """Test document generation component."""
-        try:
-            component = DocumentGenerationComponent("test_profile")
-            assert hasattr(component, 'render')
-        except ImportError:
-            # Component might not be available
-            pytest.skip("Document generation component not available")
+        """Test document generation component - REMOVED."""
+        pytest.skip("Document generation component has been removed")
 
 
 class TestDashboardAPI:

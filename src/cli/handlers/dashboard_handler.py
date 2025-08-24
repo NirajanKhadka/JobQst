@@ -26,7 +26,7 @@ from rich.prompt import Prompt
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from src.utils.job_helpers import generate_job_hash
-from src.dashboard.dashboard_manager import DashboardManager
+# DashboardManager removed - using direct streamlit commands
 import psutil
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ class DashboardHandler:
         self.profile = profile
         self.session = {}
         self.port = 8501  # Modern Dashboard port
-        self.dashboard_manager = DashboardManager()
+        # Dashboard manager removed - using direct streamlit commands
 
     def show_status_and_dashboard(self) -> None:
         """Show system status and launch Modern Dashboard."""
@@ -101,14 +101,14 @@ class DashboardHandler:
         console.print(f"[cyan]Keywords: {', '.join(keywords)}[/cyan]")
 
         # Dashboard status
-        dashboard_running = self.dashboard_manager.is_dashboard_running(self.port)
+        dashboard_running = self._is_dashboard_running()
 
         if dashboard_running:
             console.print(
-                f"[green]✅ Modern Dashboard: Running on http://localhost:{self.port}[/green]"
+                f"[green]✅ Clean Dashboard: Running on http://localhost:{self.port}[/green]"
             )
         else:
-            console.print(f"[red]❌ Modern Dashboard: Not running[/red]")
+            console.print(f"[red]❌ Clean Dashboard: Not running[/red]")
 
         # System metrics
         try:
@@ -123,18 +123,58 @@ class DashboardHandler:
         except Exception as e:
             console.print(f"[yellow]⚠️ Could not get system metrics: {e}[/yellow]")
 
+    def _is_dashboard_running(self) -> bool:
+        """Check if dashboard is running on the port."""
+        try:
+            import requests
+            response = requests.get(f"http://localhost:{self.port}", timeout=2)
+            return response.status_code == 200
+        except:
+            return False
+
     def auto_start_dashboard(self) -> bool:
-        """Automatically start the Modern Dashboard."""
-        console.print(f"[cyan]🚀 Starting Modern Dashboard on port {self.port}...[/cyan]")
-        console.print("[cyan]✨ Features: Clean UI • Utility-Focused • High Performance[/cyan]")
+        """Automatically start the available dashboard."""
+        console.print("[cyan]🚀 Starting Dashboard...[/cyan]")
 
         try:
-            # Use the Modern Dashboard manager with profile name
-            profile_name = self.profile.get("profile_name", "Nirajan")
-            success = self.dashboard_manager.start_dashboard("modern", profile_name=profile_name)
+            # Check if already running
+            if self._is_dashboard_running():
+                console.print("[yellow]⚠️ Dashboard already running![/yellow]")
+                console.print(f"[cyan]🌐 Dashboard URL: http://localhost:{self.port}[/cyan]")
+                webbrowser.open(f"http://localhost:{self.port}")
+                return True
 
-            if success:
-                console.print("[green]✅ Modern Dashboard started successfully![/green]")
+            # Check for available dashboard types
+            dash_app_path = Path("src/dashboard/dash_app/app.py")
+            
+            if dash_app_path.exists():
+                # Use Dash dashboard (port 8050 default for Dash)
+                self.port = 8050  # Update port for Dash
+                python_path = r"C:\Users\Niraj\miniconda3\envs\auto_job\python.exe"
+                cmd = [
+                    python_path, str(dash_app_path)
+                ]
+                console.print("[cyan]🚀 Starting Dash Dashboard on port 8050...[/cyan]")
+            else:
+                console.print(
+                    "[red]❌ No dashboard found at:[/red]"
+                )
+                console.print(f"  - {dash_app_path}")
+                return False
+            
+            process = subprocess.Popen(
+                cmd, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE,
+                cwd=os.getcwd()
+            )
+            
+            # Wait a moment for startup
+            time.sleep(3)
+            
+            # Check if it started successfully
+            if self._is_dashboard_running():
+                console.print("[green]✅ Clean Dashboard started successfully![/green]")
                 console.print(f"[cyan]🌐 Dashboard URL: http://localhost:{self.port}[/cyan]")
                 console.print("[yellow]💡 Use 'shutdown' action to stop the dashboard.[/yellow]")
 
@@ -142,56 +182,66 @@ class DashboardHandler:
                 webbrowser.open(f"http://localhost:{self.port}")
                 return True
             else:
-                console.print("[red]❌ Modern Dashboard failed to start.[/red]")
+                console.print("[red]❌ Clean Dashboard failed to start.[/red]")
                 return False
 
         except Exception as e:
-            console.print(f"[red]❌ Error starting Modern Dashboard: {e}[/red]")
+            console.print(f"[red]❌ Error starting Clean Dashboard: {e}[/red]")
             return False
 
     def stop_dashboard(self) -> bool:
-        """Stop the running Modern Dashboard process."""
+        """Stop the running Clean Dashboard process."""
         try:
-            self.dashboard_manager.stop_dashboard("modern")
-            console.print("[green]✅ Modern Dashboard stopped successfully[/green]")
-            return True
+            # Find and kill streamlit processes on our port
+            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+                try:
+                    if 'streamlit' in proc.info['name'].lower():
+                        cmdline = ' '.join(proc.info['cmdline'])
+                        if str(self.port) in cmdline:
+                            proc.kill()
+                            console.print("[green]✅ Clean Dashboard stopped successfully[/green]")
+                            return True
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+            
+            console.print("[yellow]⚠️ No dashboard process found to stop[/yellow]")
+            return False
         except Exception as e:
-            console.print(f"[red]❌ Error stopping Modern Dashboard: {e}[/red]")
+            console.print(f"[red]❌ Error stopping Clean Dashboard: {e}[/red]")
             return False
 
     def debug_dashboard(self) -> None:
-        """Debug Modern Dashboard issues."""
-        console.print(Panel("🔧 Modern Dashboard Debug", style="bold blue"))
+        """Debug Clean Dashboard issues."""
+        console.print(Panel("🔧 Clean Dashboard Debug", style="bold blue"))
 
         # Check if dashboard file exists
-        dashboard_path = Path("src/dashboard/modern_dashboard.py")
+        dashboard_path = Path("src/dashboard/unified_dashboard.py")
         if not dashboard_path.exists():
             console.print(
-                "[red]❌ Modern dashboard file not found: src/dashboard/modern_dashboard.py[/red]"
+                "[red]❌ Clean dashboard file not found: src/dashboard/unified_dashboard.py[/red]"
             )
             return
 
-        # Check if dashboard can be imported
-        try:
-            from src.dashboard import modern_dashboard
-
-            console.print("[green]✅ Modern dashboard module can be imported[/green]")
-        except ImportError as e:
-            console.print(f"[red]❌ Dashboard import error: {e}[/red]")
+        # Check if dashboard components exist
+        components_path = Path("src/dashboard/components")
+        if not components_path.exists():
+            console.print(f"[red]❌ Dashboard components not found: {components_path}[/red]")
             return
 
+        console.print("[green]✅ Clean dashboard files found[/green]")
+
         # Try to start dashboard
-        console.print("[cyan]🔄 Attempting to start Modern Dashboard...[/cyan]")
+        console.print("[cyan]🔄 Attempting to start Clean Dashboard...[/cyan]")
         if self.auto_start_dashboard():
-            console.print("[green]✅ Modern Dashboard debug successful![/green]")
+            console.print("[green]✅ Clean Dashboard debug successful![/green]")
         else:
-            console.print("[red]❌ Modern Dashboard debug failed[/red]")
+            console.print("[red]❌ Clean Dashboard debug failed[/red]")
 
     def show_dashboard_info(self) -> None:
         """Show detailed dashboard information."""
-        console.print(Panel("📊 Modern Dashboard Information", style="bold blue"))
+        console.print(Panel("📊 Clean Dashboard Information", style="bold blue"))
 
-        dashboard_running = self.dashboard_manager.is_dashboard_running(self.port)
+        dashboard_running = self._is_dashboard_running()
 
         table = Table(title="Dashboard Status")
         table.add_column("Property", style="cyan")

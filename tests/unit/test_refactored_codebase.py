@@ -56,9 +56,9 @@ def test_scraper_imports():
     
     scraper_tests = [
         ("scrapers.base_scraper", "BaseJobScraper", "Base scraper class"),
-        ("scrapers.eluta_Improved", "ElutaImprovedScraper", "Improved Eluta scraper"),
-        ("scrapers.ultra_parallel_scraper", "UltraParallelScraper", "Ultra parallel scraper"),
-        ("scrapers.indeed_Improved", "ImprovedIndeedScraper", "Improved Indeed scraper"),
+        ("scrapers.unified_eluta_scraper", "ElutaScraper", "Unified Eluta scraper"),
+        ("scrapers.jobspy_enhanced_scraper", "JobSpyImprovedScraper", "JobSpy enhanced scraper"),
+        ("scrapers.eluta_scraper", "ElutaScraper", "Eluta scraper"),
     ]
     
     results = []
@@ -166,7 +166,7 @@ def test_removed_dependencies():
     removed_modules = [
         "scrapers.parallel_scraper",
         "scrapers.Configurable_parallel_scraper",
-        "comprehensive_eluta_scraper",
+        "unified_eluta_scraper",
         "standalone_scraper",
         "production_comprehensive_scraper"
     ]
@@ -218,8 +218,8 @@ def test_performance_benchmark():
         }
         
         start_time = time.time()
-        from src.scrapers.comprehensive_eluta_scraper import ComprehensiveElutaScraper
-        scraper = ComprehensiveElutaScraper("test")
+        from src.scrapers.unified_eluta_scraper import ElutaScraper
+        scraper = ElutaScraper("test")
         scraper_time = time.time() - start_time
         
         console.print(f"[cyan]Scraper instantiation time: {scraper_time:.3f} seconds[/cyan]")

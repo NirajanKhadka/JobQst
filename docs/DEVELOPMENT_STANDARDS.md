@@ -1,5 +1,6 @@
 ---
 post_title: "JobLens Development Standards - Reference"
+**🚨 PRIORITY RULE #3: ABSOLUTELY NO FAKE/TEST/SAMPLE DATA IN PRODUCTION CODE - VIOLATION WILL BE REPORTED**
 author1: "Nirajan Khadka"
 post_slug: "development-standards-complete"
 microsoft_alias: "nirajank"
@@ -51,29 +52,17 @@ post_date: "2025-07-17"
 
 ## ⚙️ **Application Orchestration Standards**
 
-### **Job Application Processor/Orchestrator**
-- All automated job applications must be managed by a background orchestration service (e.g., `ApplierOrchestrationService`).
+### **Job Processing Orchestrator**
+- All automated job processing must be managed by background orchestration services.
 - The orchestrator must:
-  - Support queueing of job applications with configurable priorities (e.g., match score, deadline).
-  - Enforce rate limiting (e.g., max N applications per hour) to avoid spam detection.
-  - Track and expose real-time status for each job application (Queued, In Progress, Completed, Failed).
+  - Support queueing of job processing tasks with configurable priorities.
+  - Enforce rate limiting to avoid system overload.
+  - Track and expose real-time status for each processing task (Queued, In Progress, Completed, Failed).
   - Provide error handling and retry logic (with exponential backoff for failures).
-  - Allow manual override (pause/resume/cancel individual applications).
-  - Maintain a complete audit trail of all application attempts.
-- The dashboard must display per-job status and allow triggering individual applications ("Apply Now").
+  - Allow manual override (pause/resume/cancel individual tasks).
+  - Maintain a complete audit trail of all processing attempts.
+- The dashboard must display per-job status and processing metrics.
 - All orchestration logic should be modular and testable, with clear API boundaries.
-
-### **Document Generation Orchestration**
-- Resume and cover letter generation must be handled by a dedicated orchestration layer (e.g., worker pool, document generation queue).
-- The document generator must:
-  - Support parallel/concurrent generation (e.g., up to 5 workers).
-  - Use only real profile data (no placeholders or fabricated content).
-  - Provide reliable error handling and clear status reporting for each document.
-  - Save all generated files in a structured, job-specific output directory.
-  - Expose API or CLI for both batch and single-document generation.
-  - Ensure all output is ATS-friendly and meets formatting standards.
-- The orchestration layer must be able to recover from worker failures and retry as needed.
-- All document generation orchestration code must be covered by integration tests.
 
 ---
 
@@ -336,86 +325,7 @@ async def coordinate_workers(configs: List[Dict], max_workers: int = 3):
 
 ---
 
-## 📄 **Document Generation Standards**
-
-### **Python Rules**
-- Use descriptive, intent-revealing names for all generation classes, functions, and variables.
-- All document generators must implement a common interface for generation and validation.
-- No global variables; use dependency injection for configuration and templates.
-- Use type hints for all functions and method signatures.
-- All public functions/classes must have docstrings.
-- Limit document generation functions to 30 lines or less.
-- Handle all file I/O, template, and API errors with retries and logging.
-- Never hardcode credentials or API keys.
-- All generated content must use real profile data, never placeholder text.
-- All document generation must be reproducible and deterministic.
-- All generators must validate output before saving (no placeholder detection).
-
-### **Document Quality Requirements**
-- Generated resumes must be ATS-compatible and professionally formatted.
-- Generated cover letters must be personalized and relevant to the specific job.
-- All documents must pass automated quality checks before being saved.
-- No template placeholder text (e.g., "[Your Name]", "{{company}}") in final output.
-- All documents must be saved in both source format and PDF.
-
-### **Document Documentation & Comments**
-- Every document generator must have a docstring explaining its purpose and output format.
-- Inline comments for any non-obvious template logic or transformations.
-- Document all required profile fields and template variables.
-
-### **Document Testing & Quality**
-- All document generators must have unit tests for core logic and integration tests for end-to-end generation.
-- No placeholder/fake data in production document generators.
-- All changes must be reviewed for document quality and professional standards.
-- All generators must be monitored for success rates and output quality.
-
-### **Document Performance**
-- Use efficient template engines and avoid unnecessary file I/O.
-- Profile document generation performance and optimize for speed.
-- Support parallel/concurrent generation where possible.
-
----
-
-## 🤖 **Application Applier Module Standards**
-
-### **Python Rules**
-- Use descriptive, intent-revealing names for all classes, functions, and variables.
-- All applier services must implement clear interfaces for queuing, processing, and status tracking.
-- No global variables; use dependency injection for configuration and state.
-- Use type hints for all functions and method signatures.
-- All public functions/classes must have docstrings.
-- Limit orchestration and worker functions to 30 lines or less.
-- Handle all network, file, and API errors with retries, logging, and user feedback.
-- Never hardcode credentials or API keys.
-- All retry logic must be idempotent and safe for repeated execution.
-- All concurrency (threads, async, processes) must be safe and avoid race conditions.
-
-### **Orchestration Requirements**
-- All job applications must be queued and processed asynchronously.
-- Support priority-based processing (e.g., application deadline, match score).
-- Implement comprehensive logging and audit trails for all application attempts.
-- Provide real-time status updates for queued, processing, completed, and failed applications.
-- Support manual intervention (pause, resume, cancel) for any queued application.
-
-### **Applier Documentation & Comments**
-- Every applier class must have a docstring explaining its target ATS and application flow.
-- Inline comments for any non-obvious form-filling or automation logic.
-- Document all required configuration and environment variables.
-
-### **Applier Testing & Quality**
-- All appliers must have unit tests for core logic and integration tests for ATS connectivity.
-- No placeholder/fake data in production appliers.
-- All changes must be reviewed for ATS compliance and application success rates.
-- All appliers must be monitored for health and success rates.
-
-### **Applier Performance**
-- Use efficient form-filling strategies and minimize redundant operations.
-- Profile applier performance and optimize for speed and reliability.
-- Support parallel processing where ATS systems allow.
-
----
-
-## 🗄️ **Database Best Practices**
+## ️ **Database Best Practices**
 
 ### **Connection Management**
 ```python

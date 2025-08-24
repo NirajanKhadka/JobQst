@@ -7,6 +7,11 @@ beautifulsoup4>=4.11.0
 playwright>=1.42.0
 aiohttp>=3.9.0
 
+# Database - PostgreSQL support
+psycopg2-binary>=2.9.7
+sqlalchemy>=2.0.0
+alembic>=1.12.0
+
 # Document processing
 python-docx>=0.8.11
 openpyxl>=3.0.10

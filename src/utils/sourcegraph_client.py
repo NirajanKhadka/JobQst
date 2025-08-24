@@ -296,9 +296,8 @@ def search_dashboard_code(client: SourcegraphClient, repo: Optional[str] = None)
 
 
 # Example usage and integration
-if __name__ == "__main__":
-    # Initialize client
-    client = SourcegraphClient()
+# Main functionality moved to CLI module or tests
+# Import and use the functions directly
 
     # Check if Sourcegraph is running
     if not client.health_check():

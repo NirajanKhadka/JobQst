@@ -21,6 +21,8 @@ Examples:
   python main.py Nirajan --action dashboard        # Launch dashboard
   python main.py Nirajan --action shutdown         # Stop the dashboard
   python main.py Nirajan --action status           # Show status
+  python main.py --action create-profile --name "John" --watch  # Create profile and wait for resume
+  python main.py --action scan-resume John         # Scan resume in existing profile
         """,
     )
 
@@ -41,6 +43,8 @@ Examples:
             "setup",
             "process-queue",
             "shutdown",
+            "create-profile",
+            "scan-resume",
         ],
         default="interactive",
         help="Action to perform",
@@ -63,6 +67,11 @@ Examples:
         choices=["workday", "icims", "greenhouse", "lever", "bamboohr", "auto", "manual"],
         help="ATS system to target (or 'auto' to detect)",
     )
+
+    # Profile creation options
+    parser.add_argument("--name", help="Name for new profile creation")
+    parser.add_argument("--watch", action="store_true", help="Watch folder for resume files after profile creation")
+    parser.add_argument("--resume-path", help="Path to resume file for profile creation")
 
     # General options
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
