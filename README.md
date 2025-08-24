@@ -1,4 +1,4 @@
-# JobLens - Intelligent Job Discovery & Automation Platform
+# JobQst - Intelligent Job Discovery & Automation Platform
 
 <div align="center">
 
@@ -7,7 +7,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Playwright](https:/### **Getting Help**
-- **[🐛 Issue Tracker](https://github.com/NirajanKhadka/automate_job_idea001/issues)** - Report bugs and feature requests
+- **[🐛 Issue Tracker](https://github.com/NirajanKhadka/automate_job_idea001/issues)** - Special thanks to all contributors, testers, and users who make JobQst better every day!eport bugs and feature requests
 - **[💬 Discussions](https://github.com/NirajanKhadka/automate_job_idea001/discussions)** - Community support and Q&A.shields.io/badge/Playwright-Automation-34D399.svg)](https://playwright.dev/)
 [![Dash](https://img.shields.io/badge/Dash-Dashboard-00D4AA.svg)](https://dash.plotly.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-316192.svg)](https://www.postgresql.org/)
@@ -18,9 +18,9 @@
 
 ---
 
-## What is JobLens?
+## What is JobQst?
 
-JobLens is a comprehensive job discovery and automation platform that streamlines job searching across multiple sources, provides intelligent job-profile matching, and offers powerful analytics through modern dashboard interfaces. Built with a modular, scalable architecture supporting both CLI automation and interactive web interfaces.
+JobQst is a comprehensive job discovery and automation platform that streamlines job searching across multiple sources, provides intelligent job-profile matching, and offers powerful analytics through modern dashboard interfaces. Built with a modular, scalable architecture supporting both CLI automation and interactive web interfaces.
 
 ### 🎯 **Perfect For:**
 - **Job Seekers** who want automated, intelligent job discovery and tracking
@@ -136,7 +136,7 @@ python src/dashboard/dash_app/app.py
 
 ## Architecture Overview
 
-JobLens follows a modular, event-driven architecture designed for scalability and maintainability:
+JobQst follows a modular, event-driven architecture designed for scalability and maintainability:
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌──────────────────────┐
@@ -239,7 +239,7 @@ python src/dashboard/dash_app/app.py
 ### Environment Setup
 ```bash
 # Essential environment variables (.env)
-DATABASE_URL=postgresql://user:password@localhost/joblens  # or sqlite:///jobs.db
+DATABASE_URL=postgresql://user:password@localhost/jobqst  # or sqlite:///jobs.db
 SCRAPING_DELAY=2
 MAX_CONCURRENT_WORKERS=4
 BROWSER_HEADLESS=true
@@ -343,13 +343,13 @@ Use `Ctrl+Shift+P` → "Tasks: Run Task":
 ### Local Production Setup
 ```bash
 # 1. Production environment setup
-conda create -n joblens_prod python=3.11
-conda activate joblens_prod
+conda create -n jobqst_prod python=3.11
+conda activate jobqst_prod
 pip install -r requirements.txt
 
 # 2. PostgreSQL database setup (recommended for production)
-createdb joblens_production
-export DATABASE_URL=postgresql://user:password@localhost/joblens_production
+createdb jobqst_production
+export DATABASE_URL=postgresql://user:password@localhost/jobqst_production
 
 # 3. Run database migrations
 python -c "from src.core.database_migration import run_migrations; run_migrations()"
@@ -369,7 +369,7 @@ docker-compose up -d
 
 # Check service health
 docker-compose ps
-docker-compose logs joblens-app
+docker-compose logs jobqst-app
 ```
 
 ### Cloud Deployment Options
@@ -389,9 +389,9 @@ docker-compose logs joblens-app
 #### Option 3: Self-Hosted
 ```bash
 # Systemd service example (Ubuntu/CentOS)
-sudo cp deploy/joblens.service /etc/systemd/system/
-sudo systemctl enable joblens
-sudo systemctl start joblens
+sudo cp deploy/jobqst.service /etc/systemd/system/
+sudo systemctl enable jobqst
+sudo systemctl start jobqst
 ```
 
 ## Documentation & Resources
@@ -477,13 +477,13 @@ python main.py YourProfile --action analyze-jobs  # Ensure jobs are processed
 ### **Getting Help**
 - **[� Issue Tracker](https://github.com/NirajanKhadka/automate_job_idea001/issues)** - Report bugs and feature requests
 - **[💬 Discussions](https://github.com/NirajanKhadka/automate_job_idea001/discussions)** - Community support and Q&A
-- **[📧 Contact](mailto:contact@joblens.dev)** - Direct support (if available)
+- **[📧 Contact](mailto:contact@jobqst.dev)** - Direct support (if available)
 
 ---
 
 ## Contributing
 
-We welcome contributions! JobLens is actively developed and always looking for improvements.
+We welcome contributions! JobQst is actively developed and always looking for improvements.
 
 ### 🚀 **Development Setup**
 ```bash
@@ -492,8 +492,8 @@ git clone https://github.com/YourUsername/automate_job_idea001.git
 cd automate_job_idea001
 
 # 2. Create development environment
-conda create -n joblens_dev python=3.11
-conda activate joblens_dev
+conda create -n jobqst_dev python=3.11
+conda activate jobqst_dev
 pip install -r requirements.txt
 pip install -r requirements-dev.txt  # if available
 
@@ -559,7 +559,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ❗ **Attribution** - Must include original license notice
 
 ### **Third-Party Licenses**
-JobLens integrates with several open-source projects:
+JobQst integrates with several open-source projects:
 - **[JobSpy](https://github.com/speedyapply/JobSpy)** - MIT License
 - **[Playwright](https://github.com/microsoft/playwright-python)** - Apache 2.0
 - **[Dash](https://github.com/plotly/dash)** - MIT License

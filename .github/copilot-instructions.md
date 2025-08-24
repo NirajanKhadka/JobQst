@@ -1,4 +1,10 @@
-# JobLens AI Coding Agent Instructions
+# JobQst AI Coding Agent Instructions
+
+This document provides essential guidance for AI coding agents working on the JobQst codebase. Following these instructions will help you be more effective and align with the project's architecture and conventions.
+
+## 1. Core Architecture & "Big Picture"
+
+JobQst is a profile-driven, automated job discovery and analysis tool. Its architecture is designed for modularity and scalability.ns AI Coding Agent Instructions
 
 This document provides essential guidance for AI coding agents working on the JobLens codebase. Following these instructions will help you be more effective and align with the project's architecture and conventions.
 

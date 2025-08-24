@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "joblens"
+name = "jobqst"
 version = "2.0.0"
 description = "Profile-driven job scraping, matching, and ranking"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "JobLens Team"},
-    {email = "dev@joblens.dev"}
+    {name = "JobQst Team"},
+    {email = "dev@jobqst.dev"}
 ]
 keywords = ["job-discovery", "matching", "ranking", "profile", "web-scraping"]
 classifiers = [
