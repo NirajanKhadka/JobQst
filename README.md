@@ -7,7 +7,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Playwright](https://img.shields.io/badge/Playwright-Automation-34D399.svg)](https://playwright.dev/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B.svg)](https://streamlit.io/)
+[![Dash](https://img.shields.io/badge/Dash-Dashboard-00D4AA.svg)](https://dash.plotly.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-316192.svg)](https://www.postgresql.org/)
 
 [🚀 Quick Start](#-quick-start) • [📖 Documentation](docs/) • [🔧 Setup](#installation) • [🤝 Contributing](#-contributing)
@@ -29,7 +29,7 @@ JobLens is a comprehensive job discovery and automation platform that streamline
 ### ✨ **Current Features (August 2025)**
 - ✅ **Multi-Source Scraping** - JobSpy integration (Indeed, LinkedIn, Glassdoor, ZipRecruiter) + Eluta.ca
 - ✅ **PostgreSQL Database** - Robust data storage with profile-based organization
-- ✅ **Modern Dashboards** - Streamlit + Dash interfaces with React/FastAPI planned
+- ✅ **Dash Dashboard** - Interactive web interface with analytics and visualizations
 - ✅ **Intelligent Matching** - AI-powered job-profile compatibility scoring
 - ✅ **Parallel Processing** - Concurrent scraping with configurable worker limits
 
@@ -61,12 +61,12 @@ JobLens is a comprehensive job discovery and automation platform that streamline
 </td>
 <td width="33%">
 
-### 📊 Modern Dashboard Interfaces
-- **Streamlit Dashboard**: Primary interactive interface
-- **Dash Analytics**: Advanced visualizations and insights
-- **FastAPI + React**: Next-gen dashboard (in development)
+### 📊 Modern Dashboard Interface
+- **Dash Analytics**: Interactive web dashboard with Plotly visualizations
 - **Real-time Monitoring**: Live scraping and processing status
 - **Profile Management**: Visual configuration and management
+- **Job Analytics**: Charts, filters, and insights
+- **Multi-tab Interface**: Jobs, Analytics, Processing, System monitoring
 
 </td></tr>
 </table>
@@ -118,8 +118,8 @@ python main.py YourProfile --action analyze-jobs
 # 3. Launch interactive dashboard
 python main.py YourProfile --action dashboard
 
-# 4. Alternative: Direct dashboard launch
-streamlit run src/dashboard/unified_dashboard.py
+# 4. Alternative: Direct Dash app launch
+python src/dashboard/dash_app/app.py
 ```
 
 ### Available Actions
@@ -129,7 +129,7 @@ streamlit run src/dashboard/unified_dashboard.py
 | `jobspy-pipeline` | **Modern scraping** with JobSpy integration | `--jobspy-preset usa_comprehensive` |
 | `scrape` | **Legacy scraping** with Eluta fallback | `--keywords "python,data"` |
 | `analyze-jobs` | **AI analysis** and scoring of scraped jobs | Auto-processes all jobs in profile |
-| `dashboard` | **Streamlit interface** for browsing and management | Opens at http://localhost:8501 |
+| `dashboard` | **Dash interface** for browsing and management | Opens web dashboard |
 | `interactive` | **CLI menu** for guided workflows | Interactive command selection |
 
 ## Architecture Overview
@@ -149,9 +149,9 @@ JobLens follows a modular, event-driven architecture designed for scalability an
 ┌─────────────────┐    ┌──────────────────┐    ┌──────────────────────┐
 │    Database     │    │   Event System   │    │     Dashboards       │
 │                 │    │                  │    │                      │
-│ • PostgreSQL    │    │ • Local Events   │    │ • Streamlit (main)   │
-│ • SQLite        │    │ • Process        │    │ • Dash (analytics)   │
-│ • Profile-based │    │   Monitoring     │    │ • React (planned)    │
+│ • PostgreSQL    │    │ • Local Events   │    │ • Dash (main)        │
+│ • SQLite        │    │ • Process        │    │ • CLI Tools          │
+│ • Profile-based │    │   Monitoring     │    │                      │
 └─────────────────┘    └──────────────────┘    └──────────────────────┘
 ```
 
@@ -162,7 +162,7 @@ JobLens follows a modular, event-driven architecture designed for scalability an
 | **Scraping Engine** | JobSpy, Playwright, AsyncIO | Multi-source job discovery with parallel processing |
 | **Analysis Pipeline** | Custom AI, Transformers | Profile-based job scoring and skills analysis |
 | **Database Layer** | PostgreSQL/SQLite, SQLAlchemy | Profile-organized job storage with migration support |
-| **Dashboard Suite** | Streamlit, Dash, FastAPI+React | Multiple interface options for different use cases |
+| **Dashboard Suite** | Dash (Plotly), FastAPI+React (planned) | Interactive web interface with analytics and real-time monitoring |
 | **CLI System** | Click, Rich | Automation-friendly command-line operations |
 | **Event System** | Custom Event Bus | Coordinated processing and real-time updates |
 
@@ -207,10 +207,7 @@ print(f"Found {len(top_jobs)} high-fit jobs!")
 # Quick dashboard launch
 python main.py YourProfile --action dashboard
 
-# Direct Streamlit launch
-streamlit run src/dashboard/unified_dashboard.py
-
-# Analytics dashboard
+# Direct Dash app launch
 python src/dashboard/dash_app/app.py
 ```
 
@@ -246,7 +243,6 @@ MAX_CONCURRENT_WORKERS=4
 BROWSER_HEADLESS=true
 
 # Dashboard configuration
-STREAMLIT_PORT=8501
 DASH_PORT=8050
 
 # JobSpy integration
@@ -478,10 +474,10 @@ python main.py YourProfile --action health-check
 
 ```bash
 # Port conflicts
-export STREAMLIT_PORT=8502
+export DASH_PORT=8051
 
 # Dashboard won't start
-python src/dashboard/unified_dashboard.py --debug
+python src/dashboard/dash_app/app.py
 
 # Missing data in dashboard
 python main.py YourProfile --action analyze-jobs  # Ensure jobs are processed
@@ -534,7 +530,7 @@ pytest tests/ -v
 
 #### 🎨 **Dashboard & UI**
 - Complete React + FastAPI dashboard implementation
-- Add new Streamlit components and visualizations
+- Improve Dash components and visualizations
 - Improve mobile responsiveness and accessibility
 - Create interactive analytics and reporting features
 
@@ -580,7 +576,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 JobLens integrates with several open-source projects:
 - **[JobSpy](https://github.com/speedyapply/JobSpy)** - MIT License
 - **[Playwright](https://github.com/microsoft/playwright-python)** - Apache 2.0
-- **[Streamlit](https://github.com/streamlit/streamlit)** - Apache 2.0
+- **[Dash](https://github.com/plotly/dash)** - MIT License
 - **[FastAPI](https://github.com/tiangolo/fastapi)** - MIT License
 
 ---
@@ -589,14 +585,14 @@ JobLens integrates with several open-source projects:
 
 ### **🙏 Special Thanks**
 - **[JobSpy Project](https://github.com/speedyapply/JobSpy)** - Excellent multi-site scraping foundation
-- **[Streamlit Team](https://streamlit.io/)** - Beautiful and simple dashboard framework
+- **[Dash & Plotly Team](https://dash.plotly.com/)** - Powerful analytics dashboard framework
 - **[Playwright Developers](https://playwright.dev/)** - Robust browser automation
 
 ### **🏗️ Built With**
 - **Core Language**: Python 3.11+
 - **Web Scraping**: JobSpy, Playwright, BeautifulSoup, aiohttp
 - **Database**: PostgreSQL, SQLite, SQLAlchemy
-- **Dashboard**: Streamlit, Dash (Plotly), FastAPI + React (planned)
+- **Dashboard**: Dash (Plotly), FastAPI + React (planned)
 - **CLI/UI**: Rich, Click
 - **Testing**: Pytest, Coverage
 - **Development**: Black, isort, mypy (code quality)
