@@ -6,7 +6,9 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Playwright](https://img.shields.io/badge/Playwright-Automation-34D399.svg)](https://playwright.dev/)
+[![Playwright](https:/### **Getting Help**
+- **[🐛 Issue Tracker](https://github.com/NirajanKhadka/automate_job_idea001/issues)** - Report bugs and feature requests
+- **[💬 Discussions](https://github.com/NirajanKhadka/automate_job_idea001/discussions)** - Community support and Q&A.shields.io/badge/Playwright-Automation-34D399.svg)](https://playwright.dev/)
 [![Dash](https://img.shields.io/badge/Dash-Dashboard-00D4AA.svg)](https://dash.plotly.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-316192.svg)](https://www.postgresql.org/)
 
@@ -161,8 +163,8 @@ JobLens follows a modular, event-driven architecture designed for scalability an
 |-----------|------------|---------|
 | **Scraping Engine** | JobSpy, Playwright, AsyncIO | Multi-source job discovery with parallel processing |
 | **Analysis Pipeline** | Custom AI, Transformers | Profile-based job scoring and skills analysis |
-| **Database Layer** | PostgreSQL/SQLite, SQLAlchemy | Profile-organized job storage with migration support |
-| **Dashboard Suite** | Dash (Plotly), FastAPI+React (planned) | Interactive web interface with analytics and real-time monitoring |
+| **Database Layer** | PostgreSQL/SQLite | Profile-organized job storage |
+| **Dashboard Suite** | Dash (Plotly) | Interactive web interface with analytics |
 | **CLI System** | Click, Rich | Automation-friendly command-line operations |
 | **Event System** | Custom Event Bus | Coordinated processing and real-time updates |
 
@@ -334,10 +336,7 @@ python main.py TestProfile --action jobspy-pipeline --jobspy-preset tech_hubs_ca
 Use `Ctrl+Shift+P` → "Tasks: Run Task":
 
 - **Run all tests (pytest)** - Execute full test suite
-- **Start Dashboard Backend** - Launch FastAPI development server
-- **Start Dashboard Frontend** - Run React development environment
 - **Start Dash Dashboard** - Launch Dash analytics interface
-- **Install Frontend Dependencies** - Update npm packages
 
 ## Deployment & Production
 
@@ -400,19 +399,10 @@ sudo systemctl start joblens
 ### 📚 **Core Documentation**
 - **[📖 Documentation Hub](docs/README.md)** - Complete documentation index
 - **[🏗️ Architecture Guide](docs/ARCHITECTURE.md)** - System design and patterns
-- **[👩‍💻 Developer Guide](docs/DEVELOPER_GUIDE.md)** - Setup and development workflows
-- **[🔧 Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[ Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### 🔗 **Quick References**
 - **[⚡ CLI Reference](docs/API_REFERENCE.md#cli-commands)** - All command-line options
-- **[🎛️ Configuration Guide](.env.example)** - Environment variables and settings
-- **[📊 Dashboard Guide](docs/DASHBOARD_IMPLEMENTATION_PLAN.md)** - Web interface documentation
-- **[🛠️ Development Standards](docs/DEVELOPMENT_STANDARDS.md)** - Code quality and patterns
-
-### 🚀 **Advanced Topics**
-- **[📈 Performance Optimization](docs/PERFORMANCE_OPTIMIZATION_STRATEGY.md)** - Scale and efficiency
-- **[💾 Database Migration](docs/DATABASE_MIGRATION_PLAN.md)** - Data management strategies  
-- **[🔐 Security & Privacy](docs/TROUBLESHOOTING.md#security)** - Data protection guidelines
 
 ---
 
@@ -525,12 +515,10 @@ pytest tests/ -v
 #### 🧠 **AI & Analytics** 
 - Improve job-profile matching algorithms
 - Add skills gap analysis and career recommendations
-- Implement salary prediction and market analysis
 - Enhance resume parsing and profile generation
 
 #### 🎨 **Dashboard & UI**
-- Complete React + FastAPI dashboard implementation
-- Improve Dash components and visualizations
+- Improve Dash components and visualizations  
 - Improve mobile responsiveness and accessibility
 - Create interactive analytics and reporting features
 
@@ -538,14 +526,12 @@ pytest tests/ -v
 - Add Docker improvements and orchestration
 - Implement CI/CD pipelines and automated testing
 - Add monitoring, logging, and alerting systems
-- Create deployment automation and scaling solutions
 
 ### 🎯 **Priority Features**
-1. **React Dashboard Completion** - Finish the modern web interface
-2. **Advanced AI Scoring** - Improve job matching intelligence
-3. **Multi-Language Support** - Add internationalization
-4. **Mobile App** - React Native or Progressive Web App
-5. **Enterprise Features** - Team collaboration and admin controls
+1. **Enhanced Dash Dashboard** - Improve the current web interface
+2. **Database Connection Fixes** - Resolve PostgreSQL connectivity issues
+3. **Improved Job Analysis** - Better job matching algorithms
+4. **Mobile-Friendly Interface** - Responsive dashboard design
 
 ### 📝 **Guidelines**
 - **Code Quality**: Follow PEP 8, use type hints, add docstrings
@@ -577,7 +563,6 @@ JobLens integrates with several open-source projects:
 - **[JobSpy](https://github.com/speedyapply/JobSpy)** - MIT License
 - **[Playwright](https://github.com/microsoft/playwright-python)** - Apache 2.0
 - **[Dash](https://github.com/plotly/dash)** - MIT License
-- **[FastAPI](https://github.com/tiangolo/fastapi)** - MIT License
 
 ---
 
@@ -590,12 +575,11 @@ JobLens integrates with several open-source projects:
 
 ### **🏗️ Built With**
 - **Core Language**: Python 3.11+
-- **Web Scraping**: JobSpy, Playwright, BeautifulSoup, aiohttp
-- **Database**: PostgreSQL, SQLite, SQLAlchemy
-- **Dashboard**: Dash (Plotly), FastAPI + React (planned)
+- **Web Scraping**: JobSpy, Playwright
+- **Database**: PostgreSQL, SQLite
+- **Dashboard**: Dash (Plotly)
 - **CLI/UI**: Rich, Click
-- **Testing**: Pytest, Coverage
-- **Development**: Black, isort, mypy (code quality)
+- **Testing**: Pytest
 
 ### **🌟 Community**
 Special thanks to all contributors, testers, and users who make JobLens better every day!
@@ -608,6 +592,6 @@ Special thanks to all contributors, testers, and users who make JobLens better e
 
 [🚀 **Quick Start**](#-quick-start) • [📖 **Documentation**](docs/) • [🤝 **Contribute**](#-contributing)
 
-**Made with ❤️ by the JobLens team**
+**Made with ❤️ for better job discovery**
 
 </div>
