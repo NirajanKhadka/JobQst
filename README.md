@@ -1,35 +1,37 @@
-# JobQst - Intelligent Job Discovery Platform
+# JobLens - Intelligent Job Discovery & Automation Platform
 
 <div align="center">
 
-**🧹 Recently Modernized & Cleaned** - Profile-driven job discovery, matching, and ranking with AI-powered insights.
+**🎯 Profile-Driven Job Discovery** - Automated job searching, intelligent matching, and comprehensive analytics with modern dashboard interfaces.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Playwright](https://img.shields.io/badge/Playwright-Automation-34D399.svg)](https://playwright.dev/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B.svg)](https://streamlit.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-316192.svg)](https://www.postgresql.org/)
 
-[🚀 Quick Start](#-quick-start) • [📖 Documentation](docs/) • [🎥 Demo](#-demo) • [🤝 Contributing](#-contributing)
+[🚀 Quick Start](#-quick-start) • [📖 Documentation](docs/) • [🔧 Setup](#installation) • [🤝 Contributing](#-contributing)
 
 </div>
 
 ---
 
-## What is JobQst?
+## What is JobLens?
 
-JobQst is an intelligent job discovery platform that automates job searching across multiple sites, analyzes job-profile compatibility using AI, and provides comprehensive analytics. Recently modernized with a clean, maintainable architecture.
+JobLens is a comprehensive job discovery and automation platform that streamlines job searching across multiple sources, provides intelligent job-profile matching, and offers powerful analytics through modern dashboard interfaces. Built with a modular, scalable architecture supporting both CLI automation and interactive web interfaces.
 
 ### 🎯 **Perfect For:**
-- **Job Seekers** looking to automate and optimize their job search process
-- **Career Changers** managing applications across different fields with AI insights
-- **Professionals** who want intelligent job matching and application tracking
-- **Anyone** seeking to leverage AI for better job discovery and analysis
+- **Job Seekers** who want automated, intelligent job discovery and tracking
+- **Career Professionals** managing applications across multiple platforms with AI-powered insights  
+- **Tech Workers** seeking opportunities in Canada/USA with location-specific search capabilities
+- **Anyone** who wants to optimize their job search with automation and analytics
 
-### ✨ **What's New (August 2025)**
-- ✅ **56+ files cleaned** - Removed redundant scripts and duplicates
-- ✅ **Architecture streamlined** - Single entry point with library modules
-- ✅ **Zero functionality lost** - All features preserved and enhanced
-- ✅ **AI-powered features** - Enhanced with semantic scoring and smart caching
+### ✨ **Current Features (August 2025)**
+- ✅ **Multi-Source Scraping** - JobSpy integration (Indeed, LinkedIn, Glassdoor, ZipRecruiter) + Eluta.ca
+- ✅ **PostgreSQL Database** - Robust data storage with profile-based organization
+- ✅ **Modern Dashboards** - Streamlit + Dash interfaces with React/FastAPI planned
+- ✅ **Intelligent Matching** - AI-powered job-profile compatibility scoring
+- ✅ **Parallel Processing** - Concurrent scraping with configurable worker limits
 
 ---
 
@@ -39,369 +41,382 @@ JobQst is an intelligent job discovery platform that automates job searching acr
 <tr>
 <td width="33%">
 
-### 🔍 Smart Job Discovery
-- **Dual Strategy**: JobSpy (4 sites) + Eluta.ca fallback
-- **Sites**: Indeed, LinkedIn, Glassdoor, ZipRecruiter
-- **Parallel Processing**: Multi-site concurrent scraping
+### 🔍 Multi-Source Job Discovery
+- **Primary Engine**: JobSpy (Indeed, LinkedIn, Glassdoor, ZipRecruiter)
+- **Fallback**: Eluta.ca for Canadian opportunities
+- **Parallel Workers**: Configurable concurrent scraping
 - **Smart Deduplication**: AI-powered duplicate detection
+- **Geographic Focus**: USA & Canada job markets
 
 </td>
 <td width="33%">
 
-### 🧠 AI-Powered Analysis
-- **Semantic Scoring**: AI job-profile compatibility
-- **Skills Analysis**: Gap identification & suggestions
-- **Resume Analysis**: Auto profile creation from PDFs
-- **Location Intelligence**: Remote/hybrid/onsite detection
+### 🧠 Intelligent Analysis & Matching
+- **Profile-Based Scoring**: AI job-profile compatibility assessment
+- **Skills Gap Analysis**: Identify missing skills and suggestions
+- **Resume Processing**: Auto profile creation from PDF resumes  
+- **Location Intelligence**: Remote/hybrid/onsite categorization
+- **Experience Matching**: Level-appropriate job recommendations
 
 </td>
 <td width="33%">
 
-### 📊 Modern Dashboard
-- **Real-time Monitoring**: Live scraping status
-- **Interactive Analytics**: Trends and insights
-- **Application Tracking**: End-to-end management
-- **Profile Management**: Visual configuration
+### 📊 Modern Dashboard Interfaces
+- **Streamlit Dashboard**: Primary interactive interface
+- **Dash Analytics**: Advanced visualizations and insights
+- **FastAPI + React**: Next-gen dashboard (in development)
+- **Real-time Monitoring**: Live scraping and processing status
+- **Profile Management**: Visual configuration and management
 
 </td></tr>
 </table>
-<td width="33%">
-
-### Ranking & Filtering
-- Fit scoring and sorting by relevance
-- Quick filters (remote, location, recency)
-- Optional Streamlit dashboard for browsing
-
-</td>
-</tr>
-</table>
-
-### Management
-- Optional Streamlit dashboard for browsing and filtering
-- CLI for automated workflows
 
 ---
 
 ## Quick Start
 
 ### Prerequisites
-- Python 3.11+ (3.12 recommended)
-- Git
+- **Python 3.11+** (3.11.11 tested and recommended)
+- **Git** for repository cloning
+- **Conda** (recommended) or Python venv
+- **PostgreSQL** (optional, SQLite used by default)
 
-### Installation
+### Installation & Setup
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/NirajanKhadka/automate_job_idea001.git
 cd automate_job_idea001
 
-# 2. Create virtual environment
-python -m venv .venv
+# 2. Create conda environment (recommended)
+conda create -n auto_job python=3.11
+conda activate auto_job
 
-# 3. Activate virtual environment
-# Windows:
-.\.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-
-# 4. Install dependencies
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 5. Install browser automation
+# 4. Install browser automation
 playwright install chromium
 
-# 6. Setup environment
+# 5. Setup environment (optional)
 cp .env.example .env
-# Edit .env with your configuration
+# Edit .env with your configuration if needed
 ```
 
-### Configuration
-Add or adjust these settings in your .env file:
+### Basic Usage
+
 ```bash
-# Database
-DATABASE_URL=sqlite:///jobs.db
+# Make sure you're in the auto_job environment
+conda activate auto_job
 
-# Web scraping
-SCRAPING_DELAY=2
-MAX_CONCURRENT_REQUESTS=5
-BROWSER_HEADLESS=true
+# 1. Scrape jobs using JobSpy (modern pipeline)
+python main.py YourProfile --action jobspy-pipeline --jobspy-preset canada_comprehensive
 
-# Dashboard (optional)
-STREAMLIT_PORT=8501
-```
-
-### Launch
-```bash
-# Scrape jobs
-python main.py YourProfile --action scrape --keywords "python developer,data analyst" --days 14 --pages 3 --jobs 20
-
-# Analyze and rank scraped jobs for your profile
+# 2. Analyze and score scraped jobs
 python main.py YourProfile --action analyze-jobs
 
-# Optional dashboard
+# 3. Launch interactive dashboard
 python main.py YourProfile --action dashboard
-# Then open http://localhost:8501
+
+# 4. Alternative: Direct dashboard launch
+streamlit run src/dashboard/unified_dashboard.py
 ```
 
----
+### Available Actions
 
-## Demo
+| Action | Description | Example |
+|--------|-------------|---------|
+| `jobspy-pipeline` | **Modern scraping** with JobSpy integration | `--jobspy-preset usa_comprehensive` |
+| `scrape` | **Legacy scraping** with Eluta fallback | `--keywords "python,data"` |
+| `analyze-jobs` | **AI analysis** and scoring of scraped jobs | Auto-processes all jobs in profile |
+| `dashboard` | **Streamlit interface** for browsing and management | Opens at http://localhost:8501 |
+| `interactive` | **CLI menu** for guided workflows | Interactive command selection |
 
-### Dashboard (optional)
-Browse, filter, and sort jobs by fit score:
+## Architecture Overview
 
-```bash
-# Scrape
-python main.py Nirajan --action scrape --keywords "python,data" --days 14
-
-# Analyze & rank
-python main.py Nirajan --action analyze-jobs
-
-# Launch dashboard
-python main.py Nirajan --action dashboard
-```
-
----
-
-## Integrations & Dependencies
-
-### Open Source Integrations
-JobQst leverages open source libraries for job discovery:
-
-#### Core Scraping
-- [JobSpy](https://github.com/speedyapply/JobSpy) — Multi-site scraping (Indeed, LinkedIn, Glassdoor, ZipRecruiter)
-  - Install: `pip install python-jobspy`
-
-#### Web Automation & UI
-- [Playwright](https://playwright.dev/) — Browser automation
-- [Streamlit](https://streamlit.io/) — Optional dashboard
-- [Rich](https://rich.readthedocs.io/) — Terminal output
-
-### Optional
-```bash
-# Enable JobSpy
-pip install python-jobspy
-
-# PostgreSQL (optional)
-pip install psycopg2-binary
-```
-
----
-
-## System Architecture
-
-High-level data flow:
+JobLens follows a modular, event-driven architecture designed for scalability and maintainability:
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌──────────────────────┐
-│   Job Sources   │───▶│   Web Scrapers   │───▶│ Matching & Scoring   │
+│   Job Sources   │───▶│  Scraping Engine │───▶│   Analysis Pipeline  │
 │                 │    │                  │    │                      │
-│ • Eluta         │    │ • Playwright     │    │ • Profile signals    │
-│ • JobSpy sites  │    │ • Async workers  │    │ • Filtering          │
-│ • Others (opt)  │    │ • Rate limiting  │    │ • Ranking            │
+│ • JobSpy Sites  │    │ • Parallel       │    │ • Profile Matching   │
+│ • Eluta.ca      │    │   Workers        │    │ • AI Scoring         │
+│ • Custom APIs   │    │ • Rate Limiting  │    │ • Skills Analysis    │
 └─────────────────┘    └──────────────────┘    └──────────────────────┘
          │                       │                       │
          ▼                       ▼                       ▼
-┌─────────────────┐                                    ┌─────────────────┐
-│   Database      │                                    │   Dashboard     │
-│ • SQLite        │                                    │ • Streamlit     │
-│ • Job storage   │                                    │ • Optional UI   │
-└─────────────────┘                                    └─────────────────┘
+┌─────────────────┐    ┌──────────────────┐    ┌──────────────────────┐
+│    Database     │    │   Event System   │    │     Dashboards       │
+│                 │    │                  │    │                      │
+│ • PostgreSQL    │    │ • Local Events   │    │ • Streamlit (main)   │
+│ • SQLite        │    │ • Process        │    │ • Dash (analytics)   │
+│ • Profile-based │    │   Monitoring     │    │ • React (planned)    │
+└─────────────────┘    └──────────────────┘    └──────────────────────┘
 ```
 
 ### Core Components
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| **Web Scrapers** | Playwright, AsyncIO, JobSpy | Multi-site job discovery |
-| **Matching & Scoring** | Profile-based rules | Fit scoring and ranking |
-| **Database** | SQLite/PostgreSQL | Job storage |
-| **Dashboard** | Streamlit (optional) | Browsing and filtering |
-| **CLI** | Click, Rich | Command-line workflows |
-
----
+| **Scraping Engine** | JobSpy, Playwright, AsyncIO | Multi-source job discovery with parallel processing |
+| **Analysis Pipeline** | Custom AI, Transformers | Profile-based job scoring and skills analysis |
+| **Database Layer** | PostgreSQL/SQLite, SQLAlchemy | Profile-organized job storage with migration support |
+| **Dashboard Suite** | Streamlit, Dash, FastAPI+React | Multiple interface options for different use cases |
+| **CLI System** | Click, Rich | Automation-friendly command-line operations |
+| **Event System** | Custom Event Bus | Coordinated processing and real-time updates |
 
 ## Usage Examples
 
-### Basic Job Scraping
-```python
-from src.scrapers.parallel_job_scraper import ParallelJobScraper
-import asyncio
+### 1. Modern JobSpy Pipeline (Recommended)
+```bash
+# USA comprehensive search
+python main.py YourProfile --action jobspy-pipeline --jobspy-preset usa_comprehensive
 
-async def scrape_jobs():
-    # Initialize scraper with profile
-    profile = {
-        "name": "John Doe",
-        "keywords": ["python", "data analyst", "software engineer"],
-        "location": "Toronto",
-        "experience_level": "mid"
-    }
-    
-    scraper = ParallelJobScraper(profile, max_workers=4)
-    jobs = await scraper.scrape_jobs(max_jobs_per_keyword=20)
-    
-  print(f"Found {len(jobs)} jobs!")
-    return jobs
+# Canada tech hubs focus
+python main.py YourProfile --action jobspy-pipeline --jobspy-preset tech_hubs_canada
 
-# Run the scraper
-jobs = asyncio.run(scrape_jobs())
+# Custom configuration
+python main.py YourProfile --action jobspy-pipeline \
+  --sites indeed,linkedin \
+  --max-jobs-total 500 \
+  --experience-level mid_level
 ```
 
-### Dashboard Integration (optional)
+### 2. Profile-Based Job Analysis
 ```python
-from src.dashboard.dashboard_manager import DashboardManager
+# After scraping, analyze job compatibility
+from src.core.user_profile_manager import UserProfileManager
+from src.analysis.job_analyzer import JobAnalyzer
 
-manager = DashboardManager()
-manager.start_dashboard()
+# Load profile
+profile_manager = UserProfileManager()
+profile = profile_manager.load_profile("YourProfile")
+
+# Analyze jobs
+analyzer = JobAnalyzer(profile)
+analyzed_jobs = analyzer.analyze_all_jobs()
+
+# Top matches
+top_jobs = [job for job in analyzed_jobs if job.fit_score > 0.8]
+print(f"Found {len(top_jobs)} high-fit jobs!")
 ```
 
----
+### 3. Dashboard Integration
+```bash
+# Quick dashboard launch
+python main.py YourProfile --action dashboard
 
-## Configuration
+# Direct Streamlit launch
+streamlit run src/dashboard/unified_dashboard.py
 
-### Profile Setup
-Create a profile configuration file at `profiles/YourName/YourName.json`:
+# Analytics dashboard
+python src/dashboard/dash_app/app.py
+```
+
+### 4. Custom Profile Creation
+```json
+// profiles/YourProfile/YourProfile.json
+{
+  "name": "Your Name",
+  "location": "Toronto, ON",
+  "experience_level": "senior",
+  "keywords": ["python", "machine learning", "data science"],
+  "skills": ["Python", "SQL", "Docker", "AWS"],
+  "preferences": {
+    "remote_work": true,
+    "salary_min": 100000,
+    "company_types": ["tech", "startup"]
+  },
+  "education": {
+    "degree": "Bachelor's in Computer Science",
+    "certifications": ["AWS Certified", "Google Cloud"]
+  }
+}
+```
+
+## Configuration & Environment
+
+### Environment Setup
+```bash
+# Essential environment variables (.env)
+DATABASE_URL=postgresql://user:password@localhost/joblens  # or sqlite:///jobs.db
+SCRAPING_DELAY=2
+MAX_CONCURRENT_WORKERS=4
+BROWSER_HEADLESS=true
+
+# Dashboard configuration
+STREAMLIT_PORT=8501
+DASH_PORT=8050
+
+# JobSpy integration
+JOBSPY_MAX_WORKERS=3
+JOBSPY_SITES=indeed,linkedin,glassdoor,ziprecruiter
+
+# Optional AI features
+OPENAI_API_KEY=your_key_here  # for enhanced analysis
+```
+
+### Profile Configuration
+Create profiles in `profiles/YourName/YourName.json`:
 
 ```json
 {
   "name": "Your Name",
   "email": "your.email@example.com",
-  "phone": "+1-234-567-8900",
   "location": "Toronto, ON",
-  "keywords": [
-    "python developer",
-    "data analyst", 
-    "software engineer",
-    "machine learning"
-  ],
-  "experience_level": "mid",
-  "skills": [
-    "Python", "JavaScript", "SQL", 
-    "React", "Django", "PostgreSQL"
-  ],
+  "experience_level": "senior",
+  "keywords": ["python developer", "machine learning", "devops"],
+  "skills": ["Python", "Docker", "Kubernetes", "AWS", "PostgreSQL"],
   "preferences": {
     "remote_work": true,
-    "salary_min": 80000,
-    "company_size": ["startup", "medium", "large"]
-  }
+    "salary_min": 90000,
+    "company_size": ["startup", "medium"],
+    "industries": ["technology", "fintech", "healthtech"]
+  },
+  "education": {
+    "degree": "Computer Science",
+    "level": "bachelor"
+  },
+  "certifications": ["AWS Certified Solutions Architect"]
 }
 ```
 
-### Environment Variables
-Configure your `.env` file:
+### JobSpy Presets
+Choose from pre-configured search strategies:
 
+| Preset | Description | Coverage |
+|--------|-------------|----------|
+| `usa_comprehensive` | Full USA job market coverage | All major cities |
+| `canada_comprehensive` | Complete Canadian market | All provinces |
+| `tech_hubs_canada` | Canadian tech centers only | Toronto, Vancouver, Montreal |
+| `usa_tech_hubs` | USA tech hotspots | SF, NYC, Seattle, Austin |
+| `remote_focused` | Remote-first opportunities | Global remote positions |
+
+## Testing & Development
+
+### Running Tests
 ```bash
-# Core Settings
-APP_ENV=production
-DEBUG=false
-LOG_LEVEL=INFO
+# Activate environment
+conda activate auto_job
 
-# Database
-DATABASE_URL=sqlite:///jobs.db
-DATABASE_BACKUP_ENABLED=true
-
-# Web Scraping
-SCRAPING_DELAY=2
-MAX_CONCURRENT_REQUESTS=5
-BROWSER_HEADLESS=true
-
-# Dashboard
-STREAMLIT_PORT=8501
-DASHBOARD_AUTO_REFRESH=30
-
-# (Optional) extras can be added as needed
-```
-
----
-
-## Testing
-
-### Run Test Suite
-```bash
-# Run all tests
+# Run full test suite
 pytest tests/ -v
 
 # Run specific test categories
-pytest tests/unit/ -v          # Unit tests
-pytest tests/integration/ -v   # Integration tests
-pytest tests/e2e/ -v           # End-to-end tests
+pytest tests/unit/ -v                    # Unit tests only
+pytest tests/integration/ -v             # Integration tests
+pytest tests/dashboard/ -v               # Dashboard tests
 
-# Run with coverage
+# Run with coverage report
 pytest tests/ --cov=src --cov-report=html
+
+# Test specific components
+pytest tests/scrapers/test_jobspy_integration.py -v
 ```
 
-### Manual Testing
+### Development Workflow
 ```bash
-# Test scraper functionality
-python tests/integration/test_optimized_scraper.py
+# 1. Install development dependencies
+pip install -r requirements-dev.txt
 
-# Test dashboard components
-python tests/integration/test_dashboard.py
+# 2. Code formatting (if available)
+black src/ tests/
+isort src/ tests/
+
+# 3. Run linting (if configured)
+flake8 src/ tests/
+
+# 4. Test your changes
+pytest tests/ -v
+
+# 5. Manual testing
+python main.py TestProfile --action jobspy-pipeline --jobspy-preset tech_hubs_canada
 ```
 
----
+### Available VS Code Tasks
+Use `Ctrl+Shift+P` → "Tasks: Run Task":
 
-## Performance & Monitoring
-Basic health checks and logging are included. Performance depends on target sites and network conditions.
+- **Run all tests (pytest)** - Execute full test suite
+- **Start Dashboard Backend** - Launch FastAPI development server
+- **Start Dashboard Frontend** - Run React development environment
+- **Start Dash Dashboard** - Launch Dash analytics interface
+- **Install Frontend Dependencies** - Update npm packages
 
----
+## Deployment & Production
 
-## Documentation
-
-### References
-- [Documentation Hub](docs/README.md)
-- [Architecture Guide](docs/ARCHITECTURE.md)
-- [Developer Guide](docs/DEVELOPER_GUIDE.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-
-### **Quick References**
-- **[Installation Guide](docs/DEVELOPER_GUIDE.md#quick-setup)** - Detailed setup instructions
-- **[Configuration Reference](.env.example)** - Environment variable guide
-- **[CLI Reference](docs/API_REFERENCE.md#cli-commands)** - Command-line usage
-- **[Dashboard Guide](docs/TROUBLESHOOTING.md#dashboard-issues)** - Web interface help
-
----
-
-## Security & Privacy
-
-### Data Protection
-- **Local Storage**: All job data stored locally in SQLite database
-- **API Security**: Secure API key management with environment variables
-- **Browser Isolation**: Separate browser profiles for each user
-- **No Data Sharing**: Your data never leaves your local environment
-
-### Best Practices
-- Keep your `.env` file secure and never commit it to version control
-- Regularly backup your job database using the built-in backup system
-- Use strong, unique API keys for external services
-- Monitor system logs for unusual activity
-
----
-
-## Deployment
-
-### Local Development
+### Local Production Setup
 ```bash
-# Development mode with hot reload
-python main.py YourProfile --action dashboard --debug
+# 1. Production environment setup
+conda create -n joblens_prod python=3.11
+conda activate joblens_prod
+pip install -r requirements.txt
 
-# Production mode
-python main.py YourProfile --action dashboard --production
+# 2. PostgreSQL database setup (recommended for production)
+createdb joblens_production
+export DATABASE_URL=postgresql://user:password@localhost/joblens_production
+
+# 3. Run database migrations
+python -c "from src.core.database_migration import run_migrations; run_migrations()"
+
+# 4. Start services
+python main.py ProductionProfile --action dashboard  # Dashboard
+python main.py ProductionProfile --action jobspy-pipeline  # Background scraping
 ```
 
 ### Docker Deployment
 ```bash
-# Build container
-docker build -t jobqst .
-
-# Run with Docker Compose
+# Development environment
 docker-compose -f docker-compose.dev.yml up
 
 # Production deployment
 docker-compose up -d
+
+# Check service health
+docker-compose ps
+docker-compose logs joblens-app
 ```
 
-### Cloud Deployment
-Container-based deployment works on most providers (AWS/GCP/Azure/Heroku/VPS).
+### Cloud Deployment Options
+
+#### Option 1: Traditional VPS/VM
+- Deploy using Docker Compose
+- PostgreSQL + Redis for production scale
+- Nginx reverse proxy for dashboard access
+- Systemd services for background processing
+
+#### Option 2: Container Platforms
+- **AWS ECS/Fargate**: Container orchestration
+- **Google Cloud Run**: Serverless container deployment  
+- **Azure Container Instances**: Managed container hosting
+- **Railway/Render**: Simple deployment with built-in PostgreSQL
+
+#### Option 3: Self-Hosted
+```bash
+# Systemd service example (Ubuntu/CentOS)
+sudo cp deploy/joblens.service /etc/systemd/system/
+sudo systemctl enable joblens
+sudo systemctl start joblens
+```
+
+## Documentation & Resources
+
+### 📚 **Core Documentation**
+- **[📖 Documentation Hub](docs/README.md)** - Complete documentation index
+- **[🏗️ Architecture Guide](docs/ARCHITECTURE.md)** - System design and patterns
+- **[👩‍💻 Developer Guide](docs/DEVELOPER_GUIDE.md)** - Setup and development workflows
+- **[🔧 Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+
+### 🔗 **Quick References**
+- **[⚡ CLI Reference](docs/API_REFERENCE.md#cli-commands)** - All command-line options
+- **[🎛️ Configuration Guide](.env.example)** - Environment variables and settings
+- **[📊 Dashboard Guide](docs/DASHBOARD_IMPLEMENTATION_PLAN.md)** - Web interface documentation
+- **[🛠️ Development Standards](docs/DEVELOPMENT_STANDARDS.md)** - Code quality and patterns
+
+### 🚀 **Advanced Topics**
+- **[📈 Performance Optimization](docs/PERFORMANCE_OPTIMIZATION_STRATEGY.md)** - Scale and efficiency
+- **[💾 Database Migration](docs/DATABASE_MIGRATION_PLAN.md)** - Data management strategies  
+- **[🔐 Security & Privacy](docs/TROUBLESHOOTING.md#security)** - Data protection guidelines
 
 ---
 
@@ -410,121 +425,193 @@ Container-based deployment works on most providers (AWS/GCP/Azure/Heroku/VPS).
 ### **Common Issues**
 
 <details>
-<summary><strong>🔧 Installation Problems</strong></summary>
+<summary><strong>🔧 Environment & Installation</strong></summary>
 
 ```bash
 # Python version issues
 python --version  # Should be 3.11+
+conda list python  # Check conda environment
 
 # Dependency conflicts
-pip install --upgrade pip
+conda activate auto_job
 pip install -r requirements.txt --force-reinstall
 
-# Playwright browser issues
+# Browser automation issues
 playwright install chromium --force
 ```
 </details>
 
 <details>
-<summary><strong>🌐 Scraping Issues</strong></summary>
+<summary><strong>🌐 Scraping Problems</strong></summary>
 
 ```bash
-# Rate limiting
-# Increase delays in .env:
+# JobSpy integration issues
+pip install python-jobspy --upgrade
+
+# Rate limiting or blocks
+# Edit .env:
 SCRAPING_DELAY=5
-MAX_CONCURRENT_REQUESTS=2
+MAX_CONCURRENT_WORKERS=2
 
-# Browser crashes
-# Try headless mode:
-BROWSER_HEADLESS=true
-
-# Network issues
-# Check your internet connection and firewall settings
+# Browser automation failures
+export BROWSER_HEADLESS=false  # Debug mode
 ```
 </details>
 
 <details>
-<summary><strong>Scoring/Ranking Issues</strong></summary>
+<summary><strong>💾 Database Issues</strong></summary>
 
 ```bash
-# Ensure jobs are scraped first, then run analysis
-python main.py YourProfile --action scrape --keywords "python"
-python main.py YourProfile --action analyze-jobs
+# PostgreSQL connection problems
+export DATABASE_URL=sqlite:///jobs.db  # Fallback to SQLite
+
+# Migration issues
+python -c "from src.core.database_migration import reset_database; reset_database()"
+
+# Profile database corruption
+python main.py YourProfile --action health-check
+```
+</details>
+
+<details>
+<summary><strong>📊 Dashboard Problems</strong></summary>
+
+```bash
+# Port conflicts
+export STREAMLIT_PORT=8502
+
+# Dashboard won't start
+python src/dashboard/unified_dashboard.py --debug
+
+# Missing data in dashboard
+python main.py YourProfile --action analyze-jobs  # Ensure jobs are processed
 ```
 </details>
 
 ### **Getting Help**
-- **[📖 Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Comprehensive troubleshooting
-- **[🐛 Issue Tracker](docs/ISSUE_TRACKER.md)** - Known issues and solutions
-- **[💬 Discussions](https://github.com/NirajanKhadka/automate_job_idea001/discussions)** - Community support
+- **[� Issue Tracker](https://github.com/NirajanKhadka/automate_job_idea001/issues)** - Report bugs and feature requests
+- **[💬 Discussions](https://github.com/NirajanKhadka/automate_job_idea001/discussions)** - Community support and Q&A
+- **[📧 Contact](mailto:contact@joblens.dev)** - Direct support (if available)
 
 ---
 
 ## Contributing
 
-We welcome contributions! Here's how to get started:
+We welcome contributions! JobLens is actively developed and always looking for improvements.
 
-### Development Setup
+### 🚀 **Development Setup**
 ```bash
-# Fork and clone the repository
+# 1. Fork and clone
 git clone https://github.com/YourUsername/automate_job_idea001.git
 cd automate_job_idea001
 
-# Create a feature branch
-git checkout -b feature/amazing-new-feature
-
-# Install dependencies
+# 2. Create development environment
+conda create -n joblens_dev python=3.11
+conda activate joblens_dev
 pip install -r requirements.txt
+pip install -r requirements-dev.txt  # if available
 
-# Run tests to ensure everything works
+# 3. Create feature branch
+git checkout -b feature/amazing-improvement
+
+# 4. Run tests to ensure everything works
 pytest tests/ -v
 ```
 
-### Contribution Guidelines
-1. **Code Quality**: Follow PEP 8 and use `black` for formatting
-2. **Testing**: Add tests for new features and ensure all tests pass
-3. **Documentation**: Update documentation for any new features
-4. **Commit Messages**: Use clear, descriptive commit messages
-5. **Pull Requests**: Submit PRs with detailed descriptions
+### 📋 **Contribution Areas**
 
-### Areas for Contribution
-- 🔍 **New Job Sites**: Add scrapers for additional job boards
-- 🤖 **AI Improvements**: Enhance job analysis algorithms
-- 🎨 **UI/UX**: Improve dashboard design and user experience
-- 🧪 **Testing**: Expand test coverage and add integration tests
-- 📖 **Documentation**: Improve guides and add examples
+#### 🔍 **Scraping & Data**
+- Add new job sites (Monster, CareerBuilder, etc.)
+- Improve JobSpy integration and error handling
+- Enhance data extraction and cleaning algorithms
+- Implement smart rate limiting and anti-detection
+
+#### 🧠 **AI & Analytics** 
+- Improve job-profile matching algorithms
+- Add skills gap analysis and career recommendations
+- Implement salary prediction and market analysis
+- Enhance resume parsing and profile generation
+
+#### 🎨 **Dashboard & UI**
+- Complete React + FastAPI dashboard implementation
+- Add new Streamlit components and visualizations
+- Improve mobile responsiveness and accessibility
+- Create interactive analytics and reporting features
+
+#### 🔧 **Infrastructure & DevOps**
+- Add Docker improvements and orchestration
+- Implement CI/CD pipelines and automated testing
+- Add monitoring, logging, and alerting systems
+- Create deployment automation and scaling solutions
+
+### 🎯 **Priority Features**
+1. **React Dashboard Completion** - Finish the modern web interface
+2. **Advanced AI Scoring** - Improve job matching intelligence
+3. **Multi-Language Support** - Add internationalization
+4. **Mobile App** - React Native or Progressive Web App
+5. **Enterprise Features** - Team collaboration and admin controls
+
+### 📝 **Guidelines**
+- **Code Quality**: Follow PEP 8, use type hints, add docstrings
+- **Testing**: Add tests for new features (pytest framework)
+- **Documentation**: Update docs for any new functionality
+- **Commits**: Use clear, descriptive commit messages
+- **Pull Requests**: Include detailed descriptions and test evidence
+
+### 🏆 **Recognition**
+Contributors are recognized in our [CONTRIBUTORS.md](CONTRIBUTORS.md) file and release notes.
 
 ---
 
-## License
+## License & Legal
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### **MIT License**
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for full details.
 
-### **License Summary**
-- ✅ **Commercial Use**: Free to use commercially
-- ✅ **Modification**: Modify and distribute freely
-- ✅ **Distribution**: Share with others
-- ✅ **Private Use**: Use privately without restrictions
-- ❗ **Liability**: No warranty or liability provided
+**License Summary:**
+- ✅ **Commercial Use** - Use freely in commercial projects
+- ✅ **Modification** - Modify and distribute your changes
+- ✅ **Distribution** - Share with others freely
+- ✅ **Private Use** - Use privately without restrictions
+- ❗ **Liability** - No warranty or liability provided
+- ❗ **Attribution** - Must include original license notice
 
----
-
-## Acknowledgments
-
-### **Technologies & Libraries**
-- **[Playwright](https://playwright.dev/)** - Reliable browser automation
-- **[Streamlit](https://streamlit.io/)** - Beautiful web interface framework
-- **[Rich](https://rich.readthedocs.io/)** - Beautiful terminal output
-- **[Click](https://click.palletsprojects.com/)** - Elegant command-line interfaces
-
-### **Community**
-Special thanks to contributors, testers, and users who help make JobQst better.
+### **Third-Party Licenses**
+JobLens integrates with several open-source projects:
+- **[JobSpy](https://github.com/speedyapply/JobSpy)** - MIT License
+- **[Playwright](https://github.com/microsoft/playwright-python)** - Apache 2.0
+- **[Streamlit](https://github.com/streamlit/streamlit)** - Apache 2.0
+- **[FastAPI](https://github.com/tiangolo/fastapi)** - MIT License
 
 ---
 
-## Support & Contact
+## Acknowledgments & Credits
 
-### **Getting Help**
-- [Documentation](docs/)
-- [Issues](https://github.com/NirajanKhadka/automate_job_idea001/issues)
-- [Discussions](https://github.com/NirajanKhadka/automate_job_idea001/discussions)
+### **🙏 Special Thanks**
+- **[JobSpy Project](https://github.com/speedyapply/JobSpy)** - Excellent multi-site scraping foundation
+- **[Streamlit Team](https://streamlit.io/)** - Beautiful and simple dashboard framework
+- **[Playwright Developers](https://playwright.dev/)** - Robust browser automation
+
+### **🏗️ Built With**
+- **Core Language**: Python 3.11+
+- **Web Scraping**: JobSpy, Playwright, BeautifulSoup, aiohttp
+- **Database**: PostgreSQL, SQLite, SQLAlchemy
+- **Dashboard**: Streamlit, Dash (Plotly), FastAPI + React (planned)
+- **CLI/UI**: Rich, Click
+- **Testing**: Pytest, Coverage
+- **Development**: Black, isort, mypy (code quality)
+
+### **🌟 Community**
+Special thanks to all contributors, testers, and users who make JobLens better every day!
+
+---
+
+<div align="center">
+
+### **Ready to revolutionize your job search? Get started now!**
+
+[🚀 **Quick Start**](#-quick-start) • [📖 **Documentation**](docs/) • [🤝 **Contribute**](#-contributing)
+
+**Made with ❤️ by the JobLens team**
+
+</div>
