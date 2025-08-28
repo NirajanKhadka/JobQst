@@ -1,0 +1,29 @@
+{
+  "hardware": {
+    "device": "cuda",
+    "device_name": "NVIDIA NVIDIA GeForce RTX 3080 (10.0GB)",
+    "memory_gb": 7.999609375,
+    "performance_tier": "medium",
+    "optimal_batch_size": 16
+  },
+  "processing": {
+    "enable_optimization": true,
+    "enable_batch_processing": true,
+    "cpu_workers": 10,
+    "max_concurrent_stage2": 2,
+    "batch_size": 16,
+    "fallback_to_individual": true
+  },
+  "thresholds": {
+    "phase1_threshold": 0.15,
+    "max_phase2_jobs": 20,
+    "compatibility_apply": 0.7,
+    "compatibility_review": 0.4
+  },
+  "performance": {
+    "target_jobs_per_second": 25.0,
+    "max_processing_time": 300,
+    "enable_progress_bars": true
+  },
+  "auto_detected": true
+}

@@ -4,8 +4,19 @@ Orchestration service for dashboard
 import logging
 from typing import Dict, Any, List
 from datetime import datetime
+from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+
+class ApplicationStatus(Enum):
+    """Application status enumeration"""
+    RUNNING = "running"
+    STOPPED = "stopped"
+    ERROR = "error"
+    STARTING = "starting"
+    STOPPING = "stopping"
+    UNKNOWN = "unknown"
 
 try:
     # Bridge to existing orchestration service

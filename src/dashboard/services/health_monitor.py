@@ -4,8 +4,17 @@ Health monitor service for dashboard
 import logging
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
+from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+
+class HealthStatus(Enum):
+    """Health status enumeration"""
+    HEALTHY = "healthy"
+    WARNING = "warning"
+    CRITICAL = "critical"
+    UNKNOWN = "unknown"
 
 
 class HealthMonitor:

@@ -205,7 +205,6 @@ async def run_two_stage_processing(profile: Dict[str, Any], args) -> bool:
     ) as progress:
         task = progress.add_task("🚀 Starting Two-Stage Job Processing...", total=None)
         try:
-            from src.analysis.two_stage_processor import get_two_stage_processor
             from src.core.job_database import get_job_db
             from src.scrapers.external_job_scraper import ExternalJobDescriptionScraper
             
@@ -233,12 +232,19 @@ async def run_two_stage_processing(profile: Dict[str, Any], args) -> bool:
                     if i < len(scraped_jobs) and scraped_jobs[i].get('description'):
                         job['description'] = scraped_jobs[i]['description']
             
-            progress.update(task, description="🧠 Initializing two-stage processor...")
+            progress.update(
+                task, description="🧠 Initializing optimized processor..."
+            )
             
-            # Initialize two-stage processor with lenient settings
-            processor = get_two_stage_processor(profile, cpu_workers=10)
+            # Initialize optimized processor with auto-configuration
+            from src.utils.optimization_configurator import (
+                create_optimized_processor_from_config
+            )
+            processor = create_optimized_processor_from_config(profile)
             
-            progress.update(task, description="⚡ Processing jobs through CPU + GPU pipeline...")
+            progress.update(
+                task, description="⚡ Processing jobs through optimized pipeline..."
+            )
             
             # Process jobs
             results = await processor.process_jobs(jobs_data)
