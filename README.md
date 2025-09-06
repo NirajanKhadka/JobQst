@@ -1,4 +1,4 @@
-# JobLens - Intelligent Job Discovery & Automation Platform
+# JobQst - Intelligent Job Discovery & Automation Platform
 
 <div align="center">
 
@@ -17,9 +17,9 @@
 
 ---
 
-## What is JobLens?
+## What is JobQst?
 
-JobLens is a modern job discovery platform built with clean Python architecture. It streamlines job searching across multiple sources, provides intelligent job-profile matching, and offers powerful analytics through interactive dashboards.
+JobQst is a modern job discovery platform built with clean Python architecture. It streamlines job searching across multiple sources, provides intelligent job-profile matching, and offers powerful analytics through interactive dashboards.
 
 ### 🎯 **Perfect For:**
 
@@ -83,8 +83,8 @@ JobLens is a modern job discovery platform built with clean Python architecture.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/NirajanKhadka/JobLens.git
-cd JobLens
+git clone https://github.com/NirajanKhadka/JobQst.git
+cd JobQst
 
 # 2. Create conda environment (recommended)
 conda create -n auto_job python=3.11
@@ -140,7 +140,7 @@ python main.py YourProfile --action health-check --show-cache-stats
 
 ## Architecture Overview
 
-JobLens follows a clean, modular architecture with type-safe Python code:
+JobQst follows a clean, modular architecture with type-safe Python code:
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌──────────────────────┐
@@ -585,8 +585,8 @@ Since this is a two-person project, development is simple:
 ### 🚀 **Setup**
 ```bash
 # 1. Clone and setup
-git clone https://github.com/NirajanKhadka/JobLens.git
-cd JobLens
+git clone https://github.com/NirajanKhadka/JobQst.git
+cd JobQst
 conda create -n auto_job python=3.11
 conda activate auto_job
 pip install -r requirements.txt
