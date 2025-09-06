@@ -131,3 +131,4 @@ class BaseExtractor(ABC):
             "extraction_count": self.extraction_count,
             "type": self.__class__.__name__
         }
+

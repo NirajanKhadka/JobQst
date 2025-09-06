@@ -12,3 +12,4 @@ def check_browser_processes(config: Dict) -> Dict:
     """Alias for check_browser to maintain backward compatibility."""
     result = _check_browser_processes(config)
     return result.to_dict()
+

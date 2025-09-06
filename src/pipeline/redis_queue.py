@@ -86,3 +86,4 @@ class RedisQueue:
     async def move_to_deadletter(self, item: dict):
         await self.connect()
         await self.redis.rpush(self.deadletter_name, json.dumps(item))
+

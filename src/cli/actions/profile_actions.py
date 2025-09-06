@@ -260,3 +260,4 @@ class ProfileActions:
             title="Ready for Resume",
             border_style="blue"
         ))
+

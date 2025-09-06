@@ -103,3 +103,4 @@ class ElutaScraper(BaseJobScraper):
             "benefits": ["Health insurance", "Flexible hours"],
             "salary_range": "$70,000 - $90,000"
         }
+

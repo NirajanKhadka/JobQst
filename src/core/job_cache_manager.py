@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 import json
 
-from .job_database import ModernJobDatabase
-from .job_record import JobRecord
+from .job_database import get_job_db
+from .job_data import JobData
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class JobCacheManager:
 
     def __init__(self, profile_name: str = "Nirajan"):
         self.profile_name = profile_name
-        self.db = ModernJobDatabase()
+        self.db = get_job_db()
         self.cache_dir = Path("cache")
         self.cache_dir.mkdir(exist_ok=True)
         self.running = False
@@ -88,8 +88,8 @@ class JobCacheManager:
     def _process_job(self, job_data: Dict[str, Any]):
         """Process a single job and add to database."""
         try:
-            # Create job record
-            job_record = JobRecord(
+            # Create job data object
+            job_record = JobData(
                 title=job_data.get("title", ""),
                 company=job_data.get("company", ""),
                 location=job_data.get("location", ""),
@@ -97,15 +97,10 @@ class JobCacheManager:
                 summary=job_data.get("summary", ""),
                 search_keyword=job_data.get("search_keyword", ""),
                 site=job_data.get("site", "unknown"),
-                status="scraped",  # Initial status
-                experience_level=job_data.get("experience_level", ""),
-                keywords=job_data.get("keywords", ""),
-                job_description=job_data.get("job_description", ""),
-                salary_range=job_data.get("salary_range", ""),
+                salary=job_data.get("salary_range", ""),
                 job_type=job_data.get("job_type", ""),
-                remote_option=job_data.get("remote_option", ""),
-                requirements=job_data.get("requirements", ""),
-                benefits=job_data.get("benefits", ""),
+                posted_date=job_data.get("posted_date", ""),
+                scraped_at=datetime.now().isoformat(),
                 raw_data=job_data,
             )
 
@@ -198,3 +193,4 @@ def stop_job_caching():
     if _cache_manager:
         _cache_manager.stop_caching()
         _cache_manager = None
+

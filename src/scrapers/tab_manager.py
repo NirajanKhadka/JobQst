@@ -49,3 +49,4 @@ class TabManager:
                 f"[yellow]⚠️ Error during popup/tab handling for job {job_number}: {e}[/yellow]"
             )
             return None
+

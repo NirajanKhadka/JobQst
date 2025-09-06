@@ -1,6 +1,6 @@
 """
 Workday ATS Handler
-Provides the Workday-specific application logic for ImprovedUniversalApplier.
+Provides the Workday-specific application logic for UniversalApplier.
 """
 
 import asyncio
@@ -92,3 +92,4 @@ async def apply_workday(page: Page, job: Dict) -> str:
     except Exception as e:
         console.print(f"[red]❌ Workday application error: {e}[/red]")
         return f"error: {str(e)}"
+

@@ -26,3 +26,4 @@ def get_Automated_keywords(profile: Dict) -> List[str]:
             unique_keywords.append(keyword)
 
     return unique_keywords[:12]
+

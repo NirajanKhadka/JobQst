@@ -525,3 +525,4 @@ def apply_from_csv(profile_name: str, csv_file_path: str, **kwargs) -> Dict[str,
             "error": str(e),
             "jobs_processed": 0
         }
+

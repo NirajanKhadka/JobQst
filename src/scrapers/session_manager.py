@@ -471,3 +471,4 @@ def get_session_data(profile_name: Optional[str], key: str, default: Any = None)
     """Get data from current session."""
     session_manager = SessionManager(profile_name)
     return session_manager.get_session_data(key, default)
+

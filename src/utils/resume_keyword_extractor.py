@@ -376,3 +376,4 @@ def extract_keywords_from_resume(resume_path: str, profile_name: str = None) -> 
 
 # CLI usage moved to proper CLI module
 # To use: from src.utils.resume_keyword_extractor import extract_keywords_from_resume
+

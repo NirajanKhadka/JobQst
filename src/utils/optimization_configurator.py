@@ -305,7 +305,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(
-        description="Configure JobLens Optimization"
+        description="Configure JobQst Optimization"
     )
     parser.add_argument(
         "--reconfigure", action="store_true",
@@ -336,3 +336,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

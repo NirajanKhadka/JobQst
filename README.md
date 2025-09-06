@@ -1,94 +1,90 @@
-# JobQst - Intelligent Job Discovery & Automation Platform
+# JobLens - Intelligent Job Discovery & Automation Platform
 
 <div align="center">
 
-**🎯 Profile-Driven Job Discovery** - Automated job searching, intelligent matching, and comprehensive analytics with modern dashboard interfaces.
+**🎯 Profile-Driven Job Discovery** - Modern job searching with intelligent matching, comprehensive analytics, and clean Python architecture.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Playwright](https:/### **Getting Help**
-- **[🐛 Issue Tracker](https://github.com/NirajanKhadka/automate_job_idea001/issues)** - Special thanks to all contributors, testers, and users who make JobQst better every day!eport bugs and feature requests
-- **[💬 Discussions](https://github.com/NirajanKhadka/automate_job_idea001/discussions)** - Community support and Q&A.shields.io/badge/Playwright-Automation-34D399.svg)](https://playwright.dev/)
+[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Type Checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](https://mypy.readthedocs.io/)
+[![Playwright](https://img.shields.io/badge/Playwright-Automation-34D399.svg)](https://playwright.dev/)
 [![Dash](https://img.shields.io/badge/Dash-Dashboard-00D4AA.svg)](https://dash.plotly.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-316192.svg)](https://www.postgresql.org/)
 
-[🚀 Quick Start](#-quick-start) • [📖 Documentation](docs/) • [🔧 Setup](#installation) • [🤝 Contributing](#-contributing)
+[🚀 Quick Start](#quick-start) • [🔧 Setup](#installation--setup) • [💻 Development](#quick-development-notes)
 
 </div>
 
 ---
 
-## What is JobQst?
+## What is JobLens?
 
-JobQst is a comprehensive job discovery and automation platform that streamlines job searching across multiple sources, provides intelligent job-profile matching, and offers powerful analytics through modern dashboard interfaces. Built with a modular, scalable architecture supporting both CLI automation and interactive web interfaces.
+JobLens is a modern job discovery platform built with clean Python architecture. It streamlines job searching across multiple sources, provides intelligent job-profile matching, and offers powerful analytics through interactive dashboards.
 
 ### 🎯 **Perfect For:**
-- **Job Seekers** who want automated, intelligent job discovery and tracking
-- **Career Professionals** managing applications across multiple platforms with AI-powered insights  
-- **Tech Workers** seeking opportunities in Canada/USA with location-specific search capabilities
-- **Anyone** who wants to optimize their job search with automation and analytics
 
-### ✨ **Current Features (August 2025)**
+- **Job Seekers** wanting automated, intelligent job discovery and tracking
+- **Career Professionals** managing applications with AI-powered insights  
+- **Developers** seeking opportunities with location-specific search capabilities
+- **Anyone** optimizing their job search with automation and analytics
+
+### ✨ **Current Features (September 2025)**
+
 - ✅ **Multi-Source Scraping** - JobSpy integration (Indeed, LinkedIn, Glassdoor, ZipRecruiter) + Eluta.ca
-- ✅ **PostgreSQL Database** - Robust data storage with profile-based organization
-- ✅ **Dash Dashboard** - Interactive web interface with analytics and visualizations
-- ✅ **Intelligent Matching** - AI-powered job-profile compatibility scoring
-- ✅ **Parallel Processing** - Concurrent scraping with configurable worker limits
+- ✅ **DuckDB Analytics** - 10-100x faster analytics with optimized 17-field schema
+- ✅ **Intelligent 3-Layer Caching** - HTML, embedding, and result caching for 70% faster processing
+- ✅ **Modern Dash Dashboard** - Interactive web interface with real-time monitoring
+- ✅ **AI-Powered Matching** - Semantic job-profile compatibility scoring
+- ✅ **Type-Safe Architecture** - Full type annotations following modern Python standards
+- ✅ **Performance Monitoring** - Real-time health checks and system metrics
+- ✅ **Automated Backup System** - Database backup with rotation and integrity verification
 
 ---
 
 ## Key Features
 
-<table>
-<tr>
-<td width="33%">
-
 ### 🔍 Multi-Source Job Discovery
+
 - **Primary Engine**: JobSpy (Indeed, LinkedIn, Glassdoor, ZipRecruiter)
-- **Fallback**: Eluta.ca for Canadian opportunities
+- **Fallback**: Eluta.ca for Canadian opportunities  
 - **Parallel Workers**: Configurable concurrent scraping
 - **Smart Deduplication**: AI-powered duplicate detection
 - **Geographic Focus**: USA & Canada job markets
 
-</td>
-<td width="33%">
-
 ### 🧠 Intelligent Analysis & Matching
+
 - **Profile-Based Scoring**: AI job-profile compatibility assessment
 - **Skills Gap Analysis**: Identify missing skills and suggestions
-- **Resume Processing**: Auto profile creation from PDF resumes  
+- **Resume Processing**: Auto profile creation from PDF resumes
 - **Location Intelligence**: Remote/hybrid/onsite categorization
 - **Experience Matching**: Level-appropriate job recommendations
 
-</td>
-<td width="33%">
+### 📊 Advanced Analytics & Performance
 
-### 📊 Modern Dashboard Interface
-- **Dash Analytics**: Interactive web dashboard with Plotly visualizations
-- **Real-time Monitoring**: Live scraping and processing status
-- **Profile Management**: Visual configuration and management
-- **Job Analytics**: Charts, filters, and insights
-- **Multi-tab Interface**: Jobs, Analytics, Processing, System monitoring
-
-</td></tr>
-</table>
+- **DuckDB Analytics**: 10-100x faster analytical queries vs traditional databases
+- **Intelligent Caching**: 3-layer caching (HTML, embeddings, results) with 70% performance boost
+- **Real-time Monitoring**: Live system health, cache hit rates, and performance metrics
+- **Performance Dashboard**: Dedicated analytics interface with cache statistics
+- **Automated Backup**: Daily database backups with integrity verification
+- **Resource Optimization**: Memory-efficient processing with configurable worker pools
 
 ---
 
 ## Quick Start
 
 ### Prerequisites
-- **Python 3.11+** (3.11.11 tested and recommended)
+
+- **Python 3.11+** (Required for modern type annotations and features)
 - **Git** for repository cloning
-- **Conda** (recommended) or Python venv
-- **PostgreSQL** (optional, SQLite used by default)
+- **Conda** (recommended) or Python venv for environment management
+- **Optional**: PostgreSQL for production deployments
 
 ### Installation & Setup
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/NirajanKhadka/automate_job_idea001.git
-cd automate_job_idea001
+git clone https://github.com/NirajanKhadka/JobLens.git
+cd JobLens
 
 # 2. Create conda environment (recommended)
 conda create -n auto_job python=3.11
@@ -108,35 +104,43 @@ cp .env.example .env
 ### Basic Usage
 
 ```bash
-# Make sure you're in the auto_job environment
+# Ensure you're in the auto_job environment
 conda activate auto_job
 
-# 1. Scrape jobs using JobSpy (modern pipeline)
-python main.py YourProfile --action jobspy-pipeline --jobspy-preset canada_comprehensive
+# 1. Scrape jobs using JobSpy with DuckDB optimization
+python main.py YourProfile --action jobspy-pipeline \
+  --jobspy-preset canada_comprehensive \
+  --database-type duckdb
 
-# 2. Analyze and score scraped jobs
-python main.py YourProfile --action analyze-jobs
+# 2. Analyze and score scraped jobs with intelligent caching
+python main.py YourProfile --action analyze-jobs --enable-cache
 
-# 3. Launch interactive dashboard
-python main.py YourProfile --action dashboard
+# 3. Launch dashboard with performance monitoring
+python main.py YourProfile --action dashboard --enable-monitoring
 
-# 4. Alternative: Direct Dash app launch
-python src/dashboard/dash_app/app.py
+# 4. Performance dashboard with cache analytics
+python main.py YourProfile --action performance-dashboard
+
+# 5. System health check and cache statistics
+python main.py YourProfile --action health-check --show-cache-stats
 ```
 
 ### Available Actions
 
 | Action | Description | Example |
 |--------|-------------|---------|
-| `jobspy-pipeline` | **Modern scraping** with JobSpy integration | `--jobspy-preset usa_comprehensive` |
+| `jobspy-pipeline` | **Modern scraping** with JobSpy integration + DuckDB | `--jobspy-preset usa_comprehensive --database-type duckdb` |
 | `scrape` | **Legacy scraping** with Eluta fallback | `--keywords "python,data"` |
-| `analyze-jobs` | **AI analysis** and scoring of scraped jobs | Auto-processes all jobs in profile |
-| `dashboard` | **Dash interface** for browsing and management | Opens web dashboard |
+| `analyze-jobs` | **AI analysis** with intelligent caching | `--enable-cache --cache-profile` |
+| `dashboard` | **Enhanced Dash interface** with performance monitoring | `--enable-monitoring --show-cache-stats` |
+| `performance-dashboard` | **Dedicated performance analytics** interface | Real-time system metrics and cache analytics |
+| `health-check` | **System health monitoring** and diagnostics | `--detailed --show-cache-stats` |
+| `cache-management` | **Cache statistics** and cleanup operations | `--action cache-stats`, `--action cache-clear` |
 | `interactive` | **CLI menu** for guided workflows | Interactive command selection |
 
 ## Architecture Overview
 
-JobQst follows a modular, event-driven architecture designed for scalability and maintainability:
+JobLens follows a clean, modular architecture with type-safe Python code:
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌──────────────────────┐
@@ -149,89 +153,169 @@ JobQst follows a modular, event-driven architecture designed for scalability and
          │                       │                       │
          ▼                       ▼                       ▼
 ┌─────────────────┐    ┌──────────────────┐    ┌──────────────────────┐
-│    Database     │    │   Event System   │    │     Dashboards       │
+│    Database     │    │   Monitoring     │    │     Dashboard        │
 │                 │    │                  │    │                      │
-│ • PostgreSQL    │    │ • Local Events   │    │ • Dash (main)        │
-│ • SQLite        │    │ • Process        │    │ • CLI Tools          │
-│ • Profile-based │    │   Monitoring     │    │                      │
+│ • DuckDB        │    │ • Health Checks  │    │ • Dash Interface     │
+│ • Profile-based │    │ • Performance    │    │ • Real-time Stats    │
+│ • Caching       │    │ • Cache Analytics│    │ • Job Management     │
 └─────────────────┘    └──────────────────┘    └──────────────────────┘
 ```
 
-### Core Components
+### Core Technologies
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | **Scraping Engine** | JobSpy, Playwright, AsyncIO | Multi-source job discovery with parallel processing |
 | **Analysis Pipeline** | Custom AI, Transformers | Profile-based job scoring and skills analysis |
-| **Database Layer** | PostgreSQL/SQLite | Profile-organized job storage |
-| **Dashboard Suite** | Dash (Plotly) | Interactive web interface with analytics |
-| **CLI System** | Click, Rich | Automation-friendly command-line operations |
-| **Event System** | Custom Event Bus | Coordinated processing and real-time updates |
+| **Database** | DuckDB | High-performance analytics with optimized schema |
+| **Caching** | LRU Cache | 3-layer caching for 70% performance improvement |
+| **Dashboard** | Dash (Plotly) | Interactive web interface with real-time monitoring |
+| **CLI** | Click, Rich | Command-line automation and management |
 
-## Usage Examples
+## Modern Python API Examples
 
-### 1. Modern JobSpy Pipeline (Recommended)
-```bash
-# USA comprehensive search
-python main.py YourProfile --action jobspy-pipeline --jobspy-preset usa_comprehensive
+### Type-Safe Job Processing
 
-# Canada tech hubs focus
-python main.py YourProfile --action jobspy-pipeline --jobspy-preset tech_hubs_canada
-
-# Custom configuration
-python main.py YourProfile --action jobspy-pipeline \
-  --sites indeed,linkedin \
-  --max-jobs-total 500 \
-  --experience-level mid_level
-```
-
-### 2. Profile-Based Job Analysis
 ```python
-# After scraping, analyze job compatibility
+from typing import List, Dict, Optional, Any
+from pathlib import Path
 from src.core.user_profile_manager import UserProfileManager
 from src.analysis.job_analyzer import JobAnalyzer
+from src.models.job import JobListing
 
-# Load profile
-profile_manager = UserProfileManager()
-profile = profile_manager.load_profile("YourProfile")
-
-# Analyze jobs
-analyzer = JobAnalyzer(profile)
-analyzed_jobs = analyzer.analyze_all_jobs()
-
-# Top matches
-top_jobs = [job for job in analyzed_jobs if job.fit_score > 0.8]
-print(f"Found {len(top_jobs)} high-fit jobs!")
+def process_job_pipeline(
+    profile_name: str,
+    keywords: List[str],
+    max_jobs: int = 100,
+    enable_cache: bool = True
+) -> Dict[str, Any]:
+    """Process complete job discovery pipeline with type safety.
+    
+    Args:
+        profile_name: User profile identifier
+        keywords: Job search keywords
+        max_jobs: Maximum jobs to process
+        enable_cache: Enable intelligent caching
+        
+    Returns:
+        Processing results with job count and metrics
+        
+    Raises:
+        ValueError: If profile not found or keywords empty
+        ProcessingError: If pipeline fails
+    """
+    if not keywords:
+        raise ValueError("Keywords cannot be empty")
+    
+    # Load user profile with validation
+    profile_manager = UserProfileManager()
+    profile = profile_manager.load_profile(profile_name)
+    
+    # Initialize job analyzer with caching
+    analyzer = JobAnalyzer(profile, enable_cache=enable_cache)
+    
+    # Process jobs with progress tracking
+    results = analyzer.analyze_job_batch(keywords, max_jobs)
+    
+    return {
+        "jobs_processed": len(results),
+        "cache_hit_rate": analyzer.get_cache_stats().hit_rate,
+        "processing_time": results.processing_time,
+        "high_fit_jobs": [job for job in results.jobs if job.fit_score > 0.8]
+    }
 ```
 
-### 3. Dashboard Integration
-```bash
-# Quick dashboard launch
-python main.py YourProfile --action dashboard
+### Configuration Management
 
-# Direct Dash app launch
-python src/dashboard/dash_app/app.py
+```python
+from pydantic import BaseModel, Field, validator
+from typing import List, Optional
+
+class JobScrapingConfig(BaseModel):
+    """Type-safe configuration for job scraping operations."""
+    
+    keywords: List[str] = Field(..., min_items=1, max_items=10)
+    locations: List[str] = Field(default_factory=list)
+    max_jobs_per_site: int = Field(default=100, ge=1, le=1000)
+    enable_cache: bool = Field(default=True)
+    cache_ttl_hours: int = Field(default=24, ge=1, le=168)
+    
+    @validator('keywords')
+    def validate_keywords(cls, v: List[str]) -> List[str]:
+        """Validate and clean keywords."""
+        cleaned = [keyword.strip().lower() for keyword in v if keyword.strip()]
+        if not cleaned:
+            raise ValueError("At least one valid keyword required")
+        return cleaned
+    
+    @validator('locations')
+    def validate_locations(cls, v: List[str]) -> List[str]:
+        """Validate location format."""
+        return [loc.strip() for loc in v if loc.strip()]
+
+# Usage with type safety
+config = JobScrapingConfig(
+    keywords=["python developer", "software engineer"],
+    locations=["Toronto, ON", "Vancouver, BC"],
+    max_jobs_per_site=200,
+    enable_cache=True
+)
 ```
 
-### 4. Custom Profile Creation
-```json
-// profiles/YourProfile/YourProfile.json
-{
-  "name": "Your Name",
-  "location": "Toronto, ON",
-  "experience_level": "senior",
-  "keywords": ["python", "machine learning", "data science"],
-  "skills": ["Python", "SQL", "Docker", "AWS"],
-  "preferences": {
-    "remote_work": true,
-    "salary_min": 100000,
-    "company_types": ["tech", "startup"]
-  },
-  "education": {
-    "degree": "Bachelor's in Computer Science",
-    "certifications": ["AWS Certified", "Google Cloud"]
-  }
-}
+### Async Job Analysis
+
+```python
+import asyncio
+from typing import AsyncIterator, List
+from src.services.ai_integration_service import AIIntegrationService
+
+async def analyze_jobs_async(
+    jobs: List[JobListing],
+    batch_size: int = 10
+) -> AsyncIterator[Dict[str, Any]]:
+    """Asynchronously analyze jobs with batching.
+    
+    Args:
+        jobs: List of job listings to analyze
+        batch_size: Number of jobs to process concurrently
+        
+    Yields:
+        Analysis results for each job batch
+    """
+    ai_service = AIIntegrationService()
+    
+    # Process jobs in batches to avoid overwhelming the system
+    for i in range(0, len(jobs), batch_size):
+        batch = jobs[i:i + batch_size]
+        
+        # Create concurrent analysis tasks
+        tasks = [
+            ai_service.analyze_job_compatibility(job)
+            for job in batch
+        ]
+        
+        # Execute batch concurrently
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Yield successful results, log errors
+        for job, result in zip(batch, results):
+            if isinstance(result, Exception):
+                logger.error(f"Analysis failed for job {job.id}: {result}")
+                continue
+            
+            yield {
+                "job_id": job.id,
+                "fit_score": result.fit_score,
+                "skills_match": result.skills_match,
+                "analysis_time": result.processing_time
+            }
+
+# Usage
+async def main():
+    jobs = await scraper.get_jobs(keywords=["python"])
+    
+    async for analysis_result in analyze_jobs_async(jobs):
+        print(f"Job {analysis_result['job_id']}: {analysis_result['fit_score']:.2f}")
 ```
 
 ## Configuration & Environment
@@ -239,20 +323,35 @@ python src/dashboard/dash_app/app.py
 ### Environment Setup
 ```bash
 # Essential environment variables (.env)
-DATABASE_URL=postgresql://user:password@localhost/jobqst  # or sqlite:///jobs.db
+DATABASE_TYPE=duckdb  # Options: duckdb (recommended), postgresql, sqlite
+DATABASE_URL=postgresql://user:password@localhost/jobqst  # if using PostgreSQL
+
+# Performance optimization
+ENABLE_CACHING=true
+CACHE_SIZE_MB=500
+CACHE_TTL_HOURS=24
+
+# Scraping configuration
 SCRAPING_DELAY=2
 MAX_CONCURRENT_WORKERS=4
 BROWSER_HEADLESS=true
 
 # Dashboard configuration
 DASH_PORT=8050
+ENABLE_PERFORMANCE_MONITORING=true
 
 # JobSpy integration
 JOBSPY_MAX_WORKERS=3
 JOBSPY_SITES=indeed,linkedin,glassdoor,ziprecruiter
 
-# Optional AI features
-OPENAI_API_KEY=your_key_here  # for enhanced analysis
+# Monitoring and backup
+ENABLE_AUTO_BACKUP=true
+BACKUP_RETENTION_DAYS=7
+ENABLE_HEALTH_CHECKS=true
+
+# Optional AI features (all models run locally - no API keys needed)
+# AI_ANALYSIS_ENABLED=true  # Uses local transformer models
+# DISABLE_HEAVY_AI=false  # Set to true for faster startup
 ```
 
 ### Profile Configuration
@@ -397,12 +496,11 @@ sudo systemctl start jobqst
 ## Documentation & Resources
 
 ### 📚 **Core Documentation**
-- **[📖 Documentation Hub](docs/README.md)** - Complete documentation index
-- **[🏗️ Architecture Guide](docs/ARCHITECTURE.md)** - System design and patterns
-- **[ Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[📝 Changelog](docs/CHANGELOG.md)** - Version history and changes
 
 ### 🔗 **Quick References**
-- **[⚡ CLI Reference](docs/API_REFERENCE.md#cli-commands)** - All command-line options
+- Available VS Code tasks and commands are listed above
+- Configuration examples provided in this README
 
 ---
 
@@ -475,123 +573,63 @@ python main.py YourProfile --action analyze-jobs  # Ensure jobs are processed
 </details>
 
 ### **Getting Help**
-- **[� Issue Tracker](https://github.com/NirajanKhadka/automate_job_idea001/issues)** - Report bugs and feature requests
-- **[💬 Discussions](https://github.com/NirajanKhadka/automate_job_idea001/discussions)** - Community support and Q&A
-- **[📧 Contact](mailto:contact@jobqst.dev)** - Direct support (if available)
+
+If you run into issues, check the troubleshooting section above or reach out directly since this is a small team project.
 
 ---
 
-## Contributing
+## Quick Development Notes
 
-We welcome contributions! JobQst is actively developed and always looking for improvements.
+Since this is a two-person project, development is simple:
 
-### 🚀 **Development Setup**
+### 🚀 **Setup**
 ```bash
-# 1. Fork and clone
-git clone https://github.com/YourUsername/automate_job_idea001.git
-cd automate_job_idea001
-
-# 2. Create development environment
-conda create -n jobqst_dev python=3.11
-conda activate jobqst_dev
+# 1. Clone and setup
+git clone https://github.com/NirajanKhadka/JobLens.git
+cd JobLens
+conda create -n auto_job python=3.11
+conda activate auto_job
 pip install -r requirements.txt
-pip install -r requirements-dev.txt  # if available
 
-# 3. Create feature branch
-git checkout -b feature/amazing-improvement
-
-# 4. Run tests to ensure everything works
+# 2. Test your changes
 pytest tests/ -v
+
+# 3. Manual testing
+python main.py TestProfile --action jobspy-pipeline --jobspy-preset tech_hubs_canada
 ```
 
-### 📋 **Contribution Areas**
-
-#### 🔍 **Scraping & Data**
-- Add new job sites (Monster, CareerBuilder, etc.)
-- Improve JobSpy integration and error handling
-- Enhance data extraction and cleaning algorithms
-- Implement smart rate limiting and anti-detection
-
-#### 🧠 **AI & Analytics** 
-- Improve job-profile matching algorithms
-- Add skills gap analysis and career recommendations
-- Enhance resume parsing and profile generation
-
-#### 🎨 **Dashboard & UI**
-- Improve Dash components and visualizations  
-- Improve mobile responsiveness and accessibility
-- Create interactive analytics and reporting features
-
-#### 🔧 **Infrastructure & DevOps**
-- Add Docker improvements and orchestration
-- Implement CI/CD pipelines and automated testing
-- Add monitoring, logging, and alerting systems
-
-### 🎯 **Priority Features**
-1. **Enhanced Dash Dashboard** - Improve the current web interface
-2. **Database Connection Fixes** - Resolve PostgreSQL connectivity issues
-3. **Improved Job Analysis** - Better job matching algorithms
-4. **Mobile-Friendly Interface** - Responsive dashboard design
-
-### 📝 **Guidelines**
-- **Code Quality**: Follow PEP 8, use type hints, add docstrings
-- **Testing**: Add tests for new features (pytest framework)
-- **Documentation**: Update docs for any new functionality
-- **Commits**: Use clear, descriptive commit messages
-- **Pull Requests**: Include detailed descriptions and test evidence
-
-### 🏆 **Recognition**
-Contributors are recognized in our [CONTRIBUTORS.md](CONTRIBUTORS.md) file and release notes.
+### 📝 **Simple Guidelines**
+- Test your changes before pushing
+- Use clear commit messages
+- Update README if adding new features
 
 ---
 
-## License & Legal
+## License
 
-### **MIT License**
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for full details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-**License Summary:**
-- ✅ **Commercial Use** - Use freely in commercial projects
-- ✅ **Modification** - Modify and distribute your changes
-- ✅ **Distribution** - Share with others freely
-- ✅ **Private Use** - Use privately without restrictions
-- ❗ **Liability** - No warranty or liability provided
-- ❗ **Attribution** - Must include original license notice
-
-### **Third-Party Licenses**
-JobQst integrates with several open-source projects:
-- **[JobSpy](https://github.com/speedyapply/JobSpy)** - MIT License
-- **[Playwright](https://github.com/microsoft/playwright-python)** - Apache 2.0
-- **[Dash](https://github.com/plotly/dash)** - MIT License
+Main dependencies:
+- [JobSpy](https://github.com/speedyapply/JobSpy) - MIT License
+- [Playwright](https://github.com/microsoft/playwright-python) - Apache 2.0  
+- [Dash](https://github.com/plotly/dash) - MIT License
 
 ---
 
-## Acknowledgments & Credits
+## Acknowledgments
 
-### **🙏 Special Thanks**
-- **[JobSpy Project](https://github.com/speedyapply/JobSpy)** - Excellent multi-site scraping foundation
-- **[Dash & Plotly Team](https://dash.plotly.com/)** - Powerful analytics dashboard framework
-- **[Playwright Developers](https://playwright.dev/)** - Robust browser automation
+Built with:
+- **Python 3.11+** - Core language
+- **JobSpy, Playwright** - Web scraping  
+- **DuckDB** - High-performance database
+- **Dash (Plotly)** - Interactive dashboard
+- **Rich, Click** - CLI interface
 
-### **🏗️ Built With**
-- **Core Language**: Python 3.11+
-- **Web Scraping**: JobSpy, Playwright
-- **Database**: PostgreSQL, SQLite
-- **Dashboard**: Dash (Plotly)
-- **CLI/UI**: Rich, Click
-- **Testing**: Pytest
-
-### **🌟 Community**
-Special thanks to all contributors, testers, and users who make JobLens better every day!
+Special thanks to the [JobSpy Project](https://github.com/speedyapply/JobSpy) for excellent multi-site scraping foundation.
 
 ---
 
-<div align="center">
-
-### **Ready to revolutionize your job search? Get started now!**
-
-[🚀 **Quick Start**](#-quick-start) • [📖 **Documentation**](docs/) • [🤝 **Contribute**](#-contributing)
+**Ready to get started?** → [Quick Start](#quick-start)
 
 **Made with ❤️ for better job discovery**
 
-</div>

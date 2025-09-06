@@ -276,3 +276,4 @@ def cache_embedding(text_h: str, model: str, emb):
 def get_cached_embedding(text_h: str, model: str):
     """Legacy function - delegates to cache instance"""
     return get_cache().get_cached_embedding(text_h, model)
+

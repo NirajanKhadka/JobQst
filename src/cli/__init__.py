@@ -13,3 +13,4 @@ This module contains all command-line interface components including:
 # If you need to expose version/author, keep those lines.
 __version__ = "2.0.0"
 __author__ = "AutoJobAgent Team"
+

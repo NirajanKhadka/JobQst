@@ -102,6 +102,37 @@ class HealthMonitor:
             logger.error(f"Error clearing alerts: {e}")
             return False
     
+    def check_service_health(self, service_name: str = None) -> Dict[str, Any]:
+        """Check health of a specific service or all services"""
+        try:
+            if service_name:
+                # Check specific service
+                health_status = self._get_basic_health()
+                if service_name in health_status:
+                    return {
+                        'service': service_name,
+                        'status': health_status[service_name],
+                        'timestamp': datetime.now().isoformat()
+                    }
+                else:
+                    return {
+                        'service': service_name,
+                        'status': 'unknown',
+                        'error': f"Service '{service_name}' not found",
+                        'timestamp': datetime.now().isoformat()
+                    }
+            else:
+                # Check all services (alias for check_system_health)
+                return self.check_system_health()
+        except Exception as e:
+            logger.error(f"Error checking service health: {e}")
+            return {
+                'service': service_name or 'all',
+                'status': 'error',
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+    
     def _get_basic_health(self) -> Dict[str, str]:
         """Get basic health status for components"""
         return {
@@ -158,3 +189,4 @@ def get_health_monitor() -> HealthMonitor:
     if _health_monitor_instance is None:
         _health_monitor_instance = HealthMonitor()
     return _health_monitor_instance
+

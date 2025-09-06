@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Automated Resume Analyzer for JobLens.
+Automated Resume Analyzer for JobQst.
 This module automatically extracts keywords, skills, and experience level from resumes
 to enable Configurable, targeted job scraping.
 """
@@ -453,3 +453,4 @@ def analyze_profile_resume(profile: Dict) -> Dict:
         console.print(f"[red]❌ Error: {e}[/red]")
         import traceback
         traceback.print_exc()
+

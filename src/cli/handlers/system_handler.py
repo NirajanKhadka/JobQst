@@ -389,3 +389,4 @@ def summarize_docs_command(args=None):
     else:
         print("[CLI] Documentation update failed:")
         print(result.stderr)
+

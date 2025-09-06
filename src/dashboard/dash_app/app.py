@@ -1,5 +1,5 @@
 """
-JobLens Dash Dashboard Application
+JobQst Dash Dashboard Application
 Main entry point for the interactive dashboard
 """
 import sys
@@ -157,7 +157,7 @@ dashboard = dash.Dash(
         "6.0.0/css/all.min.css"
     ],
     suppress_callback_exceptions=True,
-    title="JobLens Dashboard"
+    title="JobQst Dashboard"
 )
 
 # Define the main layout
@@ -182,7 +182,7 @@ dashboard.layout = dbc.Container([
             html.Div([
                 html.H1([
                     html.I(className="fas fa-rocket me-3 text-primary"),
-                    "JobLens Dashboard"
+                    "JobQst Dashboard"
                 ], className="mb-0"),
                 html.Div([
                     dbc.Badge("Profile:", className="me-2"),
@@ -229,7 +229,7 @@ dashboard.layout = dbc.Container([
         dbc.Col([
             html.Hr(className="border-secondary"),
             html.P([
-                "JobLens Dashboard • ",
+                "JobQst Dashboard • ",
                 html.Small(id="last-updated", children="Last updated: --")
             ], className="text-light text-center mb-0")
         ])
@@ -240,29 +240,51 @@ dashboard.layout = dbc.Container([
 # Main navigation callback
 @dashboard.callback(
     Output('page-content', 'children'),
-    [Input('nav-jobs', 'n_clicks'),
+    [Input('nav-home', 'n_clicks'),
+     Input('nav-job-tracker', 'n_clicks'),
+     Input('nav-jobs', 'n_clicks'),
      Input('nav-analytics', 'n_clicks'),
+     Input('nav-interview-prep', 'n_clicks'),
      Input('nav-scraping', 'n_clicks'),
      Input('nav-processing', 'n_clicks'),
      Input('nav-system', 'n_clicks'),
      Input('nav-settings', 'n_clicks')],
     prevent_initial_call=False
 )
-def display_page(jobs_clicks, analytics_clicks, scraping_clicks,
-                 processing_clicks, system_clicks, settings_clicks):
+def display_page(home_clicks, tracker_clicks, jobs_clicks, analytics_clicks,
+                 interview_clicks, scraping_clicks, processing_clicks, 
+                 system_clicks, settings_clicks):
     """Handle navigation between pages"""
     ctx = dash.callback_context
     
     if not ctx.triggered:
-        return create_jobs_layout()
+        # Load enhanced home layout by default
+        try:
+            from .layouts.enhanced_home_layout_new import (
+                create_enhanced_home_layout
+            )
+            return create_enhanced_home_layout()
+        except ImportError:
+            return create_jobs_layout()
     
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
     
     try:
-        if button_id == 'nav-jobs':
+        if button_id == 'nav-home':
+            from .layouts.enhanced_home_layout_new import (
+                create_enhanced_home_layout
+            )
+            return create_enhanced_home_layout()
+        elif button_id == 'nav-job-tracker':
+            from .layouts.job_tracker_layout import create_job_tracker_layout
+            return create_job_tracker_layout()
+        elif button_id == 'nav-jobs':
             return create_jobs_layout()
         elif button_id == 'nav-analytics':
             return create_analytics_layout()
+        elif button_id == 'nav-interview-prep':
+            from .layouts.interview_prep_layout import create_interview_prep_layout
+            return create_interview_prep_layout()
         elif button_id == 'nav-scraping':
             return create_scraping_layout()
         elif button_id == 'nav-processing':
@@ -272,7 +294,10 @@ def display_page(jobs_clicks, analytics_clicks, scraping_clicks,
         elif button_id == 'nav-settings':
             return create_settings_layout()
         else:
-            return create_jobs_layout()
+            from .layouts.enhanced_home_layout_new import (
+                create_enhanced_home_layout
+            )
+            return create_enhanced_home_layout()
     except Exception as e:
         logger.error(f"Error loading page: {e}")
         return html.Div([
@@ -283,8 +308,6 @@ def display_page(jobs_clicks, analytics_clicks, scraping_clicks,
                        className="mb-0")
             ], color="danger")
         ])
-
-
 # Profile management removed - profile is set when launching dashboard
 # The profile is now passed as a parameter and stored in the app instance
 try:
@@ -360,6 +383,15 @@ try:
         register_processing_callbacks(dashboard)
         register_system_callbacks(dashboard)
         register_settings_callbacks(dashboard)
+        
+        # Register job tracker callbacks
+        try:
+            from .callbacks.job_tracker_callbacks import register_job_tracker_callbacks
+            register_job_tracker_callbacks(dashboard)
+            logger.info("Job tracker callbacks registered")
+        except ImportError as e:
+            logger.warning(f"Job tracker callbacks not available: {e}")
+        
         logger.info("All callbacks registered successfully")
     else:
         logger.info("Using fallback callbacks - imports failed")
@@ -375,7 +407,7 @@ def set_dashboard_profile(profile_name):
 
 
 if __name__ == '__main__':
-    logger.info("Starting JobLens Dashboard...")
+    logger.info("Starting JobQst Dashboard...")
     logger.info("Dashboard available at: http://127.0.0.1:8050")
     
     dashboard.run(
@@ -383,3 +415,4 @@ if __name__ == '__main__':
         host='127.0.0.1',
         port=8050
     )
+

@@ -395,3 +395,4 @@ class BatchProcessor:
             return 'negative'
         else:
             return 'neutral'
+

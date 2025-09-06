@@ -295,33 +295,4 @@ def search_dashboard_code(client: SourcegraphClient, repo: Optional[str] = None)
     return client.search_code("dashboard OR flask OR streamlit", repo=repo, file_pattern="*.py")
 
 
-# Example usage and integration
-# Main functionality moved to CLI module or tests
-# Import and use the functions directly
 
-    # Check if Sourcegraph is running
-    if not client.health_check():
-        print("Sourcegraph is not running. Please start it first.")
-        print("Run: docker compose -f docker-compose.sourcegraph.yml up -d")
-        exit(1)
-
-    print("Sourcegraph is running!")
-
-    # Example searches
-    print("\nSearching for job-related functions...")
-    job_functions = search_job_functions(client)
-    for result in job_functions[:3]:  # Show first 3 results
-        if result.get("file"):
-            print(f"- {result['file']['path']}")
-
-    print("\nSearching for scraping code...")
-    scraping_code = search_scraping_code(client)
-    for result in scraping_code[:3]:
-        if result.get("file"):
-            print(f"- {result['file']['path']}")
-
-    print("\nSearching for database operations...")
-    db_ops = find_database_operations(client)
-    for result in db_ops[:3]:
-        if result.get("file"):
-            print(f"- {result['file']['path']}")

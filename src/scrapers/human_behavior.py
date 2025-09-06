@@ -509,3 +509,4 @@ def simulate_human_reading_time(page, content_length: int) -> None:
     reading_time = max(1.0, min(reading_time, 30.0))
 
     time.sleep(reading_time)
+

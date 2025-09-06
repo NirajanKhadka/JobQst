@@ -377,3 +377,4 @@ if __name__ == "__main__":
         asyncio.run(test_gmail_monitor_only())
     elif choice == "4":
         asyncio.run(start_job_application_system(max_applications=5))
+

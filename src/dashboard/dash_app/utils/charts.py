@@ -197,6 +197,92 @@ def create_location_chart(jobs_data, top_n=10):
         logger.error(f"Error creating location chart: {e}")
         return create_empty_chart("Error creating chart")
 
+
+def create_rcip_cities_chart(jobs_data):
+    """Create chart showing RCIP vs Non-RCIP city distribution"""
+    try:
+        if not jobs_data:
+            return create_empty_chart("No data available")
+        
+        df = pd.DataFrame(jobs_data)
+        
+        if 'is_rcip_city' not in df.columns:
+            return create_empty_chart("RCIP data not available")
+        
+        # Count RCIP vs Non-RCIP cities
+        rcip_counts = df['is_rcip_city'].value_counts()
+        labels = ['Non-RCIP Cities', 'RCIP Cities']
+        values = [rcip_counts.get(0, 0), rcip_counts.get(1, 0)]
+        colors = ['#ff7f7f', '#7fbf7f']  # Red for non-RCIP, Green for RCIP
+        
+        fig = px.pie(
+            values=values,
+            names=labels,
+            title='Job Distribution: RCIP vs Non-RCIP Cities',
+            color_discrete_sequence=colors
+        )
+        
+        fig.update_layout(
+            template='plotly_white',
+            height=400,
+            margin=dict(t=40, b=40, l=40, r=40)
+        )
+        
+        return fig
+        
+    except Exception as e:
+        logger.error(f"Error creating RCIP cities chart: {e}")
+        return create_empty_chart("Error creating chart")
+
+
+def create_location_category_chart(jobs_data):
+    """Create chart showing job distribution by location category"""
+    try:
+        if not jobs_data:
+            return create_empty_chart("No data available")
+        
+        df = pd.DataFrame(jobs_data)
+        
+        if 'location_category' not in df.columns:
+            return create_empty_chart("Location category data not available")
+        
+        # Count by location category
+        category_counts = df['location_category'].value_counts()
+        
+        # Define colors for each category
+        color_map = {
+            'major_city': '#1f77b4',
+            'rcip_city': '#2ca02c', 
+            'immigration_priority': '#ff7f0e',
+            'remote': '#d62728',
+            'custom': '#9467bd',
+            'unknown': '#8c564b'
+        }
+        
+        colors = [color_map.get(cat, '#17becf') for cat in category_counts.index]
+        
+        fig = px.bar(
+            x=category_counts.index,
+            y=category_counts.values,
+            title='Job Distribution by Location Category',
+            labels={'x': 'Location Category', 'y': 'Number of Jobs'},
+            color=category_counts.index,
+            color_discrete_map=color_map
+        )
+        
+        fig.update_layout(
+            template='plotly_white',
+            height=400,
+            margin=dict(t=40, b=40, l=40, r=40),
+            xaxis={'tickangle': 45}
+        )
+        
+        return fig
+        
+    except Exception as e:
+        logger.error(f"Error creating location category chart: {e}")
+        return create_empty_chart("Error creating chart")
+
 def create_salary_distribution(jobs_data):
     """Create salary distribution chart"""
     try:

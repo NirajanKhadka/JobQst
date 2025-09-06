@@ -25,3 +25,4 @@ class SystemMenu:
         console.print(Panel("⚙️ System Menu", style="bold blue"))
         # Implementation for system menu
         pass
+

@@ -12,3 +12,4 @@ def check_network_connectivity(config: Dict) -> Dict:
     """Alias for check_network to maintain backward compatibility."""
     result = _check_network_connectivity(config)
     return result.to_dict()
+

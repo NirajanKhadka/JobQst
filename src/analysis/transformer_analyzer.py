@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced Transformer-based Stage 2 Processor for JobLens
+Enhanced Transformer-based Stage 2 Processor for JobQst
 
 This module provides specialized transformer models for different aspects of job analysis:
 - BERT/RoBERTa for general text understanding
@@ -501,3 +501,4 @@ if __name__ == "__main__":
         console.print(f"[cyan]Skills found: {result.semantic_skills}[/cyan]")
         console.print(f"[cyan]Category: {result.job_category}[/cyan]")
         console.print(f"[cyan]Compatibility: {result.semantic_compatibility:.2f}[/cyan]")
+

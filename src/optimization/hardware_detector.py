@@ -202,3 +202,4 @@ performance_stats = HardwareDetector.benchmark_performance()
 def get_hardware_info() -> Tuple[HardwareConfig, Dict[str, float]]:
     """Get hardware configuration and performance stats"""
     return hardware_config, performance_stats
+

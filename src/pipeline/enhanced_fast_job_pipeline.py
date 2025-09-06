@@ -26,7 +26,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeEl
 from ..scrapers.unified_eluta_scraper import ElutaScraper
 from ..scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper, JOBSPY_AVAILABLE
 from ..scrapers.external_job_scraper import ExternalJobDescriptionScraper
-from ..analysis.two_stage_processor import get_two_stage_processor
+from ..optimization.integrated_processor import create_optimized_processor
 from ..core.job_database import get_job_db
 from ..utils.profile_helpers import load_profile
 from ..config.jobspy_integration_config import (
@@ -49,25 +49,34 @@ class ImprovedFastJobPipeline:
     """
 
     def __init__(self, profile_name: str = "Nirajan", config: Optional[Dict] = None):
+        """Initialize the Enhanced Fast Job Pipeline.
+        
+        Args:
+            profile_name: Name of the user profile to use
+            config: Optional configuration overrides
+        """
         self.profile_name = profile_name
         self.profile = load_profile(profile_name) or {}
         self.db = get_job_db(profile_name)
         
-        # Configuration with defaults
+        # Configuration with defaults - following development standards
         default_config = {
             # JobSpy settings
             "enable_jobspy": True,
             "jobspy_priority": "high",  # high, medium, low
-            "jobspy_preset": "quality",  # fast, comprehensive, quality, mississauga, toronto, remote
+            # fast, comprehensive, quality, mississauga, toronto, remote
+            "jobspy_preset": "quality",
             "jobspy_max_jobs": 100,
+            # Job age filter (hours): 24=daily, 168=weekly, 336=biweekly
+            "hours_old": 168,  # Changed to weekly for better performance
             
             # Existing scraper settings
-            "enable_eluta": False,  # Disabled as requested
+            "enable_eluta": False,  # Disabled - JobSpy is 40x faster
             "eluta_pages": 3,
             "eluta_jobs": 50,
             
-            # External scraping settings
-            "enable_external_scraping": True,
+            # External scraping settings - DISABLED: JobSpy already gets full descriptions
+            "enable_external_scraping": False,  # JobSpy provides descriptions
             "external_workers": 6,
             
             # Processing settings
@@ -148,7 +157,35 @@ class ImprovedFastJobPipeline:
         if "jobspy_sites" in self.config and self.config["jobspy_sites"]:
             self.jobspy_config.jobspy_sites = self.config["jobspy_sites"]
 
-    async def run_complete_pipeline(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def _get_filter_description(self) -> str:
+        """Get human-readable description of current time filter."""
+        hours = self.config.get("hours_old", 336)
+        if hours <= 24:
+            return "last 24 hours (daily)"
+        elif hours <= 168:
+            return f"last {hours // 24} days"
+        else:
+            return f"last {hours // 24} days"
+
+    def set_daily_filter(self) -> None:
+        """Set the pipeline to only scrape jobs from the last 24 hours."""
+        self.config["hours_old"] = 24
+        console.print(
+            "[yellow]📅 Daily filter enabled: "
+            "jobs from last 24 hours only[/yellow]"
+        )
+
+    def set_weekly_filter(self) -> None:
+        """Set the pipeline to only scrape jobs from the last week."""
+        self.config["hours_old"] = 168
+        console.print(
+            "[yellow]📅 Weekly filter enabled: "
+            "jobs from last 7 days only[/yellow]"
+        )
+
+    async def run_complete_pipeline(
+        self, limit: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
         """
         Run the enhanced job pipeline with JobSpy integration.
         
@@ -166,14 +203,24 @@ class ImprovedFastJobPipeline:
         self.stats["pipeline_start_time"] = time.time()
         
         console.print(Panel.fit(
-            "[bold blue]🚀 Improved Fast Job Pipeline with JobSpy Integration[/bold blue]\n"
+            "[bold blue]🚀 Enhanced Fast Job Pipeline"
+            " with JobSpy Integration[/bold blue]\n"
             f"[cyan]Profile: {self.profile_name}[/cyan]\n"
-            f"[cyan]JobSpy: {'✅ Enabled' if self.config['enable_jobspy'] else '❌ Disabled'}[/cyan]\n"
-            f"[cyan]Eluta: {'✅ Enabled' if self.config['enable_eluta'] else '❌ Disabled'}[/cyan]\n"
-            f"[cyan]External Scraping: {'✅ Enabled' if self.config['enable_external_scraping'] else '❌ Disabled'}[/cyan]\n"
-            f"[cyan]AI Processing: {'✅ Enabled' if self.config['enable_processing'] else '❌ Disabled'}[/cyan]\n"
+            f"[cyan]JobSpy: "
+            f"{'✅ Enabled' if self.config['enable_jobspy'] else '❌ Disabled'}"
+            f"[/cyan]\n"
+            f"[cyan]Eluta: "
+            f"{'✅ Enabled' if self.config['enable_eluta'] else '❌ Disabled'}"
+            f"[/cyan]\n"
+            f"[cyan]External Scraping: "
+            f"{'✅ Enabled' if self.config['enable_external_scraping'] else '❌ Disabled'}"
+            f"[/cyan]\n"
+            f"[cyan]AI Processing: "
+            f"{'✅ Enabled' if self.config['enable_processing'] else '❌ Disabled'}"
+            f"[/cyan]\n"
+            f"[cyan]Job Age Filter: {self._get_filter_description()}[/cyan]\n"
             f"[cyan]Target Jobs: {limit or 'Config Default'}[/cyan]",
-            title="Improved Pipeline Starting"
+            title="Enhanced Pipeline Starting"
         ))
 
         try:
@@ -272,7 +319,8 @@ class ImprovedFastJobPipeline:
                 locations=jobspy_config_dict["locations"],
                 search_terms=jobspy_config_dict["search_terms"],
                 sites=jobspy_config_dict["sites"],
-                max_total_jobs=jobspy_config_dict["max_total_jobs"]
+                max_total_jobs=jobspy_config_dict["max_total_jobs"],
+                hours_old=int(self.config.get("hours_old", 336))
             )
             
             self.jobspy_scraper = JobSpyImprovedScraper(self.profile_name, jobspy_scraper_config)
@@ -339,6 +387,38 @@ class ImprovedFastJobPipeline:
         if not jobs:
             return jobs
         
+        # Smart check: Skip if JobSpy already provided descriptions
+        jobs_with_descriptions = sum(
+            1 for job in jobs
+            if job.get('description') and len(job.get('description', '')) > 100
+        )
+        description_coverage = (
+            jobs_with_descriptions / len(jobs) if jobs else 0
+        )
+        
+        if description_coverage > 0.8:  # If 80%+ already have descriptions
+            console.print(
+                f"[green]✅ Skipping external scraping: "
+                f"{jobs_with_descriptions}/{len(jobs)} jobs already have "
+                f"descriptions ({description_coverage:.1%})[/green]"
+            )
+            # Mark all as description_fetched since they came from JobSpy
+            for job in jobs:
+                job['description_fetched'] = bool(job.get('description'))
+            
+            self.stats["external_scraping_time"] = 0.0
+            self.stats["descriptions_fetched"] = jobs_with_descriptions
+            self.stats["phases_completed"].append("external_scraping_skipped")
+            return jobs
+        
+        if not self.config.get("enable_external_scraping", True):
+            console.print(
+                "[yellow]⚠️ External scraping disabled in config[/yellow]"
+            )
+            for job in jobs:
+                job['description_fetched'] = bool(job.get('description'))
+            return jobs
+        
         try:
             start_time = time.time()
             
@@ -347,17 +427,32 @@ class ImprovedFastJobPipeline:
                 num_workers=self.config["external_workers"]
             )
             
-            # Extract URLs from jobs
-            job_urls = [job.get('url', '') for job in jobs if job.get('url')]
+            # Extract URLs from jobs that don't have descriptions
+            jobs_needing_descriptions = [
+                job for job in jobs
+                if not job.get('description') or
+                len(job.get('description', '')) < 100
+            ]
+            job_urls = [
+                job.get('url', '') for job in jobs_needing_descriptions
+                if job.get('url')
+            ]
             
             if not job_urls:
-                console.print("[yellow]⚠️ No job URLs found for description fetching[/yellow]")
+                console.print(
+                    "[yellow]⚠️ No job URLs found for description "
+                    "fetching[/yellow]"
+                )
                 return jobs
             
-            console.print(f"[cyan]📋 Fetching descriptions for {len(job_urls)} jobs with {self.config['external_workers']} workers...[/cyan]")
+            console.print(
+                f"[cyan]📋 Fetching descriptions for {len(job_urls)} jobs "
+                f"with {self.config['external_workers']} workers...[/cyan]"
+            )
             
             # Fetch descriptions
-            scraped_jobs = await self.external_scraper.scrape_external_jobs_parallel(job_urls)
+            scraped_jobs = await self.external_scraper.\
+                scrape_external_jobs_parallel(job_urls)
             
             # Merge descriptions back into jobs
             Improved_jobs = []
@@ -366,7 +461,7 @@ class ImprovedFastJobPipeline:
                     job['description'] = scraped_jobs[i]['description']
                     job['description_fetched'] = True
                 else:
-                    job['description_fetched'] = False
+                    job['description_fetched'] = bool(job.get('description'))
                 Improved_jobs.append(job)
             
             # Update stats
@@ -393,8 +488,8 @@ class ImprovedFastJobPipeline:
         try:
             start_time = time.time()
             
-            # Initialize two-stage processor
-            self.processor = get_two_stage_processor(
+            # Initialize optimized two-stage processor with batch processing
+            self.processor = create_optimized_processor(
                 self.profile, 
                 cpu_workers=self.config["cpu_workers"]
             )
@@ -458,7 +553,7 @@ class ImprovedFastJobPipeline:
             self.stats["processing_time"] = time.time() - start_time
             self.stats["jobs_processed"] = len(processed_jobs)
             self.stats["jobs_ready_to_apply"] = ready_to_apply_count
-            self.stats["processing_method_used"] = self.config["processing_method"]
+            self.stats["processing_method_used"] = self.config.get("processing_method", "auto")
             self.stats["phases_completed"].append("ai_processing")
             
             console.print(f"[green]✅ Phase 3 Complete: {len(processed_jobs)} jobs processed, {ready_to_apply_count} ready to apply[/green]")

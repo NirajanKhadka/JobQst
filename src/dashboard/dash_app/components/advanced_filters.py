@@ -297,3 +297,4 @@ def create_filter_summary():
             className="text-muted mt-2 d-block"
         )
     ], className="mb-3")
+

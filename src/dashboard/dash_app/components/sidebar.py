@@ -1,5 +1,5 @@
 """
-Sidebar component for JobLens Dashboard
+Sidebar component for JobQst Dashboard
 """
 import dash_bootstrap_components as dbc
 from dash import html
@@ -21,7 +21,7 @@ def create_sidebar():
             # Logo and title
             html.Div([
                 html.I(className="fas fa-rocket fs-1 text-info mb-3"),
-                html.H4("JobLens", className="fw-bold text-info"),
+                html.H4("JobQst", className="fw-bold text-info"),
                 html.P(
                     "AI-Powered Job Search",
                     className="text-light small mb-4"
@@ -55,16 +55,35 @@ def create_sidebar():
                 dbc.Nav([
                     dbc.NavItem(
                         dbc.NavLink([
+                            html.I(className="fas fa-home me-2"),
+                            "Dashboard"
+                        ], href="#", id="nav-home", active=True,
+                                   className="py-2")
+                    ),
+                    
+                    dbc.NavItem(
+                        dbc.NavLink([
+                            html.I(className="fas fa-clipboard-list me-2"),
+                            "Job Tracker"
+                        ], href="#", id="nav-job-tracker", className="py-2")
+                    ),
+                    
+                    dbc.NavItem(
+                        dbc.NavLink([
                             html.I(className="fas fa-briefcase me-2"),
                             "Jobs"
-                        ], href="#", id="nav-jobs", active=True,
-                                   className="py-2")
+                        ], href="#", id="nav-jobs", className="py-2")
                     ),
                     
                     dbc.NavItem(dbc.NavLink([
                         html.I(className="fas fa-chart-bar me-2"),
                         "Analytics"
                     ], href="#", id="nav-analytics", className="py-2")),
+                    
+                    dbc.NavItem(dbc.NavLink([
+                        html.I(className="fas fa-user-tie me-2"),
+                        "Interview Prep"
+                    ], href="#", id="nav-interview-prep", className="py-2")),
                     
                     dbc.NavItem(dbc.NavLink([
                         html.I(className="fas fa-spider me-2"),
@@ -165,3 +184,4 @@ def create_profile_stats_card(profile_name):
             ])
         ])
     ], size="sm", className="mt-3")
+

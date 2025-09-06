@@ -5,7 +5,8 @@ This processor has been replaced by TwoStageProcessor.
 Use TwoStageProcessor instead for better performance.
 """
 import warnings
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+from dataclasses import dataclass, field
 
 # Import the current recommended processor
 from .two_stage_processor import (
@@ -17,10 +18,17 @@ from .two_stage_processor import (
 # Compatibility imports for existing tests
 from .custom_data_extractor import ExtractionResult  # noqa: F401
 
-try:
-    from ..ai.gpu_ollama_client import JobAnalysisResult  # noqa: F401
-except ImportError:
-    JobAnalysisResult = None
+# Moved from ai.gpu_ollama_client for compatibility
+@dataclass
+class JobAnalysisResult:
+    required_skills: List[str] = field(default_factory=list)
+    job_requirements: List[str] = field(default_factory=list)
+    compatibility_score: float = 0.0
+    analysis_confidence: float = 0.0
+    extracted_benefits: List[str] = field(default_factory=list)
+    reasoning: str = ""
+    processing_time: float = 0.0
+    model_used: str = "mock"
 
 
 class HybridProcessingEngine:
@@ -106,3 +114,4 @@ __all__ = [
     "HybridProcessingResult", 
     "get_hybrid_processing_engine",
 ]
+

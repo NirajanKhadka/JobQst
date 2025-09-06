@@ -1,5 +1,5 @@
 """
-System callbacks for JobLens Dashboard
+System callbacks for JobQst Dashboard
 Handle system monitoring and health checks
 """
 import logging

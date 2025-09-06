@@ -1,5 +1,5 @@
 """
-Job table component for JobLens Dashboard
+Job table component for JobQst Dashboard
 Interactive DataTable for job management
 """
 import dash_bootstrap_components as dbc
@@ -322,3 +322,4 @@ def format_job_data_for_table(df):
             display_df[col] = display_df[col].astype(str).str.slice(0, 50)
     
     return display_df.to_dict('records')
+

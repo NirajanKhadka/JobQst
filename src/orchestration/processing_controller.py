@@ -47,3 +47,4 @@ def run_processing_batches(jobs: List[Dict[str, Any]], cfg: OrchestratorConfig) 
         return asyncio.run(_runner())
     except RuntimeError:
         return asyncio.get_event_loop().run_until_complete(_runner())
+

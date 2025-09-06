@@ -262,3 +262,4 @@ def expensive_computation(param1, param2):
     """Example of expensive computation with caching"""
     time.sleep(2)  # Simulate expensive operation
     return param1 * param2 + 42
+

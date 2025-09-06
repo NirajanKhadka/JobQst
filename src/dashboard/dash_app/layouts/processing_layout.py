@@ -1,5 +1,5 @@
 """
-Processing layout for JobLens Dashboard
+Processing layout for JobQst Dashboard
 Real-time job processing controls and monitoring
 """
 import dash_bootstrap_components as dbc

@@ -62,3 +62,4 @@ def backup_file(file_path: str, backup_dir: str = "backups") -> bool:
 
     shutil.copy2(source_path, backup_file)
     return True
+

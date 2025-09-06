@@ -11,7 +11,8 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
-from src.core.job_database import ModernJobDatabase
+from src.core.job_database import get_job_db
+from src.core.duckdb_database import DuckDBJobDatabase
 
 
 @pytest.mark.unit
@@ -21,7 +22,7 @@ class TestJobDatabaseCore:
     def test_database_initialization_creates_schema(self, temp_dir):
         """Test that database initializes with correct schema."""
         db_path = temp_dir / "test.db"
-        db = ModernJobDatabase(str(db_path))
+        db = DuckDBJobDatabase(profile_name="test")
         
         # Verify database file exists
         assert db_path.exists()

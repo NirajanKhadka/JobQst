@@ -5,3 +5,4 @@ from .profile_embedding import ProfileEmbedding
 from .semantic_scorer import SemanticScorer
 
 __all__ = ['IntelligentCache', 'ProfileEmbedding', 'SemanticScorer']
+

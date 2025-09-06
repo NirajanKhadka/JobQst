@@ -44,3 +44,4 @@ def check_database_health(config: Dict) -> Dict:
 
     except Exception as e:
         return {"status": "critical", "message": f"Database check failed: {str(e)}"}
+

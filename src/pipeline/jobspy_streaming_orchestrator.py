@@ -165,3 +165,4 @@ async def run_jobspy_to_two_stage(
     jobs = _df_to_job_dicts(df)
     results = await _process_in_batches(jobs, cpu_workers=cpu_workers, max_concurrent_stage2=max_concurrent_stage2, batch_size=batch_size)
     return results
+

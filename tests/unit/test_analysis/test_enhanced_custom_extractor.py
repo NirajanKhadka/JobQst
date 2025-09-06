@@ -11,20 +11,20 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.analysis.Improved_custom_extractor import (
-    ImprovedCustomExtractor, 
+from src.analysis.custom_extractor import (
+    CustomExtractor, 
     ImprovedExtractionResult,
     ExtractionConfidence,
     IndustryStandardsDatabase
 )
 
-class TestImprovedCustomExtractor:
+class TestCustomExtractor:
     """Test suite for Improved custom data extractor."""
     
     @pytest.fixture
     def extractor(self):
         """Create extractor instance for testing."""
-        return ImprovedCustomExtractor()
+        return CustomExtractor()
     
     @pytest.fixture
     def sample_job_data(self):
@@ -240,7 +240,7 @@ class TestExtractionReliability:
     
     @pytest.fixture
     def extractor(self):
-        return ImprovedCustomExtractor()
+        return CustomExtractor()
     
     def test_batch_extraction_reliability(self, extractor):
         """Test reliability across multiple job postings."""

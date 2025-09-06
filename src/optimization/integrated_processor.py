@@ -10,13 +10,14 @@ import logging
 import time
 from typing import Dict, List, Any, Tuple
 
-# Import existing components
-from src.analysis.two_stage_processor import (
-    TwoStageJobProcessor, Stage1Result, Stage2Result, TwoStageResult
-)
+# PERFORMANCE FIX: Lazy import of heavy components
+# Import lightweight components immediately
 from src.optimization.hardware_detector import get_hardware_info
 from src.optimization.dynamic_thresholds import get_optimal_processing_config
 from src.optimization.batch_processor import BatchProcessor
+
+# Heavy imports will be done lazily when needed
+from src.analysis.two_stage_processor import TwoStageResult, Stage1Result, Stage2Result, TwoStageJobProcessor
 
 from rich.console import Console
 from rich.progress import (
@@ -27,7 +28,7 @@ console = Console()
 logger = logging.getLogger(__name__)
 
 
-class OptimizedTwoStageProcessor(TwoStageJobProcessor):
+class OptimizedTwoStageProcessor:
     """
     Optimized version of TwoStageJobProcessor that maintains compatibility
     while adding batch processing and cross-platform optimizations
@@ -39,59 +40,79 @@ class OptimizedTwoStageProcessor(TwoStageJobProcessor):
         cpu_workers: int = None,
         max_concurrent_stage2: int = None
     ):
+        # Store configuration for lazy initialization
+        self.user_profile = user_profile
+        self.cpu_workers = cpu_workers
+        self.max_concurrent_stage2 = max_concurrent_stage2
+        
         # Get hardware configuration for optimal defaults
         self.hardware_config, self.performance_stats = get_hardware_info()
         
         # Set optimal defaults based on hardware if not specified
-        if cpu_workers is None:
+        if self.cpu_workers is None:
             # Cap workers based on hardware batch size
-            cpu_workers = min(
+            self.cpu_workers = min(
                 10, max(4, self.hardware_config.optimal_batch_size)
             )
         
-        if max_concurrent_stage2 is None:
+        if self.max_concurrent_stage2 is None:
             # Dynamic concurrency based on hardware performance
             if self.hardware_config.performance_tier == "high":
-                max_concurrent_stage2 = 4
+                self.max_concurrent_stage2 = 4
             elif self.hardware_config.performance_tier == "medium":
-                max_concurrent_stage2 = 2
+                self.max_concurrent_stage2 = 2
             else:
-                max_concurrent_stage2 = 1
+                self.max_concurrent_stage2 = 1
         
-        # Initialize parent class with optimized parameters
-        super().__init__(user_profile, cpu_workers, max_concurrent_stage2)
+        # Lazy initialization - processor will be created when first needed
+        self._base_processor = None
         
-        # Add batch processor for Stage 2 optimization
+        # Don't initialize heavy components yet - do it lazily
         self.batch_processor = None
-        if self.stage2_processor is not None:
-            try:
-                self.batch_processor = BatchProcessor(user_profile)
-                console.print(
-                    "[green]✅ Batch processor initialized for "
-                    f"{self.hardware_config.device_name}[/green]"
-                )
-            except Exception as e:
-                logger.warning(f"Batch processor initialization failed: {e}")
-                console.print(
-                    "[yellow]⚠️ Falling back to individual processing[/yellow]"
-                )
         
-        # Display optimization info
-        console.print(
-            "[bold blue]🚀 Optimized Two-Stage Processor Initialized"
-            "[/bold blue]"
-        )
-        console.print(
-            f"[cyan]   Hardware: {self.hardware_config.device_name}[/cyan]"
-        )
-        console.print(f"[cyan]   Stage 1 Workers: {cpu_workers}[/cyan]")
-        console.print(
-            f"[cyan]   Stage 2 Concurrency: {max_concurrent_stage2}[/cyan]"
-        )
-        batch_status = "Enabled" if self.batch_processor else "Disabled"
-        console.print(
-            f"[cyan]   Batch Processing: {batch_status}[/cyan]"
-        )
+        logger.info(f"OptimizedTwoStageProcessor configured (lazy initialization)")
+    
+    def _ensure_base_processor(self):
+        """Lazily initialize the base processor when first needed"""
+        if self._base_processor is None:
+            # PERFORMANCE FIX: Import heavy components only when needed
+            from src.analysis.two_stage_processor import TwoStageJobProcessor
+            
+            # Initialize the base processor
+            self._base_processor = TwoStageJobProcessor(
+                self.user_profile, 
+                self.cpu_workers, 
+                self.max_concurrent_stage2
+            )
+            
+            # Initialize batch processor if Stage 2 is available
+            if hasattr(self._base_processor, 'stage2_processor') and self._base_processor.stage2_processor is not None:
+                try:
+                    self.batch_processor = BatchProcessor(self.user_profile)
+                    console.print(
+                        "[green]✅ Batch processor initialized for "
+                        f"{self.hardware_config.device_name}[/green]"
+                    )
+                except Exception as e:
+                    logger.warning(f"Batch processor initialization failed: {e}")
+                    console.print(
+                        "[yellow]⚠️ Falling back to individual processing[/yellow]"
+                    )
+            
+            # Display optimization info
+            console.print(
+                "[bold blue]🚀 Optimized Two-Stage Processor Initialized"
+                "[/bold blue]"
+            )
+            console.print(
+                f"[cyan]   Hardware: {self.hardware_config.device_name}[/cyan]"
+            )
+            console.print(f"[cyan]   Stage 1 Workers: {self.cpu_workers}[/cyan]")
+            console.print(
+                f"[cyan]   Stage 2 Concurrency: {self.max_concurrent_stage2}[/cyan]"
+            )
+            batch_status = "Enabled" if self.batch_processor else "Disabled"
+            console.print(f"[cyan]   Batch Processing: {batch_status}[/cyan]")
     
     async def process_jobs(
         self, jobs: List[Dict[str, Any]]
@@ -127,8 +148,11 @@ class OptimizedTwoStageProcessor(TwoStageJobProcessor):
             f"[cyan]   Max Phase 2 jobs: {config.max_phase2_jobs}[/cyan]"
         )
         
+        # Ensure base processor is initialized
+        self._ensure_base_processor()
+        
         # Stage 1: CPU-bound fast processing (unchanged - already optimized)
-        stage1_results = self.stage1_processor.process_jobs_batch(jobs)
+        stage1_results = self._base_processor.stage1_processor.process_jobs_batch(jobs)
         
         # Apply dynamic filtering based on optimized thresholds
         passed_jobs: List[Tuple[Dict[str, Any], Stage1Result, int]] = []
@@ -149,7 +173,7 @@ class OptimizedTwoStageProcessor(TwoStageJobProcessor):
         final_results: List[TwoStageResult] = []
         
         # Decide on processing strategy
-        if self.stage2_processor is None:
+        if self._base_processor.stage2_processor is None:
             # No Stage 2 available - use Stage 1 results only
             final_results = self._create_stage1_only_results(
                 jobs, stage1_results
@@ -268,7 +292,7 @@ class OptimizedTwoStageProcessor(TwoStageJobProcessor):
             async with semaphore:
                 # Use existing individual processing logic
                 s2: Stage2Result = await asyncio.to_thread(
-                    self.stage2_processor.process_job_semantic, job, s1
+                    self._base_processor.stage2_processor.process_job_semantic, job, s1
                 )
                 combined = self._combine_results(job, s1, s2, idx)
                 return combined
@@ -324,6 +348,56 @@ class OptimizedTwoStageProcessor(TwoStageJobProcessor):
                 final_results.append(combined)
         
         return final_results
+    
+    def _combine_results(self, job: Dict[str, Any], stage1: Stage1Result, 
+                        stage2: Stage2Result, job_index: int) -> TwoStageResult:
+        """Combine results from both stages"""
+        
+        # Merge skills (Stage 1 + Stage 2), filtering out None values
+        all_skills = (stage1.basic_skills or []) + (stage2.semantic_skills or [])
+        final_skills = list(set(skill for skill in all_skills if skill))
+        
+        # Use Stage 2 compatibility if available, otherwise Stage 1
+        final_compatibility = stage2.semantic_compatibility
+        
+        # Determine recommendation
+        if final_compatibility >= 0.7:
+            recommendation = "apply"
+        elif final_compatibility >= 0.4:
+            recommendation = "review"
+        else:
+            recommendation = "skip"
+        
+        return TwoStageResult(
+            job_id=job.get('id', f'job_{job_index}'),
+            url=job.get('url', ''),
+            job_data=job,
+            stage1=stage1,
+            stage2=stage2,
+            final_compatibility=final_compatibility,
+            final_skills=final_skills,
+            final_requirements=stage2.contextual_requirements,
+            recommendation=recommendation,
+            total_processing_time=stage1.processing_time + stage2.processing_time,
+            stages_completed=2
+        )
+    
+    def _create_stage1_only_result(self, job: Dict[str, Any], stage1: Stage1Result, job_index: int) -> TwoStageResult:
+        """Create result using only Stage 1 data"""
+        
+        return TwoStageResult(
+            job_id=job.get('id', f'job_{job_index}'),
+            url=job.get('url', ''),
+            job_data=job,
+            stage1=stage1,
+            stage2=None,
+            final_compatibility=stage1.basic_compatibility,
+            final_skills=stage1.basic_skills or [],
+            final_requirements=stage1.basic_requirements or [],
+            recommendation="review" if stage1.basic_compatibility >= 0.3 else "skip",
+            total_processing_time=stage1.processing_time,
+            stages_completed=1
+        )
     
     def _create_stage1_only_results(
         self,
@@ -427,3 +501,4 @@ def create_optimized_processor(
             "original processor[/red]"
         )
         return TwoStageJobProcessor(user_profile, **kwargs)
+

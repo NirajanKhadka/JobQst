@@ -256,3 +256,4 @@ async def _is_suitable_job(job_data: JobData, correlation_id: str = None) -> boo
         {"acceptance_reason": "default_acceptance", "title_keywords_checked": len(senior_keywords + entry_keywords)}, "debug"
     )
     return True
+

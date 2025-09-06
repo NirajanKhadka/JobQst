@@ -534,3 +534,4 @@ class JobContentExtractor:
 
 # CLI function for easy testing
 # Main function removed - use module functions directly
+

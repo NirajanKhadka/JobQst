@@ -39,7 +39,7 @@ class DashboardConfig:
         """Get default configuration"""
         return {
             "app": {
-                "title": "JobLens Dashboard",
+                "title": "JobQst Dashboard",
                 "theme": "bootstrap",
                 "debug": True,
                 "host": "127.0.0.1",

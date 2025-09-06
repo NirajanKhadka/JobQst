@@ -1,5 +1,5 @@
 """
-Job cards component for JobLens Dashboard
+Job cards component for JobQst Dashboard
 Card-based view for job listings
 """
 import dash_bootstrap_components as dbc
@@ -269,3 +269,4 @@ def create_job_quick_stats(jobs_data):
             ], className="text-center shadow-sm border-0")
         ], width=3)
     ], className="mb-4")
+

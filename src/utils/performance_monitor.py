@@ -554,3 +554,4 @@ def monitor_performance(func_name: str = None):
 
     finally:
         monitor.stop_monitoring()
+

@@ -135,3 +135,4 @@ class BaseJobScraper(ABC):
     def __repr__(self) -> str:
         """String representation of the scraper."""
         return f"{self.__class__.__name__}(profile={self.profile.get('profile_name', 'unknown')})"
+

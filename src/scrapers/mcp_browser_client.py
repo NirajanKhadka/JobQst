@@ -181,3 +181,4 @@ def get_browser_client() -> MCPBrowserClient:
         return MCPBrowserClient()
     else:
         return FallbackBrowserClient()
+

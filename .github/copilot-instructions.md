@@ -1,82 +1,181 @@
-# JobQst AI Coding Agent Instructions
-
-This document provides essential guidance for AI coding agents working on the JobQst codebase. Following these instructions will help you be more effective and align with the project's architecture and conventions.
-
-## 1. Core Architecture & "Big Picture"
-
-JobQst is a profile-driven, automated job discovery and analysis tool. Its architecture is designed for modularity and scalability.ns AI Coding Agent Instructions
+# JobLens AI Coding Agent Instructions
 
 This document provides essential guidance for AI coding agents working on the JobLens codebase. Following these instructions will help you be more effective and align with the project's architecture and conventions.
 
 ## 1. Core Architecture & "Big Picture"
 
-JobLens is a profile-driven, automated job discovery and analysis tool. Its architecture is designed for modularity and scalability.
+JobLens is a modern, profile-driven automated job discovery and analysis platform built with clean Python architecture. The system follows a layered microservices-like design with clear separation of concerns.
 
-- **Dual Scraper Strategy**: The system uses two main scraping sources:
-    1.  **JobSpy (`src/scrapers/jobspy_enhanced_scraper.py`)**: The primary, multi-site scraper supporting Indeed, LinkedIn, Glassdoor, and ZipRecruiter with parallel processing
-    2.  **Eluta (`src/scrapers/unified_eluta_scraper.py`)**: A fallback scraper for the Canadian job board Eluta.ca.
-- **Multi-Site Parallel Processing (`src/scrapers/multi_site_jobspy_workers.py`)**: JobSpy integration uses parallel workers for each site, with configurable concurrency and country support (USA, Canada, etc.)
-- **Processing Pipeline (`src/pipeline/fast_job_pipeline.py`)**: After scraping, jobs are sent through a multi-stage pipeline that filters, analyzes, scores, and ranks them based on user profiles.
-- **Profile-Centric Design**: All operations revolve around user profiles located in the `profiles/` directory. Each profile has its own database and settings. The `src/core/user_profile_manager.py` is a key component for managing these profiles.
-- **Data Flow**:
-    1.  The user initiates an action (e.g., `scrape`) via the CLI (`main.py`).
-    2.  The appropriate scraper is invoked (JobSpy with 4 sites in parallel or Eluta as fallback).
-    3.  Scraped jobs are stored in a local SQLite database (`data/jobs.db`), associated with the user's profile.
-    4.  The analysis action processes these jobs, calculating a "fit score".
-    5.  The optional dashboard (`src/dashboard/unified_dashboard.py`) provides a UI to view and interact with the ranked jobs.
-- **Microservices-like Structure**: The `src` directory is organized into services (e.g., `job_scraping_service.py`, `job_analysis_service.py`) that communicate via a local event bus (`src/orchestration/local_event_bus.py`). When making changes, respect this separation of concerns.
+### Key Architectural Patterns
+
+- **Profile-Centric Design**: Everything revolves around user profiles in `profiles/` directory. Each profile has its own DuckDB database and settings. `src/core/user_profile_manager.py` is the single source of truth for profile management.
+
+- **Modern Database Architecture**: 
+  - **Primary**: DuckDB for 10-100x faster analytics (`src/core/duckdb_database.py`)
+  - **Legacy Support**: SQLite fallback via unified interface (`src/core/job_database.py`)
+  - **Profile-Specific**: Each profile gets its own database instance
+
+- **Orchestration Layer**: The `src/orchestration/` package provides centralized control:
+  - `command_dispatcher.py` routes CLI commands to appropriate handlers
+  - `jobspy_controller.py` manages job discovery operations
+  - `processing_controller.py` handles batch job processing
+  - Multiple orchestration services bridge dashboard and core functionality
+
+- **Service-Oriented Structure**: Services in `src/services/` with dashboard bridges in `src/dashboard/services/`:
+  - `OrchestrationService` - Real system orchestration with worker monitoring
+  - `DataService`, `ConfigService`, `SystemService` - Dashboard data providers
+  - `HealthMonitor` - System health and performance monitoring
+
+- **Three-Layer Caching System**: Intelligent caching with 70% performance improvements:
+  - HTML caching for scraping operations
+  - Embedding caching for AI analysis
+  - Result caching for processed jobs
+
+### Data Flow & Component Integration
+
+```
+CLI (main.py) → Command Dispatcher → Orchestration Controllers → Services → Database
+                                                                      ↓
+Dashboard ← Dashboard Services ← Service Registry ← Core Services ← Processing Pipeline
+```
+
+1. **Job Discovery**: JobSpy integration with parallel workers for 4 sites (Indeed, LinkedIn, Glassdoor, ZipRecruiter)
+2. **Processing Pipeline**: `src/pipeline/fast_job_pipeline.py` with two-stage processing and intelligent caching
+3. **Analysis Engine**: AI-powered job-profile matching with skills gap analysis
+4. **Dashboard Interface**: Modern Dash application with real-time monitoring and performance analytics
 
 ## 2. Critical Developer Workflows
 
-**IMPORTANT: Always work in the `auto_job` conda environment.**
+**CRITICAL: Always work in the `auto_job` conda environment. The system will automatically attempt to relaunch under this environment if not detected.**
 
-### Simple Terminal Rules
+### Terminal & Environment Management
 
-1. **Use existing terminals** - Don't create new ones
-2. **Check environment** - Run `conda activate auto_job` if needed
-3. **Use VS Code tasks** - Press `Ctrl+Shift+P` → "Tasks: Run Task"
-4. **Working directory** - VS Code starts terminals in workspace folder
+- **Environment Enforcement**: The system automatically checks for `auto_job` environment and attempts relaunch via `conda run -n auto_job`
+- **VS Code Tasks**: Use `Ctrl+Shift+P` → "Tasks: Run Task" for standard operations
+- **Available VS Code Tasks**:
+  - `Run all tests (pytest)` - Execute full test suite with proper environment
+  - `Start Dash Dashboard` - Launch Dash analytics interface
+  - `Start Dashboard Backend` - FastAPI server (legacy, now integrated)
+  - `Install Frontend Dependencies` - Dashboard dependency management
 
-### Available Tasks
-- **Start Dashboard Backend** - Runs FastAPI server
-- **Start Dashboard Frontend** - Runs React dev server  
-- **Run all tests** - Executes pytest
-- **Install Frontend Dependencies** - Runs npm install
+### Core CLI Commands & Workflows
 
-### Environment Setup
-- **Environment Setup**: Always ensure you're in the `auto_job` conda environment before running any commands
-- **Running the Application**: The main entry point is `main.py`. It's a CLI that takes a profile name and an action.
-    - **Scraping Jobs**: `python main.py <ProfileName> --action scrape --keywords "keyword1,keyword2"`
-    - **JobSpy Pipeline**: `python main.py <ProfileName> --action jobspy-pipeline --jobspy-preset usa_comprehensive --sites indeed,linkedin,glassdoor,zip_recruiter`
-    - **Analyzing Jobs**: `python main.py <ProfileName> --action analyze-jobs`
-    - **Running the Dashboard**: `python main.py <ProfileName> --action dashboard`
-- **JobSpy Integration**: The system supports 4 job sites (Indeed, LinkedIn, Glassdoor, ZipRecruiter) with parallel processing and country-specific configurations
-    - **USA Jobs**: Use presets like `usa_comprehensive`, `usa_tech_hubs`, `usa_major_cities`
-    - **Canada Jobs**: Use presets like `canada_comprehensive`, `tech_hubs_canada`
-- **Testing**: The project uses `pytest`.
-    - **Run all tests**: `pytest tests/ -v`
-    - **Run specific tests**: `pytest tests/integration/test_optimized_scraper.py`
-- **Dependencies**:
-    - Install Python packages: `pip install -r requirements.txt`
-    - Install JobSpy: `pip install python-jobspy`
-    - Install browser dependencies for Playwright: `playwright install chromium`
+**Main Entry Point**: `main.py` with strict profile-action pattern
+
+```bash
+# Modern JobSpy pipeline (primary workflow)
+python main.py <ProfileName> --action jobspy-pipeline \
+  --jobspy-preset canada_comprehensive \
+  --database-type duckdb \
+  --enable-cache
+
+# Legacy scraping (fallback)
+python main.py <ProfileName> --action scrape --keywords "python,data"
+
+# Job analysis with caching
+python main.py <ProfileName> --action analyze-jobs --enable-cache
+
+# Dashboard with performance monitoring
+python main.py <ProfileName> --action dashboard --enable-monitoring
+
+# Health checks and system diagnostics
+python main.py <ProfileName> --action health-check --show-cache-stats
+```
+
+### JobSpy Configuration Presets
+
+- **Canada**: `canada_comprehensive`, `tech_hubs_canada`, `mississauga_focused`
+- **USA**: `usa_comprehensive`, `usa_tech_hubs`, `usa_major_cities`
+- **Remote**: `remote_focused` for distributed opportunities
+
+### Testing Strategy
+
+```bash
+# Full test suite with coverage
+pytest tests/ -v --cov=src --cov-report=html
+
+# Category-specific testing
+pytest tests/unit/ -v                    # Fast unit tests
+pytest tests/integration/ -v             # Integration tests
+pytest tests/dashboard/ -v               # Dashboard components
+pytest tests/performance/ -v             # Performance benchmarks
+
+# Real-world testing flags
+pytest --real-scraping                   # Enable actual web scraping
+pytest --skip-slow                       # Skip performance tests
+```
 
 ## 3. Project-Specific Conventions & Patterns
 
-- **Profile Management**: Always interact with user profiles through the `UserProfileManager` in `src/core/user_profile_manager.py`. Avoid directly manipulating profile JSON files.
-- **Database Interaction**: Use the `JobDB` class in `src/core/job_database.py` for all database operations. It handles the connection and querying logic for the profile-specific databases.
-- **Configuration**: The project uses a combination of `.env` files for environment variables and JSON files in the `config/` directory for more static configuration. Use the `ConfigManager` where appropriate.
-- **Asynchronous Operations**: Scraping is heavily asynchronous. Look at `src/scrapers/parallel_job_scraper.py` for an example of how `asyncio` is used to run scrapers in parallel.
-- **CLI Commands**: The CLI is built with `click`. New commands should be added to `main.py`, following the existing structure.
+### Profile Management Architecture
+
+- **UserProfileManager** (`src/core/user_profile_manager.py`): Single source of truth for all profile operations
+- **Profile Structure**: Each profile gets its own directory in `profiles/` with dedicated DuckDB database
+- **Never** directly manipulate profile JSON files - always use UserProfileManager methods
+- **Profile Data Class**: Uses modern `@dataclass` patterns with type safety
+
+### Database Architecture & Performance
+
+- **Primary Database**: DuckDB (`src/core/duckdb_database.py`) for 10-100x faster analytics
+- **Unified Interface**: `src/core/job_database.py` provides abstraction layer
+- **Database Factory**: `get_job_db(profile_name)` returns appropriate database instance
+- **Caching System**: Three-layer intelligent caching (HTML, embeddings, results) with 70% performance gains
+
+### Service Layer Patterns
+
+- **Service Registry**: `src/dashboard/services/base_service.py` implements service discovery pattern
+- **Bridge Services**: Dashboard services in `src/dashboard/services/` bridge to core services in `src/services/`
+- **Health Monitoring**: `HealthMonitor` provides real-time system diagnostics
+- **Worker Management**: `OrchestrationService` manages real worker processes and system resources
+
+### Asynchronous Architecture
+
+- **AsyncIO Patterns**: Extensive use in scraping (`src/scrapers/parallel_job_scraper.py`)
+- **Worker Pools**: Multi-site parallel processing with configurable concurrency
+- **Background Processing**: Two-stage job processing pipeline with intelligent batching
+- **Task Management**: Real worker monitoring via `RealWorkerMonitorService`
+
+### Configuration Management
+
+- **Modern Config**: `src/config/modern_config_manager.py` with type-safe patterns
+- **JobSpy Presets**: Pre-configured location and search strategies in `jobspy_integration_config.py`
+- **Environment Variables**: `.env` support with fallback to sensible defaults
+- **Profile Settings**: JSON-based configuration with validation
+
+### Error Handling & Logging
+
+- **Rich Console**: Used throughout for enhanced terminal output
+- **Structured Logging**: Service-specific loggers with proper log rotation
+- **AI Service Events**: Specialized logging for AI analysis operations (`ai_service_logger.py`)
+- **Graceful Degradation**: System continues operation even with service failures
 
 ## 4. Key Files & Directories to Reference
 
-- **`main.py`**: The main entry point and CLI. A good place to understand the available top-level commands.
-- **`docs/ARCHITECTURE.md`**: Provides a high-level overview of the system design.
-- **`src/core/user_profile_manager.py`**: The source of truth for how user profiles are managed.
-- **`src/core/job_database.py`**: The abstraction layer for the database.
-- **`src/scrapers/`**: Contains the logic for all job scrapers. This is where to look for web scraping patterns.
-- **`src/scrapers/multi_site_jobspy_workers.py`**: The main JobSpy parallel processing implementation for all 4 sites.
-- **`src/config/jobspy_integration_config.py`**: Configuration presets for different countries and job search strategies.
-- **`src/pipeline/fast_job_pipeline.py`**: Shows how jobs are processed after being scraped.
-- **`profiles/`**: Contains example user profiles. Useful for understanding the data structure of a profile.
+### Core Architecture Files
+
+- **`main.py`**: Primary CLI entry point with environment enforcement
+- **`src/core/user_profile_manager.py`**: Profile management authority
+- **`src/core/duckdb_database.py`**: High-performance database implementation
+- **`src/orchestration/command_dispatcher.py`**: Command routing and dispatch logic
+
+### Processing & Pipeline
+
+- **`src/pipeline/fast_job_pipeline.py`**: Two-stage processing with caching
+- **`src/scrapers/multi_site_jobspy_workers.py`**: Parallel JobSpy integration
+- **`src/pipeline/jobspy_streaming_orchestrator.py`**: Streaming job discovery orchestration
+- **`src/config/jobspy_integration_config.py`**: JobSpy presets and location strategies
+
+### Service & Dashboard Architecture
+
+- **`src/services/orchestration_service.py`**: Real system orchestration
+- **`src/dashboard/services/`**: Dashboard service bridge layer
+- **`src/dashboard/dash_app/`**: Modern Dash application with real-time monitoring
+- **`src/services/real_worker_monitor_service.py`**: Worker process monitoring
+
+### Testing & Quality
+
+- **`tests/conftest.py`**: Comprehensive test configuration with real data fixtures
+- **`tests/integration/`**: Integration tests following DEVELOPMENT_STANDARDS.md
+- **`docs/DEVELOPMENT_STANDARDS.md`**: Code quality and architectural guidelines
+- **`profiles/`**: Real user profiles for development and testing (never use fabricated data)
+

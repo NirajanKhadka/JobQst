@@ -71,3 +71,4 @@ def get_processing_config(method: ProcessingMethod) -> Dict[str, Any]:
         }
     }
     return configs.get(method, configs[ProcessingMethod.AUTO])
+

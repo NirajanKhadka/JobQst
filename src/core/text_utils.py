@@ -243,3 +243,4 @@ def extract_contact_info(text: str) -> Dict[str, str]:
         contact_info["phone"] = "".join(phones[0])
 
     return contact_info
+

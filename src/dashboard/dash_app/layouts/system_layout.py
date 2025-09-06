@@ -1,5 +1,5 @@
 """
-System layout for JobLens Dashboard
+System layout for JobQst Dashboard
 System monitoring and health status
 """
 import dash_bootstrap_components as dbc

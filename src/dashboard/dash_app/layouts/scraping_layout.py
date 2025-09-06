@@ -1,5 +1,5 @@
 """
-Scraping layout for JobLens Dashboard
+Scraping layout for JobQst Dashboard
 Job scraping controls and monitoring
 """
 import dash_bootstrap_components as dbc
@@ -209,3 +209,4 @@ def create_status_card(title, value, icon, color, card_id):
             ], className="text-center")
         ])
     ], className="h-100")
+

@@ -1,5 +1,5 @@
 """
-Jobs callbacks for JobLens Dashboard
+Jobs callbacks for JobQst Dashboard
 Handle job management interactions
 """
 import logging
@@ -354,7 +354,7 @@ def register_jobs_callbacks(app):
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 profile_name = (profile_data.get('name', 'jobs')
                                 if profile_data else 'jobs')
-                filename = f"JobLens_{profile_name}_export_{timestamp}.csv"
+                filename = f"JobQst_{profile_name}_export_{timestamp}.csv"
                 
                 return {
                     "content": csv_string,
@@ -369,7 +369,7 @@ def register_jobs_callbacks(app):
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 profile_name = (profile_data.get('name', 'jobs')
                                 if profile_data else 'jobs')
-                filename = f"JobLens_{profile_name}_export_{timestamp}.csv"
+                filename = f"JobQst_{profile_name}_export_{timestamp}.csv"
                 
                 return {
                     "content": csv_string,
@@ -382,3 +382,4 @@ def register_jobs_callbacks(app):
         except Exception as e:
             logger.error(f"Error exporting jobs to CSV: {e}")
             return no_update
+

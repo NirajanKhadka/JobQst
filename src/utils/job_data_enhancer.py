@@ -299,3 +299,4 @@ class JobDataEnhancer:
             analysis["size"] = "medium"
 
         return analysis
+

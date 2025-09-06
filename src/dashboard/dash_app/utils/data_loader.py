@@ -1,5 +1,5 @@
 """
-Data loader utility for JobLens Dashboard
+Data loader utility for JobQst Dashboard
 Handles loading job data from various sources
 """
 import logging
@@ -59,6 +59,12 @@ class DataLoader:
                         'title': job.get('title', 'Unknown Title'),
                         'company': job.get('company', 'Unknown Company'),
                         'location': job.get('location', 'Unknown Location'),
+                        'location_type': job.get('location_type', 'onsite'),
+                        'location_category': job.get('location_category', 'unknown'),
+                        'city_tags': job.get('city_tags', ''),
+                        'province_code': job.get('province_code', ''),
+                        'is_rcip_city': job.get('is_rcip_city', 0),
+                        'is_immigration_priority': job.get('is_immigration_priority', 0),
                         'status': self._determine_job_status(job),
                         'salary': self._format_salary(job.get('salary_range')),
                         'match_score': job.get('fit_score', 0) or self._calculate_match_score(job),
@@ -423,5 +429,6 @@ class DataLoader:
         except Exception as e:
             logger.error(f"Error getting job stats: {e}")
             return {}
+
 
 

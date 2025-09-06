@@ -206,3 +206,4 @@ def create_flow_optimizer(
         ApplicationFlowOptimizer instance
     """
     return ApplicationFlowOptimizer(profile_name, config)
+

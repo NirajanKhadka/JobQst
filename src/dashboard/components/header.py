@@ -61,3 +61,4 @@ def create_navigation() -> html.Div:
             style={'marginBottom': '20px'}
         )
     ], className="navigation")
+

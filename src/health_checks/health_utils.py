@@ -567,3 +567,4 @@ def save_health_report(
 
     console.print(f"[green]Health report saved to: {output_path}[/green]")
     return output_path
+

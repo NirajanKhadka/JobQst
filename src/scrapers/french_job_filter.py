@@ -270,3 +270,4 @@ def filter_jobs_batch(
     """Convenience function to filter a batch of jobs."""
     filter_instance = FrenchJobFilter(profile_keywords, profile_skills)
     return filter_instance.filter_jobs_batch(jobs)
+

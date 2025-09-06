@@ -108,6 +108,45 @@ JOBSPY_LOCATION_SETS = {
         # British Columbia
         "West Kootenay, BC", "North Okanagan Shuswap, BC", "Peace Liard, BC"
     ],
+    "rcip_cities": [
+        # RCIP (Regional and Community Immigration Program) Cities
+        # Atlantic Canada
+        "Charlottetown, PE", "Summerside, PE",
+        "Fredericton, NB", "Moncton, NB", "Saint John, NB",
+        "Halifax, NS", "Sydney, NS", "Yarmouth, NS", "Truro, NS",
+        "St. John's, NL", "Corner Brook, NL",
+        
+        # Quebec (outside Montreal)
+        "Quebec City, QC", "Trois-Rivières, QC", "Sherbrooke, QC", 
+        "Saguenay, QC", "Gatineau, QC", "Rimouski, QC",
+        
+        # Ontario (outside GTA)
+        "Ottawa, ON", "London, ON", "Windsor, ON", "Kingston, ON",
+        "Sudbury, ON", "Thunder Bay, ON", "Sault Ste. Marie, ON",
+        "North Bay, ON", "Peterborough, ON", "Barrie, ON",
+        
+        # Manitoba
+        "Winnipeg, MB", "Brandon, MB", "Steinbach, MB",
+        
+        # Saskatchewan  
+        "Saskatoon, SK", "Regina, SK", "Prince Albert, SK",
+        "Moose Jaw, SK", "Swift Current, SK",
+        
+        # Alberta (outside Calgary/Edmonton)
+        "Red Deer, AB", "Lethbridge, AB", "Medicine Hat, AB",
+        "Grande Prairie, AB", "Fort McMurray, AB",
+        
+        # British Columbia (outside Vancouver)
+        "Victoria, BC", "Kelowna, BC", "Kamloops, BC", "Prince George, BC",
+        "Nanaimo, BC", "Chilliwack, BC", "Vernon, BC"
+    ],
+    "immigration_priority_cities": [
+        # Cities with active immigration programs and tech growth
+        "Charlottetown, PE", "Fredericton, NB", "Halifax, NS", 
+        "Quebec City, QC", "Sherbrooke, QC", "Ottawa, ON",
+        "London, ON", "Winnipeg, MB", "Saskatoon, SK", "Regina, SK",
+        "Victoria, BC", "Kelowna, BC", "Kamloops, BC"
+    ],
     # USA Location Sets
     "usa_major_cities": [
         # Major metropolitan areas
@@ -564,3 +603,4 @@ def map_jobspy_to_autojob_data(jobspy_row: Dict[str, Any]) -> Dict[str, Any]:
     })
     
     return mapped_data
+

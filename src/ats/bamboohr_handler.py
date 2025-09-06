@@ -1,6 +1,6 @@
 """
 BambooHR ATS Handler
-Provides the BambooHR-specific application logic for ImprovedUniversalApplier.
+Provides the BambooHR-specific application logic for UniversalApplier.
 """
 
 from typing import Dict
@@ -20,3 +20,4 @@ async def apply_bamboohr(page: Page, job: Dict) -> str:
     if generic_apply:
         return await generic_apply(page, job)
     return "error: generic_apply not available"
+

@@ -57,3 +57,4 @@ def fetch_job_links_playwright_and_save():
 
 
 # Main function removed - use scraper class directly
+

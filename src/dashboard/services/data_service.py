@@ -1,11 +1,32 @@
 """
 Data service for dashboard - Bridge to existing dash app data loader
+Enhanced with intelligent query caching for improved performance
 """
 import logging
+import pandas as pd
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Import caching system
+try:
+    from .cache_service import (
+        get_dashboard_cache, get_cached_aggregations,
+        invalidate_profile_cache, get_cache_performance_stats
+    )
+    CACHING_AVAILABLE = True
+except ImportError:
+    logger.warning("Caching service not available")
+    CACHING_AVAILABLE = False
+
+# Import profile utilities
+try:
+    from ...utils.profile_helpers import get_available_profiles
+    PROFILE_HELPERS_AVAILABLE = True
+except ImportError:
+    logger.warning("Profile helpers not available")
+    PROFILE_HELPERS_AVAILABLE = False
 
 try:
     # Import existing data loader
@@ -23,12 +44,22 @@ class DataService:
     def __init__(self):
         """Initialize data service"""
         self._data_loader = None
+        self._cached_aggregations = None
+        
         if DASH_APP_AVAILABLE:
             try:
                 self._data_loader = DataLoader()
                 logger.info("Data service initialized with dash app loader")
             except Exception as e:
                 logger.error(f"Failed to initialize data loader: {e}")
+        
+        # Initialize caching if available
+        if CACHING_AVAILABLE:
+            try:
+                self._cached_aggregations = get_cached_aggregations()
+                logger.info("Data service initialized with caching support")
+            except Exception as e:
+                logger.error(f"Failed to initialize caching: {e}")
     
     @property
     def data_loader(self):
@@ -120,6 +151,155 @@ class DataService:
             'errors': 0,
             'last_run': None
         }
+    
+    def get_profiles(self) -> List[str]:
+        """Get list of available user profiles"""
+        if PROFILE_HELPERS_AVAILABLE:
+            try:
+                return get_available_profiles()
+            except Exception as e:
+                logger.error(f"Error getting profiles from helpers: {e}")
+                return ['Nirajan']
+        else:
+            # Fallback to data loader method
+            return self.get_available_profiles()
+    
+    def load_job_data(self, profile_name: str) -> pd.DataFrame:
+        """Load job data for a specific profile and return as DataFrame"""
+        try:
+            jobs_data = self.get_jobs_data(profile_name)
+            if jobs_data:
+                return pd.DataFrame(jobs_data)
+            else:
+                # Return empty DataFrame with expected columns
+                return pd.DataFrame(columns=[
+                    'id', 'title', 'company', 'location', 'applied',
+                    'match_score', 'scraped_at', 'experience_level'
+                ])
+        except Exception as e:
+            logger.error(f"Error loading job data for {profile_name}: {e}")
+            return pd.DataFrame()
+
+    # ============= CACHED AGGREGATION METHODS =============
+
+    def get_cached_company_stats(
+        self, profile_name: str = 'Nirajan', top_n: int = 15
+    ) -> Dict[str, Any]:
+        """Get cached company statistics for improved performance"""
+        if not CACHING_AVAILABLE or not self._cached_aggregations:
+            # Fallback to regular job stats
+            return self.get_job_stats(profile_name)
+        
+        try:
+            df = self.load_job_data(profile_name)
+            return self._cached_aggregations.get_company_stats(
+                df, profile_name, top_n
+            )
+        except Exception as e:
+            logger.error(f"Error getting cached company stats: {e}")
+            return {'companies': [], 'counts': [], 'total_companies': 0}
+    
+    def get_cached_location_stats(
+        self, profile_name: str = 'Nirajan', top_n: int = 10
+    ) -> Dict[str, Any]:
+        """Get cached location statistics for improved performance"""
+        if not CACHING_AVAILABLE or not self._cached_aggregations:
+            # Return basic location info
+            return {'locations': [], 'counts': [], 'total_locations': 0}
+        
+        try:
+            df = self.load_job_data(profile_name)
+            return self._cached_aggregations.get_location_stats(
+                df, profile_name, top_n
+            )
+        except Exception as e:
+            logger.error(f"Error getting cached location stats: {e}")
+            return {'locations': [], 'counts': [], 'total_locations': 0}
+    
+    def get_cached_job_metrics(
+        self, profile_name: str = 'Nirajan'
+    ) -> Dict[str, Any]:
+        """Get cached job metrics for improved performance"""
+        if not CACHING_AVAILABLE or not self._cached_aggregations:
+            # Fallback to regular job stats
+            return self.get_job_stats(profile_name)
+        
+        try:
+            df = self.load_job_data(profile_name)
+            return self._cached_aggregations.get_job_metrics(df, profile_name)
+        except Exception as e:
+            logger.error(f"Error getting cached job metrics: {e}")
+            return {
+                'total_jobs': 0,
+                'avg_match_score': 0.0,
+                'status_counts': {},
+                'score_distribution': {'ranges': [], 'counts': []}
+            }
+    
+    def invalidate_cache(self, profile_name: str = None) -> Dict[str, Any]:
+        """
+        Invalidate cache for profile or entire cache
+        
+        Args:
+            profile_name: If provided, invalidate only this profile's cache
+                         If None, clear entire cache
+        
+        Returns:
+            Dictionary with invalidation results
+        """
+        if not CACHING_AVAILABLE:
+            return {
+                'success': False,
+                'message': 'Caching not available',
+                'invalidated_count': 0
+            }
+        
+        try:
+            if profile_name:
+                count = invalidate_profile_cache(profile_name)
+                return {
+                    'success': True,
+                    'message': (
+                        f'Invalidated {count} entries for {profile_name}'
+                    ),
+                    'invalidated_count': count
+                }
+            else:
+                cache = get_dashboard_cache()
+                count = cache.invalidate()
+                return {
+                    'success': True,
+                    'message': f'Invalidated entire cache ({count} entries)',
+                    'invalidated_count': count
+                }
+        except Exception as e:
+            logger.error(f"Error invalidating cache: {e}")
+            return {
+                'success': False,
+                'message': f'Cache invalidation failed: {e}',
+                'invalidated_count': 0
+            }
+    
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache performance statistics"""
+        if not CACHING_AVAILABLE:
+            return {
+                'cache_available': False,
+                'message': 'Caching not available'
+            }
+        
+        try:
+            stats = get_cache_performance_stats()
+            return {
+                'cache_available': True,
+                **stats
+            }
+        except Exception as e:
+            logger.error(f"Error getting cache stats: {e}")
+            return {
+                'cache_available': False,
+                'message': f'Error getting stats: {e}'
+            }
 
 
 # Global instance
@@ -132,3 +312,4 @@ def get_data_service() -> DataService:
     if _data_service_instance is None:
         _data_service_instance = DataService()
     return _data_service_instance
+

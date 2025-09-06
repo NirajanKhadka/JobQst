@@ -12,3 +12,4 @@ def check_file_permissions(config: Dict) -> Dict:
     """Alias for check_permissions to maintain backward compatibility."""
     result = _check_file_permissions(config)
     return result.to_dict()
+

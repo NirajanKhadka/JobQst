@@ -1,5 +1,5 @@
 """
-Settings layout for JobLens Dashboard
+Settings layout for JobQst Dashboard
 Configuration and preferences management
 """
 import dash_bootstrap_components as dbc

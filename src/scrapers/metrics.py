@@ -54,3 +54,4 @@ class ScrapingMetrics:
             perf["total_attempts"] += 1
             perf["total_jobs_found"] += len(keyword_jobs)
             perf["total_jobs_processed"] += len(keyword_processed)
+

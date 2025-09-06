@@ -1,5 +1,5 @@
 """
-Analytics callbacks for JobLens Dashboard
+Analytics callbacks for JobQst Dashboard
 Handle chart updates and analytics visualizations
 """
 import logging

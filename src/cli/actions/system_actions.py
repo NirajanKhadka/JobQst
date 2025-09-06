@@ -46,3 +46,4 @@ class SystemActions:
     def show_profile_completeness_action(self) -> None:
         """Handle show profile completeness action."""
         self.system_handler.show_profile_completeness()
+

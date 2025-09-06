@@ -2,6 +2,7 @@
 Profile Embedding System for Semantic Job Matching
 Enhanced implementation following AI_STRATEGY_ANALYSIS.md
 """
+import os
 import json
 import logging
 import torch
@@ -14,16 +15,22 @@ logger = logging.getLogger(__name__)
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
-# Initialize model with error handling
-try:
-    model = SentenceTransformer(MODEL_NAME)
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model.to(device)
-    logger.info(f"Profile embedding model loaded: {MODEL_NAME} on {device}")
-except Exception as e:
-    logger.error(f"Failed to load embedding model: {e}")
+# PERFORMANCE FIX: Check if heavy AI models are disabled
+if os.environ.get("DISABLE_SENTENCE_TRANSFORMERS") == "1" or os.environ.get("DISABLE_HEAVY_AI") == "1":
+    logger.info("Sentence transformers disabled via environment variable - using lightweight fallback")
     model = None
     device = 'cpu'
+else:
+    # Initialize model with error handling
+    try:
+        model = SentenceTransformer(MODEL_NAME)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        model.to(device)
+        logger.info(f"Profile embedding model loaded: {MODEL_NAME} on {device}")
+    except Exception as e:
+        logger.error(f"Failed to load embedding model: {e}")
+        model = None
+        device = 'cpu'
 
 
 class ProfileEmbedding:
@@ -209,3 +216,4 @@ def get_profile_embedding(profile_summary: str):
     except Exception as e:
         logger.error(f"Failed to generate profile embedding: {e}")
         return None
+

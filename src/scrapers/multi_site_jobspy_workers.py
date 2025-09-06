@@ -15,7 +15,7 @@ from jobspy import scrape_jobs
 import pandas as pd
 from datetime import datetime
 
-from src.core.job_database import ModernJobDatabase
+from src.core.job_database import get_job_db
 from src.config.jobspy_integration_config import JOBSPY_LOCATION_SETS, JOBSPY_QUERY_PRESETS
 
 # New imports for async description fetching
@@ -230,7 +230,7 @@ class MultiSiteJobSpyWorkers:
         self.max_jobs_per_site_location = max_jobs_per_site_location
         self.per_site_concurrency = max(1, int(per_site_concurrency))
         self.country = country.lower()
-        self.db = ModernJobDatabase(profile_name)
+        self.db = get_job_db(profile_name)
         self.logger = logging.getLogger("MultiSiteJobSpyWorkers")
         
         # Create site-specific workers

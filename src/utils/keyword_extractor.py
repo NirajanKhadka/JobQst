@@ -65,3 +65,4 @@ def get_keywords_for_profile(profile_path: str) -> List[str]:
     with profile_file.open("w", encoding="utf-8") as f:
         json.dump(profile, f, indent=2, ensure_ascii=False)
     return keywords
+

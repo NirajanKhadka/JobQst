@@ -112,3 +112,4 @@ def ensure_profile_files(profile: Dict) -> bool:
             return False
 
     return True
+

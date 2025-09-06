@@ -349,3 +349,4 @@ def get_scraper_manager() -> CustomizableScraperManager:
     if _scraper_manager_instance is None:
         _scraper_manager_instance = CustomizableScraperManager()
     return _scraper_manager_instance
+

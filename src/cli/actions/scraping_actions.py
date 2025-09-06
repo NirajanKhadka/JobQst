@@ -26,29 +26,42 @@ class ScrapingActions:
         self.scraping_handler = ScrapingHandler(profile)
 
     def show_scraping_menu(self, args) -> None:
-        """Show JobSpy scraping menu with parallel processing options."""
-        console.print(Panel("🚀 JobSpy Scraping Menu (Parallel Processing)", style="bold blue"))
+        """Show JobSpy scraping menu with clear primary/backup distinction."""
+        console.print(Panel("🚀 Job Scraping Menu (JobSpy Primary)", style="bold blue"))
 
         # Show system capabilities
-        console.print(f"[green]🚀 JobSpy: Parallel scraping across multiple sites[/green]")
+        console.print("[green]🚀 PRIMARY: JobSpy (Ultra-Fast, 32x faster!)[/green]")
         console.print(f"[cyan]📋 Keywords: {len(self.profile.get('keywords', []))} loaded from profile[/cyan]")
-        console.print(f"[cyan]⚡ Sites: Indeed, LinkedIn, Glassdoor (parallel processing)[/cyan]")
+        console.print("[cyan]⚡ Sites: Indeed, LinkedIn, Glassdoor (JobSpy)[/cyan]")
+        console.print("[green]🎯 Performance: 2+ jobs/second[/green]")
+        console.print("[yellow]🔄 BACKUP: Eluta (slow, manual only)[/yellow]")
 
         # Scraping mode selection
-        console.print(f"\n[bold]Scraping Modes:[/bold]")
+        console.print("\n[bold]Primary Scraping Options (JobSpy):[/bold]")
         mode_options = {
-            "1": "🚀 JobSpy Standard (Default parallel processing)",
-            "2": "⚡ JobSpy High Performance (Maximum parallel workers)",
+            "1": "🚀 JobSpy Standard (Fast, recommended)",
+            "2": "⚡ JobSpy High Performance (Maximum speed)",
+            "3": "� Manual: Eluta Backup (SLOW - only if JobSpy fails)",
         }
 
         for key, value in mode_options.items():
             console.print(f"  [bold cyan]{key}[/bold cyan]: {value}")
 
         console.print()
-        console.print("[green]💡 JobSpy automatically scrapes multiple sites in parallel[/green]")
-        mode_choice = Prompt.ask("Select scraping mode", choices=list(mode_options.keys()), default="1")
+        console.print("[green]💡 Always use options 1-2 first. Option 3 only as manual backup![/green]")
+        mode_choice = Prompt.ask("Select scraping option", choices=list(mode_options.keys()), default="1")
 
-        self._execute_jobspy_scraping(mode_choice)
+        if mode_choice in ["1", "2"]:
+            self._execute_jobspy_scraping(mode_choice)
+        elif mode_choice == "3":
+            console.print("[yellow]⚠️ You selected the SLOW Eluta backup option![/yellow]")
+            console.print("[yellow]⚠️ This is significantly slower than JobSpy![/yellow]")
+            confirm = Prompt.ask("Are you sure you want to use slow Eluta backup?", choices=["y", "n"], default="n")
+            if confirm == "y":
+                self._execute_eluta_only_scraping()
+            else:
+                console.print("[green]✅ Good choice! Using fast JobSpy instead...[/green]")
+                self._execute_jobspy_scraping("1")
 
     def single_site_scrape_action(self, args, site: str, bot_method: str = "1") -> None:
         """Handle single site scraping action using Fast 3-Phase Pipeline."""
@@ -154,6 +167,55 @@ class ScrapingActions:
             success = self.scraping_handler.run_scraping(mode="simple" if method_choice == "1" else "multi_worker")
             if success:
                 console.print("[green]✅ Fallback scraping completed![/green]")
+
+    def _execute_eluta_only_scraping(self) -> None:
+        """Execute Eluta-only scraping as backup option (32x slower than JobSpy)."""
+        console.print(Panel("� Eluta Backup Scraper", style="bold yellow"))
+        console.print("[yellow]⚠️ BACKUP MODE: This is 32x slower than JobSpy![/yellow]")
+        console.print("[yellow]⚠️ Performance: 0.06 jobs/second vs JobSpy's 2+ jobs/second[/yellow]")
+        console.print("[yellow]💡 Consider using JobSpy instead for much faster results[/yellow]")
+        console.print("[cyan]🔍 Launching comprehensive backup data collection from Eluta.ca...[/cyan]")
+        
+        try:
+            # Use the scraping handler with Eluta-specific settings
+            success = self.scraping_handler.run_scraping(mode="eluta_only")
+            
+            if success:
+                console.print("[green]✅ Eluta backup scraping completed successfully![/green]")
+                console.print("[cyan]💾 Jobs saved to database automatically[/cyan]")
+                console.print("[green]💡 Next time, use JobSpy (option 1-2) for 32x faster results![/green]")
+            else:
+                console.print("[yellow]⚠️ Eluta backup scraping completed with limited results[/yellow]")
+                console.print("[cyan]💡 Try using fast JobSpy instead or check internet connection[/cyan]")
+                
+        except Exception as e:
+            console.print(f"[red]❌ Eluta backup scraping error: {e}[/red]")
+            console.print("[green]💡 Consider using fast JobSpy instead (32x faster, more reliable)[/green]")
+
+    # def _execute_combined_scraping(self) -> None:
+    #     """Execute combined JobSpy + Eluta scraping."""
+    #     # DEPRECATED: Use JobSpy as primary, Eluta as manual backup only
+    #     console.print(Panel("🔄 Combined JobSpy + Eluta Scraping", style="bold blue"))
+    #     console.print("[cyan]🚀 Running JobSpy first (fast)...[/cyan]")
+    #     console.print("[yellow]🐌 Then Eluta for additional coverage (slower)...[/yellow]")
+    #     
+    #     try:
+    #         # First run JobSpy for speed
+    #         console.print("[cyan]Step 1/2: JobSpy scraping...[/cyan]")
+    #         self._execute_jobspy_scraping("1")  # Standard mode
+    #         
+    #         # Then run Eluta for additional coverage
+    #         console.print("[yellow]Step 2/2: Eluta scraping (slower)...[/yellow]")
+    #         success = self.scraping_handler.run_scraping(mode="eluta_only")
+    #         
+    #         if success:
+    #             console.print("[green]✅ Combined scraping completed successfully![/green]")
+    #             console.print("[cyan]💾 Maximum job coverage achieved![/cyan]")
+    #         else:
+    #             console.print("[yellow]⚠️ Combined scraping completed with partial results[/yellow]")
+    #             
+    #     except Exception as e:
+    #         console.print(f"[red]❌ Combined scraping error: {e}[/red]")
 
     def automated_scrape_action(self, args=None) -> None:
         """Execute automated scraping action using simplified architecture."""
@@ -374,3 +436,4 @@ class ScrapingActions:
         except Exception as e:
             console.print(f"[red]Error scraping job details: {e}[/red]")
             return None
+

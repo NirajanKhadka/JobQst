@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Location Type Detection Service for JobLens
+Location Type Detection Service for JobQst
 Automatically detects and categorizes jobs as Remote, Hybrid, or On-site
 based on job descriptions, titles, and location information.
 """
@@ -234,3 +234,4 @@ class LocationTypeDetector:
                 stats[f'{key}_percentage'] = (stats[key] / stats['total_jobs']) * 100
         
         return stats
+

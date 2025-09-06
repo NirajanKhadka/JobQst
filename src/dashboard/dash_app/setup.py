@@ -140,7 +140,7 @@ def run_dashboard():
 
 def main():
     """Main setup and run function"""
-    logger.info("Setting up JobLens Dash Dashboard...")
+    logger.info("Setting up JobQst Dash Dashboard...")
     
     # Check Python version
     if not check_python_version():

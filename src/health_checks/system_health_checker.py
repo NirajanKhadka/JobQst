@@ -5,11 +5,12 @@ Provides comprehensive system health monitoring and diagnostics.
 
 import os
 import shutil
-import sqlite3
 import requests
-from pathlib import Path
 from typing import Dict, Any, List
 from rich.console import Console
+
+# Import unified database interface
+from ..core.job_database import get_job_db
 
 console = Console()
 
@@ -31,36 +32,21 @@ class SystemHealthChecker:
         self.profile_name = profile.get("profile_name", "default")
         
     def check_database_health(self) -> bool:
-        """Check database connectivity and integrity."""
+        """Check database connectivity and integrity using unified interface."""
         try:
-            # Check if database directory exists
-            db_path = f"profiles/{self.profile_name}/{self.profile_name}.db"
-            if not os.path.exists(db_path):
-                console.print(f"[yellow]⚠️ Database file not found: {db_path}[/yellow]")
-                return False
+            # Use unified database interface
+            db = get_job_db(self.profile_name)
             
-            # Test database connection
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
+            # Test basic database operations
+            job_count = db.get_job_count()
+            job_stats = db.get_job_stats()
             
-            # Check if main tables exist
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-            tables = [row[0] for row in cursor.fetchall()]
+            # Test getting jobs
+            jobs = db.get_top_jobs(1)
             
-            required_tables = ['jobs', 'applications', 'profiles']
-            missing_tables = [table for table in required_tables if table not in tables]
-            
-            if missing_tables:
-                console.print(f"[yellow]⚠️ Missing database tables: {missing_tables}[/yellow]")
-                conn.close()
-                return False
-            
-            # Test a simple query
-            cursor.execute("SELECT COUNT(*) FROM jobs;")
-            job_count = cursor.fetchone()[0]
-            
-            conn.close()
             console.print(f"[green]✅ Database healthy: {job_count} jobs found[/green]")
+            console.print(f"[green]✅ Database stats retrieved successfully[/green]")
+            
             return True
             
         except Exception as e:
@@ -285,3 +271,4 @@ class SystemHealthChecker:
             recommendations.append("✅ System is healthy! No immediate actions required.")
         
         return recommendations
+

@@ -246,3 +246,4 @@ class JobPatternMatcher:
                 skills.add(candidate)
         
         return list(skills)
+

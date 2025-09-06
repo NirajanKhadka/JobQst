@@ -113,3 +113,4 @@ def validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         validated["keywords"] = [keyword.strip() for keyword in args.keywords.split(",")]
 
     return validated
+

@@ -113,12 +113,16 @@ Performance Optimized Examples:
     )
     parser.add_argument(
         "--action",
-        choices=["scrape", "dashboard", "interactive", "benchmark", "apply", "process", "process-jobs", "fetch-descriptions", "analyze-jobs", "generate-docs", "shutdown", "pipeline", "health-check", "fast-pipeline", "jobspy-pipeline", "legacy-process-jobs", "analyze-resume"],
+        choices=["scrape", "dashboard", "interactive", "benchmark", "apply", "process", "process-jobs", "fetch-descriptions", "analyze-jobs", "generate-docs", "shutdown", "pipeline", "health-check", "fast-pipeline", "jobspy-pipeline", "enhanced-jobspy", "ultra-jobspy", "legacy-process-jobs", "analyze-resume", "eluta-only"],
         default="interactive",
         help="Action to perform: interactive (DEFAULT: show menu), "
              "process/process-jobs (two-stage CPU+GPU processing), "
-             "scrape (get jobs), apply (submit applications), "
+             "scrape (fast JobSpy + optional Eluta), "
+             "eluta-only (slow Eluta scraper only), "
+             "apply (submit applications), "
              "jobspy-pipeline (Improved pipeline with JobSpy integration), "
+             "enhanced-jobspy (Enhanced JobSpy with location categorization & RCIP tagging), "
+             "ultra-jobspy (Ultra-enhanced JobSpy with proxies & maximum optimization), "
              "dashboard (launch UI), generate-docs (create documents), "
              "analyze-resume (analyze resume and suggest profile improvements)",
     )
@@ -129,7 +133,7 @@ Performance Optimized Examples:
     parser.add_argument("--batch", type=int, default=10, help="Number of jobs per batch")
     parser.add_argument("--days", type=int, default=14, choices=[7, 14, 30], help="Days to look back (7, 14, or 30)")
     parser.add_argument("--pages", type=int, default=3, choices=range(1, 11), metavar="1-10", help="Max pages per keyword (1-10)")
-    parser.add_argument("--jobs", type=int, default=20, choices=range(5, 101), metavar="5-100", help="Max jobs per keyword (5-100)")
+    parser.add_argument("--jobs", type=int, default=20, choices=range(5, 1001), metavar="5-1000", help="Max jobs per keyword (5-1000)")
     parser.add_argument("--headless", action="store_true", help="Run browser in headless mode (faster)")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("--workers", type=int, default=4, help="Number of worker processes (default: 4)")
@@ -144,7 +148,7 @@ Performance Optimized Examples:
     # JobSpy integration options
     parser.add_argument("--jobspy-preset", choices=["fast", "comprehensive", "quality", "mississauga", "toronto", "remote", "canadian_cities", "canada_comprehensive", "tech_hubs"],
                        default="quality", help="JobSpy configuration preset")
-    parser.add_argument("--enable-eluta", action="store_true", default=True, help="Enable Eluta scraper alongside JobSpy")
+    parser.add_argument("--enable-eluta", action="store_true", default=False, help="Enable Eluta scraper (slower, use as secondary option)")
     parser.add_argument("--jobspy-only", action="store_true", help="Use JobSpy only (fastest option)")
     parser.add_argument("--multi-site-workers", action="store_true", help="Use multi-site worker architecture for optimal performance")
     parser.add_argument("--hours-old", type=int, default=336, help="Maximum age of jobs in hours (default: 336 = 14 days)")
@@ -340,7 +344,7 @@ async def run_Improved_jobspy_pipeline(profile: Dict[str, Any], args) -> bool:
     ) as progress:
         task = progress.add_task("🚀 Starting Enhanced JobSpy Pipeline...", total=None)
         try:
-            from src.pipeline.Improved_fast_job_pipeline import ImprovedFastJobPipeline
+            from src.pipeline.enhanced_fast_job_pipeline import ImprovedFastJobPipeline
             
             # Build config for Improved pipeline
             pipeline_config = {
@@ -358,7 +362,7 @@ async def run_Improved_jobspy_pipeline(profile: Dict[str, Any], args) -> bool:
                 "jobspy_sites": getattr(args, "sites", None),  # Pass sites filter to pipeline
             }
             
-            progress.update(task, description="⚙️ Initializing Improved Pipeline with JobSpy Integration...")
+            progress.update(task, description="⚙️ Initializing Enhanced Pipeline with JobSpy Integration...")
             pipeline = ImprovedFastJobPipeline(profile["profile_name"], pipeline_config)
             
             progress.update(task, description="🔄 Running complete pipeline (JobSpy → External Scraping → AI Processing)...")
@@ -396,6 +400,105 @@ async def run_Improved_jobspy_pipeline(profile: Dict[str, Any], args) -> bool:
         except Exception as e:
             console.print(f"\n❌ [red]Enhanced JobSpy pipeline failed: {str(e)}[/red]")
             console.print(f"💡 [cyan]Tip: Make sure python-jobspy is installed: pip install python-jobspy[/cyan]")
+            return False
+
+
+async def run_enhanced_jobspy_pipeline(profile: Dict[str, Any], args) -> bool:
+    """Run enhanced JobSpy pipeline with optimizations."""
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("🚀 Starting Enhanced JobSpy Integration...", total=None)
+        try:
+            from src.scrapers.enhanced_jobspy_integration import run_enhanced_jobspy_pipeline as run_enhanced
+            
+            # Prepare enhanced parameters
+            sites = getattr(args, "sites", None)
+            if sites:
+                sites = [s.strip() for s in sites.split(",")]
+            
+            max_jobs = getattr(args, "max_jobs_total", None) or args.jobs
+            if max_jobs > 2000:
+                max_jobs = 2000  # Safety limit
+            
+            progress.update(task, description="⚙️ Initializing enhanced scraper with location categorization...")
+            
+            # Run enhanced pipeline
+            success = await run_enhanced(
+                profile_name=profile["profile_name"],
+                sites=sites,
+                max_jobs=max_jobs
+            )
+            
+            if success:
+                progress.update(task, description="🎉 Enhanced JobSpy integration completed!")
+                console.print(f"\n✅ [bold green]Enhanced JobSpy Integration completed![/bold green]")
+                console.print(f"🚀 [cyan]With location categorization, RCIP tagging, and LinkedIn detailed fetching[/cyan]")
+                console.print(f"📊 [cyan]Check the enhanced database for results[/cyan]")
+                return True
+            else:
+                console.print(f"\n⚠️ [yellow]Enhanced JobSpy completed with issues[/yellow]")
+                return False
+                
+        except Exception as e:
+            console.print(f"\n❌ [red]Enhanced JobSpy failed: {str(e)}[/red]")
+            console.print(f"💡 [cyan]Tip: Make sure python-jobspy is installed: pip install python-jobspy[/cyan]")
+            return False
+
+
+async def run_ultra_jobspy_pipeline(profile: Dict[str, Any], args) -> bool:
+    """Run ultra-enhanced JobSpy pipeline with maximum optimizations."""
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("🚀 Starting Ultra-Enhanced JobSpy...", total=None)
+        try:
+            from src.scrapers.jobspy_ultra_enhanced import JobSpyUltraEnhanced, UltraJobSpyConfig
+            
+            # Prepare ultra configuration
+            sites = getattr(args, "sites", None)
+            if sites:
+                sites = [s.strip() for s in sites.split(",")]
+            
+            max_jobs = getattr(args, "max_jobs_total", None) or args.jobs
+            if max_jobs > 2000:
+                max_jobs = 2000  # Safety limit
+            
+            # Create ultra config
+            config = UltraJobSpyConfig()
+            if sites:
+                config.sites = sites
+            config.max_total_jobs = max_jobs
+            config.enable_proxies = True  # Enable proxy rotation
+            config.linkedin_fetch_description = True  # Get detailed descriptions
+            config.direct_db_write = True  # Skip conversion overhead
+            
+            progress.update(task, description="⚙️ Initializing ultra scraper with proxy rotation...")
+            
+            # Run ultra scraper
+            scraper = JobSpyUltraEnhanced(profile["profile_name"], config)
+            results = await scraper.scrape_ultra_enhanced()
+            
+            jobs_found = len(results) if results else 0
+            
+            if jobs_found > 0:
+                progress.update(task, description="🎉 Ultra-enhanced JobSpy completed!")
+                console.print(f"\n✅ [bold green]Ultra-Enhanced JobSpy completed![/bold green]")
+                console.print(f"🚀 [cyan]With proxy rotation, direct DB writes, and advanced search queries[/cyan]")
+                console.print(f"📊 [cyan]Jobs found: {jobs_found}[/cyan]")
+                console.print(f"💾 [cyan]Check the ultra database for results[/cyan]")
+                return True
+            else:
+                console.print(f"\n⚠️ [yellow]Ultra JobSpy completed with no results[/yellow]")
+                return False
+                
+        except Exception as e:
+            console.print(f"\n❌ [red]Ultra-Enhanced JobSpy failed: {str(e)}[/red]")
+            console.print(f"💡 [cyan]Tip: Install dependencies: pip install python-jobspy swiftshadow[/cyan]")
             return False
 
 
@@ -594,6 +697,12 @@ if __name__ == "__main__":
         console.print("  python main.py Nirajan --action jobspy-pipeline --jobspy-preset canadian_cities --max-jobs-total 1000")
         console.print("  python main.py Nirajan --action jobspy-pipeline --jobspy-preset canada_comprehensive --jobspy-only")
         
+        console.print("\n[green]📅 Daily Job Filtering (24 hours only):[/green]")
+        console.print("  python main.py Nirajan --action jobspy-pipeline --hours-old 24")
+        console.print("  python main.py Nirajan --action fast-pipeline --hours-old 24 --jobs 50")
+        console.print("  python main.py Nirajan --action scrape --hours-old 24 --headless")
+        console.print("  python main.py Nirajan --action jobspy-pipeline --jobspy-preset quality --hours-old 24")
+        
         console.print("\n[green]🚀 Performance Features:[/green]")
         console.print("  • NEW: Fast 3-phase pipeline (4-5x faster)")
         console.print("  • Parallel external job scraping (6+ workers)")
@@ -749,9 +858,22 @@ if __name__ == "__main__":
         success = asyncio.run(run_Improved_jobspy_pipeline(profile, args))
         sys.exit(0 if success else 1)
         
+    elif args.action == "enhanced-jobspy":
+        # ENHANCED: JobSpy with location categorization and RCIP tagging
+        console.print("[bold blue]🚀 Enhanced JobSpy with Location Categorization[/bold blue]")
+        success = asyncio.run(run_enhanced_jobspy_pipeline(profile, args))
+        sys.exit(0 if success else 1)
+        
+    elif args.action == "ultra-jobspy":
+        # ULTRA-ENHANCED: JobSpy with proxies, optimization, and direct DB write
+        console.print("[bold blue]🚀 Ultra-Enhanced JobSpy with Maximum Optimization[/bold blue]")
+        success = asyncio.run(run_ultra_jobspy_pipeline(profile, args))
+        sys.exit(0 if success else 1)
+        
     elif args.action == "scrape":
-        # Improved scraping with performance monitoring - NOW USES FAST PIPELINE BY DEFAULT
-        console.print("[bold blue]🔍 Improved Scraping Mode (Fast 3-Phase Pipeline)[/bold blue]")
+        # Fast JobSpy scraping - NO ELUTA BY DEFAULT
+        console.print("[bold blue]� Fast JobSpy Scraping (Primary Method)[/bold blue]")
+        console.print("[green]⚡ Using JobSpy for maximum speed - NO slow Eluta scraping[/green]")
         
         # Override keywords if provided
         if args.keywords:
@@ -761,21 +883,62 @@ if __name__ == "__main__":
 
         # Show scraping parameters
         if args.verbose:
-            console.print(f"[yellow]📅 Scraping Parameters:[/yellow]")
+            console.print(f"[yellow]📅 JobSpy Scraping Parameters:[/yellow]")
             console.print(f"  Days: {args.days}")
             console.print(f"  Pages per keyword: {args.pages}")
             console.print(f"  Jobs per keyword: {args.jobs}")
             console.print(f"  External workers: {getattr(args, 'external_workers', 6)}")
             console.print(f"  Processing method: {getattr(args, 'processing_method', 'auto')}")
+            console.print(f"  Eluta enabled: {getattr(args, 'enable_eluta', False)} (backup only)")
 
-        # Use fast 3-phase pipeline by default (4-5x faster)
-        success = asyncio.run(run_fast_pipeline(profile, args))
+        # Force JobSpy-only by default (NO ELUTA)
+        args.enable_eluta = False  # Disable Eluta completely
+        args.jobspy_only = True    # Force JobSpy only
+        
+        # Use enhanced JobSpy pipeline (fast)
+        success = asyncio.run(run_Improved_jobspy_pipeline(profile, args))
 
         if success:
-            console.print("[green]✅ Scraping completed successfully![/green]")
+            console.print("[green]✅ JobSpy scraping completed successfully![/green]")
             console.print("[cyan]💡 Check the dashboard for results: http://localhost:8501[/cyan]")
+            console.print("[yellow]📝 Note: Eluta is disabled by default (use --enable-eluta if needed)[/yellow]")
         else:
-            console.print("[yellow]⚠️ Scraping completed with limited results[/yellow]")
+            console.print("[yellow]⚠️ JobSpy scraping completed with limited results[/yellow]")
+
+    elif args.action == "eluta-only":
+        # Eluta-only scraping (slower but comprehensive)
+        console.print("[bold yellow]🐌 Eluta-Only Scraping Mode (Slower but Comprehensive)[/bold yellow]")
+        console.print("[yellow]⚠️ Note: Eluta scraping is significantly slower than JobSpy[/yellow]")
+        console.print("[cyan]💡 Recommended for supplementary data collection only[/cyan]")
+        
+        # Override keywords if provided
+        if args.keywords:
+            profile["keywords"] = [k.strip() for k in args.keywords.split(",")]
+            if args.verbose:
+                console.print(f"[cyan]Using custom keywords: {profile['keywords']}[/cyan]")
+
+        # Show scraping parameters
+        if args.verbose:
+            console.print("[yellow]📅 Eluta Scraping Parameters:[/yellow]")
+            console.print(f"  Days: {args.days}")
+            console.print(f"  Pages per keyword: {args.pages}")
+            console.print(f"  Jobs per keyword: {args.jobs}")
+            console.print(f"  Headless mode: {args.headless}")
+
+        # Force Eluta-only configuration
+        eluta_args = args
+        eluta_args.enable_eluta = True
+        eluta_args.jobspy_only = False
+
+        # Use fast pipeline but with Eluta enabled
+        success = asyncio.run(run_fast_pipeline(profile, eluta_args))
+
+        if success:
+            console.print("[green]✅ Eluta scraping completed successfully![/green]")
+            console.print("[cyan]💡 Check the dashboard for results: http://localhost:8501[/cyan]")
+            console.print("[yellow]🔍 Consider using 'scrape' action with JobSpy for faster results[/yellow]")
+        else:
+            console.print("[yellow]⚠️ Eluta scraping completed with limited results[/yellow]")
 
     elif args.action == "dashboard":
         # Start dashboard only

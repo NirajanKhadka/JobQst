@@ -404,3 +404,4 @@ if __name__ == "__main__":
     print(f"Database URL: {config.database.get_url()}")
     print(f"Dashboard: {config.dashboard.host}:{config.dashboard.port}")
     print(f"Scraping workers: {config.scraping.max_workers}")
+

@@ -1,5 +1,5 @@
 """
-Processing callbacks for JobLens Dashboard
+Processing callbacks for JobQst Dashboard
 Handle job processing controls and monitoring
 """
 import logging
@@ -230,3 +230,4 @@ def _stop_processing():
     _processing_state['log_messages'] = [log_message]
     
     return 0, 0, log_message
+

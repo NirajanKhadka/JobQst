@@ -1,4 +1,4 @@
-# JobLens Dash Dashboard Requirements
+# jobqst Dash Dashboard Requirements
 # Core Dash framework
 dash>=2.14.0
 dash-bootstrap-components>=1.5.0

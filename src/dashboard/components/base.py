@@ -27,3 +27,4 @@ class BaseComponent:
             return True
         except Exception:
             return False
+

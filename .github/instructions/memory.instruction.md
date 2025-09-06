@@ -28,3 +28,4 @@ applyTo: '**'
 
 ## Notes
 - These methods will maximize the value of user profiles and improve job search relevance and efficiency.
+

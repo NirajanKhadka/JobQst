@@ -407,3 +407,4 @@ def filter_duplicate_jobs(jobs: List[JobData], similarity_threshold: float = 0.8
             unique_jobs.append(job)
 
     return unique_jobs
+

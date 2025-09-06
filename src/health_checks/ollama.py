@@ -12,3 +12,4 @@ def check_ollama_service(config: Dict) -> Dict:
     """Alias for check_ollama to maintain backward compatibility."""
     result = _check_ollama_service(config)
     return result.to_dict()
+

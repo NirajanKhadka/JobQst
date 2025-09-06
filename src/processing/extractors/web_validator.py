@@ -175,3 +175,4 @@ class WebValidator:
             validation_method="rule_based",
             details="Valid salary format" if is_valid else "Invalid format"
         )
+

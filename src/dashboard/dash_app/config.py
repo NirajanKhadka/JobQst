@@ -1,12 +1,12 @@
 """
-Configuration module for JobLens Dash Dashboard
+Configuration module for JobQst Dash Dashboard
 """
 import os
 from pathlib import Path
 
 # Dashboard Configuration
 DASHBOARD_CONFIG = {
-    'title': 'JobLens - AI-Powered Job Search Dashboard',
+    'title': 'JobQst - AI-Powered Job Search Dashboard',
     'port': 8050,
     'debug': True,
     'host': '0.0.0.0',
@@ -42,7 +42,7 @@ COLORS = {
 
 # API Configuration
 API_CONFIG = {
-    'base_url': os.environ.get('JOBLENS_API_BASE', 'http://127.0.0.1:8000'),
+    'base_url': os.environ.get('JobQst_API_BASE', 'http://127.0.0.1:8000'),
     'timeout': 30,
     'retry_attempts': 3
 }

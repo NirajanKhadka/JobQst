@@ -1,5 +1,5 @@
 """
-AI Integration Service for JobLens
+AI Integration Service for JobQst
 Implements Phase 2 of AI_STRATEGY_ANALYSIS.md - Dashboard Integration
 """
 import logging
@@ -269,3 +269,4 @@ class AIIntegrationService:
 def get_ai_integration_service(profile_name: str = "default") -> AIIntegrationService:
     """Get or create AI integration service instance"""
     return AIIntegrationService(profile_name)
+

@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any
 from src.scrapers.scraping_models import JobData, JobStatus
-from src.core.job_database import ModernJobDatabase
+from src.core.job_database import get_job_db
 
 # Set up structured logging
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ class StructuredLogger:
         logger.info(f"[{correlation_id}] {stage.upper()}: Metrics update", extra=log_entry)
 
 
-async def storage_stage(storage_queue: asyncio.Queue, metrics, db: ModernJobDatabase, thread_pool):
+async def storage_stage(storage_queue: asyncio.Queue, metrics, db, thread_pool):
     """
     Saves jobs to the database with structured logging and correlation IDs.
     """
@@ -164,3 +164,4 @@ async def storage_stage(storage_queue: asyncio.Queue, metrics, db: ModernJobData
                 logger.error(f"[{stage_correlation_id}] STORAGE: {error_msg}")
             
             metrics.increment("errors")
+

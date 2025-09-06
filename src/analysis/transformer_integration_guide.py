@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Integration guide for Enhanced Hugging Face Transformers in JobLens Stage 2
+Integration guide for Enhanced Hugging Face Transformers in JobQst Stage 2
 
 This demonstrates how the transformer analyzer integrates with the existing
 two-stage processing system.
@@ -55,7 +55,7 @@ def enhanced_stage2_processing(job_data: Dict[str, Any], stage1_result, user_pro
 
 # Installation and setup guide
 SETUP_GUIDE = """
-# 🚀 Setting up Enhanced Transformers for JobLens
+# 🚀 Setting up Enhanced Transformers for JobQst
 
 ## 1. Install Required Dependencies
 ```bash
@@ -96,7 +96,7 @@ python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
 - "dbmdz/bert-large-cased-finetuned-conll03-english" (NER)
 - "microsoft/DialoGPT-medium" (Conversational understanding)
 
-## 4. Integration Points in JobLens
+## 4. Integration Points in JobQst
 
 ### A) Modify existing two_stage_processor.py:
 Replace the Stage2GPUProcessor._initialize_model() method to use our enhanced analyzer.
@@ -137,3 +137,4 @@ transformer_config = {
 """
 
 print(SETUP_GUIDE)
+

@@ -76,3 +76,4 @@ def get_health_status() -> Dict[str, Any]:
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+

@@ -326,3 +326,4 @@ class LeverSubmitter(BaseSubmitter):
         except Exception as e:
             logger.error(f"Error submitting Lever application: {e}")
             return "Failed"
+

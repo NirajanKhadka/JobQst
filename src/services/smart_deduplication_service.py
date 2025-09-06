@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Smart Deduplication Service for JobLens
+Smart Deduplication Service for JobQst
 Intelligently merges duplicate jobs from multiple sources while preserving the most complete data.
 
 Features:
@@ -377,3 +377,4 @@ class SmartDeduplicationService:
         report['statistics']['total_duplicates'] = len(report['duplicate_groups'])
         
         return report
+

@@ -421,3 +421,4 @@ class IndustryStandardsDatabase:
             'skills_count': len(self.skills),
             'locations_count': len(self.locations)
         }
+

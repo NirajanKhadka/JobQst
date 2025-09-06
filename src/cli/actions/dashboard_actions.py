@@ -68,3 +68,4 @@ class DashboardActions:
 
         except Exception as e:
             console.print(f"[yellow]⚠️ Could not get system info: {e}[/yellow]")
+

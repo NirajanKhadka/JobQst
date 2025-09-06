@@ -312,3 +312,4 @@ def get_optimized_search_locations(site_name: str, original_location: str = "Can
         console.print(f"  Locations: {locations}")
         console.print(f"  Strategy: {strategy['strategy']}")
         console.print(f"  Parallel: {strategy['parallel_search']}")
+

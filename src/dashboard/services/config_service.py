@@ -2,9 +2,19 @@
 Configuration service for dashboard
 """
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List
+
+from .base_service import BaseService, cache_result
 
 logger = logging.getLogger(__name__)
+
+# Import profile utilities
+try:
+    from ...utils.profile_helpers import get_available_profiles
+    PROFILE_HELPERS_AVAILABLE = True
+except ImportError:
+    logger.warning("Profile helpers not available")
+    PROFILE_HELPERS_AVAILABLE = False
 
 try:
     # Import existing config manager
@@ -19,18 +29,47 @@ except ImportError:
     DashboardConfig = None
 
 
-class ConfigService:
+class ConfigService(BaseService):
     """Configuration service that bridges to existing config functionality"""
     
     def __init__(self):
         """Initialize config service"""
+        super().__init__()
         self._config = None
         if CONFIG_AVAILABLE:
             try:
                 self._config = get_dashboard_config()
                 logger.info("Config service initialized with dashboard config")
+                self._initialized = True
             except Exception as e:
                 logger.error(f"Failed to initialize config: {e}")
+                self._initialized = False
+        else:
+            self._initialized = False
+
+    def initialize(self) -> bool:
+        """Initialize the service."""
+        if CONFIG_AVAILABLE:
+            try:
+                self._config = get_dashboard_config()
+                self._initialized = True
+                logger.info("Config service initialized successfully")
+                return True
+            except Exception as e:
+                logger.error(f"Failed to initialize config: {e}")
+                self._initialized = False
+                return False
+        return False
+
+    def health_check(self) -> Dict[str, Any]:
+        """Check service health status."""
+        return {
+            "status": "healthy" if self._initialized else "unhealthy",
+            "config_available": CONFIG_AVAILABLE,
+            "profile_helpers_available": PROFILE_HELPERS_AVAILABLE,
+            "has_config_instance": self._config is not None,
+            "cache_stats": self.get_cache_stats()
+        }
     
     @property
     def config(self):
@@ -102,11 +141,24 @@ class ConfigService:
                 return False
         return False
     
+    @cache_result(timeout=300)  # 5 minute cache
+    def get_available_profiles(self) -> List[str]:
+        """Get list of available user profiles"""
+        if PROFILE_HELPERS_AVAILABLE:
+            try:
+                return get_available_profiles()
+            except Exception as e:
+                logger.error(f"Error getting available profiles: {e}")
+                return []
+        else:
+            logger.warning("Profile helpers not available")
+            return []
+    
     def _default_config(self) -> Dict[str, Any]:
         """Default configuration"""
         return {
             "app": {
-                "title": "JobLens Dashboard",
+                "title": "JobQst Dashboard",
                 "debug": True,
                 "host": "127.0.0.1",
                 "port": 8050
@@ -138,3 +190,4 @@ def get_config_service() -> ConfigService:
     if _config_service_instance is None:
         _config_service_instance = ConfigService()
     return _config_service_instance
+

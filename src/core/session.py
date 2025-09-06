@@ -189,3 +189,4 @@ def create_rate_limiter(requests_per_minute: int = 60) -> RateLimiter:
 def create_browser_session(headless: bool = True) -> BrowserSession:
     """Create a browser session with default configuration."""
     return BrowserSession(headless=headless)
+

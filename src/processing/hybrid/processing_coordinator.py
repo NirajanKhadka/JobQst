@@ -290,3 +290,4 @@ def process_single_job(job_data: Dict[str, Any],
     """Process a single job with default coordinator."""
     coordinator = create_coordinator(strategy)
     return coordinator.process_job(job_data)
+

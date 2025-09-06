@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Job Alert Notification Service for JobLens
+Job Alert Notification Service for JobQst
 Sends notifications when new jobs matching user criteria are found.
 
 Features:
@@ -205,7 +205,7 @@ class JobAlertService:
             raise Exception("Email address not configured")
         
         # Create email content
-        subject = f"JobLens Alert: {len(jobs)} New Job{'s' if len(jobs) > 1 else ''} Found"
+        subject = f"JobQst Alert: {len(jobs)} New Job{'s' if len(jobs) > 1 else ''} Found"
         body = self._generate_email_body(jobs)
         
         # Create message
@@ -227,7 +227,7 @@ class JobAlertService:
         if not DESKTOP_NOTIFICATIONS_AVAILABLE:
             raise Exception("Desktop notifications not available (plyer not installed)")
         
-        title = f"JobLens: {len(jobs)} New Job{'s' if len(jobs) > 1 else ''}"
+        title = f"JobQst: {len(jobs)} New Job{'s' if len(jobs) > 1 else ''}"
         
         if len(jobs) == 1:
             job = jobs[0]
@@ -245,7 +245,7 @@ class JobAlertService:
             title=title,
             message=message,
             timeout=10,
-            app_name="JobLens"
+            app_name="JobQst"
         )
     
     def _generate_email_body(self, jobs: List[Dict[str, Any]]) -> str:
@@ -268,7 +268,7 @@ class JobAlertService:
         </head>
         <body>
             <div class="header">
-                <h1>JobLens Job Alert</h1>
+                <h1>JobQst Job Alert</h1>
                 <p>Found """ + str(len(jobs)) + """ new job""" + ("s" if len(jobs) > 1 else "") + """ matching your criteria</p>
             </div>
         """
@@ -288,11 +288,11 @@ class JobAlertService:
             """
         
         if len(jobs) > 10:
-            html += f"<p><em>... and {len(jobs) - 10} more jobs in your JobLens dashboard</em></p>"
+            html += f"<p><em>... and {len(jobs) - 10} more jobs in your JobQst dashboard</em></p>"
         
         html += """
             <div class="footer">
-                <p>This alert was sent by JobLens. You can update your notification preferences in the dashboard.</p>
+                <p>This alert was sent by JobQst. You can update your notification preferences in the dashboard.</p>
             </div>
         </body>
         </html>
@@ -388,3 +388,4 @@ class JobAlertService:
         }
         
         return self.send_job_alerts([test_job])
+

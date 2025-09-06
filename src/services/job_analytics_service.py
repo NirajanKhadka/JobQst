@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Analytics Service for JobLens
+Analytics Service for JobQst
 Provides insights and statistics about job search data, trends, and performance.
 
 Features:
@@ -506,3 +506,4 @@ class JobAnalyticsService:
                 cities[city] += count
         
         return dict(sorted(cities.items(), key=lambda x: x[1], reverse=True)[:10])
+

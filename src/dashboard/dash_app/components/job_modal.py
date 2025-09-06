@@ -214,3 +214,4 @@ def create_job_notes_storage():
 def create_job_modal_store():
     """Create a component to store current job data"""
     return dcc.Store(id="job-modal-store", data={})
+

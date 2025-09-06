@@ -307,3 +307,4 @@ def get_semantic_scorer() -> SemanticScorer:
     if _semantic_scorer_instance is None:
         _semantic_scorer_instance = SemanticScorer()
     return _semantic_scorer_instance
+

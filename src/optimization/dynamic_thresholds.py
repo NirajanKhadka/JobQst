@@ -190,3 +190,4 @@ def get_optimal_processing_config(
     estimates = manager.get_performance_estimate(config)
     
     return config, estimates
+

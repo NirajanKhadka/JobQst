@@ -23,3 +23,4 @@ class ScrapingMenu:
     def show_menu(self, args) -> None:
         """Show the scraping menu."""
         self.scraping_actions.show_scraping_menu(args)
+

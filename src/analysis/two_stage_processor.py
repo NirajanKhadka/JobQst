@@ -14,6 +14,7 @@ Stage 2: Extended Processor
 - Improved compatibility scoring with weighted factors
 """
 
+import os
 import asyncio
 import time
 import logging
@@ -23,23 +24,31 @@ from dataclasses import dataclass, asdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 
-# Conditional torch import for GPU support
-try:
-    import torch
-    from transformers import AutoTokenizer, AutoModel
-    TORCH_AVAILABLE = True
-except ImportError:
+# PERFORMANCE FIX: Lazy import for heavy AI libraries
+# Check if heavy AI is disabled via environment variables
+if os.environ.get("DISABLE_HEAVY_AI") == "1":
     TORCH_AVAILABLE = False
     torch = None
     AutoTokenizer = None
     AutoModel = None
+else:
+    # Conditional torch import for GPU support (lazy loaded when needed)
+    try:
+        import torch
+        from transformers import AutoTokenizer, AutoModel
+        TORCH_AVAILABLE = True
+    except ImportError:
+        TORCH_AVAILABLE = False
+        torch = None
+        AutoTokenizer = None
+        AutoModel = None
 
 import numpy as np
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
 
 from .custom_data_extractor import CustomDataExtractor, get_custom_data_extractor
-from .enhanced_custom_extractor import ImprovedCustomExtractor, get_Improved_custom_extractor
+from .custom_extractor import CustomExtractor, get_Improved_custom_extractor
 
 console = Console()
 logger = logging.getLogger(__name__)

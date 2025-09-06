@@ -133,3 +133,4 @@ class NeedsHumanException(AutoJobAgentError):
     """Exception raised when human intervention is required."""
 
     pass
+

@@ -535,3 +535,4 @@ class RuleBasedExtractor:
 def get_rule_based_extractor(search_client: Optional[Any] = None) -> RuleBasedExtractor:
     """Get a configured rule-based extractor instance."""
     return RuleBasedExtractor(search_client)
+

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simplified Resume Keyword Analyzer for JobLens
+Simplified Resume Keyword Analyzer for JobQst
 Focuses on extracting keywords and skills from resumes to enhance user profiles.
 
 Core Features:
@@ -361,3 +361,4 @@ class SimpleResumeAnalyzer:
                 'skills_to_add': len(suggestions.get('recommended_additions', []))
             }
         }
+

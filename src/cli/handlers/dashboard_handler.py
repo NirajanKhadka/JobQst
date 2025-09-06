@@ -263,3 +263,4 @@ class DashboardHandler:
 
 # Note: DashboardActions class is defined in src/cli/actions/dashboard_actions.py
 # This prevents duplicate class definitions and initialization issues
+

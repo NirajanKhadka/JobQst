@@ -1,6 +1,6 @@
 """
 iCIMS ATS Handler
-Provides the iCIMS-specific application logic for ImprovedUniversalApplier.
+Provides the iCIMS-specific application logic for UniversalApplier.
 """
 
 from typing import Dict
@@ -20,3 +20,4 @@ async def apply_icims(page: Page, job: Dict) -> str:
     if generic_apply:
         return await generic_apply(page, job)
     return "error: generic_apply not available"
+

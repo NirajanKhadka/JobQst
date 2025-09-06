@@ -1,5 +1,5 @@
 """
-Settings callbacks for JobLens Dashboard
+Settings callbacks for JobQst Dashboard
 Handle configuration and settings management
 """
 import logging

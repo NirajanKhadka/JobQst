@@ -349,3 +349,4 @@ class ManualReviewManager:
     def should_auto_approve(self, job: dict) -> bool:
         """Stub: Determine if a job should be auto-approved."""
         return False
+

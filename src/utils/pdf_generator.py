@@ -306,3 +306,4 @@ Data Analysis Intern, TechCorp Solutions (Summer 2023)
     test_path = Path("test_resume.pdf")
     generator.text_to_pdf(test_content, test_path, "resume")
     print(f"Test PDF generated: {test_path}")
+

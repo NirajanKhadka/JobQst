@@ -1,5 +1,5 @@
 """
-Jobs layout for JobLens Dashboard
+Jobs layout for JobQst Dashboard
 Modern job management interface with DataTable and cards
 """
 import dash_bootstrap_components as dbc  # already imported; keep single
@@ -484,3 +484,4 @@ def create_job_card(job):
             ], size="sm", className="w-100")
         ])
     ], className="mb-3 shadow-sm border-0 h-100")
+

@@ -237,3 +237,4 @@ async def run_interactive_mode(profile: Dict[str, Any]) -> bool:
     except Exception as e:
         console.print(f"[red]❌ Interactive mode failed: {e}[/red]")
         return False
+

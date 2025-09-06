@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Real-Time Job Processing Status Manager for JobLens
+Real-Time Job Processing Status Manager for JobQst
 Manages live job counts and processing status across multiple profiles
 Follows DEVELOPMENT_STANDARDS.md guidelines
 """
@@ -417,3 +417,4 @@ def update_processing_status(
     get_status_manager().update_processing_status(
         profile_name, is_processing, current_job_title, progress_percentage, active_workers
     )
+

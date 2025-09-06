@@ -286,3 +286,4 @@ def get_dashboard_service() -> DashboardIntegrationService:
     if _dashboard_service_instance is None:
         _dashboard_service_instance = DashboardIntegrationService()
     return _dashboard_service_instance
+

@@ -17,7 +17,7 @@ def test_imports():
     console.print("[bold blue]🧪 Testing New Feature Imports[/bold blue]")
     
     tests = [
-        ("JobSpy Enhanced Scraper", "from src.scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper"),
+        ("JobSpy Enhanced Scraper", "from src.scrapers.jobspy_scraper_v2 import JobSpyImprovedScraper"),
         ("Unified Eluta Scraper", "from src.scrapers.unified_eluta_scraper import ElutaScraper"),
         ("Main Entry Point", "from main import main"),
         ("Job Database", "from src.core.job_database import get_job_db"),
@@ -59,7 +59,7 @@ def test_enhanced_scraper_features():
     console.print("\n[bold blue]🔍 Testing Enhanced Scraper Features[/bold blue]")
     
     try:
-        from src.scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper
+        from src.scrapers.jobspy_scraper_v2 import JobSpyImprovedScraper
         
         # Create a test profile
         test_profile = {

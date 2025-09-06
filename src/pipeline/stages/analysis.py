@@ -176,3 +176,4 @@ async def analysis_stage(
                 logger.error(f"[{stage_correlation_id}] ANALYSIS: {error_msg}")
             
             metrics.increment("errors")
+

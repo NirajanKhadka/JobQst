@@ -1,5 +1,5 @@
 """
-Analytics layout for JobLens Dashboard
+Analytics layout for JobQst Dashboard
 Beautiful charts and visualizations
 """
 import dash_bootstrap_components as dbc

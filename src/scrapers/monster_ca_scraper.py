@@ -648,3 +648,4 @@ class MonsterCAScraper:
 
 
 # Main function removed - use scraper class directly
+

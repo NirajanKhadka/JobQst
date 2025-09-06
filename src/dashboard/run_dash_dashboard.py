@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-JobLens Dash Dashboard Launcher
+JobQst Dash Dashboard Launcher
 Run the professional Dash dashboard
 """
 import sys
@@ -13,7 +13,7 @@ sys.path.insert(0, str(project_root))
 from src.dashboard.dash_app.app import dashboard
 
 if __name__ == '__main__':
-    print("🚀 Starting JobLens Professional Dashboard...")
+    print("🚀 Starting JobQst Professional Dashboard...")
     print("📊 Open your browser to: http://localhost:8050")
     print("⚡ Features included:")
     print("   - Modern job management with DataTable")

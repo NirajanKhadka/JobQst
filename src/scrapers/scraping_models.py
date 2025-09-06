@@ -55,3 +55,4 @@ class JobData:
             "status": self.status.value if self.status else "pending",
             "analysis_data": self.analysis_data
         }
+

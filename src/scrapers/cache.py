@@ -43,3 +43,4 @@ class ScrapingCache:
 
     def add_processed_url(self, url: str):
         self.processed_urls.add(url)
+

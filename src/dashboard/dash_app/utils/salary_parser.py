@@ -1,5 +1,5 @@
 """
-Enhanced salary parsing utilities for JobLens Dashboard
+Enhanced salary parsing utilities for JobQst Dashboard
 Extracts and standardizes salary information from job descriptions
 """
 import re
@@ -325,3 +325,4 @@ def get_salary_statistics(jobs_data: list) -> Dict[str, Any]:
         'max_salary': max(salaries),
         'median_salary': salaries[n // 2] if n % 2 == 1 else (salaries[n//2-1] + salaries[n//2]) / 2
     }
+

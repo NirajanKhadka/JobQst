@@ -187,3 +187,4 @@ class PerformanceMonitor:
             recommendations.append("📦 Install psutil for Improved performance monitoring: pip install psutil")
         
         return recommendations
+

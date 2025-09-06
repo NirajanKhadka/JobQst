@@ -429,3 +429,4 @@ def get_user_profile_manager(profile_name: str = "default") -> ModernUserProfile
 
 # Backward compatibility alias
 UserProfileManager = ModernUserProfileManager
+

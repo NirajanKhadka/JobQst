@@ -1,5 +1,5 @@
 """
-Navigation component for JobLens Dashboard
+Navigation component for JobQst Dashboard
 """
 import dash_bootstrap_components as dbc
 from dash import html

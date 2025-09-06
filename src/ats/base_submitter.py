@@ -290,3 +290,4 @@ class BaseSubmitter(ABC):
 class TestBaseSubmitter(BaseSubmitter):
     def submit(self, job_data):
         return True
+

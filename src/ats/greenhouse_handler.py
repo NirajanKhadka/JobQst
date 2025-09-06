@@ -1,6 +1,6 @@
 """
 Greenhouse ATS Handler
-Provides the Greenhouse-specific application logic for ImprovedUniversalApplier.
+Provides the Greenhouse-specific application logic for UniversalApplier.
 """
 
 import asyncio
@@ -85,3 +85,4 @@ async def apply_greenhouse(page: Page, job: Dict) -> str:
     except Exception as e:
         console.print(f"[red]❌ Greenhouse application error: {e}[/red]")
         return f"error: {str(e)}"
+

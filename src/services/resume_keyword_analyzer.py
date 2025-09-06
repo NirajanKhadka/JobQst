@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Resume and Keyword Analyzer Service for JobLens
+Resume and Keyword Analyzer Service for JobQst
 Extracts skills, keywords, and relevant terms from resumes and suggests 
 improvements to user profiles for better job matching.
 
@@ -473,3 +473,4 @@ class ResumeKeywordAnalyzer:
         suggestions['missing_from_resume'] = list(current_skills - resume_skills)
         
         return suggestions
+

@@ -60,3 +60,4 @@ class WorkdayLogin:
         success_indicators = ["text='Apply'", "text='My Applications'"]
         self.page.wait_for_timeout(3000)
         return any(self.page.is_visible(indicator) for indicator in success_indicators)
+

@@ -81,3 +81,4 @@ def run_jobspy_discovery(cfg: OrchestratorConfig, profile_name: str) -> Discover
         "sites": df["source_site"].unique().tolist() if "source_site" in df.columns else [],
     }
     return DiscoveryResult(total_jobs=len(df), dataframe_summary=summary)
+

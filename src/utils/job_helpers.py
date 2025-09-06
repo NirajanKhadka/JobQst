@@ -102,3 +102,4 @@ def get_job_stats(jobs: List[Dict]) -> Dict:
         "job_types": job_types,
         "avg_salary": total_salary / salary_count if salary_count > 0 else 0,
     }
+

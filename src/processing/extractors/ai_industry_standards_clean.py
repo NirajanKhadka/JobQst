@@ -333,3 +333,4 @@ def get_ai_industry_standards() -> AIIndustryStandards:
     if _ai_standards_instance is None:
         _ai_standards_instance = AIIndustryStandards()
     return _ai_standards_instance
+

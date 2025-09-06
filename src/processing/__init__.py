@@ -1,5 +1,5 @@
 """
-JobLens Processing Module
+JobQst Processing Module
 
 Modular processing architecture with clean separation:
 - Rule-based extraction (fast, reliable)
@@ -48,3 +48,4 @@ __all__ = [
     'create_coordinator',
     'process_single_job',
 ]
+

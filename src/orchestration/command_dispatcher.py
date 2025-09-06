@@ -74,7 +74,7 @@ async def _run_fast_pipeline(profile: Dict[str, Any], args: Any) -> bool:
     try:
         console.print("[bold blue]⚡ Starting Fast Pipeline...[/bold blue]")
         
-        from src.pipeline.enhanced_fast_job_pipeline import FastJobPipeline
+        from src.pipeline.job_pipeline import FastJobPipeline
         
         pipeline = FastJobPipeline(
             profile_name=args.profile,
@@ -149,3 +149,4 @@ def get_available_actions() -> list[str]:
         "fast-pipeline",
         "jobspy-pipeline",
     ]
+

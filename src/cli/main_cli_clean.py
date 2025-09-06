@@ -235,7 +235,7 @@ def validate_environment() -> bool:
 def display_welcome_banner() -> None:
     """Display the application welcome banner."""
     banner = """
-🎯 JobLens - Automated Job Discovery & Analysis
+🎯 JobQst - Automated Job Discovery & Analysis
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ✨ Performance Optimized CLI Interface
@@ -250,3 +250,4 @@ def handle_cli_error(error: Exception, context: str = "CLI") -> None:
     console.print(f"[red]❌ {context} Error: {str(error)}[/red]")
     if "--verbose" in sys.argv:
         console.print_exception()
+
