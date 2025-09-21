@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Ultra-Fast Job Pipeline - Maximum Performance Architecture
-Eliminates external scraping bottleneck with parallel processing streams.
+Job Pipeline - Parallel Processing Architecture
+JobSpy integration with multi-stage AI analysis pipeline.
 
-Performance Target: 3+ jobs/second (vs 0.07 original)
-Architecture: JobSpy-only → Async Queue → GPU Batch Processing
+Performance Goals: Optimized for throughput and efficiency
+Architecture: JobSpy → Async Queue → Parallel Processing
 """
 
 import os
@@ -19,7 +19,7 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
 
 # Import optimized components
-from ..scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper, JobSpyConfig, JOBSPY_AVAILABLE
+from ..scrapers.jobspy_scraper_v2 import JobSpyImprovedScraper, JobSpyConfig, JOBSPY_AVAILABLE
 from ..core.job_database import get_job_db
 from ..utils.profile_helpers import load_profile
 
@@ -59,12 +59,12 @@ class UltraFastJobPipeline:
     Ultra-Fast Job Pipeline with Parallel Processing Architecture
     
     Key Optimizations:
-    1. JobSpy-only scraping (7+ jobs/sec, excellent descriptions)
+    1. JobSpy integration for reliable job data
     2. Parallel async streams (scraper → queue → processor)
-    3. GPU batch processing for AI analysis
-    4. No external description fetching (eliminates major bottleneck)
+    3. Batch processing for AI analysis optimization
+    4. Focused on high-quality job descriptions
     
-    Expected Performance: 3+ jobs/second
+    Performance Goals: Throughput optimization with parallel processing
     """
     
     def __init__(self, profile_name: str, config: Optional[UltraFastConfig] = None):
@@ -168,15 +168,15 @@ class UltraFastJobPipeline:
         target_jobs = limit or self.config.max_jobs
         
         console.print(Panel.fit(
-            "[bold blue]⚡ Ultra-Fast Job Pipeline[/bold blue]\n"
+            "[bold blue]⚡ Parallel Job Pipeline[/bold blue]\n"
             f"[cyan]Profile: {self.profile_name}[/cyan]\n"
             f"[cyan]Target Jobs: {target_jobs}[/cyan]\n"
             f"[cyan]Architecture: Parallel Streams[/cyan]\n"
-            f"[cyan]Expected Speed: 3+ jobs/second[/cyan]\n"
-            f"[green]🚀 JobSpy-only (no external scraping)[/green]\n"
-            f"[green]🧠 GPU batch processing[/green]\n"
+            f"[cyan]Optimization: Throughput focused[/cyan]\n"
+            f"[green]🚀 JobSpy integration[/green]\n"
+            f"[green]🧠 Batch AI processing[/green]\n"
             f"[green]⚡ Async parallel streams[/green]",
-            title="Ultra-Fast Pipeline Starting"
+            title="Parallel Pipeline Starting"
         ))
         
         try:

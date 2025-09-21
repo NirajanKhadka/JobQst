@@ -194,16 +194,16 @@ def create_application_pipeline():
             ], className="mb-0")
         ]),
         dbc.CardBody([
-            dbc.Progress([
-                dbc.Progress(value=20, color="info", bar=True, 
-                           label="Discovered"),
-                dbc.Progress(value=15, color="primary", bar=True, 
-                           label="Applied"),
-                dbc.Progress(value=10, color="warning", bar=True, 
-                           label="Interviewing"),
-                dbc.Progress(value=5, color="success", bar=True, 
+            html.Div([
+                dbc.Progress(value=20, color="info", 
+                           label="Discovered", className="mb-2"),
+                dbc.Progress(value=15, color="primary", 
+                           label="Applied", className="mb-2"),
+                dbc.Progress(value=10, color="warning", 
+                           label="Interviewing", className="mb-2"),
+                dbc.Progress(value=5, color="success", 
                            label="Offers")
-            ], multi=True, className="mb-3"),
+            ], className="mb-3"),
             dbc.Row([
                 dbc.Col([
                     html.Small("🔍 Discovered: 0", className="text-muted")
@@ -251,20 +251,5 @@ def create_enhanced_home_layout():
         dcc.Store(id="dashboard-data"),
         dcc.Interval(id="dashboard-interval", interval=30000, n_intervals=0),
         
-        # Custom styling
-        html.Style("""
-            .bg-gradient {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-            }
-            .shadow-sm {
-                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
-            }
-            .card {
-                border-radius: 10px !important;
-            }
-            .btn {
-                border-radius: 8px !important;
-            }
-        """)
+        # Custom styling moved to external CSS file
     ])

@@ -81,9 +81,9 @@ def create_sidebar():
                     ], href="#", id="nav-analytics", className="py-2")),
                     
                     dbc.NavItem(dbc.NavLink([
-                        html.I(className="fas fa-user-tie me-2"),
-                        "Interview Prep"
-                    ], href="#", id="nav-interview-prep", className="py-2")),
+                        html.I(className="fas fa-tools me-2"),
+                        "Utilities"
+                    ], href="#", id="nav-utilities", className="py-2")),
                     
                     dbc.NavItem(dbc.NavLink([
                         html.I(className="fas fa-spider me-2"),

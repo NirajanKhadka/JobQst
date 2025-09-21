@@ -16,7 +16,6 @@ Models used:
 """
 
 import requests
-import sqlite3
 import json
 import time
 import logging
@@ -26,6 +25,8 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import re
+
+from src.core.job_database import get_job_db
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -329,39 +330,33 @@ Return ONLY the JSON object, no other text."""
 class JobDatabaseUpdater:
     """Updates job database with extracted information"""
     
-    def __init__(self, db_path: str = "data/jobs.db"):
-        self.db_path = db_path
+    def __init__(self, profile_name: str = "default"):
+        self.profile_name = profile_name
+        self.db = get_job_db(profile_name)
     
     def get_jobs_needing_extraction(self, limit: int = 10) -> List[Tuple[int, str]]:
         """Get jobs that need content extraction"""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
             # Find jobs with URLs but missing detailed info
-            cursor.execute("""
+            cursor = self.db.conn.execute("""
                 SELECT id, url FROM jobs 
                 WHERE url IS NOT NULL 
                 AND url != ''
                 AND (description IS NULL OR description = '' OR length(description) < 100)
                 LIMIT ?
-            """, (limit,))
+            """, [limit])
             
             jobs = cursor.fetchall()
-            conn.close()
-            
             return jobs
             
         except Exception as e:
             logger.error(f"Error getting jobs from database: {e}")
             return []
     
-    def update_job_info(self, job_id: int, extracted_info: ExtractedJobInfo) -> bool:
+    def update_job_info(self, job_id: int,
+                        extracted_info: ExtractedJobInfo) -> bool:
         """Update job with extracted information"""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
             # Prepare update data
             update_fields = []
             update_values = []
@@ -410,7 +405,7 @@ class JobDatabaseUpdater:
             update_fields.extend([
                 "extraction_confidence = ?",
                 "extraction_method = ?",
-                "last_updated = datetime('now')"
+                "last_updated = CURRENT_TIMESTAMP"
             ])
             update_values.extend([
                 extracted_info.confidence,
@@ -422,28 +417,27 @@ class JobDatabaseUpdater:
             
             # Build and execute update query
             if update_fields:
-                query = f"UPDATE jobs SET {', '.join(update_fields)} WHERE id = ?"
-                cursor.execute(query, update_values)
-                conn.commit()
-                
-                success = cursor.rowcount > 0
-                conn.close()
-                return success
+                query = (f"UPDATE jobs SET {', '.join(update_fields)} "
+                         f"WHERE id = ?")
+                self.db.conn.execute(query, update_values)
+                self.db.conn.commit()
+                return True
             
-            conn.close()
             return False
             
         except Exception as e:
             logger.error(f"Error updating job {job_id}: {e}")
             return False
 
+
 class JobContentExtractor:
     """Main job content extraction system"""
     
-    def __init__(self, db_path: str = "data/jobs.db", model: str = "llama3.2:1b"):
+    def __init__(self, profile_name: str = "default", 
+                 model: str = "llama3.2:1b"):
         self.fetcher = WebContentFetcher()
         self.analyzer = SmallModelAnalyzer(model)
-        self.updater = JobDatabaseUpdater(db_path)
+        self.updater = JobDatabaseUpdater(profile_name)
     
     def process_jobs(self, max_jobs: int = 10, delay: float = 2.0) -> Dict[str, int]:
         """Process jobs and extract content"""
@@ -510,11 +504,10 @@ class JobContentExtractor:
         """Extract content for a single job"""
         try:
             # Get job URL
-            conn = sqlite3.connect(self.updater.db_path)
-            cursor = conn.cursor()
-            cursor.execute("SELECT url FROM jobs WHERE id = ?", (job_id,))
+            cursor = self.updater.db.conn.execute(
+                "SELECT url FROM jobs WHERE id = ?", [job_id]
+            )
             result = cursor.fetchone()
-            conn.close()
             
             if not result or not result[0]:
                 logger.error(f"No URL found for job {job_id}")

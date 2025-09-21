@@ -24,7 +24,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeEl
 
 # Import pipeline components
 from ..scrapers.unified_eluta_scraper import ElutaScraper
-from ..scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper, JOBSPY_AVAILABLE
+from ..scrapers.jobspy_scraper_v2 import JobSpyImprovedScraper, JOBSPY_AVAILABLE
 from ..scrapers.external_job_scraper import ExternalJobDescriptionScraper
 from ..optimization.integrated_processor import create_optimized_processor
 from ..core.job_database import get_job_db
@@ -314,7 +314,7 @@ class ImprovedFastJobPipeline:
                 "max_total_jobs": limit or self.jobspy_config.jobspy_max_jobs
             }
             
-            from ..scrapers.jobspy_enhanced_scraper import JobSpyConfig
+            from ..scrapers.jobspy_scraper_v2 import JobSpyConfig
             jobspy_scraper_config = JobSpyConfig(
                 locations=jobspy_config_dict["locations"],
                 search_terms=jobspy_config_dict["search_terms"],

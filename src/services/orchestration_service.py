@@ -303,7 +303,7 @@ class OrchestrationService:
                 "worker_type": "multiprocessing.Pool",
                 "worker_count": 2,
                 "ai_backend": "Ollama + Llama3",
-                "database": "SQLite"
+                "database": "DuckDB"
             }
         }
     

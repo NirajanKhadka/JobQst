@@ -238,7 +238,7 @@ def test_database_config():
         profile_name = "Nirajan"  # Fallback to known profile
     
     return {
-        "database": f"{profile_name}_test_jobs.db",
+        "database": f"{profile_name}_test_jobs_duckdb.db",
         "profile": profile_name,
         "cleanup_after": True,
     }

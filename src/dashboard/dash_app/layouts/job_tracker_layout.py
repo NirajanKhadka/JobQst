@@ -333,8 +333,7 @@ def create_job_tracker_layout():
         dcc.Store(id="job-tracker-data"),
         dcc.Store(id="selected-job-data"),
         
-        # Custom CSS
-        html.Style("""
+        # Custom CSS - moved to external stylesheet
             .job-card {
                 transition: all 0.2s ease;
                 border-radius: 8px !important;

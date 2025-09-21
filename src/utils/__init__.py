@@ -23,7 +23,7 @@ from .file_operations import save_jobs_to_json, load_jobs_from_json, save_jobs_t
 # from .job_data_enhancer import JobDataEnhancer
 
 # Export job filters from core module
-from src.core.job_filters import JobFilter, filter_entry_level_jobs, remove_duplicates
+from src.core.job_filters import JobRelevanceFilter, filter_entry_level_jobs, remove_duplicates
 
 __all__ = [
     "ErrorTracker",
@@ -41,7 +41,7 @@ __all__ = [
     "save_jobs_to_json",
     "load_jobs_from_json",
     "save_jobs_to_csv",
-    "JobFilter",
+    "JobRelevanceFilter",
     "filter_entry_level_jobs",
     "remove_duplicates",
 ]

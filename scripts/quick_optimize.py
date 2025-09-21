@@ -78,22 +78,12 @@ class DatabaseOptimizer:
     """Optimize database performance"""
     
     @staticmethod
-    def setup_sqlite_optimizations(db_path: str):
-        """Apply SQLite performance optimizations"""
-        import sqlite3
-        
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        
-        # Performance optimizations
-        cursor.execute("PRAGMA journal_mode=WAL")  # Write-Ahead Logging
-        cursor.execute("PRAGMA synchronous=NORMAL")  # Faster writes
-        cursor.execute("PRAGMA cache_size=10000")  # 10MB cache
-        cursor.execute("PRAGMA temp_store=MEMORY")  # Keep temps in memory
-        
-        conn.commit()
-        conn.close()
-        logger.info(f"SQLite optimizations applied to {db_path}")
+    def setup_database_optimizations():
+        """Database optimizations for DuckDB"""
+        # DuckDB is pre-optimized for analytical performance
+        # No specific connection-level optimizations needed
+        logger.info("DuckDB is pre-optimized for analytical performance")
+        return True
 
 
 # Quick optimization functions
@@ -138,16 +128,22 @@ def optimize_database(profile_name: str = "default"):
     """Apply database optimizations"""
     import os
     
-    db_paths = [
-        f"data/jobs.db",
-        f"profiles/{profile_name}/{profile_name}.db"
+    # Check for DuckDB databases (new architecture)
+    duckdb_paths = [
+        f"profiles/{profile_name}/{profile_name}_duckdb.db"
     ]
     
     optimizer = DatabaseOptimizer()
     
-    for db_path in db_paths:
+    # DuckDB optimization doesn't require per-file configuration
+    optimizer.setup_database_optimizations()
+    
+    # Log existing DuckDB databases
+    for db_path in duckdb_paths:
         if os.path.exists(db_path):
-            optimizer.setup_sqlite_optimizations(db_path)
+            logger.info(f"Found DuckDB database: {db_path}")
+        else:
+            logger.info(f"DuckDB database not found: {db_path}")
 
 
 if __name__ == "__main__":

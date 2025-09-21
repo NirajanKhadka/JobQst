@@ -259,9 +259,14 @@ class ScrapingHandler:
             console.print("[cyan]🚀 Using NEW Fast 3-Phase Pipeline (4.6x faster than old system)[/cyan]")
             console.print("[yellow]📝 Phase 1: Eluta URLs → Phase 2: Parallel External Scraping → Phase 3: GPU Processing[/yellow]")
         else:  # multi_worker
-            console.print("[cyan]⚡ Using ULTRA-FAST PIPELINE (32x FASTER!)[/cyan]")
-            console.print("[yellow]📝 JobSpy Scraping → Parallel AI Processing → GPU Batch Processing[/yellow]")
-            console.print("[green]🚀 Expected: 2+ jobs/second (vs 0.07 original)[/green]")
+            console.print("[cyan]⚡ Using PARALLEL PIPELINE[/cyan]")
+            console.print(
+                "[yellow]📝 JobSpy Scraping → Parallel AI Processing → "
+                "Batch Processing[/yellow]"
+            )
+            console.print(
+                "[green]🚀 Optimized for parallel processing efficiency[/green]"
+            )
 
         try:
             import asyncio

@@ -49,6 +49,21 @@ def create_jobs_table(data=None):
             'format': {'specifier': '.0f'}
         },
         {
+            'name': '🔑 Keywords',
+            'id': 'keywords',
+            'type': 'text'
+        },
+        {
+            'name': '🇨🇦 RCIP',
+            'id': 'rcip_indicator',
+            'type': 'text'
+        },
+        {
+            'name': '⭐ Priority',
+            'id': 'immigration_priority',
+            'type': 'text'
+        },
+        {
             'name': 'AI Confidence',
             'id': 'confidence_badge',
             'type': 'text',

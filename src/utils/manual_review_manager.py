@@ -142,31 +142,30 @@ class ManualReviewManager:
             Dictionary with review details
         """
         try:
-            import sqlite3
+            cursor = self.db.conn.execute(
+                """
+                SELECT mrq.*, j.title, j.company, j.url, j.location, j.summary
+                FROM manual_review_queue mrq
+                JOIN jobs j ON mrq.job_id = j.id
+                WHERE mrq.id = ?
+            """,
+                [review_id],
+            )
 
-            with sqlite3.connect(self.db.db_path) as conn:
-                conn.row_factory = sqlite3.Row
-
-                cursor = conn.execute(
-                    """
-                    SELECT mrq.*, j.title, j.company, j.url, j.location, j.summary
-                    FROM manual_review_queue mrq
-                    JOIN jobs j ON mrq.job_id = j.id
-                    WHERE mrq.id = ?
-                """,
-                    (review_id,),
-                )
-
-                row = cursor.fetchone()
-                if row:
-                    details = dict(row)
-                    # Parse JSON context data
-                    if details.get("context_data"):
-                        try:
-                            details["context_data"] = json.loads(details["context_data"])
-                        except:
-                            pass
-                    return details
+            row = cursor.fetchone()
+            if row:
+                # Convert DuckDB row to dictionary
+                columns = [desc[0] for desc in cursor.description]
+                details = dict(zip(columns, row))
+                # Parse JSON context data
+                if details.get("context_data"):
+                    try:
+                        details["context_data"] = json.loads(
+                            details["context_data"]
+                        )
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                return details
 
         except Exception as e:
             console.print(f"[red]❌ Error getting review details: {e}[/red]")
@@ -238,24 +237,23 @@ class ManualReviewManager:
             True if successful
         """
         try:
-            import sqlite3
+            self.db.conn.execute(
+                """
+                UPDATE manual_review_queue
+                SET status = 'resolved',
+                    resolution = ?,
+                    reviewer = ?,
+                    reviewed_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """,
+                [resolution, reviewer or self.profile_name, review_id],
+            )
 
-            with sqlite3.connect(self.db.db_path) as conn:
-                conn.execute(
-                    """
-                    UPDATE manual_review_queue 
-                    SET status = 'resolved', 
-                        resolution = ?, 
-                        reviewer = ?,
-                        reviewed_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                """,
-                    (resolution, reviewer or self.profile_name, review_id),
-                )
-
-                conn.commit()
-                console.print(f"[green]✅ Review item {review_id} marked as resolved[/green]")
-                return True
+            self.db.conn.commit()
+            console.print(
+                f"[green]✅ Review item {review_id} marked as resolved[/green]"
+            )
+            return True
 
         except Exception as e:
             console.print(f"[red]❌ Error resolving review item: {e}[/red]")
@@ -273,24 +271,23 @@ class ManualReviewManager:
             True if successful
         """
         try:
-            import sqlite3
+            self.db.conn.execute(
+                """
+                UPDATE manual_review_queue
+                SET status = 'skipped',
+                    resolution = ?,
+                    reviewer = ?,
+                    reviewed_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """,
+                [f"Skipped: {reason}", self.profile_name, review_id],
+            )
 
-            with sqlite3.connect(self.db.db_path) as conn:
-                conn.execute(
-                    """
-                    UPDATE manual_review_queue 
-                    SET status = 'skipped', 
-                        resolution = ?, 
-                        reviewer = ?,
-                        reviewed_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                """,
-                    (f"Skipped: {reason}", self.profile_name, review_id),
-                )
-
-                conn.commit()
-                console.print(f"[yellow]⏭️ Review item {review_id} skipped[/yellow]")
-                return True
+            self.db.conn.commit()
+            console.print(
+                f"[yellow]⏭️ Review item {review_id} skipped[/yellow]"
+            )
+            return True
 
         except Exception as e:
             console.print(f"[red]❌ Error skipping review item: {e}[/red]")
@@ -304,35 +301,42 @@ class ManualReviewManager:
             Dictionary with review statistics
         """
         try:
-            import sqlite3
-
-            with sqlite3.connect(self.db.db_path) as conn:
-                cursor = conn.execute(
-                    """
-                    SELECT 
-                        status,
-                        review_type,
-                        priority,
-                        COUNT(*) as count
-                    FROM manual_review_queue
-                    GROUP BY status, review_type, priority
+            cursor = self.db.conn.execute(
                 """
+                SELECT
+                    status,
+                    review_type,
+                    priority,
+                    COUNT(*) as count
+                FROM manual_review_queue
+                GROUP BY status, review_type, priority
+            """
+            )
+
+            stats = {
+                "by_status": {}, "by_type": {}, "by_priority": {}, "total": 0
+            }
+
+            for row in cursor.fetchall():
+                status, review_type, priority, count = row
+                stats["by_status"][status] = (
+                    stats["by_status"].get(status, 0) + count
                 )
+                stats["by_type"][review_type] = (
+                    stats["by_type"].get(review_type, 0) + count
+                )
+                stats["by_priority"][priority] = (
+                    stats["by_priority"].get(priority, 0) + count
+                )
+                stats["total"] += count
 
-                stats = {"by_status": {}, "by_type": {}, "by_priority": {}, "total": 0}
-
-                for row in cursor.fetchall():
-                    status, review_type, priority, count = row
-                    stats["by_status"][status] = stats["by_status"].get(status, 0) + count
-                    stats["by_type"][review_type] = stats["by_type"].get(review_type, 0) + count
-                    stats["by_priority"][priority] = stats["by_priority"].get(priority, 0) + count
-                    stats["total"] += count
-
-                return stats
+            return stats
 
         except Exception as e:
             console.print(f"[red]❌ Error getting review statistics: {e}[/red]")
-            return {"by_status": {}, "by_type": {}, "by_priority": {}, "total": 0}
+            return {
+                "by_status": {}, "by_type": {}, "by_priority": {}, "total": 0
+            }
 
     def add_job_for_review(self, job: dict) -> bool:
         """Stub: Add a job for manual review."""

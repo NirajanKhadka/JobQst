@@ -244,7 +244,7 @@ dashboard.layout = dbc.Container([
      Input('nav-job-tracker', 'n_clicks'),
      Input('nav-jobs', 'n_clicks'),
      Input('nav-analytics', 'n_clicks'),
-     Input('nav-interview-prep', 'n_clicks'),
+     Input('nav-utilities', 'n_clicks'),
      Input('nav-scraping', 'n_clicks'),
      Input('nav-processing', 'n_clicks'),
      Input('nav-system', 'n_clicks'),
@@ -252,7 +252,7 @@ dashboard.layout = dbc.Container([
     prevent_initial_call=False
 )
 def display_page(home_clicks, tracker_clicks, jobs_clicks, analytics_clicks,
-                 interview_clicks, scraping_clicks, processing_clicks, 
+                 utilities_clicks, scraping_clicks, processing_clicks, 
                  system_clicks, settings_clicks):
     """Handle navigation between pages"""
     ctx = dash.callback_context
@@ -282,9 +282,9 @@ def display_page(home_clicks, tracker_clicks, jobs_clicks, analytics_clicks,
             return create_jobs_layout()
         elif button_id == 'nav-analytics':
             return create_analytics_layout()
-        elif button_id == 'nav-interview-prep':
-            from .layouts.interview_prep_layout import create_interview_prep_layout
-            return create_interview_prep_layout()
+        elif button_id == 'nav-utilities':
+            from .layouts.utilities_layout import create_utilities_layout
+            return create_utilities_layout()
         elif button_id == 'nav-scraping':
             return create_scraping_layout()
         elif button_id == 'nav-processing':
@@ -347,7 +347,7 @@ def update_system_status(n_intervals):
     """Update system status indicator"""
     try:
         # Basic health check - can be expanded
-        from utils.data_loader import DataLoader
+        from src.dashboard.dash_app.utils.data_loader import DataLoader
         data_loader = DataLoader()
         
         # Try to load some basic data

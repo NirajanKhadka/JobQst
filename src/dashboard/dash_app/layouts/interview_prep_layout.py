@@ -173,7 +173,7 @@ def create_interview_prep_layout():
         dcc.Store(id="interview-prep-data"),
         
         # Custom CSS
-        html.Style("""
+        # Custom CSS - moved to external stylesheet
             .interview-card {
                 transition: all 0.2s ease;
                 border-radius: 8px !important;

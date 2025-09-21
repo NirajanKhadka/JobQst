@@ -900,10 +900,45 @@ if __name__ == "__main__":
 
         if success:
             console.print("[green]✅ JobSpy scraping completed successfully![/green]")
+            
+            # AUTO-PROCESS: Automatically process scraped jobs
+            console.print("[cyan]🔄 Auto-processing scraped jobs...[/cyan]")
+            try:
+                from src.optimization.integrated_processor import create_optimized_processor
+                
+                # Get unprocessed jobs
+                from src.core.job_database import get_job_db
+                db = get_job_db(profile_name)
+                jobs_to_process = db.get_jobs_for_processing(limit=200)
+                
+                if jobs_to_process:
+                    console.print(f"[cyan]📋 Processing {len(jobs_to_process)} jobs...[/cyan]")
+                    
+                    processor = create_optimized_processor(
+                        user_profile=profile,
+                        cpu_workers=4,
+                        max_concurrent_stage2=2
+                    )
+                    
+                    import asyncio
+                    processed_jobs = asyncio.run(processor.process_jobs(jobs_to_process))
+                    
+                    if processed_jobs:
+                        console.print(f"[green]✅ Auto-processed {len(processed_jobs)} jobs![/green]")
+                    else:
+                        console.print("[yellow]⚠️ Auto-processing completed with limited results[/yellow]")
+                else:
+                    console.print("[cyan]💡 No jobs need processing[/cyan]")
+                    
+            except Exception as e:
+                console.print(f"[yellow]⚠️ Auto-processing failed: {e}[/yellow]")
+            
             console.print("[cyan]💡 Check the dashboard for results: http://localhost:8501[/cyan]")
             console.print("[yellow]📝 Note: Eluta is disabled by default (use --enable-eluta if needed)[/yellow]")
         else:
             console.print("[yellow]⚠️ JobSpy scraping completed with limited results[/yellow]")
+        
+        sys.exit(0 if success else 1)  # Exit after scraping to prevent interactive mode
 
     elif args.action == "eluta-only":
         # Eluta-only scraping (slower but comprehensive)
@@ -939,6 +974,8 @@ if __name__ == "__main__":
             console.print("[yellow]🔍 Consider using 'scrape' action with JobSpy for faster results[/yellow]")
         else:
             console.print("[yellow]⚠️ Eluta scraping completed with limited results[/yellow]")
+        
+        sys.exit(0 if success else 1)  # Exit after scraping to prevent interactive mode
 
     elif args.action == "dashboard":
         # Start dashboard only

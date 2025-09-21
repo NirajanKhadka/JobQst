@@ -24,14 +24,14 @@ class Environment(Enum):
 
 class DatabaseType(Enum):
     """Database types"""
-    SQLITE = "sqlite"
+    DUCKDB = "duckdb"
     POSTGRESQL = "postgresql"
 
 
 @dataclass
 class DatabaseConfig:
     """Database configuration"""
-    type: DatabaseType = DatabaseType.SQLITE
+    type: DatabaseType = DatabaseType.DUCKDB
     url: Optional[str] = None
     host: str = "localhost"
     port: int = 5432
@@ -47,8 +47,8 @@ class DatabaseConfig:
         if self.url:
             return self.url
         
-        if self.type == DatabaseType.SQLITE:
-            return f"sqlite:///data/jobs.db"
+        if self.type == DatabaseType.DUCKDB:
+            return "duckdb:///data/jobs_duckdb.db"
         elif self.type == DatabaseType.POSTGRESQL:
             return (f"postgresql://{self.username}:{self.password}"
                    f"@{self.host}:{self.port}/{self.database}")
@@ -320,13 +320,16 @@ class ConfigManager:
         """Create default configuration files for all environments"""
         environments = {
             Environment.DEVELOPMENT: {
-                'database': {'type': 'sqlite'},
+                'database': {'type': 'duckdb'},
                 'dashboard': {'debug': True, 'port': 8050},
                 'ai': {'enable_heavy_processing': False},
                 'log_level': 'DEBUG'
             },
             Environment.TESTING: {
-                'database': {'type': 'sqlite', 'url': 'sqlite:///test.db'},
+                'database': {
+                    'type': 'duckdb',
+                    'url': 'duckdb:///test_duckdb.db'
+                },
                 'dashboard': {'debug': True, 'port': 8051},
                 'scraping': {'max_workers': 2},
                 'log_level': 'INFO'

@@ -11,7 +11,7 @@ JobLens is a modern, profile-driven automated job discovery and analysis platfor
 - **Profile-Centric Design**: Everything revolves around user profiles in `profiles/` directory. Each profile has its own DuckDB database and settings. `src/core/user_profile_manager.py` is the single source of truth for profile management.
 
 - **Modern Database Architecture**: 
-  - **Primary**: DuckDB for 10-100x faster analytics (`src/core/duckdb_database.py`)
+  - **Primary**: DuckDB for analytics performance (`src/core/duckdb_database.py`)
   - **Legacy Support**: SQLite fallback via unified interface (`src/core/job_database.py`)
   - **Profile-Specific**: Each profile gets its own database instance
 
@@ -26,10 +26,10 @@ JobLens is a modern, profile-driven automated job discovery and analysis platfor
   - `DataService`, `ConfigService`, `SystemService` - Dashboard data providers
   - `HealthMonitor` - System health and performance monitoring
 
-- **Three-Layer Caching System**: Intelligent caching with 70% performance improvements:
-  - HTML caching for scraping operations
-  - Embedding caching for AI analysis
-  - Result caching for processed jobs
+- **Multi-Layer Caching Architecture**: Dashboard and scraping cache systems:
+  - Dashboard query caching for expensive aggregations (3-5 min TTL)
+  - Intelligent cache framework for HTML, embeddings, and metadata storage
+  - URL deduplication for scraping operations
 
 ### Data Flow & Component Integration
 
@@ -116,10 +116,10 @@ pytest --skip-slow                       # Skip performance tests
 
 ### Database Architecture & Performance
 
-- **Primary Database**: DuckDB (`src/core/duckdb_database.py`) for 10-100x faster analytics
+- **Primary Database**: DuckDB (`src/core/duckdb_database.py`) for analytics performance
 - **Unified Interface**: `src/core/job_database.py` provides abstraction layer
 - **Database Factory**: `get_job_db(profile_name)` returns appropriate database instance
-- **Caching System**: Three-layer intelligent caching (HTML, embeddings, results) with 70% performance gains
+- **Caching System**: Dashboard query caching with TTL management and intelligent cache framework
 
 ### Service Layer Patterns
 

@@ -12,9 +12,9 @@ import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
-from pathlib import Path
-import sqlite3
-from contextlib import contextmanager
+
+# Import unified database interface (DuckDB-first)
+from .job_database import get_job_db
 
 # Setup logging per standards
 logger = logging.getLogger(__name__)
@@ -277,7 +277,7 @@ class RealTimeJobStatusManager:
     
     def _fetch_job_counts_from_db(self, profile_name: str) -> JobCounts:
         """
-        Fetch current job counts from database.
+        Fetch current job counts from DuckDB database.
         
         Args:
             profile_name: Profile identifier
@@ -286,42 +286,45 @@ class RealTimeJobStatusManager:
             JobCounts with current statistics
         """
         try:
-            # Get database path for profile
-            db_path = Path(f"profiles/{profile_name}/{profile_name}.db")
+            # Use unified database interface (DuckDB-first)
+            db = get_job_db(profile_name)
             
-            if not db_path.exists():
-                logger.warning(f"Database not found for profile: {profile_name}")
-                return JobCounts(last_updated=datetime.now().isoformat())
+            # Count jobs by status using DuckDB
+            query = """
+                SELECT
+                    COUNT(*) as total_jobs,
+                    SUM(CASE WHEN status = 'scraped' THEN 1 ELSE 0 END) 
+                        as scraped_jobs,
+                    SUM(CASE WHEN status IN ('processed', 'analyzed', 'enhanced') 
+                        THEN 1 ELSE 0 END) as processed_jobs,
+                    SUM(CASE WHEN analysis_data IS NOT NULL THEN 1 ELSE 0 END) 
+                        as analyzed_jobs,
+                    SUM(CASE WHEN application_status = 'applied' THEN 1 ELSE 0 END) 
+                        as applied_jobs,
+                    SUM(CASE WHEN status = 'scraped' AND 
+                        application_status = 'not_applied' THEN 1 ELSE 0 END) 
+                        as pending_processing,
+                    SUM(CASE WHEN status = 'error' OR error_message IS NOT NULL 
+                        THEN 1 ELSE 0 END) as error_jobs
+                FROM jobs
+            """
             
-            with sqlite3.connect(db_path) as conn:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.cursor()
-                
-                # Count jobs by status
-                cursor.execute("""
-                    SELECT 
-                        COUNT(*) as total_jobs,
-                        SUM(CASE WHEN status = 'scraped' THEN 1 ELSE 0 END) as scraped_jobs,
-                        SUM(CASE WHEN status IN ('processed', 'analyzed', 'enhanced') THEN 1 ELSE 0 END) as processed_jobs,
-                        SUM(CASE WHEN analysis_data IS NOT NULL THEN 1 ELSE 0 END) as analyzed_jobs,
-                        SUM(CASE WHEN application_status = 'applied' THEN 1 ELSE 0 END) as applied_jobs,
-                        SUM(CASE WHEN status = 'scraped' AND application_status = 'not_applied' THEN 1 ELSE 0 END) as pending_processing,
-                        SUM(CASE WHEN status = 'error' OR error_message IS NOT NULL THEN 1 ELSE 0 END) as error_jobs
-                    FROM jobs
-                """)
-                
-                row = cursor.fetchone()
-                
+            result = db.execute_query(query)
+            
+            if result and len(result) > 0:
+                row = result[0]
                 return JobCounts(
-                    total_jobs=row['total_jobs'] or 0,
-                    scraped_jobs=row['scraped_jobs'] or 0,
-                    processed_jobs=row['processed_jobs'] or 0,
-                    analyzed_jobs=row['analyzed_jobs'] or 0,
-                    applied_jobs=row['applied_jobs'] or 0,
-                    pending_processing=row['pending_processing'] or 0,
-                    error_jobs=row['error_jobs'] or 0,
+                    total_jobs=int(row[0]) if row[0] else 0,
+                    scraped_jobs=int(row[1]) if row[1] else 0,
+                    processed_jobs=int(row[2]) if row[2] else 0,
+                    analyzed_jobs=int(row[3]) if row[3] else 0,
+                    applied_jobs=int(row[4]) if row[4] else 0,
+                    pending_processing=int(row[5]) if row[5] else 0,
+                    error_jobs=int(row[6]) if row[6] else 0,
                     last_updated=datetime.now().isoformat()
                 )
+            else:
+                return JobCounts(last_updated=datetime.now().isoformat())
                 
         except Exception as e:
             logger.error(f"Error fetching job counts for {profile_name}: {e}")
@@ -333,11 +336,12 @@ class RealTimeJobStatusManager:
     def _calculate_processing_rate(self, profile_name: str) -> float:
         """Calculate current processing rate in jobs per minute."""
         # Get recent processing activities
+        cutoff_time = datetime.now() - timedelta(minutes=5)
         recent_activities = [
             a for a in self._activity_log
-            if (a.get("profile_name") == profile_name and 
+            if (a.get("profile_name") == profile_name and
                 a.get("action") == "job_processed" and
-                datetime.fromisoformat(a.get("timestamp", "")) > datetime.now() - timedelta(minutes=5))
+                datetime.fromisoformat(a.get("timestamp", "")) > cutoff_time)
         ]
         
         if len(recent_activities) < 2:

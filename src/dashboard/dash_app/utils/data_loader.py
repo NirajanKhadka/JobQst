@@ -38,78 +38,89 @@ class DataLoader:
             return ['Nirajan']
     
     def load_jobs_data(self, profile_name='Nirajan'):
-        """Load job data for a specific profile"""
+        """Load job data for a specific profile using connection manager"""
         try:
-            # Try to import the job database
-            from src.core.job_database import get_job_db
+            # Use connection manager to avoid file locking issues
+            from src.core.duckdb_connection_manager import DuckDBConnectionManager
             
-            # Use the configured database type (PostgreSQL or SQLite)
-            db = get_job_db(profile_name)
+            # Build query with profile filter
+            query = "SELECT * FROM jobs WHERE profile_name = ? ORDER BY created_at DESC"
+            params = [profile_name]
             
-            # Clean up old jobs (30+ days) first
-            self._cleanup_old_jobs(db)
+            # Execute query with read-only connection
+            result = DuckDBConnectionManager.execute_query(query, params, profile_name, read_only=True)
+            columns = DuckDBConnectionManager.get_columns(query, params, profile_name)
             
-            jobs = db.get_jobs()  # Remove profile_name parameter
+            # Convert to list of dictionaries
+            jobs = [dict(zip(columns, row)) for row in result]
+            
+            logger.info(f"Retrieved {len(jobs)} jobs from DuckDB for {profile_name}")
             
             if jobs and len(jobs) > 0:
-                # Convert to DataFrame with proper columns
+                # Convert to DataFrame with proper columns mapped to DuckDB schema
                 df = pd.DataFrame([
                     {
                         'id': job.get('id', ''),
                         'title': job.get('title', 'Unknown Title'),
                         'company': job.get('company', 'Unknown Company'),
                         'location': job.get('location', 'Unknown Location'),
-                        'location_type': job.get('location_type', 'onsite'),
-                        'location_category': job.get('location_category', 'unknown'),
+                        'status': self._determine_job_status(job),
+                        'salary': self._format_salary(job.get('salary_range')),
+                        'match_score': job.get('fit_score', 0) or self._calculate_match_score(job),
+                        'posted_date': self._format_date(job.get('date_posted')),
+                        'created_at': self._format_date(job.get('created_at')),
+                        'url': job.get('url', ''),
+                        'job_url': job.get('url', ''),
+                        'summary': job.get('summary', ''),
+                        'description': job.get('description', ''),
+                        'site': job.get('source', ''),
+                        'job_type': job.get('job_type', ''),
+                        'skills': job.get('skills', ''),
+                        'keywords': job.get('keywords', ''),
+                        'application_status': job.get('application_status', 'discovered'),
+                        'priority_level': job.get('priority_level', 3),
+                        # Immigration and location fields
                         'city_tags': job.get('city_tags', ''),
                         'province_code': job.get('province_code', ''),
                         'is_rcip_city': job.get('is_rcip_city', 0),
                         'is_immigration_priority': job.get('is_immigration_priority', 0),
-                        'status': self._determine_job_status(job),
-                        'salary': self._format_salary(job.get('salary_range')),
-                        'match_score': job.get('fit_score', 0) or self._calculate_match_score(job),
-                        # AI Strategy Phase 2 fields
-                        'semantic_score': job.get('semantic_score', 0.0),
-                        'cache_status': job.get('cache_status', 'unknown'),
-                        'profile_similarity': job.get(
-                            'profile_similarity', 0.0
-                        ),
-                        'embedding_cached': job.get('embedding_cached', 0),
-                        'html_cached': job.get('html_cached', 0),
-                        'posted_date': self._format_date(
-                            job.get('date_posted') or job.get('scraped_at')
-                        ),
-                        'created_at': job.get('scraped_at',
-                                              datetime.now().isoformat()),
-                        'url': job.get('url', '') or job.get('job_url', ''),
-                        'job_url': (job.get('job_url', '') or
-                                    job.get('url', '')),
-                        'summary': job.get('summary', ''),
-                        'description': job.get('description', ''),
-                        'site': job.get('site', ''),
+                        'location_type': job.get('location_type', 'onsite'),
+                        'location_category': job.get('location_category', 'unknown'),
+                        # RCIP indicator for display
+                        'rcip_indicator': '🇨🇦 RCIP' if job.get('is_rcip_city', 0) else '',
+                        'immigration_priority': '⭐ Priority' if job.get('is_immigration_priority', 0) else '',
                         # View job link that opens in new tab
                         'view_job': (
-                            f"[🔗 View Job]({job.get('job_url') or job.get('url','')})"  # noqa
-                            if (job.get('job_url') or job.get('url'))
+                            f"[🔗 View Job]({job.get('url', '')})"
+                            if job.get('url')
                             else 'No URL'
                         )
                     }
                     for job in jobs
                 ])
-                logger.info(f"Loaded {len(df)} jobs from database "
-                            f"for {profile_name}")
+                logger.info(f"Successfully loaded {len(df)} jobs from DuckDB for {profile_name}")
                 return df
             else:
-                logger.info(f"No jobs found in {profile_name} database")
+                logger.warning(f"No jobs found in DuckDB for profile {profile_name}")
                 return self._create_empty_dataframe()
                 
-        except ImportError as e:
-            logger.error(f"Database import failed: {e}")
-            logger.info("Database not available - "
-                        "please ensure profile exists")
-            return self._create_empty_dataframe()
         except Exception as e:
-            logger.error(f"Error loading jobs data: {e}")
+            logger.error(f"Error loading jobs data from DuckDB: {e}")
+            logger.exception("Full traceback:")
+            
+            # Fallback: try to get job count to verify database exists
+            try:
+                count_query = "SELECT COUNT(*) FROM jobs WHERE profile_name = ?"
+                count_result = DuckDBConnectionManager.execute_query(count_query, [profile_name], profile_name, read_only=True)
+                job_count = count_result[0][0] if count_result else 0
+                logger.info(f"Database accessible, found {job_count} jobs for {profile_name}")
+                
+                if job_count == 0:
+                    logger.warning(f"Database is empty for profile {profile_name} - no jobs have been scraped yet")
+                
+            except Exception as e2:
+                logger.error(f"Cannot access database at all: {e2}")
+            
             return self._create_empty_dataframe()
     
     def _cleanup_old_jobs(self, db):
@@ -166,7 +177,10 @@ class DataLoader:
         return pd.DataFrame(columns=[
             'id', 'title', 'company', 'location', 'status', 'salary',
             'match_score', 'posted_date', 'created_at', 'url', 'job_url',
-            'summary', 'description', 'site', 'view_job'
+            'summary', 'description', 'site', 'job_type', 'skills', 'keywords',
+            'application_status', 'priority_level', 'city_tags', 'province_code',
+            'is_rcip_city', 'is_immigration_priority', 'location_type', 
+            'location_category', 'rcip_indicator', 'immigration_priority', 'view_job'
         ])
     
     def get_processing_status(self, profile_name='Nirajan'):
@@ -292,47 +306,46 @@ class DataLoader:
         return pd.DataFrame(sample_data)
     
     def _determine_job_status(self, job):
-        """Determine job status based on processing indicators"""
-        # Check if job has been processed by looking for processing indicators
-        has_fit_score = job.get('fit_score') is not None
-        has_compatibility_score = (job.get('compatibility_score') is not None 
-                                   and job.get('compatibility_score') > 0)
-        has_analysis_data = (job.get('analysis_data') is not None 
-                             and job.get('analysis_data') != '')
-        has_processed_at = job.get('processed_at') is not None
-        has_processing_method = (job.get('processing_method') is not None 
-                                 and job.get('processing_method') != 'unknown')
+        """Determine job status based on DuckDB schema"""
+        # First check application_status (new field in DuckDB)
+        app_status = job.get('application_status', '')
+        if app_status and app_status != 'discovered':
+            return self._map_application_status(app_status)
         
-        # If any processing indicators are present, job is processed
-        is_processed = (has_fit_score or has_compatibility_score 
-                        or has_analysis_data or has_processed_at 
-                        or has_processing_method)
-        
-        if is_processed:
-            # Check if applied
-            is_applied = (job.get('applied') or 
-                          job.get('application_status') == 'applied')
-            if is_applied:
-                return 'applied'
-            return 'processed'
-        
-        # Otherwise use the status mapping
-        return self._map_status(job.get('status', 'new'))
+        # Then check regular status field
+        status = job.get('status', 'new')
+        return self._map_status(status)
     
     def _map_status(self, status):
         """Map database status to dashboard status"""
         status_mapping = {
-            'new': 'scraped',
-            'scraped': 'scraped',
-            'processed': 'processed',
-            'ready_to_apply': 'processed',
+            'new': 'new',
+            'scraped': 'new', 
+            'processed': 'ready_to_apply',
+            'ready_to_apply': 'ready_to_apply',
             'applied': 'applied',
-            'reviewing': 'processed'
+            'reviewing': 'needs_review',
+            'interview': 'interview'
         }
-        return status_mapping.get(status, 'scraped')
+        return status_mapping.get(status, 'new')
+    
+    def _map_application_status(self, app_status):
+        """Map application_status to dashboard status"""
+        app_status_mapping = {
+            'discovered': 'new',
+            'interested': 'needs_review',
+            'applied': 'applied',
+            'phone_screen': 'interview',
+            'technical_interview': 'interview',
+            'onsite': 'interview',
+            'offer': 'offer',
+            'rejected': 'rejected',
+            'accepted': 'accepted'
+        }
+        return app_status_mapping.get(app_status, 'new')
     
     def _calculate_match_score(self, job):
-        """Calculate a match score for a job"""
+        """Calculate a match score for a job based on user profile"""
         # Check if job has been processed with fit_score
         if job.get('fit_score') is not None:
             try:
@@ -349,31 +362,54 @@ class DataLoader:
             except (ValueError, TypeError):
                 pass
         
-        if job.get('compatibility_score') is not None:
-            try:
-                compatibility = float(job['compatibility_score'])
-                return min(max(int(compatibility * 100), 0), 100)
-            except (ValueError, TypeError):
-                pass
-        
-        # Simple scoring based on available data
-        score = 70  # Base score
+        # Enhanced scoring based on Data Analyst profile
+        score = 50  # Base score
         
         if job.get('title'):
             title = job['title'].lower()
-            # Boost for relevant keywords
-            if any(keyword in title for keyword in
-                   ['senior', 'lead', 'engineer', 'developer']):
-                score += 15
+            
+            # High relevance for Data Analyst profile
+            data_keywords = ['data analyst', 'data scientist', 'business analyst', 
+                           'research analyst', 'quantitative analyst']
+            if any(keyword in title for keyword in data_keywords):
+                score += 30
+            
+            # Medium relevance
+            tech_keywords = ['python', 'sql', 'analyst', 'data', 'analytics']
+            if any(keyword in title for keyword in tech_keywords):
+                score += 20
+            
+            # Lower relevance for pure development roles
+            dev_keywords = ['software engineer', 'full stack', 'backend', 'frontend']
+            if any(keyword in title for keyword in dev_keywords):
+                score -= 10  # Reduce score for non-analyst roles
+            
+            # Seniority boost
+            if any(keyword in title for keyword in ['senior', 'lead', 'principal']):
+                score += 10
         
+        # Description analysis
+        if job.get('description'):
+            description = job['description'].lower()
+            
+            # Look for data analysis skills
+            analysis_skills = ['python', 'sql', 'pandas', 'numpy', 'tableau', 
+                             'power bi', 'excel', 'statistics', 'machine learning']
+            skill_matches = sum(1 for skill in analysis_skills if skill in description)
+            score += min(skill_matches * 3, 15)  # Max 15 points for skills
+        
+        # Location preferences
         if job.get('location'):
             location = job['location'].lower()
             # Boost for preferred locations
-            if any(loc in location for loc in
-                   ['remote', 'toronto', 'vancouver']):
-                score += 10
+            if any(loc in location for loc in ['remote', 'toronto', 'vancouver', 'canada']):
+                score += 5
         
-        return min(score, 100)
+        # RCIP city bonus
+        if job.get('is_rcip_city', 0):
+            score += 10
+        
+        return min(max(score, 0), 100)
     
     def _create_action_buttons(self, job_id):
         """Create action buttons for table display"""

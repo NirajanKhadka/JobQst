@@ -3,12 +3,12 @@ DuckDB Database Implementation for JobQst
 Optimized analytics database with minimal schema (17 essential fields).
 
 Performance Benefits:
-- 10-100x faster than SQLite for analytical queries
+- Columnar storage optimized for analytical queries
 - File-based deployment (no Docker required)
-- Optimized for aggregations, filtering, and analytics
-- Columnar storage for dashboard performance
+- Vectorized operations for aggregations, filtering, and analytics
+- Optimized for dashboard performance with minimal memory footprint
 
-Schema: Reduced from 30 fields to 17 essential fields based on dashboard.
+Schema: Reduced from 30 fields to 17 essential fields based on dashboard needs.
 """
 
 import logging
@@ -48,13 +48,29 @@ class DuckDBJobDatabase:
         # Ensure directory exists
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         
-        # Connect to DuckDB
-        self.conn = duckdb.connect(self.db_path)
+        # Initialize connection as None - will connect when needed
+        self.conn = None
         
-        # Create table with minimal schema (17 essential fields)
+        # Connect and create table
+        self._ensure_connection()
         self._create_table()
         
         logger.info(f"DuckDB database initialized: {self.db_path}")
+    
+    def _ensure_connection(self):
+        """Ensure database connection is active"""
+        if self.conn is None:
+            try:
+                self.conn = duckdb.connect(self.db_path)
+            except Exception as e:
+                logger.error(f"Failed to connect to DuckDB: {e}")
+                # Try read-only connection for dashboard
+                try:
+                    self.conn = duckdb.connect(self.db_path, read_only=True)
+                    logger.info("Connected to DuckDB in read-only mode")
+                except Exception as e2:
+                    logger.error(f"Failed to connect in read-only mode: {e2}")
+                    raise e2
     
     def _create_table(self):
         """Create jobs table with enhanced schema for job tracking."""
@@ -77,6 +93,13 @@ class DuckDBJobDatabase:
             status VARCHAR DEFAULT 'new',
             fit_score FLOAT,
             job_type VARCHAR,
+            -- Immigration and location fields
+            city_tags VARCHAR,
+            province_code VARCHAR,
+            is_rcip_city INTEGER DEFAULT 0,
+            is_immigration_priority INTEGER DEFAULT 0,
+            location_type VARCHAR, -- remote, hybrid, onsite
+            location_category VARCHAR, -- urban, rural, etc
             -- Enhanced job tracking fields
             application_status VARCHAR DEFAULT 'discovered',
             -- Status options: discovered, interested, applied, phone_screen,
@@ -199,8 +222,30 @@ class DuckDBJobDatabase:
         );
         """
         
+        # Manual review queue table
+        manual_review_sql = """
+        CREATE TABLE IF NOT EXISTS manual_review_queue (
+            id INTEGER PRIMARY KEY,
+            job_id VARCHAR NOT NULL,
+            review_type VARCHAR NOT NULL, -- duplicate, low_quality, etc
+            priority INTEGER DEFAULT 3, -- 1-5 scale (1=highest priority)
+            status VARCHAR DEFAULT 'pending', -- pending, in_progress, resolved
+            description TEXT,
+            context_data TEXT, -- JSON string with additional context
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            assigned_to VARCHAR,
+            reviewer VARCHAR,
+            reviewed_at TIMESTAMP,
+            resolution TEXT,
+            FOREIGN KEY (job_id) REFERENCES jobs(id)
+        );
+        """
+        
         # Execute table creation
-        tables = [notes_sql, interviews_sql, communications_sql, documents_sql]
+        tables = [
+            notes_sql, interviews_sql, communications_sql,
+            documents_sql, manual_review_sql
+        ]
         for sql in tables:
             try:
                 self.conn.execute(sql)
@@ -217,6 +262,10 @@ class DuckDBJobDatabase:
             "ON job_communications(job_id);",
             "CREATE INDEX IF NOT EXISTS idx_job_documents_job_id "
             "ON job_documents(job_id);",
+            "CREATE INDEX IF NOT EXISTS idx_manual_review_job_id "
+            "ON manual_review_queue(job_id);",
+            "CREATE INDEX IF NOT EXISTS idx_manual_review_status "
+            "ON manual_review_queue(status);",
         ]
         
         for index_sql in tracking_indexes:
@@ -225,11 +274,15 @@ class DuckDBJobDatabase:
             except Exception as e:
                 logger.warning(f"Tracking index creation warning: {e}")
     
-    def add_job(self, job_data: JobData) -> bool:
+    def add_job(self, job_data) -> bool:
         """Add a single job to the database."""
         try:
-            # Convert JobData to minimal field dict
-            job_dict = self._job_data_to_minimal_dict(job_data)
+            # Handle both JobData objects and dictionaries
+            if isinstance(job_data, dict):
+                job_dict = self._dict_to_minimal_dict(job_data)
+            else:
+                # Assume it's a JobData object
+                job_dict = self._job_data_to_minimal_dict(job_data)
             
             # Check if job already exists
             if self._job_exists(job_dict['id']):
@@ -256,15 +309,19 @@ class DuckDBJobDatabase:
         """Save a job to the database (alias for add_job for compatibility)"""
         return self.add_job(job_data)
     
-    def add_jobs_batch(self, jobs_data: List[JobData]) -> int:
+    def add_jobs_batch(self, jobs_data) -> int:
         """Add multiple jobs efficiently using pandas."""
         if not jobs_data:
             return 0
             
         try:
-            # Convert to minimal dicts
-            job_dicts = [self._job_data_to_minimal_dict(job)
-                         for job in jobs_data]
+            # Convert to minimal dicts - handle both JobData objects and dictionaries
+            job_dicts = []
+            for job in jobs_data:
+                if isinstance(job, dict):
+                    job_dicts.append(self._dict_to_minimal_dict(job))
+                else:
+                    job_dicts.append(self._job_data_to_minimal_dict(job))
             
             # Create DataFrame
             df = pd.DataFrame(job_dicts)
@@ -301,6 +358,8 @@ class DuckDBJobDatabase:
                  ) -> List[Dict[str, Any]]:
         """Get jobs with optional filtering."""
         try:
+            self._ensure_connection()
+            
             query = "SELECT * FROM jobs WHERE 1=1"
             params = []
             
@@ -453,6 +512,8 @@ class DuckDBJobDatabase:
     def get_job_count(self, profile_name: Optional[str] = None) -> int:
         """Get total job count."""
         try:
+            self._ensure_connection()
+            
             if profile_name or self.profile_name:
                 result = self.conn.execute(
                     "SELECT COUNT(*) FROM jobs WHERE profile_name = ?", 
@@ -481,7 +542,8 @@ class DuckDBJobDatabase:
                 COUNT(*) as total_jobs,
                 COUNT(DISTINCT company) as unique_companies,
                 COUNT(DISTINCT source) as unique_sites,
-                COUNT(CASE WHEN created_at > datetime('now', '-1 day') THEN 1 END) as recent_jobs,
+                COUNT(CASE WHEN created_at > (CURRENT_TIMESTAMP - INTERVAL 1 DAY)
+                      THEN 1 END) as recent_jobs,
                 MAX(created_at) as last_created
             FROM jobs {profile_filter}
             """
@@ -540,6 +602,53 @@ class DuckDBJobDatabase:
             self.conn.close()
             logger.info("DuckDB connection closed")
     
+    def _dict_to_minimal_dict(self, job_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert job dictionary to minimal field dictionary for database."""
+        # Generate ID if not present
+        job_id = job_dict.get('id')
+        if not job_id:
+            title = job_dict.get('title', 'Unknown')
+            company = job_dict.get('company', 'Unknown')
+            location = job_dict.get('location', 'Unknown')
+            job_id = f"{company}_{title}_{location}".replace(" ", "_").lower()
+        
+        # Convert posted_date to proper format
+        date_posted = job_dict.get('date_posted') or job_dict.get('posted_date')
+        if isinstance(date_posted, str):
+            try:
+                date_posted = datetime.strptime(date_posted, '%Y-%m-%d').date()
+            except:
+                date_posted = None
+        elif isinstance(date_posted, datetime):
+            date_posted = date_posted.date()
+        
+        return {
+            'id': job_id,
+            'title': job_dict.get('title', 'Unknown Title'),
+            'company': job_dict.get('company', 'Unknown Company'),
+            'location': job_dict.get('location', ''),
+            'salary_range': job_dict.get('salary') or job_dict.get('salary_range', ''),
+            'description': job_dict.get('description', ''),
+            'summary': job_dict.get('summary', ''),
+            'skills': job_dict.get('skills', ''),
+            'keywords': job_dict.get('keywords', ''),
+            'url': job_dict.get('url') or job_dict.get('job_url', ''),
+            'source': job_dict.get('site') or job_dict.get('source', 'jobspy'),
+            'date_posted': date_posted,
+            'created_at': datetime.now(),
+            'profile_name': self.profile_name or job_dict.get('profile_name', 'default'),
+            'status': job_dict.get('status', 'new'),
+            'fit_score': job_dict.get('fit_score'),
+            'job_type': job_dict.get('job_type', ''),
+            # Immigration and location fields
+            'city_tags': job_dict.get('city_tags', ''),
+            'province_code': job_dict.get('province_code', ''),
+            'is_rcip_city': job_dict.get('is_rcip_city', 0),
+            'is_immigration_priority': job_dict.get('is_immigration_priority', 0),
+            'location_type': job_dict.get('location_type', 'onsite'),
+            'location_category': job_dict.get('location_category', 'unknown')
+        }
+    
     def _job_data_to_minimal_dict(self, job_data: JobData) -> Dict[str, Any]:
         """Convert JobData to minimal field dictionary."""
         # Generate ID if not present
@@ -591,3 +700,260 @@ class DuckDBJobDatabase:
         query = f"SELECT id FROM jobs WHERE id IN ({placeholders})"
         result = self.conn.execute(query, job_ids).fetchall()
         return [row[0] for row in result]
+
+    def get_jobs_for_processing(self, limit: int = 10, 
+                               profile_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get jobs that need processing (for pipeline testing and processing)."""
+        try:
+            self._ensure_connection()
+            
+            query = """
+            SELECT * FROM jobs 
+            WHERE 1=1
+            """
+            params = []
+            
+            # Add profile filter
+            if profile_name:
+                query += " AND profile_name = ?"
+                params.append(profile_name)
+            elif self.profile_name:
+                query += " AND profile_name = ?"
+                params.append(self.profile_name)
+            
+            # Prioritize jobs that haven't been processed yet
+            query += """
+            AND (fit_score IS NULL OR fit_score = 0)
+            ORDER BY created_at DESC
+            LIMIT ?
+            """
+            params.append(limit)
+            
+            result = self.conn.execute(query, params).fetchall()
+            columns = [desc[0] for desc in self.conn.description]
+            
+            jobs = [dict(zip(columns, row)) for row in result]
+            logger.info(f"Retrieved {len(jobs)} jobs for processing")
+            return jobs
+            
+        except Exception as e:
+            logger.error(f"Error getting jobs for processing: {e}")
+            return []
+    
+    def update_job_processing_status(self, job_id: str, 
+                                   processing_data: Dict[str, Any]) -> bool:
+        """Update job with processing results."""
+        try:
+            # Check if job exists
+            if not self._job_exists(job_id):
+                logger.warning(f"Job {job_id} not found for processing update")
+                return False
+            
+            # Build update query based on provided processing data
+            update_fields = []
+            update_values = []
+            
+            # Handle fit_score
+            if 'fit_score' in processing_data:
+                update_fields.append("fit_score = ?")
+                update_values.append(processing_data['fit_score'])
+            
+            # Handle status
+            if 'status' in processing_data:
+                update_fields.append("status = ?")
+                update_values.append(processing_data['status'])
+            
+            # Handle summary
+            if 'summary' in processing_data:
+                update_fields.append("summary = ?")
+                update_values.append(processing_data['summary'])
+            
+            # Handle skills
+            if 'skills' in processing_data:
+                update_fields.append("skills = ?")
+                update_values.append(processing_data['skills'])
+            
+            # Always update last_updated
+            update_fields.append("last_updated = ?")
+            update_values.append(datetime.now())
+            
+            if not update_fields:
+                logger.warning("No fields to update in processing data")
+                return False
+            
+            # Add job_id for WHERE clause
+            update_values.append(job_id)
+            
+            # Execute update
+            update_sql = f"""
+            UPDATE jobs 
+            SET {', '.join(update_fields)}
+            WHERE id = ?
+            """
+            
+            self.conn.execute(update_sql, update_values)
+            logger.debug(f"Updated processing data for job {job_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating job processing status: {e}")
+            return False
+
+    def update_job_analysis(self, job_id: str,
+                            analysis_data: Dict[str, Any]) -> bool:
+        """Update job with analysis results."""
+        try:
+            # Check if job exists
+            if not self._job_exists(job_id):
+                logger.warning(f"Job {job_id} not found for analysis update")
+                return False
+            
+            # Build update query based on provided analysis data
+            update_fields = []
+            update_values = []
+            
+            # Handle fit_score (main compatibility score)
+            if 'fit_score' in analysis_data:
+                update_fields.append("fit_score = ?")
+                update_values.append(analysis_data['fit_score'])
+            
+            # Handle status
+            if 'status' in analysis_data:
+                update_fields.append("status = ?")
+                update_values.append(analysis_data['status'])
+            
+            # Handle summary
+            if 'summary' in analysis_data:
+                update_fields.append("summary = ?")
+                update_values.append(analysis_data['summary'])
+            
+            # Handle skills
+            if 'skills' in analysis_data:
+                update_fields.append("skills = ?")
+                update_values.append(analysis_data['skills'])
+            
+            # Always update last_updated
+            update_fields.append("last_updated = ?")
+            update_values.append(datetime.now())
+            
+            if not update_fields:
+                logger.warning("No fields to update in analysis data")
+                return False
+            
+            # Add job_id for WHERE clause
+            update_values.append(job_id)
+            
+            # Execute update
+            update_sql = f"""
+            UPDATE jobs 
+            SET {', '.join(update_fields)}
+            WHERE id = ?
+            """
+            
+            self.conn.execute(update_sql, update_values)
+            logger.debug(f"Updated analysis data for job {job_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating job analysis: {e}")
+            return False
+            
+            # Handle match_score (for compatibility)
+            if 'match_score' in analysis_data:
+                update_fields.append("match_score = ?")
+                update_values.append(analysis_data['match_score'])
+            
+            # Add job_id for WHERE clause
+            update_values.append(job_id)
+            
+            if not update_fields:
+                logger.warning("No valid analysis fields provided for update")
+                return False
+            
+            # Add timestamp
+            update_fields.append("last_updated = current_timestamp")
+            
+            # Execute update
+            query = f"""
+                UPDATE jobs
+                SET {', '.join(update_fields)}
+                WHERE id = ?
+            """
+            
+            self.conn.execute(query, update_values)
+            self.conn.commit()
+            
+            logger.debug(f"Updated job {job_id} with analysis data")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating job analysis for {job_id}: {e}")
+            self.conn.rollback()
+            return False
+
+    def get_job_by_url(self, url: str) -> Optional[Dict[str, Any]]:
+        """Get a job by its URL to check for duplicates."""
+        try:
+            if not url:
+                return None
+                
+            result = self.conn.execute(
+                "SELECT * FROM jobs WHERE url = ? LIMIT 1",
+                [url]
+            ).fetchone()
+            
+            if result:
+                # Convert to dictionary using column names
+                columns = [desc[0] for desc in self.conn.description]
+                return dict(zip(columns, result))
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting job by URL '{url}': {e}")
+            return None
+    
+    def update_job_metadata(self, job_id: str,
+                            metadata: Dict[str, Any]) -> bool:
+        """Update job metadata fields."""
+        try:
+            if not metadata:
+                return True
+                
+            # Build dynamic update query based on provided metadata
+            set_clauses = []
+            values = []
+            
+            # Map of allowed metadata fields to actual DB columns
+            allowed_mappings = {
+                'updated_at': 'last_updated',
+                'last_updated': 'last_updated',
+                'status': 'status',
+                'application_status': 'application_status',
+                'source': 'source'
+                # Note: search_term and search_location are not in the
+                # minimal DuckDB schema, so they are ignored
+            }
+            
+            for key, value in metadata.items():
+                if key in allowed_mappings:
+                    column_name = allowed_mappings[key]
+                    set_clauses.append(f"{column_name} = ?")
+                    values.append(value)
+            
+            if not set_clauses:
+                logger.debug(f"No valid metadata fields to update "
+                             f"for job {job_id} (fields provided: "
+                             f"{list(metadata.keys())})")
+                return True
+            
+            query = f"UPDATE jobs SET {', '.join(set_clauses)} WHERE id = ?"
+            values.append(job_id)
+            
+            self.conn.execute(query, values)
+            logger.debug(f"Updated metadata for job {job_id}: {metadata}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating job metadata for {job_id}: {e}")
+            return False
