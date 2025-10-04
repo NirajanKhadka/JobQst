@@ -28,4 +28,3 @@ class OrchestratorConfig:
 class DiscoveryResult:
     total_jobs: int
     dataframe_summary: Dict[str, Any]
-

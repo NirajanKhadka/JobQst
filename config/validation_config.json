@@ -1,0 +1,335 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Validation Configuration - Rules, patterns, and thresholds for data validation and quality assurance",
+  "version": "1.0.0",
+  "last_updated": "2025-01-13",
+  
+  "location_validation": {
+    "description": "Patterns and rules for validating location data",
+    "city_state_patterns": {
+      "north_america": {
+        "pattern": "^[A-Za-z\\s]+,\\s*[A-Z]{2}$",
+        "description": "City, State/Province (e.g., Toronto, ON)",
+        "confidence": 0.95
+      },
+      "canada": {
+        "pattern": "^[A-Za-z\\s]+,\\s*[A-Za-z\\s]+$",
+        "description": "City, Province (e.g., Toronto, Ontario)",
+        "confidence": 0.90
+      },
+      "international": {
+        "pattern": "^[A-Za-z\\s]+,\\s*[A-Za-z\\s]+,\\s*[A-Za-z\\s]+$",
+        "description": "City, State/Province, Country",
+        "confidence": 0.85
+      }
+    },
+    "remote_keywords": {
+      "patterns": ["remote", "work from home", "wfh", "telecommute", "virtual", "distributed", "anywhere"],
+      "confidence": 1.0
+    },
+    "hybrid_keywords": {
+      "patterns": ["hybrid", "flexible", "part remote", "semi-remote", "occasional remote"],
+      "confidence": 0.95
+    },
+    "min_length": 3,
+    "max_length": 100,
+    "require_country": false,
+    "normalize_case": true
+  },
+  
+  "email_validation": {
+    "description": "Email address validation rules",
+    "pattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$",
+    "blacklist_domains": [
+      "example.com",
+      "test.com",
+      "tempmail.com",
+      "guerrillamail.com",
+      "10minutemail.com",
+      "noreply.com"
+    ],
+    "whitelist_domains": [],
+    "max_length": 254,
+    "require_tld": true,
+    "allow_subdomains": true,
+    "confidence": 0.98
+  },
+  
+  "phone_validation": {
+    "description": "Phone number validation patterns by region",
+    "north_america": {
+      "pattern": "^\\+?1?[-\\s.]?\\(?\\d{3}\\)?[-\\s.]?\\d{3}[-\\s.]?\\d{4}$",
+      "format": "+1 (XXX) XXX-XXXX",
+      "confidence": 0.95
+    },
+    "international": {
+      "pattern": "^\\+?\\d{1,3}[-\\s.]?\\(?\\d{1,4}\\)?[-\\s.]?\\d{1,4}[-\\s.]?\\d{1,9}$",
+      "format": "+XX XXX XXX XXXX",
+      "confidence": 0.85
+    },
+    "min_digits": 10,
+    "max_digits": 15,
+    "allow_extensions": true,
+    "normalize_format": true
+  },
+  
+  "url_validation": {
+    "description": "URL validation rules for job postings and company websites",
+    "pattern": "^https?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(?:/[^\\s]*)?$",
+    "require_https": false,
+    "blacklist_domains": [
+      "spam.com",
+      "phishing.com"
+    ],
+    "allowed_protocols": ["http", "https"],
+    "max_length": 2048,
+    "validate_tld": true,
+    "confidence": 0.90
+  },
+  
+  "deduplication_thresholds": {
+    "description": "Similarity thresholds for duplicate detection",
+    "title_similarity": {
+      "threshold": 0.85,
+      "method": "fuzzy",
+      "case_sensitive": false,
+      "normalize_whitespace": true
+    },
+    "company_similarity": {
+      "threshold": 0.90,
+      "method": "fuzzy",
+      "case_sensitive": false,
+      "normalize_whitespace": true
+    },
+    "description_similarity": {
+      "threshold": 0.75,
+      "method": "jaccard",
+      "min_tokens": 50
+    },
+    "url_match": {
+      "confidence": 1.0,
+      "exact_match": true
+    },
+    "fuzzy_match_min": 0.75,
+    "exact_match_boost": 1.2,
+    "location_weight": 0.15,
+    "title_weight": 0.35,
+    "company_weight": 0.30,
+    "description_weight": 0.20
+  },
+  
+  "matching_confidence": {
+    "description": "Confidence level thresholds for matching operations",
+    "very_high": {
+      "min": 0.90,
+      "label": "Very High Confidence",
+      "action": "auto_accept"
+    },
+    "high": {
+      "min": 0.85,
+      "label": "High Confidence",
+      "action": "accept"
+    },
+    "medium": {
+      "min": 0.65,
+      "label": "Medium Confidence",
+      "action": "review"
+    },
+    "low": {
+      "min": 0.45,
+      "label": "Low Confidence",
+      "action": "manual_review"
+    },
+    "very_low": {
+      "min": 0.0,
+      "label": "Very Low Confidence",
+      "action": "reject"
+    }
+  },
+  
+  "data_quality_rules": {
+    "description": "Rules for assessing data quality and completeness",
+    "required_fields": {
+      "job_title": {
+        "required": true,
+        "min_length": 3,
+        "max_length": 200,
+        "weight": 0.25
+      },
+      "company": {
+        "required": true,
+        "min_length": 2,
+        "max_length": 150,
+        "weight": 0.20
+      },
+      "description": {
+        "required": true,
+        "min_length": 50,
+        "max_length": 50000,
+        "weight": 0.30
+      },
+      "location": {
+        "required": false,
+        "min_length": 3,
+        "max_length": 100,
+        "weight": 0.15
+      },
+      "salary": {
+        "required": false,
+        "weight": 0.10
+      }
+    },
+    "completeness_thresholds": {
+      "excellent": 0.95,
+      "good": 0.80,
+      "acceptable": 0.60,
+      "poor": 0.40
+    },
+    "min_quality_score": 0.60
+  },
+  
+  "text_validation": {
+    "description": "Text content validation rules",
+    "min_word_count": {
+      "job_title": 2,
+      "description": 20,
+      "summary": 10
+    },
+    "max_word_count": {
+      "job_title": 20,
+      "description": 10000,
+      "summary": 500
+    },
+    "prohibited_content": {
+      "spam_keywords": [
+        "click here",
+        "buy now",
+        "limited time",
+        "act fast",
+        "guaranteed",
+        "free money"
+      ],
+      "offensive_language": []
+    },
+    "language_detection": {
+      "enabled": true,
+      "supported_languages": ["en", "fr"],
+      "confidence_threshold": 0.80
+    }
+  },
+  
+  "skill_validation": {
+    "description": "Skill extraction validation rules",
+    "min_skills": 1,
+    "max_skills": 50,
+    "min_skill_length": 2,
+    "max_skill_length": 50,
+    "remove_duplicates": true,
+    "normalize_case": true,
+    "validate_against_database": true,
+    "confidence_threshold": 0.70
+  },
+  
+  "experience_validation": {
+    "description": "Experience requirement validation",
+    "min_years": 0,
+    "max_years": 50,
+    "unrealistic_threshold": 30,
+    "allow_ranges": true,
+    "validate_level_consistency": true
+  },
+  
+  "salary_validation": {
+    "description": "Salary data validation rules (references salary_config.json)",
+    "min_realistic_salary": 15000,
+    "max_realistic_salary": 1000000,
+    "min_hourly_rate": 7.25,
+    "max_hourly_rate": 500,
+    "require_currency": false,
+    "validate_against_market": true,
+    "market_variance_tolerance": 0.30,
+    "flag_outliers": true
+  },
+  
+  "date_validation": {
+    "description": "Date and timestamp validation",
+    "min_date": "2020-01-01",
+    "max_future_days": 365,
+    "require_timezone": false,
+    "accepted_formats": [
+      "YYYY-MM-DD",
+      "YYYY-MM-DDTHH:MM:SS",
+      "YYYY-MM-DDTHH:MM:SS.sssZ"
+    ]
+  },
+  
+  "application_validation": {
+    "description": "Application deadline and status validation",
+    "max_days_open": 90,
+    "warn_closing_soon_days": 7,
+    "expired_grace_period_days": 3,
+    "valid_statuses": [
+      "open",
+      "closed",
+      "on_hold",
+      "filled",
+      "cancelled"
+    ]
+  },
+  
+  "source_validation": {
+    "description": "Job source and scraping validation",
+    "trusted_sources": [
+      "indeed.com",
+      "linkedin.com",
+      "glassdoor.com",
+      "ziprecruiter.com",
+      "monster.com",
+      "careerbuilder.com"
+    ],
+    "require_source_url": true,
+    "validate_source_reachability": false,
+    "max_source_age_days": 30
+  },
+  
+  "html_validation": {
+    "description": "HTML content validation and sanitization",
+    "strip_tags": true,
+    "allowed_tags": [
+      "p", "br", "ul", "ol", "li", "strong", "em", "h1", "h2", "h3", "h4", "h5", "h6"
+    ],
+    "remove_scripts": true,
+    "remove_styles": true,
+    "decode_entities": true,
+    "normalize_whitespace": true
+  },
+  
+  "batch_validation": {
+    "description": "Batch processing validation settings",
+    "max_batch_size": 1000,
+    "min_batch_size": 1,
+    "validation_timeout_seconds": 300,
+    "continue_on_error": true,
+    "error_threshold_percent": 10,
+    "log_validation_errors": true
+  },
+  
+  "validation_actions": {
+    "description": "Actions to take based on validation results",
+    "on_critical_failure": "reject",
+    "on_warning": "flag",
+    "on_success": "accept",
+    "auto_fix_enabled": true,
+    "auto_fix_confidence_min": 0.85,
+    "manual_review_queue": true
+  },
+  
+  "performance_settings": {
+    "description": "Performance settings for validation operations",
+    "enable_caching": true,
+    "cache_ttl_seconds": 3600,
+    "parallel_validation": true,
+    "max_parallel_workers": 4,
+    "validation_timeout_ms": 5000
+  }
+}

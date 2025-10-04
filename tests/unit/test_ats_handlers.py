@@ -25,7 +25,7 @@ class TestWorkdayHandler:
         page = AsyncMock(spec=Page)
         context = AsyncMock(spec=BrowserContext)
         page.context = context
-        
+
         # Mock profile data
         context._profile = {
             "name": "John Doe",
@@ -37,7 +37,7 @@ class TestWorkdayHandler:
         }
         context._resume_path = "/path/to/resume.pdf"
         context._cover_letter_path = "/path/to/cover_letter.pdf"
-        
+
         return page
 
     @pytest.fixture
@@ -55,14 +55,16 @@ class TestWorkdayHandler:
     async def test_apply_workday_success_path(self, mock_page, sample_job):
         """Test successful Workday application."""
         # Arrange
-        with patch('src.ats.workday_handler.find_and_click_apply_button', return_value=True), \
-             patch('src.ats.workday_handler.check_for_captcha', return_value=False), \
-             patch('src.ats.workday_handler.check_for_login_required', return_value=False), \
-             patch('src.ats.workday_handler.fill_form_fields', return_value=3), \
-             patch('src.ats.workday_handler.upload_resume', return_value=True), \
-             patch('src.ats.workday_handler.upload_cover_letter', return_value=True), \
-             patch('src.ats.workday_handler.click_next_or_continue', return_value=False), \
-             patch('src.ats.workday_handler.click_submit_button', return_value=True):
+        with (
+            patch("src.ats.workday_handler.find_and_click_apply_button", return_value=True),
+            patch("src.ats.workday_handler.check_for_captcha", return_value=False),
+            patch("src.ats.workday_handler.check_for_login_required", return_value=False),
+            patch("src.ats.workday_handler.fill_form_fields", return_value=3),
+            patch("src.ats.workday_handler.upload_resume", return_value=True),
+            patch("src.ats.workday_handler.upload_cover_letter", return_value=True),
+            patch("src.ats.workday_handler.click_next_or_continue", return_value=False),
+            patch("src.ats.workday_handler.click_submit_button", return_value=True),
+        ):
 
             # Act
             result = await apply_workday(mock_page, sample_job)
@@ -74,7 +76,7 @@ class TestWorkdayHandler:
     async def test_apply_workday_no_apply_button(self, mock_page, sample_job):
         """Test Workday application when no apply button is found."""
         # Arrange
-        with patch('src.ats.workday_handler.find_and_click_apply_button', return_value=False):
+        with patch("src.ats.workday_handler.find_and_click_apply_button", return_value=False):
             # Act
             result = await apply_workday(mock_page, sample_job)
 
@@ -85,8 +87,10 @@ class TestWorkdayHandler:
     async def test_apply_workday_captcha_detected(self, mock_page, sample_job):
         """Test Workday application when CAPTCHA is detected."""
         # Arrange
-        with patch('src.ats.workday_handler.find_and_click_apply_button', return_value=True), \
-             patch('src.ats.workday_handler.check_for_captcha', return_value=True):
+        with (
+            patch("src.ats.workday_handler.find_and_click_apply_button", return_value=True),
+            patch("src.ats.workday_handler.check_for_captcha", return_value=True),
+        ):
 
             # Act
             result = await apply_workday(mock_page, sample_job)
@@ -98,9 +102,11 @@ class TestWorkdayHandler:
     async def test_apply_workday_login_required(self, mock_page, sample_job):
         """Test Workday application when login is required."""
         # Arrange
-        with patch('src.ats.workday_handler.find_and_click_apply_button', return_value=True), \
-             patch('src.ats.workday_handler.check_for_captcha', return_value=False), \
-             patch('src.ats.workday_handler.check_for_login_required', return_value=True):
+        with (
+            patch("src.ats.workday_handler.find_and_click_apply_button", return_value=True),
+            patch("src.ats.workday_handler.check_for_captcha", return_value=False),
+            patch("src.ats.workday_handler.check_for_login_required", return_value=True),
+        ):
 
             # Act
             result = await apply_workday(mock_page, sample_job)
@@ -112,14 +118,16 @@ class TestWorkdayHandler:
     async def test_apply_workday_manual_completion(self, mock_page, sample_job):
         """Test Workday application requiring manual completion."""
         # Arrange
-        with patch('src.ats.workday_handler.find_and_click_apply_button', return_value=True), \
-             patch('src.ats.workday_handler.check_for_captcha', return_value=False), \
-             patch('src.ats.workday_handler.check_for_login_required', return_value=False), \
-             patch('src.ats.workday_handler.fill_form_fields', return_value=2), \
-             patch('src.ats.workday_handler.upload_resume', return_value=True), \
-             patch('src.ats.workday_handler.upload_cover_letter', return_value=False), \
-             patch('src.ats.workday_handler.click_next_or_continue', return_value=False), \
-             patch('src.ats.workday_handler.click_submit_button', return_value=False):
+        with (
+            patch("src.ats.workday_handler.find_and_click_apply_button", return_value=True),
+            patch("src.ats.workday_handler.check_for_captcha", return_value=False),
+            patch("src.ats.workday_handler.check_for_login_required", return_value=False),
+            patch("src.ats.workday_handler.fill_form_fields", return_value=2),
+            patch("src.ats.workday_handler.upload_resume", return_value=True),
+            patch("src.ats.workday_handler.upload_cover_letter", return_value=False),
+            patch("src.ats.workday_handler.click_next_or_continue", return_value=False),
+            patch("src.ats.workday_handler.click_submit_button", return_value=False),
+        ):
 
             # Act
             result = await apply_workday(mock_page, sample_job)
@@ -131,7 +139,10 @@ class TestWorkdayHandler:
     async def test_apply_workday_exception_handling(self, mock_page, sample_job):
         """Test Workday application exception handling."""
         # Arrange
-        with patch('src.ats.workday_handler.find_and_click_apply_button', side_effect=Exception("Test error")):
+        with patch(
+            "src.ats.workday_handler.find_and_click_apply_button",
+            side_effect=Exception("Test error"),
+        ):
             # Act
             result = await apply_workday(mock_page, sample_job)
 
@@ -143,14 +154,16 @@ class TestWorkdayHandler:
     async def test_apply_workday_uses_profile_data(self, mock_page, sample_job):
         """Test that Workday handler uses profile data from context."""
         # Arrange
-        with patch('src.ats.workday_handler.find_and_click_apply_button', return_value=True), \
-             patch('src.ats.workday_handler.check_for_captcha', return_value=False), \
-             patch('src.ats.workday_handler.check_for_login_required', return_value=False), \
-             patch('src.ats.workday_handler.fill_form_fields') as mock_fill, \
-             patch('src.ats.workday_handler.upload_resume') as mock_upload_resume, \
-             patch('src.ats.workday_handler.upload_cover_letter') as mock_upload_cover, \
-             patch('src.ats.workday_handler.click_next_or_continue', return_value=False), \
-             patch('src.ats.workday_handler.click_submit_button', return_value=True):
+        with (
+            patch("src.ats.workday_handler.find_and_click_apply_button", return_value=True),
+            patch("src.ats.workday_handler.check_for_captcha", return_value=False),
+            patch("src.ats.workday_handler.check_for_login_required", return_value=False),
+            patch("src.ats.workday_handler.fill_form_fields") as mock_fill,
+            patch("src.ats.workday_handler.upload_resume") as mock_upload_resume,
+            patch("src.ats.workday_handler.upload_cover_letter") as mock_upload_cover,
+            patch("src.ats.workday_handler.click_next_or_continue", return_value=False),
+            patch("src.ats.workday_handler.click_submit_button", return_value=True),
+        ):
 
             mock_fill.return_value = 3
             mock_upload_resume.return_value = True
@@ -176,14 +189,14 @@ class TestGreenhouseHandler:
         page = AsyncMock(spec=Page)
         context = AsyncMock(spec=BrowserContext)
         page.context = context
-        
+
         context._profile = {
             "name": "Jane Smith",
             "email": "jane.smith@example.com",
         }
         context._resume_path = "/path/to/resume.pdf"
         context._cover_letter_path = ""
-        
+
         return page
 
     @pytest.fixture
@@ -200,14 +213,16 @@ class TestGreenhouseHandler:
     async def test_apply_greenhouse_success_path(self, mock_page, sample_job):
         """Test successful Greenhouse application."""
         # Arrange
-        with patch('src.ats.greenhouse_handler.find_and_click_apply_button', return_value=True), \
-             patch('src.ats.greenhouse_handler.check_for_captcha', return_value=False), \
-             patch('src.ats.greenhouse_handler.check_for_login_required', return_value=False), \
-             patch('src.ats.greenhouse_handler.fill_form_fields', return_value=2), \
-             patch('src.ats.greenhouse_handler.upload_resume', return_value=True), \
-             patch('src.ats.greenhouse_handler.upload_cover_letter', return_value=False), \
-             patch('src.ats.greenhouse_handler.click_next_or_continue', return_value=False), \
-             patch('src.ats.greenhouse_handler.click_submit_button', return_value=True):
+        with (
+            patch("src.ats.greenhouse_handler.find_and_click_apply_button", return_value=True),
+            patch("src.ats.greenhouse_handler.check_for_captcha", return_value=False),
+            patch("src.ats.greenhouse_handler.check_for_login_required", return_value=False),
+            patch("src.ats.greenhouse_handler.fill_form_fields", return_value=2),
+            patch("src.ats.greenhouse_handler.upload_resume", return_value=True),
+            patch("src.ats.greenhouse_handler.upload_cover_letter", return_value=False),
+            patch("src.ats.greenhouse_handler.click_next_or_continue", return_value=False),
+            patch("src.ats.greenhouse_handler.click_submit_button", return_value=True),
+        ):
 
             # Act
             result = await apply_greenhouse(mock_page, sample_job)
@@ -220,15 +235,17 @@ class TestGreenhouseHandler:
         """Test Greenhouse application without cover letter."""
         # Arrange - mock page context has empty cover letter path
         mock_page.context._cover_letter_path = ""
-        
-        with patch('src.ats.greenhouse_handler.find_and_click_apply_button', return_value=True), \
-             patch('src.ats.greenhouse_handler.check_for_captcha', return_value=False), \
-             patch('src.ats.greenhouse_handler.check_for_login_required', return_value=False), \
-             patch('src.ats.greenhouse_handler.fill_form_fields', return_value=2), \
-             patch('src.ats.greenhouse_handler.upload_resume', return_value=True), \
-             patch('src.ats.greenhouse_handler.upload_cover_letter') as mock_cover, \
-             patch('src.ats.greenhouse_handler.click_next_or_continue', return_value=False), \
-             patch('src.ats.greenhouse_handler.click_submit_button', return_value=True):
+
+        with (
+            patch("src.ats.greenhouse_handler.find_and_click_apply_button", return_value=True),
+            patch("src.ats.greenhouse_handler.check_for_captcha", return_value=False),
+            patch("src.ats.greenhouse_handler.check_for_login_required", return_value=False),
+            patch("src.ats.greenhouse_handler.fill_form_fields", return_value=2),
+            patch("src.ats.greenhouse_handler.upload_resume", return_value=True),
+            patch("src.ats.greenhouse_handler.upload_cover_letter") as mock_cover,
+            patch("src.ats.greenhouse_handler.click_next_or_continue", return_value=False),
+            patch("src.ats.greenhouse_handler.click_submit_button", return_value=True),
+        ):
 
             # Act
             result = await apply_greenhouse(mock_page, sample_job)
@@ -248,11 +265,11 @@ class TestFallbackHandlers:
         page = AsyncMock(spec=Page)
         context = AsyncMock(spec=BrowserContext)
         page.context = context
-        
+
         # Mock generic apply function
         async def mock_generic_apply(page, job):
             return "applied"
-        
+
         context._generic_apply = mock_generic_apply
         return page
 
@@ -322,7 +339,7 @@ class TestHandlerIntegration:
         mock_page = AsyncMock(spec=Page)
         mock_page.context = AsyncMock(spec=BrowserContext)
         mock_page.context._generic_apply = AsyncMock(return_value="applied")
-        
+
         sample_job = {
             "id": "test_job",
             "title": "Test Job",
@@ -342,8 +359,14 @@ class TestHandlerIntegration:
         for handler in handlers:
             # Should not raise any exceptions about function signature
             try:
-                with patch('src.ats.workday_handler.find_and_click_apply_button', return_value=False), \
-                     patch('src.ats.greenhouse_handler.find_and_click_apply_button', return_value=False):
+                with (
+                    patch(
+                        "src.ats.workday_handler.find_and_click_apply_button", return_value=False
+                    ),
+                    patch(
+                        "src.ats.greenhouse_handler.find_and_click_apply_button", return_value=False
+                    ),
+                ):
                     result = await handler(mock_page, sample_job)
                     # Should return a string result
                     assert isinstance(result, str)

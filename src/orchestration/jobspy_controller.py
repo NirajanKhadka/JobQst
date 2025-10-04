@@ -59,7 +59,9 @@ async def _discover_only(
 
     if fetch_descriptions and isinstance(df, pd.DataFrame) and not df.empty:
         try:
-            df = await workers.run_optimized_description_fetching(df, max_concurrency=description_fetch_concurrency)
+            df = await workers.run_optimized_description_fetching(
+                df, max_concurrency=description_fetch_concurrency
+            )
         except Exception as e:
             console.print(f"[yellow]Description enrichment failed: {e}[/yellow]")
 
@@ -73,7 +75,9 @@ def run_jobspy_discovery(cfg: OrchestratorConfig, profile_name: str) -> Discover
         df = asyncio.run(run_jobspy_discovery_async(cfg, profile_name))
     except RuntimeError:
         # If already in an event loop (e.g., Streamlit), run nested via create_task
-        df = asyncio.get_event_loop().run_until_complete(run_jobspy_discovery_async(cfg, profile_name))
+        df = asyncio.get_event_loop().run_until_complete(
+            run_jobspy_discovery_async(cfg, profile_name)
+        )
 
     summary = {
         "rows": len(df),
@@ -81,4 +85,3 @@ def run_jobspy_discovery(cfg: OrchestratorConfig, profile_name: str) -> Discover
         "sites": df["source_site"].unique().tolist() if "source_site" in df.columns else [],
     }
     return DiscoveryResult(total_jobs=len(df), dataframe_summary=summary)
-

@@ -270,7 +270,8 @@ class SourcegraphClient:
         try:
             response = self.session.get(f"{self.base_url}/.api/health")
             return response.status_code == 200
-        except:
+        except Exception as e:
+            logger.warning("Sourcegraph health check failed: %s", str(e))
             return False
 
 
@@ -293,6 +294,3 @@ def find_database_operations(client: SourcegraphClient, repo: Optional[str] = No
 def search_dashboard_code(client: SourcegraphClient, repo: Optional[str] = None) -> List[Dict]:
     """Search for dashboard-related code."""
     return client.search_code("dashboard OR flask OR streamlit", repo=repo, file_pattern="*.py")
-
-
-

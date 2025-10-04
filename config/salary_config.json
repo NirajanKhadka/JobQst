@@ -1,0 +1,341 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Salary Parsing Configuration - Patterns, currency handling, and normalization rules",
+  "version": "1.0.0",
+  "last_updated": "2025-01-13",
+  
+  "salary_patterns": {
+    "description": "Regex patterns for extracting salary information with confidence levels",
+    "ranges": {
+      "confidence": 0.95,
+      "weight": "very_high",
+      "patterns": [
+        "(?i)(?:salary|compensation|pay)[:\\s]*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?\\s*[-–—]\\s*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?",
+        "\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?\\s*[-–—]\\s*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?",
+        "(?i)(?:range|between)[:\\s]*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?\\s*(?:to|and|-)\\s*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?",
+        "(?i)\\$?([\\d,]+(?:\\.\\d{2})?)\\s*[-–—]\\s*([\\d,]+)\\s*(?:per\\s*year|/year|annually|annual)"
+      ]
+    },
+    "single_amount": {
+      "confidence": 0.80,
+      "weight": "high",
+      "patterns": [
+        "(?i)(?:salary|compensation|pay)[:\\s]*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?(?:\\s*(?:per\\s*year|/year|annually|annual))?",
+        "(?i)(?:up\\s*to|maximum)[:\\s]*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?",
+        "(?i)(?:starting\\s*at|from)[:\\s]*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?",
+        "\\$([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?\\b"
+      ]
+    },
+    "hourly_rates": {
+      "confidence": 0.90,
+      "weight": "high",
+      "patterns": [
+        "(?i)\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:per\\s*hour|/hour|hr|hourly)",
+        "(?i)(?:hourly\\s*rate|rate)[:\\s]*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:/hr|per\\s*hour)?",
+        "(?i)([\\d,]+(?:\\.\\d{2})?)\\s*[-–—]\\s*([\\d,]+(?:\\.\\d{2})?)\\s*(?:per\\s*hour|/hour)"
+      ]
+    },
+    "weekly_rates": {
+      "confidence": 0.85,
+      "weight": "medium",
+      "patterns": [
+        "(?i)\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:per\\s*week|/week|weekly)",
+        "(?i)([\\d,]+(?:\\.\\d{2})?)\\s*[-–—]\\s*([\\d,]+(?:\\.\\d{2})?)\\s*(?:per\\s*week|/week)"
+      ]
+    },
+    "monthly_rates": {
+      "confidence": 0.85,
+      "weight": "medium",
+      "patterns": [
+        "(?i)\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:per\\s*month|/month|monthly)",
+        "(?i)([\\d,]+(?:\\.\\d{2})?)\\s*[-–—]\\s*([\\d,]+(?:\\.\\d{2})?)\\s*(?:per\\s*month|/month)"
+      ]
+    },
+    "daily_rates": {
+      "confidence": 0.80,
+      "weight": "medium",
+      "patterns": [
+        "(?i)\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:per\\s*day|/day|daily)",
+        "(?i)([\\d,]+(?:\\.\\d{2})?)\\s*[-–—]\\s*([\\d,]+(?:\\.\\d{2})?)\\s*(?:per\\s*day|/day)"
+      ]
+    },
+    "contract_rates": {
+      "confidence": 0.75,
+      "weight": "medium",
+      "patterns": [
+        "(?i)\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:per\\s*contract|/contract)",
+        "(?i)(?:contract\\s*rate|rate)[:\\s]*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?"
+      ]
+    }
+  },
+  
+  "currency_symbols": {
+    "description": "Currency symbol to code mapping",
+    "$": {
+      "code": "CAD",
+      "name": "Canadian Dollar",
+      "symbol": "$",
+      "default_region": "canada"
+    },
+    "US$": {
+      "code": "USD",
+      "name": "US Dollar",
+      "symbol": "$",
+      "default_region": "usa"
+    },
+    "€": {
+      "code": "EUR",
+      "name": "Euro",
+      "symbol": "€",
+      "default_region": "europe"
+    },
+    "£": {
+      "code": "GBP",
+      "name": "British Pound",
+      "symbol": "£",
+      "default_region": "uk"
+    },
+    "¥": {
+      "code": "JPY",
+      "name": "Japanese Yen",
+      "symbol": "¥",
+      "default_region": "japan"
+    },
+    "₹": {
+      "code": "INR",
+      "name": "Indian Rupee",
+      "symbol": "₹",
+      "default_region": "india"
+    },
+    "A$": {
+      "code": "AUD",
+      "name": "Australian Dollar",
+      "symbol": "$",
+      "default_region": "australia"
+    }
+  },
+  
+  "period_mappings": {
+    "description": "Salary period conversions to annual equivalent",
+    "hourly": {
+      "multiplier": 2080,
+      "display": "/hour",
+      "annual_hours": 2080,
+      "description": "40 hours/week * 52 weeks"
+    },
+    "daily": {
+      "multiplier": 260,
+      "display": "/day",
+      "annual_days": 260,
+      "description": "5 days/week * 52 weeks"
+    },
+    "weekly": {
+      "multiplier": 52,
+      "display": "/week",
+      "annual_weeks": 52,
+      "description": "52 weeks/year"
+    },
+    "bi-weekly": {
+      "multiplier": 26,
+      "display": "/bi-weekly",
+      "annual_periods": 26,
+      "description": "26 pay periods/year"
+    },
+    "semi-monthly": {
+      "multiplier": 24,
+      "display": "/semi-monthly",
+      "annual_periods": 24,
+      "description": "24 pay periods/year"
+    },
+    "monthly": {
+      "multiplier": 12,
+      "display": "/month",
+      "annual_months": 12,
+      "description": "12 months/year"
+    },
+    "quarterly": {
+      "multiplier": 4,
+      "display": "/quarter",
+      "annual_quarters": 4,
+      "description": "4 quarters/year"
+    },
+    "yearly": {
+      "multiplier": 1,
+      "display": "/year",
+      "annual_periods": 1,
+      "description": "Annual salary"
+    },
+    "annual": {
+      "multiplier": 1,
+      "display": "/year",
+      "annual_periods": 1,
+      "description": "Annual salary"
+    }
+  },
+  
+  "salary_modifiers": {
+    "description": "Salary amount modifiers (k, thousand, million, etc.)",
+    "k": 1000,
+    "K": 1000,
+    "thousand": 1000,
+    "thousands": 1000,
+    "m": 1000000,
+    "M": 1000000,
+    "million": 1000000,
+    "millions": 1000000
+  },
+  
+  "salary_ranges": {
+    "description": "Industry-specific salary range benchmarks for validation",
+    "entry_level": {
+      "min": 30000,
+      "max": 60000,
+      "label": "Entry Level"
+    },
+    "junior": {
+      "min": 45000,
+      "max": 75000,
+      "label": "Junior"
+    },
+    "mid_level": {
+      "min": 60000,
+      "max": 100000,
+      "label": "Mid Level"
+    },
+    "senior": {
+      "min": 85000,
+      "max": 150000,
+      "label": "Senior"
+    },
+    "lead": {
+      "min": 110000,
+      "max": 180000,
+      "label": "Lead/Principal"
+    },
+    "executive": {
+      "min": 150000,
+      "max": 500000,
+      "label": "Executive"
+    }
+  },
+  
+  "validation_rules": {
+    "description": "Rules for validating parsed salary data",
+    "min_realistic_salary": 15000,
+    "max_realistic_salary": 1000000,
+    "min_hourly_rate": 7.25,
+    "max_hourly_rate": 500,
+    "salary_range_tolerance": 0.5,
+    "outlier_detection": {
+      "enabled": true,
+      "z_score_threshold": 3.0,
+      "iqr_multiplier": 1.5
+    },
+    "require_currency": false,
+    "default_currency": "CAD",
+    "default_period": "yearly"
+  },
+  
+  "normalization_settings": {
+    "description": "Settings for normalizing salary data",
+    "convert_to_annual": true,
+    "remove_commas": true,
+    "round_to_nearest": 1000,
+    "handle_missing_period": "assume_annual",
+    "handle_missing_currency": "assume_local",
+    "preserve_original_format": true
+  },
+  
+  "equity_compensation": {
+    "description": "Patterns for equity and bonus compensation",
+    "stock_options": {
+      "patterns": [
+        "(?i)(?:stock\\s*options|equity)[:\\s]*([\\d,]+(?:\\.\\d{2})?)",
+        "(?i)(?:rsu|restricted\\s*stock)[:\\s]*([\\d,]+(?:\\.\\d{2})?)"
+      ]
+    },
+    "bonus": {
+      "patterns": [
+        "(?i)(?:bonus|signing\\s*bonus)[:\\s]*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?",
+        "(?i)(?:performance\\s*bonus)[:\\s]*(\\d+)%"
+      ]
+    },
+    "commission": {
+      "patterns": [
+        "(?i)(?:commission)[:\\s]*(\\d+)%",
+        "(?i)(?:ote|on[-\\s]?target[-\\s]?earnings)[:\\s]*\\$?([\\d,]+(?:\\.\\d{2})?)\\s*(?:k|,?000)?"
+      ]
+    }
+  },
+  
+  "salary_components": {
+    "description": "Different components of total compensation",
+    "base_salary": {
+      "weight": 1.0,
+      "required": true
+    },
+    "bonus": {
+      "weight": 0.8,
+      "required": false
+    },
+    "equity": {
+      "weight": 0.6,
+      "required": false
+    },
+    "commission": {
+      "weight": 0.7,
+      "required": false
+    },
+    "benefits_value": {
+      "weight": 0.3,
+      "required": false
+    }
+  },
+  
+  "parsing_settings": {
+    "description": "Global settings for salary parsing operations",
+    "min_confidence_threshold": 0.70,
+    "enable_fuzzy_matching": true,
+    "fuzzy_match_threshold": 0.85,
+    "max_pattern_matches": 10,
+    "context_window_chars": 150,
+    "allow_estimation": true,
+    "estimation_confidence_penalty": 0.2
+  },
+  
+  "regional_adjustments": {
+    "description": "Regional cost-of-living adjustments for salary comparison",
+    "toronto": {
+      "multiplier": 1.15,
+      "region": "canada"
+    },
+    "vancouver": {
+      "multiplier": 1.18,
+      "region": "canada"
+    },
+    "montreal": {
+      "multiplier": 1.05,
+      "region": "canada"
+    },
+    "calgary": {
+      "multiplier": 1.08,
+      "region": "canada"
+    },
+    "san_francisco": {
+      "multiplier": 1.40,
+      "region": "usa"
+    },
+    "new_york": {
+      "multiplier": 1.35,
+      "region": "usa"
+    },
+    "seattle": {
+      "multiplier": 1.25,
+      "region": "usa"
+    },
+    "austin": {
+      "multiplier": 1.10,
+      "region": "usa"
+    }
+  }
+}

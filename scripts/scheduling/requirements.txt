@@ -1,0 +1,3 @@
+# Scheduling requirements for JobQst
+schedule>=1.2.0
+rich>=13.0.0

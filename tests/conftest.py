@@ -44,6 +44,7 @@ TEST_CONFIG = {
     "COVERAGE_THRESHOLD": 80,  # Overall project coverage target
 }
 
+
 # Test markers for categorization
 def pytest_configure(config):
     """Configure custom pytest markers."""
@@ -75,27 +76,27 @@ def job_limit(request) -> int:
     """
     Dynamic job limit fixture.
     Uses marker value if specified, otherwise defaults to TEST_CONFIG.
-    
+
     Usage:
         @pytest.mark.parametrize("job_limit", [5], indirect=True)
         def test_scraping(job_limit):
             # Will use 5 jobs instead of default 10
     """
     # Check if test has a custom limit marker
-    if hasattr(request, 'param'):
+    if hasattr(request, "param"):
         return request.param
-    
+
     # Check for limited marker
     if request.node.get_closest_marker("limited"):
         return TEST_CONFIG["FAST_TEST_LIMIT"]
-    
+
     return TEST_CONFIG["DEFAULT_JOB_LIMIT"]
 
 
 @pytest.fixture
 def batch_size(request) -> int:
     """Dynamic batch size for processing tests."""
-    if hasattr(request, 'param'):
+    if hasattr(request, "param"):
         return request.param
     return TEST_CONFIG["BATCH_SIZE"]
 
@@ -103,7 +104,7 @@ def batch_size(request) -> int:
 @pytest.fixture
 def test_timeout(request) -> int:
     """Dynamic timeout for tests."""
-    if hasattr(request, 'param'):
+    if hasattr(request, "param"):
         return request.param
     return TEST_CONFIG["DEFAULT_TIMEOUT"]
 
@@ -119,7 +120,7 @@ def real_job_data(test_db) -> Dict[str, Any]:
     """Real job data from database for testing (follows DEVELOPMENT_STANDARDS.md - no fabricated content)."""
     if test_db is None:
         pytest.skip("Database not available for real job data")
-    
+
     try:
         # Get a real job from the database
         jobs = test_db.get_recent_jobs(limit=1)
@@ -154,7 +155,7 @@ def real_job_list(test_db) -> List[Dict[str, Any]]:
     """Real job list from database for batch testing (follows DEVELOPMENT_STANDARDS.md - no fabricated content)."""
     if test_db is None:
         pytest.skip("Database not available for real job list")
-    
+
     try:
         # Get real jobs from the database (limited for testing)
         jobs = test_db.get_recent_jobs(limit=10)
@@ -170,60 +171,64 @@ def real_job_list(test_db) -> List[Dict[str, Any]]:
 @pytest.fixture
 def performance_timer():
     """Timer fixture for performance testing."""
+
     class Timer:
         def __init__(self):
             self.start_time = None
             self.end_time = None
-        
+
         def start(self):
             self.start_time = time.time()
-        
+
         def stop(self):
             self.end_time = time.time()
-        
+
         @property
         def elapsed(self) -> float:
             if self.start_time and self.end_time:
                 return self.end_time - self.start_time
             return 0.0
-        
+
         def __enter__(self):
             self.start()
             return self
-        
+
         def __exit__(self, *args):
             self.stop()
-    
+
     return Timer()
 
 
 @pytest.fixture
 def mock_scraping_results(job_limit):
     """Mock scraping results for testing without actual web requests.
-    
+
     Note: This is for testing scraping infrastructure, not job content.
     Follows DEVELOPMENT_STANDARDS.md by avoiding fabricated job content.
     """
+
     def _generate_results(count: int = None) -> List[Dict[str, Any]]:
         if count is None:
             count = job_limit
-        
+
         # Return empty structure for testing scraping infrastructure
         # without fabricated job content
         results = []
         for i in range(count):
-            results.append({
-                "title": "",  # Empty to avoid fabricated content
-                "company": "",
-                "location": "",
-                "url": "",
-                "description": "",
-                "salary": "",
-                "scraped_at": time.time(),
-                "test_index": i + 1,  # Only metadata for testing
-            })
+            results.append(
+                {
+                    "title": "",  # Empty to avoid fabricated content
+                    "company": "",
+                    "location": "",
+                    "url": "",
+                    "description": "",
+                    "salary": "",
+                    "scraped_at": time.time(),
+                    "test_index": i + 1,  # Only metadata for testing
+                }
+            )
         return results
-    
+
     return _generate_results
 
 
@@ -232,11 +237,12 @@ def test_database_config():
     """Test database configuration using real profile structure."""
     try:
         from src.utils.profile_helpers import get_available_profiles
+
         profiles = get_available_profiles()
         profile_name = profiles[0] if profiles else "Nirajan"  # Use real profile or fallback
     except ImportError:
         profile_name = "Nirajan"  # Fallback to known profile
-    
+
     return {
         "database": f"{profile_name}_test_jobs_duckdb.db",
         "profile": profile_name,
@@ -289,19 +295,16 @@ def pytest_addoption(parser):
         action="store",
         default=10,
         type=int,
-        help="Default number of jobs for scraping tests"
+        help="Default number of jobs for scraping tests",
     )
     parser.addoption(
-        "--skip-slow",
-        action="store_true",
-        default=False,
-        help="Skip slow performance tests"
+        "--skip-slow", action="store_true", default=False, help="Skip slow performance tests"
     )
     parser.addoption(
         "--real-scraping",
-        action="store_true", 
+        action="store_true",
         default=False,
-        help="Enable real web scraping tests (slow)"
+        help="Enable real web scraping tests (slow)",
     )
 
 
@@ -312,7 +315,7 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "performance" in item.keywords or "slow" in item.keywords:
                 item.add_marker(skip_slow)
-    
+
     if not config.getoption("--real-scraping"):
         skip_real = pytest.mark.skip(reason="--real-scraping not provided")
         for item in items:
@@ -323,20 +326,20 @@ def pytest_collection_modifyitems(config, items):
 # Helper functions for tests
 class TestHelpers:
     """Helper functions for tests."""
-    
+
     @staticmethod
     def validate_job_data(job_data: Dict[str, Any]) -> bool:
         """Validate job data structure."""
         required_fields = ["title", "company", "url"]
         return all(field in job_data for field in required_fields)
-    
+
     @staticmethod
     def calculate_success_rate(successful: int, total: int) -> float:
         """Calculate success rate percentage."""
         if total == 0:
             return 0.0
         return (successful / total) * 100
-    
+
     @staticmethod
     def format_performance_result(metric_name: str, value: float, threshold: float) -> str:
         """Format performance test results."""
@@ -352,21 +355,46 @@ def test_helpers():
 
 @pytest.fixture
 def test_db():
-    """Test database fixture for integration tests."""
+    """Test database fixture for integration tests with proper cleanup."""
+    db = None
     try:
         from src.core.job_database import get_job_db
-        
+        import shutil
+
         # Use a test-specific database
         test_profile = "test_profile"
+        
+        # Clean up any existing test profile directory before starting
+        test_profile_dir = Path(f"profiles/{test_profile}")
+        if test_profile_dir.exists():
+            shutil.rmtree(test_profile_dir, ignore_errors=True)
+        
+        # Create fresh database
         db = get_job_db(test_profile)
         
-        yield db
-        
-        # Cleanup after test
-        try:
+        # Ensure database is clean before test
+        if hasattr(db, 'clear_all_jobs'):
             db.clear_all_jobs()
-        except:
-            pass  # Ignore cleanup errors
+
+        yield db
+
+        # Cleanup after test
+        if db is not None:
+            try:
+                if hasattr(db, 'clear_all_jobs'):
+                    db.clear_all_jobs()
+                if hasattr(db, 'close'):
+                    db.close()
+            except Exception as e:
+                console.print(f"[yellow]Warning: Cleanup failed: {e}[/yellow]")
+            
+            # Remove test profile directory after test
+            try:
+                if test_profile_dir.exists():
+                    shutil.rmtree(test_profile_dir, ignore_errors=True)
+            except Exception:
+                pass
+                
     except ImportError:
         # If database module not available, return None
         yield None
@@ -378,7 +406,7 @@ def real_job(real_job_data):
     return real_job_data
 
 
-@pytest.fixture  
+@pytest.fixture
 def real_jobs(real_job_list):
     """Multiple real jobs fixture (follows DEVELOPMENT_STANDARDS.md - no fabricated content)."""
     return real_job_list
@@ -389,7 +417,7 @@ def real_profile():
     """Real profile fixture from actual profile files (follows DEVELOPMENT_STANDARDS.md - no fabricated content)."""
     try:
         from src.utils.profile_helpers import load_profile, get_available_profiles
-        
+
         # Get available real profiles
         profiles = get_available_profiles()
         if profiles:
@@ -397,7 +425,7 @@ def real_profile():
             profile = load_profile(profiles[0])
             if profile:
                 return profile
-        
+
         # If no profiles available, return minimal structure
         return {
             "profile_name": "test_profile",
@@ -407,7 +435,7 @@ def real_profile():
     except ImportError:
         # Fallback minimal structure
         return {
-            "profile_name": "test_profile", 
+            "profile_name": "test_profile",
             "keywords": [],
             "skills": [],
         }
@@ -419,25 +447,30 @@ def sample_job(real_job):
     """Legacy alias for real_job fixture (DEPRECATED - use real_job instead)."""
     return real_job
 
-@pytest.fixture  
+
+@pytest.fixture
 def sample_jobs(real_jobs):
     """Legacy alias for real_jobs fixture (DEPRECATED - use real_jobs instead)."""
     return real_jobs
+
 
 @pytest.fixture
 def sample_job_data(real_job_data):
     """Legacy alias for real_job_data fixture (DEPRECATED - use real_job_data instead)."""
     return real_job_data
 
+
 @pytest.fixture
 def sample_job_list(real_job_list):
     """Legacy alias for real_job_list fixture (DEPRECATED - use real_job_list instead)."""
     return real_job_list
 
+
 @pytest.fixture
 def test_profile(real_profile):
     """Legacy alias for real_profile fixture (DEPRECATED - use real_profile instead)."""
     return real_profile
+
 
 @pytest.fixture
 def temp_dir(tmp_path):
@@ -448,10 +481,11 @@ def temp_dir(tmp_path):
 @pytest.fixture
 def scraper():
     """Mock scraper fixture for testing scraper functionality."""
+
     class MockScraper:
         def __init__(self):
             self.name = "MockScraper"
-        
+
         def scrape_jobs(self, keywords=None, limit=None):
             """Mock scrape_jobs method that returns empty results."""
             if limit is None:
@@ -469,5 +503,5 @@ def scraper():
                 }
                 for i in range(min(limit, 5))  # Limit to 5 for testing
             ]
-    
+
     return MockScraper()

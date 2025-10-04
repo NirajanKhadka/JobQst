@@ -160,9 +160,7 @@ class ManualReviewManager:
                 # Parse JSON context data
                 if details.get("context_data"):
                     try:
-                        details["context_data"] = json.loads(
-                            details["context_data"]
-                        )
+                        details["context_data"] = json.loads(details["context_data"])
                     except (json.JSONDecodeError, TypeError):
                         pass
                 return details
@@ -250,9 +248,7 @@ class ManualReviewManager:
             )
 
             self.db.conn.commit()
-            console.print(
-                f"[green]✅ Review item {review_id} marked as resolved[/green]"
-            )
+            console.print(f"[green]✅ Review item {review_id} marked as resolved[/green]")
             return True
 
         except Exception as e:
@@ -284,9 +280,7 @@ class ManualReviewManager:
             )
 
             self.db.conn.commit()
-            console.print(
-                f"[yellow]⏭️ Review item {review_id} skipped[/yellow]"
-            )
+            console.print(f"[yellow]⏭️ Review item {review_id} skipped[/yellow]")
             return True
 
         except Exception as e:
@@ -313,30 +307,20 @@ class ManualReviewManager:
             """
             )
 
-            stats = {
-                "by_status": {}, "by_type": {}, "by_priority": {}, "total": 0
-            }
+            stats = {"by_status": {}, "by_type": {}, "by_priority": {}, "total": 0}
 
             for row in cursor.fetchall():
                 status, review_type, priority, count = row
-                stats["by_status"][status] = (
-                    stats["by_status"].get(status, 0) + count
-                )
-                stats["by_type"][review_type] = (
-                    stats["by_type"].get(review_type, 0) + count
-                )
-                stats["by_priority"][priority] = (
-                    stats["by_priority"].get(priority, 0) + count
-                )
+                stats["by_status"][status] = stats["by_status"].get(status, 0) + count
+                stats["by_type"][review_type] = stats["by_type"].get(review_type, 0) + count
+                stats["by_priority"][priority] = stats["by_priority"].get(priority, 0) + count
                 stats["total"] += count
 
             return stats
 
         except Exception as e:
             console.print(f"[red]❌ Error getting review statistics: {e}[/red]")
-            return {
-                "by_status": {}, "by_type": {}, "by_priority": {}, "total": 0
-            }
+            return {"by_status": {}, "by_type": {}, "by_priority": {}, "total": 0}
 
     def add_job_for_review(self, job: dict) -> bool:
         """Stub: Add a job for manual review."""
@@ -353,4 +337,3 @@ class ManualReviewManager:
     def should_auto_approve(self, job: dict) -> bool:
         """Stub: Determine if a job should be auto-approved."""
         return False
-

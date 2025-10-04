@@ -254,4 +254,3 @@ class OllamaManager:
         except requests.exceptions.RequestException:
             pass
         return False
-

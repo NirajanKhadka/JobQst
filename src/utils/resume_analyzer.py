@@ -437,9 +437,8 @@ def analyze_profile_resume(profile: Dict) -> Dict:
     analyzer = ResumeAnalyzer()
     return analyzer.analyze_resume(profile)
 
-
-# Main functionality moved to CLI module or tests
-# Import and use the functions directly
+    # Main functionality moved to CLI module or tests
+    # Import and use the functions directly
 
     try:
         profile = profile_helpers.load_profile("Nirajan")
@@ -452,5 +451,5 @@ def analyze_profile_resume(profile: Dict) -> Dict:
     except Exception as e:
         console.print(f"[red]❌ Error: {e}[/red]")
         import traceback
-        traceback.print_exc()
 
+        traceback.print_exc()

@@ -156,4 +156,3 @@ def create_gmail_checker(
         SimpleGmailChecker instance
     """
     return SimpleGmailChecker(email_address, check_interval_minutes)
-

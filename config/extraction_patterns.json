@@ -1,0 +1,253 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Extraction Patterns Configuration - Regex patterns and rules for extracting structured data from job descriptions",
+  "version": "1.0.0",
+  "last_updated": "2025-01-13",
+  
+  "skills_extraction": {
+    "description": "Patterns for extracting skills from job text with confidence levels",
+    "skills_section": {
+      "confidence": 0.95,
+      "weight": "very_high",
+      "patterns": [
+        "(?i)(?:required\\s*)?(?:skills|technologies|technical\\s*skills)[:\\s]*([^.\\n]{10,300})",
+        "(?i)(?:must\\s*have|requirements)[:\\s]*([^.\\n]{10,200})",
+        "(?i)(?:technical\\s*requirements)[:\\s]*([^.\\n]{10,200})",
+        "(?i)(?:key\\s*skills)[:\\s]*([^.\\n]{10,200})"
+      ]
+    },
+    "qualifications_section": {
+      "confidence": 0.90,
+      "weight": "high",
+      "patterns": [
+        "(?i)(?:qualifications)[:\\s]*([^.\\n]{10,200})",
+        "(?i)(?:you\\s*have|you\\s*bring)[:\\s]*([^.\\n]{10,200})",
+        "(?i)(?:ideal\\s*candidate)[:\\s]*([^.\\n]{10,200})"
+      ]
+    },
+    "experience_section": {
+      "confidence": 0.80,
+      "weight": "high",
+      "patterns": [
+        "(?i)experience\\s*(?:with|in|using)[:\\s]*([^.\\n]{10,150})",
+        "(?i)proficiency\\s*(?:with|in)[:\\s]*([^.\\n]{10,150})",
+        "(?i)expertise\\s*(?:with|in)[:\\s]*([^.\\n]{10,150})",
+        "(?i)knowledge\\s*(?:of|in)[:\\s]*([^.\\n]{10,150})"
+      ]
+    },
+    "responsibilities_section": {
+      "confidence": 0.70,
+      "weight": "medium",
+      "patterns": [
+        "(?i)(?:responsibilities|duties)[:\\s]*([^.\\n]{10,200})",
+        "(?i)(?:you\\s*will|you'll)[:\\s]*([^.\\n]{10,200})",
+        "(?i)(?:role\\s*involves)[:\\s]*([^.\\n]{10,150})"
+      ]
+    },
+    "bullet_points": {
+      "confidence": 0.75,
+      "weight": "medium",
+      "patterns": [
+        "(?:^|\\n)\\s*[•\\-\\*]\\s*([^\\n]{10,150})",
+        "(?:^|\\n)\\s*\\d+\\.\\s*([^\\n]{10,150})"
+      ]
+    },
+    "inline_mentions": {
+      "confidence": 0.60,
+      "weight": "low",
+      "patterns": [
+        "(?i)\\b(python|java|javascript|typescript|react|angular|vue|node\\.?js|sql|aws|azure|docker|kubernetes)\\b",
+        "(?i)\\b(machine\\s*learning|deep\\s*learning|data\\s*science|ai|nlp)\\b"
+      ]
+    }
+  },
+  
+  "experience_extraction": {
+    "description": "Patterns for extracting years of experience requirements",
+    "exact_years": {
+      "confidence": 0.95,
+      "patterns": [
+        "(\\d+)\\+?\\s*years?\\s+of\\s+experience",
+        "(\\d+)\\s*to\\s*(\\d+)\\s*years?\\s+experience",
+        "(\\d+)-(\\d+)\\s*years?\\s+experience",
+        "experience[:\\s]*(\\d+)\\+?\\s*years?"
+      ]
+    },
+    "experience_level": {
+      "confidence": 0.85,
+      "patterns": [
+        "(?i)\\b(entry[-\\s]?level|junior|jr\\.?|graduate|intern)\\b",
+        "(?i)\\b(mid[-\\s]?level|intermediate|experienced)\\b",
+        "(?i)\\b(senior|sr\\.?|lead|principal|staff)\\b",
+        "(?i)\\b(director|vp|chief|head\\s*of|executive)\\b"
+      ]
+    },
+    "relative_experience": {
+      "confidence": 0.70,
+      "patterns": [
+        "(?i)\\b(no|little|minimal)\\s*experience\\s*required\\b",
+        "(?i)\\b(some|relevant|related)\\s*experience\\b",
+        "(?i)\\b(extensive|significant|substantial)\\s*experience\\b"
+      ]
+    }
+  },
+  
+  "education_extraction": {
+    "description": "Patterns for extracting education requirements",
+    "degree_requirements": {
+      "confidence": 0.90,
+      "patterns": [
+        "(?i)\\b(bachelor'?s?|ba|bs|b\\.?sc\\.?)\\b.*(?:degree|in)\\s*([a-z\\s]+)",
+        "(?i)\\b(master'?s?|ma|ms|m\\.?sc\\.?)\\b.*(?:degree|in)\\s*([a-z\\s]+)",
+        "(?i)\\b(phd|ph\\.?d\\.?|doctorate)\\b.*(?:degree|in)?\\s*([a-z\\s]+)?",
+        "(?i)\\b(associate'?s?)\\b.*(?:degree|in)\\s*([a-z\\s]+)"
+      ]
+    },
+    "field_of_study": {
+      "confidence": 0.85,
+      "patterns": [
+        "(?i)degree\\s*in\\s*([a-z\\s]+)",
+        "(?i)major\\s*in\\s*([a-z\\s]+)",
+        "(?i)(?:computer\\s*science|engineering|mathematics|statistics|business|data\\s*science)"
+      ]
+    }
+  },
+  
+  "location_extraction": {
+    "description": "Patterns for extracting job location information",
+    "city_state": {
+      "confidence": 0.95,
+      "patterns": [
+        "([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*),\\s*([A-Z]{2})\\b",
+        "(?i)location[:\\s]*([A-Za-z\\s]+),\\s*([A-Z]{2})",
+        "(?i)(?:based\\s*in|located\\s*in)[:\\s]*([A-Za-z\\s]+),\\s*([A-Z]{2})"
+      ]
+    },
+    "remote_indicators": {
+      "confidence": 1.0,
+      "patterns": [
+        "(?i)\\b(remote|work\\s*from\\s*home|wfh|telecommute)\\b",
+        "(?i)\\b(hybrid|flexible\\s*location)\\b",
+        "(?i)\\b100%\\s*remote\\b"
+      ]
+    },
+    "country": {
+      "confidence": 0.90,
+      "patterns": [
+        "(?i)\\b(canada|canadian)\\b",
+        "(?i)\\b(united\\s*states|usa|u\\.s\\.|america)\\b",
+        "(?i)\\b(united\\s*kingdom|uk|britain)\\b"
+      ]
+    }
+  },
+  
+  "contact_extraction": {
+    "description": "Patterns for extracting contact information",
+    "email": {
+      "confidence": 0.98,
+      "patterns": [
+        "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+        "(?i)(?:email|e-mail)[:\\s]*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})"
+      ]
+    },
+    "phone": {
+      "confidence": 0.95,
+      "patterns": [
+        "\\+?1?[-\\s.]?\\(?\\d{3}\\)?[-\\s.]?\\d{3}[-\\s.]?\\d{4}",
+        "(?i)(?:phone|tel|telephone)[:\\s]*(\\+?1?[-\\s.]?\\(?\\d{3}\\)?[-\\s.]?\\d{3}[-\\s.]?\\d{4})"
+      ]
+    },
+    "website": {
+      "confidence": 0.90,
+      "patterns": [
+        "(?i)https?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(?:/[^\\s]*)?",
+        "(?i)www\\.[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(?:/[^\\s]*)?"
+      ]
+    }
+  },
+  
+  "company_extraction": {
+    "description": "Patterns for extracting company information",
+    "company_name": {
+      "confidence": 0.85,
+      "patterns": [
+        "(?i)(?:company|employer|organization)[:\\s]*([A-Z][a-zA-Z0-9\\s&,.-]+)",
+        "(?i)(?:join|work\\s*(?:at|for|with))[:\\s]*([A-Z][a-zA-Z0-9\\s&,.-]+)",
+        "(?i)([A-Z][a-zA-Z0-9\\s&,.-]+)\\s*is\\s*(?:hiring|looking|seeking)"
+      ]
+    },
+    "company_size": {
+      "confidence": 0.80,
+      "patterns": [
+        "(?i)(\\d+[-\\s]?\\d*)\\s*employees?",
+        "(?i)(?:company\\s*size|team\\s*size)[:\\s]*(\\d+[-\\s]?\\d*)"
+      ]
+    },
+    "industry": {
+      "confidence": 0.75,
+      "patterns": [
+        "(?i)industry[:\\s]*([a-z\\s&,.-]+)",
+        "(?i)(?:sector|field)[:\\s]*([a-z\\s&,.-]+)"
+      ]
+    }
+  },
+  
+  "job_type_extraction": {
+    "description": "Patterns for extracting employment type",
+    "employment_type": {
+      "confidence": 0.90,
+      "patterns": [
+        "(?i)\\b(full[-\\s]?time|fulltime)\\b",
+        "(?i)\\b(part[-\\s]?time|parttime)\\b",
+        "(?i)\\b(contract|contractor|freelance)\\b",
+        "(?i)\\b(temporary|temp|seasonal)\\b",
+        "(?i)\\b(internship|intern|co-op)\\b",
+        "(?i)\\b(permanent|perm)\\b"
+      ]
+    }
+  },
+  
+  "benefits_extraction": {
+    "description": "Patterns for extracting benefits and perks",
+    "health_benefits": {
+      "confidence": 0.85,
+      "patterns": [
+        "(?i)\\b(health\\s*insurance|medical|dental|vision)\\b",
+        "(?i)\\b(healthcare|health\\s*coverage)\\b"
+      ]
+    },
+    "retirement_benefits": {
+      "confidence": 0.85,
+      "patterns": [
+        "(?i)\\b(401k|retirement|pension|rrsp)\\b",
+        "(?i)\\b(matching|employer\\s*match)\\b"
+      ]
+    },
+    "time_off": {
+      "confidence": 0.85,
+      "patterns": [
+        "(?i)\\b(pto|paid\\s*time\\s*off|vacation)\\b",
+        "(?i)\\b(sick\\s*leave|personal\\s*days)\\b"
+      ]
+    },
+    "equity": {
+      "confidence": 0.85,
+      "patterns": [
+        "(?i)\\b(stock\\s*options|equity|rsu|espp)\\b",
+        "(?i)\\b(shares|ownership)\\b"
+      ]
+    }
+  },
+  
+  "extraction_settings": {
+    "description": "Global settings for extraction operations",
+    "min_confidence_threshold": 0.60,
+    "max_pattern_matches": 50,
+    "context_window_chars": 200,
+    "enable_fuzzy_matching": true,
+    "fuzzy_match_threshold": 0.85,
+    "case_sensitive": false,
+    "remove_duplicates": true,
+    "normalize_whitespace": true
+  }
+}

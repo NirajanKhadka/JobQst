@@ -9,4 +9,3 @@ Contains menu system for interactive CLI operations:
 from .system_menu import SystemMenu
 
 __all__ = ["SystemMenu"]
-

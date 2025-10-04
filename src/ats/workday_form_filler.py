@@ -68,4 +68,3 @@ class WorkdayFormFiller:
     def _submit_application_Improved(self) -> bool:
         # Logic from _submit_application_Improved in WorkdaySubmitter
         return False
-

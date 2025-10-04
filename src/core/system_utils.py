@@ -86,14 +86,14 @@ def get_system_performance_info() -> Dict[str, Any]:
 def auto_start_dashboard() -> bool:
     """Automatically start the dashboard."""
     try:
-        # Check if dashboard is already running
+        # Check if dashboard is already running (unified_dashboard uses port 8050)
         import requests
 
         try:
-            response = requests.get("http://localhost:8002/", timeout=2)
+            response = requests.get("http://localhost:8050/", timeout=2)
             if response.status_code == 200:
                 console.print("[green]✅ Dashboard is already running[/green]")
-                webbrowser.open("http://localhost:8002/")
+                webbrowser.open("http://localhost:8050/")
                 return True
         except requests.exceptions.RequestException:
             pass
@@ -101,23 +101,25 @@ def auto_start_dashboard() -> bool:
         # Start dashboard
         console.print("[cyan]🚀 Starting dashboard...[/cyan]")
 
-        # Import and start dashboard
-        from src.dashboard.api import start_dashboard
+        # Import unified dashboard launcher
+        from src.dashboard.unified_dashboard import launch_dashboard
 
         # Start in background
         import threading
 
-        dashboard_thread = threading.Thread(target=start_dashboard, daemon=True)
+        dashboard_thread = threading.Thread(
+            target=lambda: launch_dashboard(profile_name="Nirajan", port=8050), daemon=True
+        )
         dashboard_thread.start()
 
-        # Wait for dashboard to start
+        # Wait for dashboard to start (updated port to 8050)
         for _ in range(10):
             time.sleep(1)
             try:
-                response = requests.get("http://localhost:8002/", timeout=2)
+                response = requests.get("http://localhost:8050/", timeout=2)
                 if response.status_code == 200:
                     console.print("[green]✅ Dashboard started successfully[/green]")
-                    webbrowser.open("http://localhost:8002/")
+                    webbrowser.open("http://localhost:8050/")
                     return True
             except requests.exceptions.RequestException:
                 continue
@@ -247,4 +249,3 @@ def get_system_info() -> Dict[str, Any]:
         }
     except Exception as e:
         return {"error": str(e), "platform": "Unknown", "python_version": "Unknown"}
-

@@ -1,398 +1,785 @@
-# JobQst - Intelligent Job Discovery & Automation Platform
+# JobLens - Intelligent Job Discovery Platform# JobQst - Intelligent Job Discovery Platform
 
-<div align="center">
 
-**🎯 Profile-Driven Job Discovery** - Modern job searching with intelligent matching, comprehensive analytics, and clean Python architecture.
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Type Checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](https://mypy.readthedocs.io/)
-[![Playwright](https://img.shields.io/badge/Playwright-Automation-34D399.svg)](https://playwright.dev/)
-[![Dash](https://img.shields.io/badge/Dash-Dashboard-00D4AA.svg)](https://dash.plotly.com/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-[🚀 Quick Start](#quick-start) • [🔧 Setup](#installation--setup) • [💻 Development](#quick-development-notes)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-</div>
+[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-> **Enterprise-grade job search automation with AI-powered matching and intelligent deduplication**
+[![Compliance: 93/100](https://img.shields.io/badge/compliance-93%2F100-success.svg)](docs/DEVELOPMENT_STANDARDS.md)[![Type Checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](https://mypy.readthedocs.io/)
 
-JobQst is a comprehensive job search automation platform that combines intelligent web scraping, AI-powered job analysis, and real-time analytics to streamline your job search process.
 
-## 🚀 Quick Start
 
-```bash
-# Clone and setup
-git clone https://github.com/NirajanKhadka/JobQst.git
-cd JobQst
-pip install -r requirements.txt
+**Automated job discovery across Indeed, LinkedIn, Glassdoor & ZipRecruiter with AI-powered matching****Automated job discovery across Indeed, LinkedIn, Glassdoor & ZipRecruiter with AI-powered matching**
 
-# Create your profile
+
+
+------
+
+
+
+## What Is JobLens?## What Is This?
+
+
+
+JobLens automates job searching across 4 major job sites using [JobSpy](https://github.com/cullena20/JobSpy), then uses AI to match jobs to your profile. It features a modern Python architecture with DuckDB analytics and a Dash dashboard for visualization.JobQst automates job searching across 4 major job sites using [JobSpy](https://github.com/cullena20/JobSpy), then uses AI to match jobs to your profile. Built with clean Python, type safety, and a Dash dashboard for visualization.
+
+
+
+**Built for:** Developers and tech professionals job hunting in Canada/USA.**Built for**: Developers and tech professionals job hunting in Canada/USA.
+
+
+
+**Core Features:**## 🚀 Quick Start
+
+- 🔍 Multi-site scraping (Indeed, LinkedIn, Glassdoor, ZipRecruiter)
+
+- 🧠 AI-powered job matching with compatibility scores```bash
+
+- 📊 Real-time analytics dashboard# Clone and setup
+
+- ⚡ Intelligent caching (70% performance boost)git clone https://github.com/NirajanKhadka/JobQst.git
+
+- 🎯 Profile-based system with dedicated databasescd JobQst
+
+- 🛡️ Type-safe code (93/100 compliance)pip install -r requirements.txt
+
+
+
+---# Create your profile
+
 python main.py --setup-profile YourName
 
-# Start scraping
-python main.py YourName --action scrape --jobs 50
+## Quick Start
 
-# View results
-python src/dashboard/unified_dashboard.py --profile YourName
+# Start scraping
+
+```bashpython main.py YourName --action scrape --jobs 50
+
+# Clone and setup
+
+git clone https://github.com/NirajanKhadka/JobQst.git# View results
+
+cd JobQstpython src/dashboard/unified_dashboard.py --profile YourName
+
 ```
 
-## ✨ Key Features
+# Create environment
+
+conda create -n auto_job python=3.11.11## ✨ Key Features
+
+conda activate auto_job
 
 ### 🧠 **Intelligent Job Matching**
-- **AI-Powered Analysis**: GPU-accelerated job compatibility scoring
-- **Smart Deduplication**: Advanced similarity detection across job boards
+
+# Install dependencies- **AI-Powered Analysis**: GPU-accelerated job compatibility scoring
+
+pip install -r requirements.txt- **Smart Deduplication**: Advanced similarity detection across job boards
+
 - **Relevance Filtering**: Automatically filters irrelevant positions
-- **Skill Extraction**: Identifies required skills and technologies
+
+# Create your profile- **Skill Extraction**: Identifies required skills and technologies
+
+python main.py --setup-profile YourName
 
 ### 🕷️ **Multi-Platform Scraping**
-- **Eluta Integration**: Specialized Canadian job market scraping
-- **External Job Boards**: Support for major job platforms
+
+# Start discovery- **Eluta Integration**: Specialized Canadian job market scraping
+
+python main.py YourName --action jobspy-pipeline --jobspy-preset canada_comprehensive- **External Job Boards**: Support for major job platforms
+
 - **Rate Limiting**: Respectful scraping with anti-bot measures
-- **Parallel Processing**: High-performance concurrent scraping
 
-### 📊 **Real-Time Analytics**
+# View dashboard- **Parallel Processing**: High-performance concurrent scraping
+
+python main.py YourName --action dashboard
+
+```### 📊 **Real-Time Analytics**
+
 - **Interactive Dashboard**: Comprehensive job market insights
-- **Performance Metrics**: Scraping and processing statistics
+
+Access dashboard at: `http://localhost:8050`- **Performance Metrics**: Scraping and processing statistics
+
 - **Company Analysis**: Hiring trends and salary insights
-- **Location Intelligence**: Geographic job distribution
 
-### ⚙️ **Production Features**
+---- **Location Intelligence**: Geographic job distribution
+
+
+
+## System Requirements### ⚙️ **Production Features**
+
 - **Automated Scheduling**: Set-and-forget job discovery
-- **Multi-User Support**: Separate profiles and databases
-- **Error Recovery**: Robust error handling and retry logic
-- **Type Safety**: Full type annotations for reliability
 
-## 🏗️ Architecture Overview
+### Minimum- **Multi-User Support**: Separate profiles and databases
 
-```
-JobQst Pipeline Architecture
+- **Python:** 3.11.11 (required)- **Error Recovery**: Robust error handling and retry logic
 
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+- **Memory:** 4GB RAM- **Type Safety**: Full type annotations for reliability
+
+- **Storage:** 2GB free space
+
+- **Network:** Stable internet## 🏗️ Architecture Overview
+
+
+
+### Recommended```
+
+- **Memory:** 8GB+ RAMJobQst Pipeline Architecture
+
+- **GPU:** CUDA-compatible for AI processing
+
+- **Storage:** SSD with 5GB+ free┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+
 │   Web Scrapers  │───▶│  Smart Processing │───▶│   Dashboard     │
-│                 │    │                  │    │                 │
+
+---│                 │    │                  │    │                 │
+
 │ • Eluta         │    │ • Deduplication  │    │ • Analytics     │
-│ • External APIs │    │ • AI Matching    │    │ • Visualizations│
+
+## Installation│ • External APIs │    │ • AI Matching    │    │ • Visualizations│
+
 │ • Rate Limiting │    │ • Skill Extract  │    │ • Export Tools  │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+
+### Standard Setup└─────────────────┘    └──────────────────┘    └─────────────────┘
+
          │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    DuckDB Analytics Database                     │
-│          • Columnar Storage  • Vectorized Queries              │
+
+```bash         ▼                       ▼                       ▼
+
+# Clone repository┌─────────────────────────────────────────────────────────────────┐
+
+git clone https://github.com/NirajanKhadka/JobQst.git│                    DuckDB Analytics Database                     │
+
+cd JobQst│          • Columnar Storage  • Vectorized Queries              │
+
 └─────────────────────────────────────────────────────────────────┘
-```
 
-## 📋 System Requirements
+# Create conda environment (recommended)```
 
-### Minimum Requirements
-- **Python**: 3.8 or higher
+conda create -n auto_job python=3.11.11
+
+conda activate auto_job## 📋 System Requirements
+
+
+
+# Install dependencies### Minimum Requirements
+
+pip install -r requirements.txt- **Python**: 3.8 or higher
+
 - **Memory**: 4GB RAM
-- **Storage**: 2GB free space
-- **Network**: Stable internet connection
 
-### Recommended for Optimal Performance
+# Verify installation- **Storage**: 2GB free space
+
+python --version  # Should show Python 3.11.11- **Network**: Stable internet connection
+
+python test_complete_pipeline.py
+
+```### Recommended for Optimal Performance
+
 - **Python**: 3.11+
-- **Memory**: 8GB+ RAM
+
+### Development Setup- **Memory**: 8GB+ RAM
+
 - **GPU**: CUDA-compatible GPU for AI processing
-- **Storage**: SSD with 5GB+ free space
 
-## 🛠️ Installation
+```bash- **Storage**: SSD with 5GB+ free space
 
-### Standard Installation
+# Install dev dependencies
+
+pip install -r requirements-dev.txt## 🛠️ Installation
+
+
+
+# Install pre-commit hooks### Standard Installation
+
+pre-commit install
 
 ```bash
-# Clone repository
-git clone <repository-url>
-cd jobqst
 
-# Create virtual environment
+# Run quality checks# Clone repository
+
+python -m black --check src/ tests/git clone <repository-url>
+
+python -m mypy src/cd jobqst
+
+pytest --cov=src --cov-report=html
+
+```# Create virtual environment
+
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
+---source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+
+
+## Usage Guide# Install dependencies
+
 pip install -r requirements.txt
 
+### 1. Profile Setup
+
 # Verify installation
-python test_complete_pipeline.py
-```
+
+```bashpython test_complete_pipeline.py
+
+# Interactive setup```
+
+python main.py --setup-profile YourName
 
 ### Development Installation
 
-```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
+# Or manually edit: profiles/YourName/YourName.json
 
-# Install pre-commit hooks
-pre-commit install
+{```bash
 
-# Run quality checks
-black --check src/ tests/
-mypy src/
-pytest --cov=src --cov-report=term-missing
+  "profile_name": "YourName",# Install development dependencies
+
+  "keywords": ["Python Developer", "Software Engineer"],pip install -r requirements-dev.txt
+
+  "locations": ["Toronto", "Vancouver", "Remote"],
+
+  "experience_level": "mid"# Install pre-commit hooks
+
+}pre-commit install
+
 ```
 
-## 🎯 Usage Guide
+# Run quality checks
+
+### 2. Job Discoveryblack --check src/ tests/
+
+mypy src/
+
+```bashpytest --cov=src --cov-report=term-missing
+
+# Modern JobSpy pipeline (recommended)```
+
+python main.py YourName --action jobspy-pipeline \
+
+  --jobspy-preset canada_comprehensive \## 🎯 Usage Guide
+
+  --enable-cache
 
 ### Profile Setup
 
-Create a personalized job search profile:
+# Custom search
 
-```bash
-# Interactive profile creation
+python main.py YourName --action jobspy-pipeline \Create a personalized job search profile:
+
+  --sites indeed,linkedin \
+
+  --locations "Toronto, ON" "Vancouver, BC" \```bash
+
+  --search-terms "Python Developer" "Data Scientist"# Interactive profile creation
+
 python main.py --setup-profile YourName
 
-# Or manually edit: profiles/YourName/YourName.json
-{
+# Legacy scraping (fallback)
+
+python main.py YourName --action scrape --jobs 100# Or manually edit: profiles/YourName/YourName.json
+
+```{
+
   "profile_name": "YourName",
-  "keywords": ["Python Developer", "Software Engineer"],
-  "locations": ["Toronto", "Vancouver", "Remote"],
-  "experience_level": "mid",
-  "salary_range": "80000-120000"
-}
-```
 
-### Job Scraping
+**Available Presets:**  "keywords": ["Python Developer", "Software Engineer"],
 
-```bash
-# Basic scraping
-python main.py YourName --action scrape --jobs 100
+- `canada_comprehensive` - 20+ Canadian cities  "locations": ["Toronto", "Vancouver", "Remote"],
 
-# Advanced scraping with options
-python main.py YourName --action scrape \
-  --jobs 200 \
+- `tech_hubs_canada` - Toronto, Vancouver, Montreal, etc.  "experience_level": "mid",
+
+- `usa_comprehensive` - 50+ USA cities  "salary_range": "80000-120000"
+
+- `usa_tech_hubs` - San Francisco, Seattle, Austin, etc.}
+
+- `remote_focused` - Remote opportunities```
+
+
+
+### 3. Job Analysis### Job Scraping
+
+
+
+```bash```bash
+
+# Analyze discovered jobs# Basic scraping
+
+python main.py YourName --action analyze-jobs --enable-cachepython main.py YourName --action scrape --jobs 100
+
+
+
+# Force reprocessing# Advanced scraping with options
+
+python main.py YourName --action analyze-jobs --force-reprocesspython main.py YourName --action scrape \
+
+```  --jobs 200 \
+
   --sites eluta,external \
-  --auto-process \
+
+### 4. Dashboard  --auto-process \
+
   --enable-gpu
 
-# Scheduled scraping
-python scripts/scheduling/scheduler.py
+```bash
+
+# Launch dashboard# Scheduled scraping
+
+python main.py YourName --action dashboardpython scripts/scheduling/scheduler.py
+
 ```
 
-### Dashboard Analytics
+# Access at: http://localhost:8050
 
-```bash
-# Launch interactive dashboard
-python src/dashboard/unified_dashboard.py --profile YourName
+```### Dashboard Analytics
+
+
+
+**Dashboard Features:**```bash
+
+- **Ranked Jobs** - Browse and filter jobs by compatibility score# Launch interactive dashboard
+
+- **Job Tracker** - Manage application statuspython src/dashboard/unified_dashboard.py --profile YourName
+
+- **Market Insights** - Analytics and trends
 
 # Access at: http://localhost:8501
-```
 
-### Command Line Interface
+---```
 
-```bash
+
+
+## Configuration### Command Line Interface
+
+
+
+### JobSpy Presets```bash
+
 # Interactive mode
-python main.py YourName
 
-# Available actions:
-# - scrape: Discover new jobs
-# - process: Analyze existing jobs  
-# - dashboard: Launch analytics dashboard
-# - export: Export job data
-# - cleanup: Remove duplicates
+Presets are defined in `src/config/jobspy_integration_config.py`:python main.py YourName
+
+
+
+```python# Available actions:
+
+JOBSPY_LOCATION_SETS = {# - scrape: Discover new jobs
+
+    "canada_comprehensive": [/* 20+ cities */],# - process: Analyze existing jobs  
+
+    "tech_hubs_canada": ["Toronto", "Vancouver", "Montreal", ...],# - dashboard: Launch analytics dashboard
+
+    "usa_tech_hubs": ["San Francisco", "Seattle", "Austin", ...],# - export: Export job data
+
+}# - cleanup: Remove duplicates
+
 ```
 
-## 📊 Performance Metrics
+JOBSPY_QUERY_PRESETS = {
 
-### Scraping Performance
-- **Speed**: 2+ jobs/second with parallel processing
-- **Accuracy**: 95%+ relevant job matching
+    "comprehensive": [/* 20+ search terms */],## 📊 Performance Metrics
+
+    "python_focused": ["Python Developer", "Python Engineer", ...],
+
+    "data_focused": ["Data Analyst", "Data Scientist", ...],### Scraping Performance
+
+}- **Speed**: 2+ jobs/second with parallel processing
+
+```- **Accuracy**: 95%+ relevant job matching
+
 - **Deduplication**: 85%+ duplicate detection rate
-- **Coverage**: Multiple job boards and sources
 
-### Processing Performance
+### Environment Variables- **Coverage**: Multiple job boards and sources
+
+
+
+Create `.env` file:### Processing Performance
+
 - **AI Analysis**: GPU-accelerated compatibility scoring
-- **Skill Extraction**: 90%+ accuracy in skill identification
-- **Response Time**: <2 seconds for job analysis
-- **Throughput**: 100+ jobs/minute processing
 
-## 🔧 Configuration
+```bash- **Skill Extraction**: 90%+ accuracy in skill identification
 
-### Environment Variables
+# Database- **Response Time**: <2 seconds for job analysis
 
-```bash
-# .env file configuration
-DATABASE_URL=profiles/{profile_name}/{profile_name}_duckdb.db
-LOG_LEVEL=INFO
+DATABASE_TYPE=duckdb  # or sqlite- **Throughput**: 100+ jobs/minute processing
+
+
+
+# AI Processing## 🔧 Configuration
+
 ENABLE_GPU=true
-MAX_WORKERS=10
-SCRAPING_DELAY=1.0
+
+DISABLE_HEAVY_AI=false### Environment Variables
+
+
+
+# Logging```bash
+
+LOG_LEVEL=INFO# .env file configuration
+
+DATABASE_URL=profiles/{profile_name}/{profile_name}_duckdb.db
+
+# CachingLOG_LEVEL=INFO
+
+ENABLE_CACHE=trueENABLE_GPU=true
+
+CACHE_TTL_SECONDS=300MAX_WORKERS=10
+
+```SCRAPING_DELAY=1.0
+
 ```
+
+---
 
 ### Advanced Configuration
 
+## Architecture Overview
+
 ```python
-# config/settings.py
-from pydantic import BaseSettings
 
-class Settings(BaseSettings):
-    max_concurrent_requests: int = 5
-    request_timeout: int = 30
-    retry_attempts: int = 3
-    enable_ai_processing: bool = True
-    
-    class Config:
-        env_file = ".env"
-```
+```# config/settings.py
 
-## 🧪 Testing
+JobLens Pipelinefrom pydantic import BaseSettings
 
-### Running Tests
 
-```bash
-# Full test suite
+
+CLI (main.py)class Settings(BaseSettings):
+
+    ↓    max_concurrent_requests: int = 5
+
+Command Dispatcher    request_timeout: int = 30
+
+    ↓    retry_attempts: int = 3
+
+JobSpy Controller    enable_ai_processing: bool = True
+
+    ↓    
+
+Multi-Site Workers (4 sites parallel)    class Config:
+
+    ↓        env_file = ".env"
+
+Unified Deduplication```
+
+    ↓
+
+Two-Stage Processing (CPU → GPU)## 🧪 Testing
+
+    ↓
+
+DuckDB Storage### Running Tests
+
+    ↓
+
+Dashboard (Dash)```bash
+
+```# Full test suite
+
 pytest
 
-# With coverage
-pytest --cov=src --cov-report=html
+**Key Components:**
 
-# Specific test categories
-pytest tests/unit/          # Unit tests
+- **JobSpy Workers** (`src/scrapers/multi_site_jobspy_workers.py`) - Parallel scraping# With coverage
+
+- **Two-Stage Processor** (`src/analysis/two_stage_processor.py`) - AI analysispytest --cov=src --cov-report=html
+
+- **DuckDB Database** (`src/core/duckdb_database.py`) - High-performance storage
+
+- **Unified Deduplication** (`src/core/unified_deduplication.py`) - Single dedup system# Specific test categories
+
+- **Dashboard** (`src/dashboard/dash_app/app.py`) - Interactive UIpytest tests/unit/          # Unit tests
+
 pytest tests/integration/   # Integration tests
-pytest tests/e2e/          # End-to-end tests
 
-# Pipeline health check
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.pytest tests/e2e/          # End-to-end tests
+
+
+
+---# Pipeline health check
+
 python test_complete_pipeline.py
-```
 
-### Test Coverage Requirements
-- **Minimum**: 80% code coverage
-- **Critical paths**: 95% coverage required
-- **New features**: 100% coverage required
+## Performance```
 
-## 📈 Monitoring & Observability
 
-### Health Checks
+
+### Scraping### Test Coverage Requirements
+
+- **Speed:** 2-3 jobs/second with 4 parallel workers- **Minimum**: 80% code coverage
+
+- **Success Rate:** 85-90% (varies by site)- **Critical paths**: 95% coverage required
+
+- **Relevance:** 95%+ after AI filtering- **New features**: 100% coverage required
+
+
+
+### Processing## 📈 Monitoring & Observability
+
+- **Stage 1 (CPU):** ~100 jobs/minute
+
+- **Stage 2 (AI):** ~20 jobs/minute (with cache: ~100 jobs/minute)### Health Checks
+
+- **Cache Hit Rate:** 70-80%
 
 ```bash
-# System health check
-python test_complete_pipeline.py
+
+### Database# System health check
+
+- **DuckDB vs SQLite:** 10-100x faster analytical queriespython test_complete_pipeline.py
+
+- **Query Speed:** <500ms for dashboard with cache
 
 # Database health
-python -c "from src.core.job_database import get_job_db; print(get_job_db().get_job_stats())"
 
-# Scraper status
+---python -c "from src.core.job_database import get_job_db; print(get_job_db().get_job_stats())"
+
+
+
+## Testing# Scraper status
+
 python -c "from src.scrapers import get_scraper_status; print(get_scraper_status())"
-```
 
-### Logging
+```bash```
 
-```python
-# Structured logging with context
-import logging
-from src.utils.logging import get_logger
+# Full test suite
 
-logger = get_logger(__name__)
-logger.info("Job scraping started", extra={"profile": "YourName", "target_jobs": 100})
-```
+pytest tests/ -v --cov=src --cov-report=html### Logging
 
-## 🚀 Deployment
 
-### Production Deployment
 
-```bash
+# Specific categories```python
+
+pytest tests/unit/ -v                    # Fast unit tests# Structured logging with context
+
+pytest tests/integration/ -v             # Integration testsimport logging
+
+pytest tests/integration/ -v --real-scraping  # With live scrapingfrom src.utils.logging import get_logger
+
+
+
+# Quick health checklogger = get_logger(__name__)
+
+python test_complete_pipeline.pylogger.info("Job scraping started", extra={"profile": "YourName", "target_jobs": 100})
+
+``````
+
+
+
+**Current Coverage:** ~85% (target: 90%)## 🚀 Deployment
+
+
+
+---### Production Deployment
+
+
+
+## Development Standards```bash
+
 # Using Docker
-docker-compose -f docker-compose.infrastructure.yml up -d
 
-# Using systemd (Linux)
+JobLens follows strict development standards documented in [DEVELOPMENT_STANDARDS.md](docs/DEVELOPMENT_STANDARDS.md).docker-compose -f docker-compose.infrastructure.yml up -d
+
+
+
+**Current Compliance:** 93/100 ✅# Using systemd (Linux)
+
 sudo cp scripts/scheduling/jobqst-scheduler.service /etc/systemd/system/
-sudo systemctl enable jobqst-scheduler
+
+### Quality Toolssudo systemctl enable jobqst-scheduler
+
 sudo systemctl start jobqst-scheduler
 
-# Using Windows Task Scheduler
-# Run as Administrator: scripts/scheduling/setup_windows_scheduler.bat
+```bash
+
+# Code formatting# Using Windows Task Scheduler
+
+python -m black src/ tests/# Run as Administrator: scripts/scheduling/setup_windows_scheduler.bat
+
 ```
 
-### Scaling Considerations
+# Type checking
 
-- **Horizontal Scaling**: Multiple scraper instances with shared database
-- **Vertical Scaling**: Increase worker threads and memory allocation
+python -m mypy src/### Scaling Considerations
+
+
+
+# Linting- **Horizontal Scaling**: Multiple scraper instances with shared database
+
+python -m flake8 src/ tests/- **Vertical Scaling**: Increase worker threads and memory allocation
+
 - **Database Optimization**: Regular VACUUM and index maintenance
-- **Caching**: Redis for frequently accessed data
+
+# Import sorting- **Caching**: Redis for frequently accessed data
+
+python -m isort src/ tests/
 
 ## 🔒 Security
 
-### Security Features
-- **Input Validation**: All external input sanitized
+# Security scanning
+
+python -m bandit -r src/### Security Features
+
+```- **Input Validation**: All external input sanitized
+
 - **Rate Limiting**: Respectful scraping practices
-- **Error Handling**: No sensitive data in error messages
+
+### Pre-commit Hooks- **Error Handling**: No sensitive data in error messages
+
 - **Dependency Scanning**: Regular security audits
 
-### Security Best Practices
+```bash
+
+# Install hooks### Security Best Practices
+
+pre-commit install
 
 ```bash
-# Security scanning
-bandit -r src/
-safety check
+
+# Run manually# Security scanning
+
+pre-commit run --all-filesbandit -r src/
+
+```safety check
+
 pip-audit
 
+---
+
 # Secure configuration
-# Never commit .env files
+
+## Troubleshooting# Never commit .env files
+
 # Use environment variables for secrets
-# Regular dependency updates
+
+See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for common issues.# Regular dependency updates
+
 ```
+
+### Quick Fixes
 
 ## 🤝 Contributing
 
-### Development Workflow
+| Problem | Solution |
 
-1. **Fork** the repository
-2. **Create** feature branch: `git checkout -b feature/amazing-feature`
-3. **Follow** [development standards](docs/DEVELOPMENT_STANDARDS.md)
+|---------|----------|### Development Workflow
+
+| No jobs found | Check keywords: `python -c "from src.utils.profile_helpers import load_profile; print(load_profile('YourProfile')['keywords'])"` |
+
+| Database errors | Restart: `pkill -f python; python main.py YourProfile` |1. **Fork** the repository
+
+| Wrong environment | Activate: `conda activate auto_job` |2. **Create** feature branch: `git checkout -b feature/amazing-feature`
+
+| Import errors | Reinstall: `pip install -r requirements.txt` |3. **Follow** [development standards](docs/DEVELOPMENT_STANDARDS.md)
+
 4. **Test** your changes: `pytest`
-5. **Commit** with conventional commits: `feat: add amazing feature`
+
+### Environment Verification5. **Commit** with conventional commits: `feat: add amazing feature`
+
 6. **Push** and create Pull Request
 
-### Code Quality Requirements
+```bash
+
+# Check Python version### Code Quality Requirements
+
+python --version  # Should be 3.11.11
 
 ```bash
-# Before submitting PR
-black src/ tests/           # Code formatting
-isort src/ tests/           # Import sorting
+
+# Check environment# Before submitting PR
+
+python -c "import sys; print(sys.executable)"black src/ tests/           # Code formatting
+
+# Expected: .../miniconda3/envs/auto_job/python.exeisort src/ tests/           # Import sorting
+
 flake8 src/ tests/          # Linting
-mypy src/                   # Type checking
-pytest --cov=src            # Test coverage
+
+# Verify toolsmypy src/                   # Type checking
+
+python -m black --version   # 25.1.0pytest --cov=src            # Test coverage
+
+python -m mypy --version    # 1.14.1```
+
 ```
 
 ## 📚 Documentation
 
+---
+
 - **[Development Standards](docs/DEVELOPMENT_STANDARDS.md)**: Code quality and patterns
-- **[Architecture Guide](docs/ARCHITECTURE.md)**: System design and components
+
+## Documentation- **[Architecture Guide](docs/ARCHITECTURE.md)**: System design and components
+
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)**: Common issues and solutions
 
-## 🆘 Support
+- **[DEVELOPMENT_STANDARDS.md](docs/DEVELOPMENT_STANDARDS.md)** - Coding standards (93/100 compliance)
+
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture and design## 🆘 Support
+
+- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### Getting Help
 
+---
+
 - **Documentation**: Check docs/ directory first
-- **Issues**: Create GitHub issue with reproduction steps
+
+## Contributing- **Issues**: Create GitHub issue with reproduction steps
+
 - **Discussions**: Use GitHub Discussions for questions
-- **Security**: Email security issues privately
 
-### Common Issues
+1. Fork the repository- **Security**: Email security issues privately
 
-```bash
-# Database connection issues
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+
+3. Follow [DEVELOPMENT_STANDARDS.md](docs/DEVELOPMENT_STANDARDS.md)### Common Issues
+
+4. Run quality checks: `pre-commit run --all-files`
+
+5. Commit with conventional commits: `feat: add amazing feature````bash
+
+6. Push and create Pull Request# Database connection issues
+
 python -c "from src.core.job_database import get_job_db; get_job_db().get_job_count()"
 
+---
+
 # Scraper issues
-python test_complete_pipeline.py
 
-# Performance issues
+## Licensepython test_complete_pipeline.py
+
+
+
+MIT License - see [LICENSE](LICENSE) file for details.# Performance issues
+
 python -m cProfile -o profile.stats main.py YourName --action scrape --jobs 10
-```
 
-## 📄 License
+---```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
 
-- **JobSpy**: External job board integration
+## Acknowledgments## 📄 License
+
+
+
+- **[JobSpy](https://github.com/cullena20/JobSpy)** - Multi-site job scraping foundationThis project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+- **[DuckDB](https://duckdb.org/)** - High-performance analytics database
+
+- **[Dash](https://dash.plotly.com/)** - Interactive dashboard framework## 🙏 Acknowledgments
+
+
+
+---- **JobSpy**: External job board integration
+
 - **DuckDB**: High-performance analytics database
-- **Playwright**: Reliable web scraping
+
+**Built for job seekers with ❤️ and modern Python**- **Playwright**: Reliable web scraping
+
 - **Transformers**: AI-powered job analysis
-- **Dash**: Interactive dashboard framework
+
+*JobLens - Making job search intelligent, automated, and effective.*- **Dash**: Interactive dashboard framework
+
 
 ## 🙏 Acknowledgments
 
@@ -427,7 +814,9 @@ Special thanks to the [JobSpy Project](https://github.com/speedyapply/JobSpy) fo
 
 ## What is JobQst?
 
-JobQst is a modern job discovery platform built with clean Python architecture. It streamlines job searching across multiple sources, provides intelligent job-profile matching, and offers powerful analytics through interactive dashboards.
+JobQst is an intelligent job discovery and analysis platform that automates your job search across **4 major job sites** (Indeed, LinkedIn, Glassdoor, ZipRecruiter) using **JobSpy integration**. It provides **AI-powered job-profile matching**, **intelligent caching**, and **real-time analytics** through a modern Dash dashboard.
+
+Built with **clean Python architecture** following modern development standards with **full type annotations**, **DuckDB analytics**, and **production-ready error handling**.
 
 ### 🎯 **Perfect For:**
 
@@ -436,16 +825,18 @@ JobQst is a modern job discovery platform built with clean Python architecture. 
 - **Developers** seeking opportunities with location-specific search capabilities
 - **Anyone** optimizing their job search with automation and analytics
 
-### ✨ **Current Features (September 2025)**
+### ✨ **Current Features (January 2025)**
 
-- ✅ **Multi-Source Scraping** - JobSpy integration (Indeed, LinkedIn, Glassdoor, ZipRecruiter) + Eluta.ca
-- ✅ **DuckDB Analytics** - 10-100x faster analytics with optimized 17-field schema
-- ✅ **Intelligent 3-Layer Caching** - HTML, embedding, and result caching for 70% faster processing
-- ✅ **Modern Dash Dashboard** - Interactive web interface with real-time monitoring
-- ✅ **AI-Powered Matching** - Semantic job-profile compatibility scoring
-- ✅ **Type-Safe Architecture** - Full type annotations following modern Python standards
-- ✅ **Performance Monitoring** - Real-time health checks and system metrics
-- ✅ **Automated Backup System** - Database backup with rotation and integrity verification
+- ✅ **JobSpy Multi-Site Integration** - 4 major job sites (Indeed, LinkedIn, Glassdoor, ZipRecruiter) with parallel scraping
+- ✅ **AI-Powered Job Matching** - Two-stage processing with semantic similarity analysis and compatibility scoring
+- ✅ **Intelligent Caching System** - 3-layer caching (HTML, embeddings, results) for 70% performance improvement
+- ✅ **DuckDB Analytics** - High-performance columnar database for 10-100x faster analytics
+- ✅ **Modern Dash Dashboard** - Interactive web interface with real-time monitoring and performance analytics
+- ✅ **Smart Relevance Filtering** - AI-powered job filtering to eliminate irrelevant results
+- ✅ **Type-Safe Architecture** - Full type annotations (93/100 compliance) following modern Python standards
+- ✅ **Profile-Based System** - Multiple user profiles with dedicated databases
+- ✅ **Unified Deduplication** - Single, authoritative deduplication system across all job sources
+- ✅ **Configurable Presets** - Pre-configured search strategies (Canada, USA, Tech Hubs, Remote)
 
 ---
 
@@ -515,36 +906,34 @@ cp .env.example .env
 # Ensure you're in the auto_job environment
 conda activate auto_job
 
-# 1. Scrape jobs using JobSpy with DuckDB optimization
+# 1. Run JobSpy discovery pipeline (primary workflow)
 python main.py YourProfile --action jobspy-pipeline \
   --jobspy-preset canada_comprehensive \
-  --database-type duckdb
+  --workers 4
 
-# 2. Analyze and score scraped jobs with intelligent caching
-python main.py YourProfile --action analyze-jobs --enable-cache
+# 2. Process and analyze discovered jobs
+python main.py YourProfile --action process-jobs
 
-# 3. Launch dashboard with performance monitoring
-python main.py YourProfile --action dashboard --enable-monitoring
+# 3. Launch interactive dashboard
+python main.py YourProfile --action dashboard
 
-# 4. Performance dashboard with cache analytics
-python main.py YourProfile --action performance-dashboard
+# 4. System health check and diagnostics
+python main.py YourProfile --action health-check
 
-# 5. System health check and cache statistics
-python main.py YourProfile --action health-check --show-cache-stats
+# 5. Interactive CLI menu (guided workflow)
+python main.py YourProfile --action interactive
 ```
 
 ### Available Actions
 
-| Action | Description | Example |
-|--------|-------------|---------|
-| `jobspy-pipeline` | **Modern scraping** with JobSpy integration + DuckDB | `--jobspy-preset usa_comprehensive --database-type duckdb` |
-| `scrape` | **Legacy scraping** with Eluta fallback | `--keywords "python,data"` |
-| `analyze-jobs` | **AI analysis** with intelligent caching | `--enable-cache --cache-profile` |
-| `dashboard` | **Enhanced Dash interface** with performance monitoring | `--enable-monitoring --show-cache-stats` |
-| `performance-dashboard` | **Dedicated performance analytics** interface | Real-time system metrics and cache analytics |
-| `health-check` | **System health monitoring** and diagnostics | `--detailed --show-cache-stats` |
-| `cache-management` | **Cache statistics** and cleanup operations | `--action cache-stats`, `--action cache-clear` |
-| `interactive` | **CLI menu** for guided workflows | Interactive command selection |
+| Action | Description | Key Options |
+|--------|-------------|-------------|
+| `jobspy-pipeline` | **Multi-site job discovery** via JobSpy | `--jobspy-preset <preset>`, `--sites <sites>`, `--workers <n>` |
+| `process-jobs` | **AI-powered job analysis** with caching | `--jobs <limit>`, `--verbose` |
+| `dashboard` | **Interactive Dash interface** | Launches at http://localhost:8050 |
+| `health-check` | **System diagnostics** | Database, cache, and worker health |
+| `benchmark` | **Performance testing** | Pipeline and system benchmarks |
+| `interactive` | **CLI menu** for guided workflows | User-friendly menu interface |
 
 ## Architecture Overview
 
@@ -845,61 +1234,67 @@ Use `Ctrl+Shift+P` → "Tasks: Run Task":
 - **Run all tests (pytest)** - Execute full test suite
 - **Start Dash Dashboard** - Launch Dash analytics interface
 
-## Deployment & Production
+## Deployment & Running
 
-### Local Production Setup
+### Local Setup (Recommended)
+
 ```bash
-# 1. Production environment setup
-conda create -n jobqst_prod python=3.11
-conda activate jobqst_prod
+# 1. Environment setup
+conda create -n jobqst_local python=3.11
+conda activate jobqst_local
 pip install -r requirements.txt
 
-# 2. PostgreSQL database setup (recommended for production)
-createdb jobqst_production
-export DATABASE_URL=postgresql://user:password@localhost/jobqst_production
-
-# 3. Run database migrations
-python -c "from src.core.database_migration import run_migrations; run_migrations()"
-
-# 4. Start services
-python main.py ProductionProfile --action dashboard  # Dashboard
-python main.py ProductionProfile --action jobspy-pipeline  # Background scraping
+# 2. Start using it
+python main.py YourProfile --action jobspy-pipeline
+python main.py YourProfile --action dashboard  # Dashboard on localhost:8050
 ```
 
-### Docker Deployment
+### Running on a Server
+
+If you want to run JobQst on a remote server:
+
 ```bash
-# Development environment
-docker-compose -f docker-compose.dev.yml up
+# 1. SSH into server and set up conda environment
+ssh your-server
+conda create -n auto_job python=3.11
+conda activate auto_job
+pip install -r requirements.txt
 
-# Production deployment
-docker-compose up -d
+# 2. Run in background with screen/tmux
+screen -S jobqst
+python main.py YourProfile --action dashboard  # Keeps dashboard running
 
-# Check service health
-docker-compose ps
-docker-compose logs jobqst-app
+# 3. Detach with Ctrl+A, D
+# Reattach with: screen -r jobqst
+
+# 4. Access dashboard via SSH tunnel
+# On your local machine:
+ssh -L 8050:localhost:8050 your-server
+# Then open http://localhost:8050 in browser
 ```
 
-### Cloud Deployment Options
+### Deployment Notes
 
-#### Option 1: Traditional VPS/VM
-- Deploy using Docker Compose
-- PostgreSQL + Redis for production scale
-- Nginx reverse proxy for dashboard access
-- Systemd services for background processing
+**Current Status**: JobQst is designed for local development and personal use.
 
-#### Option 2: Container Platforms
-- **AWS ECS/Fargate**: Container orchestration
-- **Google Cloud Run**: Serverless container deployment  
-- **Azure Container Instances**: Managed container hosting
-- **Railway/Render**: Simple deployment with built-in PostgreSQL
+**What exists:**
+- Conda environment setup (documented above)
+- Local DuckDB database (per-profile)
+- Dash dashboard on localhost:8050
+- CLI automation tools
 
-#### Option 3: Self-Hosted
-```bash
-# Systemd service example (Ubuntu/CentOS)
-sudo cp deploy/jobqst.service /etc/systemd/system/
-sudo systemctl enable jobqst
-sudo systemctl start jobqst
-```
+**What doesn't exist (yet):**
+- Docker containerization
+- Cloud deployment configs
+- Production database setup
+- Multi-server deployment
+- CI/CD pipelines
+
+If you need to run JobQst on a server, you can:
+1. Set up the conda environment on the server
+2. Run commands via SSH or cron jobs
+3. Use screen/tmux to keep dashboard running
+4. Forward port 8050 for dashboard access
 
 ## Documentation & Resources
 

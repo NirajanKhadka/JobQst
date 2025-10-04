@@ -9,26 +9,17 @@ def check_database_health(config: Dict) -> Dict:
         # Look for DuckDB databases in profiles directory
         profiles_dir = Path("profiles")
         if not profiles_dir.exists():
-            return {
-                "status": "warning",
-                "message": "Profiles directory not found"
-            }
-        
+            return {"status": "warning", "message": "Profiles directory not found"}
+
         db_files = list(profiles_dir.glob("**/*_duckdb.db"))
         if not db_files:
-            return {
-                "status": "warning",
-                "message": "No DuckDB databases found"
-            }
-        
+            return {"status": "warning", "message": "No DuckDB databases found"}
+
         # Check the first available DuckDB database
         db_path = db_files[0]
-        
+
         if not db_path.exists():
-            return {
-                "status": "warning",
-                "message": "DuckDB database file not found"
-            }
+            return {"status": "warning", "message": "DuckDB database file not found"}
 
         db_size_mb = db_path.stat().st_size / (1024 * 1024)
         max_size = config.get("database_max_size_mb", 1000)
@@ -50,15 +41,10 @@ def check_database_health(config: Dict) -> Dict:
                 }
 
             required_tables = ["jobs", "applications"]
-            missing_tables = [
-                table for table in required_tables if table not in tables
-            ]
+            missing_tables = [table for table in required_tables if table not in tables]
 
             if missing_tables:
-                return {
-                    "status": "warning",
-                    "message": f"Missing tables: {missing_tables}"
-                }
+                return {"status": "warning", "message": f"Missing tables: {missing_tables}"}
 
             # Check job count
             try:
@@ -70,12 +56,8 @@ def check_database_health(config: Dict) -> Dict:
         return {
             "status": "healthy",
             "message": f"DuckDB healthy ({db_size_mb:.1f}MB, "
-                      f"{len(tables)} tables, {job_count} jobs)",
+            f"{len(tables)} tables, {job_count} jobs)",
         }
 
     except Exception as e:
-        return {
-            "status": "critical",
-            "message": f"DuckDB health check failed: {str(e)}"
-        }
-
+        return {"status": "critical", "message": f"DuckDB health check failed: {str(e)}"}

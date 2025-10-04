@@ -31,16 +31,19 @@ class JobAnalysisEngine:
         try:
             keywords = get_Automated_keywords(self.profile)
             console.print(f"[cyan]🔍 Using {len(keywords)} Automated keywords[/cyan]")
-        except:
-            console.print("[yellow]⚠️ Using default keywords[/yellow]")
+        except (AttributeError, KeyError, TypeError) as e:
+            console.print(f"[yellow]⚠️ Using default keywords ({e})[/yellow]")
             keywords = ["Python", "Data Analyst", "SQL"]
 
         parallel_scraper = ParallelJobScraper(self.profile_name, num_workers=min(len(keywords), 4))
-        
+
         # Use async method properly
         import asyncio
+
         try:
-            all_jobs = asyncio.run(parallel_scraper.start_parallel_scraping(max_jobs_per_keyword=max_jobs))
+            all_jobs = asyncio.run(
+                parallel_scraper.start_parallel_scraping(max_jobs_per_keyword=max_jobs)
+            )
         except Exception as e:
             console.print(f"[red]❌ Scraping failed: {e}[/red]")
             return []

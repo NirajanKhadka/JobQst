@@ -11,15 +11,15 @@ from datetime import datetime, timedelta
 
 class TestDashboardData:
     """Test dashboard data operations with real data."""
-    
+
     def test_database_connection(self):
         """Test that we can connect to the database."""
-        db = get_job_db('test_profile')
+        db = get_job_db("test_profile")
         assert db is not None
-        
+
     def test_get_recent_jobs(self):
         """Test getting recent jobs from database."""
-        db = get_job_db('test_profile')
+        db = get_job_db("test_profile")
         try:
             # Test with real data if available
             jobs = db.get_recent_jobs(limit=5)
@@ -28,23 +28,23 @@ class TestDashboardData:
             assert len(jobs) >= 0
         except Exception:
             pytest.skip("Database not available or empty")
-    
+
     def test_job_count(self):
         """Test getting job count from database."""
-        db = get_job_db('test_profile')
+        db = get_job_db("test_profile")
         try:
             count = db.get_job_count()
             assert isinstance(count, int)
             assert count >= 0
         except Exception:
             pytest.skip("Database not available")
-    
+
     def test_applied_jobs_count(self):
         """Test getting applied jobs count."""
-        db = get_job_db('test_profile')
+        db = get_job_db("test_profile")
         try:
             # This should work even with empty database
-            applied_count = len([job for job in db.get_recent_jobs() if job.get('applied', False)])
+            applied_count = len([job for job in db.get_recent_jobs() if job.get("applied", False)])
             assert isinstance(applied_count, int)
             assert applied_count >= 0
         except Exception:

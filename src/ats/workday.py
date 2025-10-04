@@ -71,4 +71,3 @@ class WorkdaySubmitter(BaseSubmitter):
             except Exception:
                 continue
         return False
-

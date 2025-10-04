@@ -4,6 +4,7 @@ Provides get_status() used in DataLoader without pulling in heavy
 processing pipeline synchronously. Wraps TwoStageJobProcessor lazily if
 needed for future expansion.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -51,19 +52,14 @@ class JobProcessor:
         if self._initialized:
             return
         self._initialized = True
-        logger.debug(
-            "JobProcessor initialized for profile %s",
-            self.profile_name
-        )
+        logger.debug("JobProcessor initialized for profile %s", self.profile_name)
 
     def refresh_status(self) -> None:
         if get_job_db is None:
             return
         try:
             db = get_job_db(self.profile_name)
-            pending = db.get_job_count(
-                status_filter=["scraped", "new"]
-            )  # type: ignore
+            pending = db.get_job_count(status_filter=["scraped", "new"])  # type: ignore
             processed = db.get_job_count(
                 status_filter=["processed", "ready_to_apply", "applied"]
             )  # type: ignore
@@ -86,4 +82,3 @@ class JobProcessor:
 
 
 __all__ = ["JobProcessor", "ProcessorStatus"]
-

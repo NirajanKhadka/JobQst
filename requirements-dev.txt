@@ -1,0 +1,44 @@
+# JobQst - Development Requirements
+# Additional dependencies for development, testing, and code quality
+# Last Updated: October 1, 2025
+
+# Include all production requirements
+-r requirements.txt
+
+# ===== Testing Framework =====
+pytest==8.3.4
+pytest-asyncio==0.25.2
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+pytest-xdist==3.6.1  # Parallel test execution
+
+# ===== Code Quality & Linting =====
+black==25.1.0
+isort==5.13.2
+flake8==7.1.1
+pylint==3.3.2
+mypy==1.14.1
+
+# ===== Security Scanning =====
+bandit==1.8.0
+safety==3.2.11
+
+# ===== Documentation =====
+sphinx==8.1.3
+sphinx-rtd-theme==3.0.2
+
+# ===== Performance Profiling =====
+py-spy==0.4.0
+memory-profiler==0.61.0
+line-profiler==4.2.0
+
+# ===== Development Tools =====
+ipython==8.31.0
+ipdb==0.13.13
+pre-commit==4.0.1
+
+# ===== Type Checking Support =====
+types-requests==2.32.0.20241016
+types-python-dateutil==2.9.0.20241206
+types-pytz==2024.2.0.20241209
+pandas-stubs==2.2.3.241009

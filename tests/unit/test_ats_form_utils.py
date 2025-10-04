@@ -104,7 +104,7 @@ class TestFillFormFields:
         mock_element.is_visible.return_value = True
         mock_element.input_value.return_value = ""  # Empty field
         mock_element.fill = AsyncMock()
-        
+
         mock_page.query_selector_all.return_value = [mock_element]
 
         # Act
@@ -122,7 +122,7 @@ class TestFillFormFields:
         mock_element.is_visible.return_value = True
         mock_element.input_value.return_value = "existing value"  # Already filled
         mock_element.fill = AsyncMock()
-        
+
         mock_page.query_selector_all.return_value = [mock_element]
 
         # Act
@@ -153,7 +153,7 @@ class TestFillFormFields:
         mock_element.is_visible.return_value = True
         mock_element.input_value.return_value = ""
         mock_element.fill = AsyncMock()
-        
+
         mock_page.query_selector_all.return_value = [mock_element]
 
         # Act
@@ -194,7 +194,7 @@ class TestFileUpload:
         mock_element = AsyncMock()
         mock_element.is_visible.return_value = True
         mock_element.set_input_files = AsyncMock()
-        
+
         mock_page.query_selector_all.return_value = [mock_element]
 
         # Act
@@ -232,7 +232,7 @@ class TestFileUpload:
         mock_element = AsyncMock()
         mock_element.is_visible.return_value = True
         mock_element.set_input_files = AsyncMock()
-        
+
         mock_page.query_selector_all.return_value = [mock_element]
 
         # Act
@@ -286,9 +286,9 @@ class TestNavigationButtons:
         mock_page.is_visible.return_value = True
         mock_page.click = AsyncMock()
         mock_page.wait_for_load_state = AsyncMock()
-        
+
         # Mock confirmation check
-        with patch('src.ats.form_utils.check_for_confirmation', return_value=True):
+        with patch("src.ats.form_utils.check_for_confirmation", return_value=True):
             # Act
             result = await click_submit_button(mock_page)
 
@@ -405,7 +405,7 @@ class TestGenerateCoverLetterText:
         cover_letter = generate_cover_letter_text(profile)
 
         # Assert
-        lines = cover_letter.strip().split('\n')
+        lines = cover_letter.strip().split("\n")
         assert len(lines) >= 5  # Should have multiple lines
         assert lines[0].startswith("Dear")  # Proper greeting
         assert "Test User" in lines[-1]  # Name in signature

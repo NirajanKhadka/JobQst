@@ -137,4 +137,3 @@ def create_Improved_applicator(
         JobApplicator instance
     """
     return JobApplicator(profile_name, config)
-

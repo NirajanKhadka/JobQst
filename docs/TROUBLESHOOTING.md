@@ -1,147 +1,182 @@
-# JobQst Troubleshooting Guide
+# JobLens Troubleshooting Guide
 
-**Version**: 2.0.0  
-**Last Updated**: September 21, 2025
-
-This guide helps you resolve common issues with JobQst quickly and effectively.
+**Last Updated:** January 13, 2025  
+**Status:** Active Reference  
+**Compliance Score:** 93/100 ✅  
+**Environment:** Python 3.11.11 (auto_job conda)
 
 ## Quick Diagnostics
 
-### System Health Check
+Run these first to identify issues:
 
 ```bash
-# Run the complete pipeline test
-python test_complete_pipeline.py
+# 1. Environment verification (CRITICAL)
+python --version  # Should show: Python 3.11.11
+python -c "import sys; print(sys.executable)"
+# Expected: .../miniconda3/envs/auto_job/python.exe
 
-# Check database connectivity
+# 2. Database connectivity
 python -c "from src.core.job_database import get_job_db; print(f'Jobs: {get_job_db(\"YourProfile\").get_job_count()}')"
 
-# Verify profile exists
+# 3. Profile verification
 python -c "from src.utils.profile_helpers import load_profile; print(load_profile('YourProfile'))"
+
+# 4. Complete pipeline test
+python test_complete_pipeline.py
 ```
 
-## Common Issues
+## Critical Environment Issues
 
-### 1. Installation Problems
-
-#### Issue: `ModuleNotFoundError` when running JobQst
+### Wrong Python Environment
 
 **Symptoms:**
 ```
-ModuleNotFoundError: No module named 'src.core.job_database'
+Python 3.10.x instead of 3.11.11
+ModuleNotFoundError: No module named 'black'
+Incorrect sys.executable path (base conda instead of auto_job)
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# Ensure you're in the project root directory
-cd /path/to/jobqst
+# 1. Activate correct environment
+conda activate auto_job
 
-# Install dependencies
+# 2. Verify
+python --version  # Python 3.11.11
+python -c "import sys; print(sys.executable)"
+
+# 3. Install dependencies if missing
 pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
-# Verify Python path
-python -c "import sys; print(sys.path)"
+# 4. Verify dev tools
+python -m black --version   # 25.1.0
+python -m flake8 --version  # 7.1.1
+python -m mypy --version    # 1.14.1
 ```
 
-#### Issue: GPU/CUDA errors during AI processing
+**Reference:** See `ENVIRONMENT_SETUP_GUIDE.md` for complete setup
+
+### Development Tools Not Found
 
 **Symptoms:**
 ```
-RuntimeError: CUDA out of memory
-torch.cuda.is_available() returns False
+ModuleNotFoundError: No module named 'black'
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# Disable GPU processing (use CPU only)
-export DISABLE_HEAVY_AI=1
-python main.py YourProfile --action scrape
+# Ensure correct environment
+conda activate auto_job
 
-# Or reduce batch size in processing
-# Edit config to use smaller batches
+# Install dev dependencies
+pip install -r requirements-dev.txt
+
+# Verify
+python -c "import black, flake8, mypy, pytest; print('✅ All tools installed')"
 ```
 
-### 2. Database Issues
+### Pre-commit Hooks Failing
 
-#### Issue: Database connection errors
+**Symptoms:**
+```
+pre-commit: command not found
+Pre-commit hooks fail on commit
+```
+
+**Solution:**
+```bash
+# Install and setup
+pip install pre-commit
+pre-commit install
+
+# Run manually to see errors
+pre-commit run --all-files
+
+# Fix issues, then commit
+git add <fixed-files>
+git commit -m "Fix pre-commit issues"
+```
+
+## Database Issues
+
+### Connection Errors
 
 **Symptoms:**
 ```
 Connection Error: Can't open a connection to same database file
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# Close all running JobQst processes
-pkill -f "python.*main.py"
+# Close all JobLens processes
+pkill -f "python.*main.py"  # Linux/Mac
+# Windows: taskkill /F /IM python.exe
 
-# Remove lock files if they exist
+# Remove lock files
 rm -f profiles/YourProfile/*.db-wal
 rm -f profiles/YourProfile/*.db-shm
 
-# Restart JobQst
+# Restart
 python main.py YourProfile
 ```
 
-#### Issue: Database corruption
+### Database Corruption
 
 **Symptoms:**
 ```
 database disk image is malformed
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# Backup existing database
+# Backup
 cp profiles/YourProfile/YourProfile_duckdb.db profiles/YourProfile/backup_$(date +%Y%m%d).db
 
-# Create fresh database (will lose data)
+# Fresh database (will lose data)
 rm profiles/YourProfile/YourProfile_duckdb.db
 
-# Re-run scraping to rebuild
+# Rebuild
 python main.py YourProfile --action scrape --jobs 50
 ```
 
-### 3. Scraping Issues
+## Scraping Issues
 
-#### Issue: No jobs found during scraping
+### No Jobs Found
 
 **Symptoms:**
 ```
 ✅ Eluta scraping completed: 0 jobs found
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# Check your keywords are relevant
+# Check keywords
 python -c "from src.utils.profile_helpers import load_profile; print(load_profile('YourProfile')['keywords'])"
 
 # Test with broader keywords
 python main.py YourProfile --action scrape --jobs 10 --keywords "developer,engineer"
 
-# Check internet connection
-curl -I https://www.eluta.ca
+# Check internet
+curl -I https://www.indeed.com
 ```
 
-#### Issue: Scraping is very slow
+### Slow Scraping
 
 **Symptoms:**
 - Takes >5 minutes to scrape 50 jobs
-- Browser windows opening/closing slowly
 
-**Solutions:**
+**Solution:**
 ```bash
-# Enable headless mode for faster scraping
+# Enable headless mode
 python main.py YourProfile --action scrape --headless
 
-# Reduce concurrent workers if system is slow
-# Edit scraper config to use fewer workers
-
 # Check system resources
-top -p $(pgrep -f python)
+top -p $(pgrep -f python)  # Linux/Mac
+# Windows: Task Manager
 ```
 
-#### Issue: Rate limiting / IP blocking
+### Rate Limiting
 
 **Symptoms:**
 ```
@@ -149,21 +184,19 @@ HTTP 429: Too Many Requests
 Connection refused errors
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# Increase delays between requests
-# Edit scraper config: delay: 2.0 (instead of 1.0)
+# Increase delays in scraper config
+# Edit: delay: 2.0 (instead of 1.0)
 
-# Use different scraping approach
-python main.py YourProfile --action scrape --mode conservative
-
-# Wait and try again later
+# Wait and retry
 sleep 3600  # Wait 1 hour
+python main.py YourProfile --action scrape
 ```
 
-### 4. Processing Issues
+## Processing Issues
 
-#### Issue: AI processing fails
+### AI Processing Fails
 
 **Symptoms:**
 ```
@@ -171,98 +204,97 @@ ProcessingError: Model loading failed
 CUDA out of memory
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# Disable GPU processing
+# Disable GPU
 export DISABLE_HEAVY_AI=1
 
-# Use CPU-only processing
+# Use CPU-only
 python main.py YourProfile --action process --cpu-only
 
 # Reduce batch size
 python main.py YourProfile --action process --batch-size 16
 ```
 
-#### Issue: Jobs not getting compatibility scores
+### Missing Compatibility Scores
 
 **Symptoms:**
-- Jobs have `fit_score: null` in database
-- Processing completes but no scores assigned
+- Jobs have `fit_score: null`
 
-**Solutions:**
+**Solution:**
 ```bash
-# Check if jobs need processing
+# Check unprocessed jobs
 python -c "from src.core.job_database import get_job_db; db = get_job_db('YourProfile'); print(f'Unprocessed: {len(db.get_jobs_for_processing())}')"
 
 # Force reprocessing
 python main.py YourProfile --action process --force-reprocess
 
-# Check profile has skills defined
-python -c "from src.utils.profile_helpers import load_profile; print(load_profile('YourProfile').get('skills', 'No skills defined'))"
+# Check profile has skills
+python -c "from src.utils.profile_helpers import load_profile; print(load_profile('YourProfile').get('skills'))"
 ```
 
-### 5. Dashboard Issues
+## Dashboard Issues
 
-#### Issue: Dashboard won't start
+### Dashboard Won't Start
 
 **Symptoms:**
 ```
 ModuleNotFoundError: No module named 'dash'
-Port 8501 already in use
+Port 8050 already in use
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# Install dashboard dependencies
+# Install dependencies
 pip install dash plotly pandas
 
 # Use different port
-python src/dashboard/unified_dashboard.py --profile YourProfile --port 8502
+python src/dashboard/unified_dashboard.py --profile YourProfile --port 8052
 
 # Kill existing dashboard
-pkill -f "streamlit\|dash"
+pkill -f "dash"  # Linux/Mac
+# Windows: taskkill /F /FI "WINDOWTITLE eq Dash*"
 ```
 
-#### Issue: Dashboard shows no data
+### Dashboard Shows No Data
 
 **Symptoms:**
 - Dashboard loads but shows "0 jobs"
-- Empty charts and tables
 
-**Solutions:**
+**Solution:**
 ```bash
 # Verify database has data
 python -c "from src.core.job_database import get_job_db; print(f'Jobs: {get_job_db(\"YourProfile\").get_job_count()}')"
 
-# Check profile name matches
+# Check profile name
 ls profiles/  # List available profiles
 
-# Refresh dashboard data
-# Restart dashboard with correct profile name
+# Restart with correct profile
+python src/dashboard/unified_dashboard.py --profile YourProfile
 ```
 
-### 6. Profile Issues
+## Profile Issues
 
-#### Issue: Profile not found
+### Profile Not Found
 
 **Symptoms:**
 ```
 ValueError: Profile 'YourProfile' not found!
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# List available profiles
+# List profiles
 ls profiles/
 
 # Create new profile
 python main.py --setup-profile YourProfile
 
-# Check profile file exists and is valid JSON
+# Validate JSON
 cat profiles/YourProfile/YourProfile.json | python -m json.tool
 ```
 
-#### Issue: Invalid profile configuration
+### Invalid Profile Configuration
 
 **Symptoms:**
 ```
@@ -270,99 +302,90 @@ JSONDecodeError: Expecting ',' delimiter
 KeyError: 'keywords'
 ```
 
-**Solutions:**
+**Solution:**
 ```bash
-# Validate profile JSON
+# Validate profile
 python -c "import json; print(json.load(open('profiles/YourProfile/YourProfile.json')))"
 
-# Reset profile to defaults
+# Reset to defaults
 python main.py --setup-profile YourProfile --reset
 
-# Manually fix profile file
 # Ensure required fields: profile_name, keywords
 ```
 
-## Performance Optimization
+## Performance Issues
 
 ### Slow Performance
 
-#### Symptoms:
-- Scraping takes >10 minutes for 100 jobs
+**Symptoms:**
 - High CPU/memory usage
-- System becomes unresponsive
+- System unresponsive
 
-#### Solutions:
-
+**Solution:**
 ```bash
-# Reduce concurrent workers
-# Edit config: max_workers: 5 (instead of 10)
+# Reduce workers (edit config)
+# max_workers: 5 (instead of 10)
 
 # Use lighter processing
 export DISABLE_HEAVY_AI=1
 
-# Process in smaller batches
+# Smaller batches
 python main.py YourProfile --action scrape --jobs 25
 
-# Monitor system resources
-htop  # or Task Manager on Windows
+# Monitor resources
+htop  # Linux/Mac
+# Windows: Task Manager
 ```
 
 ### Memory Issues
 
-#### Symptoms:
+**Symptoms:**
 ```
 MemoryError: Unable to allocate array
 System runs out of RAM
 ```
 
-#### Solutions:
-
+**Solution:**
 ```bash
-# Reduce batch sizes
-# Edit processing config: batch_size: 16
+# Reduce batch sizes (edit config)
+# batch_size: 16
 
-# Clear cache periodically
+# Clear cache
 rm -rf cache/
 
-# Process jobs in smaller chunks
+# Process in chunks
 python main.py YourProfile --action process --limit 50
 ```
 
-## Environment-Specific Issues
+## Platform-Specific Issues
 
-### Windows Issues
+### Windows
 
-#### Issue: Unicode encoding errors
-
-**Symptoms:**
+**Unicode Errors:**
 ```
 UnicodeEncodeError: 'charmap' codec can't encode character
 ```
 
-**Solutions:**
+**Solution:**
 ```cmd
-# Set UTF-8 encoding
+# Set UTF-8
 set PYTHONIOENCODING=utf-8
 
-# Or use PowerShell instead of CMD
+# Use PowerShell
 powershell
 python main.py YourProfile
 ```
 
-#### Issue: Path issues with backslashes
-
-**Solutions:**
+**Path Issues:**
 ```python
-# Use forward slashes or raw strings in config
+# Use forward slashes or raw strings
 "db_path": "profiles/YourProfile/data.db"  # Good
 "db_path": r"profiles\YourProfile\data.db"  # Also good
 ```
 
-### macOS Issues
+### macOS
 
-#### Issue: Permission denied errors
-
-**Solutions:**
+**Permission Errors:**
 ```bash
 # Fix permissions
 chmod +x main.py
@@ -374,17 +397,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Linux Issues
+### Linux
 
-#### Issue: Missing system dependencies
-
-**Solutions:**
+**Missing Dependencies:**
 ```bash
-# Install system dependencies
+# Ubuntu/Debian
 sudo apt-get update
 sudo apt-get install python3-dev build-essential
 
-# For CentOS/RHEL
+# CentOS/RHEL
 sudo yum install python3-devel gcc
 ```
 
@@ -396,69 +417,34 @@ sudo yum install python3-devel gcc
 # Set debug level
 export LOG_LEVEL=DEBUG
 
-# Run with verbose output
+# Verbose output
 python main.py YourProfile --action scrape --verbose
 
-# Check log files
+# Check logs
 tail -f logs/jobqst.log
 ```
 
 ### Profile Performance
 
 ```bash
-# Profile scraping performance
+# Profile scraping
 python -m cProfile -o scraping.prof main.py YourProfile --action scrape --jobs 10
 
-# Analyze profile
+# Analyze
 python -c "import pstats; pstats.Stats('scraping.prof').sort_stats('cumulative').print_stats(20)"
 ```
 
 ### Database Debugging
 
 ```bash
-# Check database schema
+# Check schema
 python -c "from src.core.job_database import get_job_db; db = get_job_db('YourProfile'); print(db.conn.execute('PRAGMA table_info(jobs)').fetchall())"
 
 # Check recent jobs
 python -c "from src.core.job_database import get_job_db; db = get_job_db('YourProfile'); jobs = db.get_jobs(limit=5); [print(f\"{j['title']} at {j['company']}\") for j in jobs]"
 ```
 
-## Getting Help
-
-### Before Asking for Help
-
-1. **Run the health check**: `python test_complete_pipeline.py`
-2. **Check the logs**: Look in `logs/` directory for error messages
-3. **Verify your setup**: Ensure profile exists and has valid keywords
-4. **Try with minimal data**: Test with just 10 jobs first
-
-### Information to Include
-
-When reporting issues, include:
-
-```bash
-# System information
-python --version
-pip list | grep -E "(torch|playwright|duckdb|dash)"
-
-# JobQst status
-python test_complete_pipeline.py
-
-# Error logs
-tail -20 logs/jobqst.log
-
-# Profile information (remove sensitive data)
-python -c "from src.utils.profile_helpers import load_profile; p = load_profile('YourProfile'); print({k: v for k, v in p.items() if k != 'personal_info'})"
-```
-
-### Where to Get Help
-
-1. **Check this troubleshooting guide first**
-2. **Review the [README.md](../README.md) for setup instructions**
-3. **Check [Architecture Guide](ARCHITECTURE.md) for technical details**
-4. **Create GitHub issue with reproduction steps**
-
-## Quick Fixes Summary
+## Quick Reference Table
 
 | Problem | Quick Fix |
 |---------|-----------|
@@ -468,11 +454,52 @@ python -c "from src.utils.profile_helpers import load_profile; p = load_profile(
 | Memory issues | Disable AI: `export DISABLE_HEAVY_AI=1` |
 | Dashboard empty | Check profile: `ls profiles/` |
 | Import errors | Reinstall: `pip install -r requirements.txt` |
+| Wrong environment | Activate: `conda activate auto_job` |
+
+## Getting Help
+
+### Before Asking
+
+1. Run health check: `python test_complete_pipeline.py`
+2. Check logs: `logs/` directory
+3. Verify setup: profile exists with valid keywords
+4. Test minimal: try with 10 jobs first
+
+### Information to Include
+
+```bash
+# System info
+python --version
+pip list | grep -E "(torch|playwright|duckdb|dash)"
+
+# JobLens status
+python test_complete_pipeline.py
+
+# Recent logs
+tail -20 logs/jobqst.log
+
+# Profile info (remove sensitive data)
+python -c "from src.utils.profile_helpers import load_profile; p = load_profile('YourProfile'); print({k: v for k, v in p.items() if k != 'personal_info'})"
+```
+
+### Where to Get Help
+
+1. Check this guide first
+2. Review `README.md` for setup
+3. Check `ARCHITECTURE.md` for technical details
+4. Create GitHub issue with reproduction steps
+
+## Related Documentation
+
+- **[DEVELOPMENT_STANDARDS.md](DEVELOPMENT_STANDARDS.md)** - Coding standards (93/100 compliance)
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture
+- **[README.md](../README.md)** - User guide
+- **[ENVIRONMENT_SETUP_GUIDE.md](ENVIRONMENT_SETUP_GUIDE.md)** - Complete environment setup
 
 ---
 
-**Troubleshooting Guide Version**: 2.0.0  
-**Last Updated**: September 21, 2025  
-**Maintainer**: JobQst Development Team
+**Version:** 3.0.0  
+**Last Updated:** January 13, 2025  
+**Maintainer:** JobQst Development Team
 
-*Most issues can be resolved by running the health check and following the solutions above. For persistent problems, create a GitHub issue with the diagnostic information.*
+> "Most issues are environment-related. When in doubt, check your Python version and active conda environment first."

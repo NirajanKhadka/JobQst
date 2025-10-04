@@ -448,4 +448,3 @@ class GreenhouseSubmitter(BaseSubmitter):
         except Exception as e:
             console.print(f"[yellow]Error checking terms agreement: {e}[/yellow]")
             return False
-

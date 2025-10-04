@@ -13,20 +13,23 @@ from rich.panel import Panel
 
 console = Console()
 
+
 class SpecificIssueTester:
     def __init__(self):
         self.issues_found = []
         self.fixes_applied = []
 
-    def log_issue(self, issue_id, component, severity, description, fix_suggestion=None, error=None):
+    def log_issue(
+        self, issue_id, component, severity, description, fix_suggestion=None, error=None
+    ):
         issue = {
-            'id': issue_id,
-            'component': component,
-            'severity': severity,
-            'description': description,
-            'fix_suggestion': fix_suggestion,
-            'error': str(error) if error else None,
-            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
+            "id": issue_id,
+            "component": component,
+            "severity": severity,
+            "description": description,
+            "fix_suggestion": fix_suggestion,
+            "error": str(error) if error else None,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         }
         self.issues_found.append(issue)
 
@@ -35,90 +38,98 @@ class SpecificIssueTester:
         console.print("[bold blue]🔍 Testing CSV Applicator Function Issue[/bold blue]")
         try:
             import src.ats.csv_applicator as csv_applicator
-            if hasattr(csv_applicator, 'apply_from_csv'):
+
+            if hasattr(csv_applicator, "apply_from_csv"):
                 console.print("[green]✅ apply_from_csv function found[/green]")
                 assert True
             else:
-                functions = [attr for attr in dir(csv_applicator) if callable(getattr(csv_applicator, attr)) and not attr.startswith('_')]
-                console.print(f"[yellow]⚠️ apply_from_csv not found. Available functions: {functions}[/yellow]")
-                if hasattr(csv_applicator, 'main'):
+                functions = [
+                    attr
+                    for attr in dir(csv_applicator)
+                    if callable(getattr(csv_applicator, attr)) and not attr.startswith("_")
+                ]
+                console.print(
+                    f"[yellow]⚠️ apply_from_csv not found. Available functions: {functions}[/yellow]"
+                )
+                if hasattr(csv_applicator, "main"):
                     console.print("[cyan]ℹ️ Found 'main' function instead[/cyan]")
                     self.log_issue(
-                        'CSV-001',
-                        'csv_applicator',
-                        'MEDIUM',
-                        'apply_from_csv function not found, but main function exists',
-                        'The CSV applicator uses a main() function and CSVJobApplicator class. The expected apply_from_csv function should be created as a wrapper.'
+                        "CSV-001",
+                        "csv_applicator",
+                        "MEDIUM",
+                        "apply_from_csv function not found, but main function exists",
+                        "The CSV applicator uses a main() function and CSVJobApplicator class. The expected apply_from_csv function should be created as a wrapper.",
                     )
                     assert False
-                if hasattr(csv_applicator, 'CSVJobApplicator'):
+                if hasattr(csv_applicator, "CSVJobApplicator"):
                     console.print("[cyan]ℹ️ Found CSVJobApplicator class[/cyan]")
                     self.log_issue(
-                        'CSV-002',
-                        'csv_applicator',
-                        'MEDIUM',
-                        'apply_from_csv function missing, but CSVJobApplicator class exists',
-                        'Create an apply_from_csv wrapper function that uses CSVJobApplicator class'
+                        "CSV-002",
+                        "csv_applicator",
+                        "MEDIUM",
+                        "apply_from_csv function missing, but CSVJobApplicator class exists",
+                        "Create an apply_from_csv wrapper function that uses CSVJobApplicator class",
                     )
                     assert False
                 self.log_issue(
-                    'CSV-003',
-                    'csv_applicator',
-                    'HIGH',
-                    'No expected functions or classes found in csv_applicator',
-                    'Review csv_applicator.py structure and ensure proper function exports'
+                    "CSV-003",
+                    "csv_applicator",
+                    "HIGH",
+                    "No expected functions or classes found in csv_applicator",
+                    "Review csv_applicator.py structure and ensure proper function exports",
                 )
                 assert False
         except Exception as e:
             console.print(f"[red]❌ Error testing CSV applicator: {e}[/red]")
             self.log_issue(
-                'CSV-004',
-                'csv_applicator',
-                'HIGH',
-                'Failed to import or test csv_applicator module',
-                'Check csv_applicator.py for syntax errors and import issues',
-                e
+                "CSV-004",
+                "csv_applicator",
+                "HIGH",
+                "Failed to import or test csv_applicator module",
+                "Check csv_applicator.py for syntax errors and import issues",
+                e,
             )
             assert False
-    
+
     def test_ats_modules_detailed(self):
         """Test ATS modules with detailed analysis."""
         console.print("[bold blue]🔍 Testing ATS Modules in Detail[/bold blue]")
         # Check what files actually exist in src/ats
-        ats_dir = Path('src/ats')
+        ats_dir = Path("src/ats")
         if not ats_dir.exists():
             console.print("[red]❌ ATS directory not found[/red]")
             self.log_issue(
-                'ATS-001',
-                'ats_directory',
-                'CRITICAL',
-                'ATS directory does not exist',
-                'Create src/ats/ directory with proper ATS modules'
+                "ATS-001",
+                "ats_directory",
+                "CRITICAL",
+                "ATS directory does not exist",
+                "Create src/ats/ directory with proper ATS modules",
             )
             assert False
         # List actual files
-        actual_files = list(ats_dir.glob('*.py'))
+        actual_files = list(ats_dir.glob("*.py"))
         console.print(f"[cyan]Found ATS files: {[f.name for f in actual_files]}[/cyan]")
         # Test base_submitter class name issue
         try:
             from src.ats.base_submitter import BaseSubmitter
+
             console.print("[green]✅ BaseSubmitter class found (correct name)[/green]")
         except ImportError as e:
             console.print(f"[red]❌ BaseSubmitter import failed: {e}[/red]")
             self.log_issue(
-                'ATS-002',
-                'base_submitter',
-                'MEDIUM',
-                'BaseSubmitter class import failed',
-                'Check ats/base_submitter.py for correct class name and exports',
-                e
+                "ATS-002",
+                "base_submitter",
+                "MEDIUM",
+                "BaseSubmitter class import failed",
+                "Check ats/base_submitter.py for correct class name and exports",
+                e,
             )
         # Test individual ATS modules
         ats_modules = [
-            ('workday', 'ats.workday', 'WorkdaySubmitter'),
-            ('icims', 'ats.icims', 'ICIMSSubmitter'),
-            ('greenhouse', 'ats.greenhouse', 'GreenhouseSubmitter'),
-            ('bamboohr', 'ats.bamboohr', 'BambooHRSubmitter'),
+            ("workday", "ats.workday", "WorkdaySubmitter"),
+            ("icims", "ats.icims", "ICIMSSubmitter"),
+            ("greenhouse", "ats.greenhouse", "GreenhouseSubmitter"),
+            ("bamboohr", "ats.bamboohr", "BambooHRSubmitter"),
         ]
         working_modules = 0
         for module_name, module_path, class_name in ats_modules:
@@ -130,68 +141,78 @@ class SpecificIssueTester:
             except ImportError as e:
                 console.print(f"[yellow]⚠️ {module_name}: Module not found[/yellow]")
                 self.log_issue(
-                    f'ATS-{module_name.upper()}-001',
+                    f"ATS-{module_name.upper()}-001",
                     module_name,
-                    'MEDIUM',
-                    f'{module_path} module not found',
-                    f'The file exists as ats/{module_name}.py but may have import issues or wrong class name',
-                    e
+                    "MEDIUM",
+                    f"{module_path} module not found",
+                    f"The file exists as ats/{module_name}.py but may have import issues or wrong class name",
+                    e,
                 )
             except AttributeError as e:
                 console.print(f"[yellow]⚠️ {module_name}: Class {class_name} not found[/yellow]")
                 self.log_issue(
-                    f'ATS-{module_name.upper()}-002',
+                    f"ATS-{module_name.upper()}-002",
                     module_name,
-                    'MEDIUM',
-                    f'{class_name} class not found in {module_path}',
-                    f'Check ats/{module_name}.py for correct class name. Expected: {class_name}',
-                    e
+                    "MEDIUM",
+                    f"{class_name} class not found in {module_path}",
+                    f"Check ats/{module_name}.py for correct class name. Expected: {class_name}",
+                    e,
                 )
         assert working_modules > 0
-    
+
     def test_base_scraper_abstract_issue(self):
         """Test the BaseJobScraper abstract class issue."""
         console.print("[bold blue]🔍 Testing BaseJobScraper Abstract Class Issue[/bold blue]")
         try:
             from src.scrapers.base_scraper import BaseJobScraper
+
             # This should fail because it's abstract
             try:
-                test_profile = {'profile_name': 'test', 'keywords': ['Python'], 'city': 'Toronto'}
+                test_profile = {"profile_name": "test", "keywords": ["Python"], "city": "Toronto"}
                 scraper = BaseJobScraper(test_profile)
-                console.print("[red]❌ BaseJobScraper should not be instantiable (it's abstract)[/red]")
+                console.print(
+                    "[red]❌ BaseJobScraper should not be instantiable (it's abstract)[/red]"
+                )
                 self.log_issue(
-                    'SCRAPER-001',
-                    'base_scraper',
-                    'LOW',
-                    'BaseJobScraper can be instantiated but should be abstract',
-                    'This is actually correct behavior - abstract classes should not be instantiable'
+                    "SCRAPER-001",
+                    "base_scraper",
+                    "LOW",
+                    "BaseJobScraper can be instantiated but should be abstract",
+                    "This is actually correct behavior - abstract classes should not be instantiable",
                 )
                 assert False, "BaseJobScraper should not be instantiable (it's abstract)"
             except TypeError as e:
                 if "abstract" in str(e).lower():
-                    console.print("[green]✅ BaseJobScraper correctly prevents instantiation (abstract class)[/green]")
-                    console.print("[cyan]ℹ️ This is expected behavior for an abstract base class[/cyan]")
+                    console.print(
+                        "[green]✅ BaseJobScraper correctly prevents instantiation (abstract class)[/green]"
+                    )
+                    console.print(
+                        "[cyan]ℹ️ This is expected behavior for an abstract base class[/cyan]"
+                    )
                     assert True
                 else:
-                    console.print(f"[yellow]⚠️ BaseJobScraper failed instantiation for different reason: {e}[/yellow]")
+                    console.print(
+                        f"[yellow]⚠️ BaseJobScraper failed instantiation for different reason: {e}[/yellow]"
+                    )
                     assert False, f"BaseJobScraper failed instantiation for different reason: {e}"
         except Exception as e:
             console.print(f"[red]❌ Error testing BaseJobScraper: {e}[/red]")
             self.log_issue(
-                'SCRAPER-002',
-                'base_scraper',
-                'MEDIUM',
-                'Failed to import BaseJobScraper',
-                'Check scrapers/base_scraper.py for import issues',
-                e
+                "SCRAPER-002",
+                "base_scraper",
+                "MEDIUM",
+                "Failed to import BaseJobScraper",
+                "Check scrapers/base_scraper.py for import issues",
+                e,
             )
             assert False, f"Failed to import BaseJobScraper: {e}"
-    
+
     def test_database_table_issue(self):
         """Test the database table creation issue."""
         console.print("[bold blue]🔍 Testing Database Table Creation Issue[/bold blue]")
         try:
             from src.core.job_database import JobDatabase
+
             # Test with in-memory database
             db = JobDatabase(":memory:")
             # Check if tables are created automatically
@@ -204,25 +225,27 @@ class SpecificIssueTester:
                 if "no such table" in str(e).lower():
                     console.print(f"[red]❌ Database tables not created automatically: {e}[/red]")
                     self.log_issue(
-                        'DB-001',
-                        'job_database',
-                        'HIGH',
-                        'Database tables not created automatically on initialization',
-                        'Add table creation in JobDatabase.__init__() or create_tables() method'
+                        "DB-001",
+                        "job_database",
+                        "HIGH",
+                        "Database tables not created automatically on initialization",
+                        "Add table creation in JobDatabase.__init__() or create_tables() method",
                     )
                     # Check if there's a create_tables method
-                    if hasattr(db, 'create_tables'):
+                    if hasattr(db, "create_tables"):
                         console.print("[cyan]ℹ️ Found create_tables method, testing...[/cyan]")
                         try:
                             db.create_tables()
                             stats = db.get_stats()
-                            console.print(f"[green]✅ Tables created manually, stats: {stats}[/green]")
+                            console.print(
+                                f"[green]✅ Tables created manually, stats: {stats}[/green]"
+                            )
                             self.log_issue(
-                                'DB-002',
-                                'job_database',
-                                'MEDIUM',
-                                'Tables need to be created manually',
-                                'Call create_tables() automatically in __init__ or ensure it\'s called before first use'
+                                "DB-002",
+                                "job_database",
+                                "MEDIUM",
+                                "Tables need to be created manually",
+                                "Call create_tables() automatically in __init__ or ensure it's called before first use",
                             )
                             assert True
                         except Exception as e2:
@@ -237,15 +260,15 @@ class SpecificIssueTester:
         except Exception as e:
             console.print(f"[red]❌ Error testing database: {e}[/red]")
             self.log_issue(
-                'DB-003',
-                'job_database',
-                'HIGH',
-                'Failed to import or initialize JobDatabase',
-                'Check job_database.py for import and initialization issues',
-                e
+                "DB-003",
+                "job_database",
+                "HIGH",
+                "Failed to import or initialize JobDatabase",
+                "Check job_database.py for import and initialization issues",
+                e,
             )
             assert False, f"Failed to import or initialize JobDatabase: {e}"
-    
+
     def run_specific_tests(self):
         """Run all specific issue tests."""
         console.print(Panel("🔍 Specific Issue Analysis", style="bold blue"))
@@ -274,7 +297,7 @@ class SpecificIssueTester:
         # Generate Improved issues tracker
         self.generate_Improved_issues_tracker()
         assert all(result[1] for result in results)
-    
+
     def display_results(self, results):
         """Display test results."""
         console.print("\n")
@@ -282,29 +305,31 @@ class SpecificIssueTester:
         table.add_column("Test", style="cyan")
         table.add_column("Status", style="bold")
         table.add_column("Duration", style="yellow")
-        
+
         for test_name, success, duration in results:
             status = "[green]✅ PASS[/green]" if success else "[red]❌ FAIL[/red]"
             table.add_row(test_name, status, f"{duration:.2f}s")
-        
+
         console.print(table)
-        
+
         passed = sum(1 for _, success, _ in results if success)
         total = len(results)
         console.print(f"\n[bold]Results: {passed}/{total} tests passed[/bold]")
         console.print(f"[bold]Detailed Issues Found: {len(self.issues_found)}[/bold]")
-    
+
     def generate_Improved_issues_tracker(self):
         """Generate Improved issues tracker with fix suggestions."""
         console.print("\n[bold blue]📝 Generating Improved Issues Tracker...[/bold blue]")
-        
+
         content = self._generate_Improved_markdown()
-        
-        with open('Improved_ISSUES_TRACKER.md', 'w', encoding='utf-8') as f:
+
+        with open("Improved_ISSUES_TRACKER.md", "w", encoding="utf-8") as f:
             f.write(content)
-        
-        console.print(f"[green]✅ Improved issues tracker generated: Improved_ISSUES_TRACKER.md[/green]")
-    
+
+        console.print(
+            f"[green]✅ Improved issues tracker generated: Improved_ISSUES_TRACKER.md[/green]"
+        )
+
     def _generate_Improved_markdown(self):
         """Generate Improved markdown with detailed analysis and fixes."""
         content = """# 🔧 AutoJobAgent Improved Issues Tracker
@@ -314,42 +339,42 @@ class SpecificIssueTester:
 ## 📊 Executive Summary
 
 """
-        
+
         content += f"**Total Detailed Issues: {len(self.issues_found)}**\n\n"
-        
+
         # Group by severity
         by_severity = {}
         for issue in self.issues_found:
-            severity = issue['severity']
+            severity = issue["severity"]
             by_severity.setdefault(severity, []).append(issue)
-        
+
         for severity, issues in by_severity.items():
             content += f"- **{severity}**: {len(issues)} issues\n"
-        
+
         content += "\n---\n\n"
-        
+
         # Add detailed issues
-        for severity in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']:
+        for severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
             issues = by_severity.get(severity, [])
             if not issues:
                 continue
-                
+
             content += f"## 🚨 {severity} Priority Issues\n\n"
-            
+
             for issue in issues:
                 content += f"### {issue['id']}: {issue['component']}\n\n"
                 content += f"**Description:** {issue['description']}\n\n"
-                
-                if issue['fix_suggestion']:
+
+                if issue["fix_suggestion"]:
                     content += f"**💡 Fix Suggestion:**\n{issue['fix_suggestion']}\n\n"
-                
-                if issue['error']:
+
+                if issue["error"]:
                     content += f"**Error Details:**\n```\n{issue['error']}\n```\n\n"
-                
+
                 content += f"**Timestamp:** {issue['timestamp']}\n\n"
                 content += "**Status:** 🔴 Open\n\n"
                 content += "---\n\n"
-        
+
         return content
 
 

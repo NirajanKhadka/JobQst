@@ -10,14 +10,13 @@ from .processing_coordinator import (
     ProcessingResult,
     ProcessingStrategy,
     create_coordinator,
-    process_single_job
+    process_single_job,
 )
 
 __all__ = [
-    'JobProcessingCoordinator',
-    'ProcessingResult', 
-    'ProcessingStrategy',
-    'create_coordinator',
-    'process_single_job',
+    "JobProcessingCoordinator",
+    "ProcessingResult",
+    "ProcessingStrategy",
+    "create_coordinator",
+    "process_single_job",
 ]
-

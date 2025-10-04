@@ -173,16 +173,20 @@ class JobCacheManager:
 _cache_manager = None
 
 
-def get_cache_manager(profile_name: str = "Nirajan") -> JobCacheManager:
+def get_cache_manager(profile_name: str) -> JobCacheManager:
     """Get or create the global cache manager instance."""
+    if not profile_name:
+        raise ValueError("Profile name is required")
     global _cache_manager
     if _cache_manager is None:
         _cache_manager = JobCacheManager(profile_name)
     return _cache_manager
 
 
-def start_job_caching(profile_name: str = "Nirajan"):
+def start_job_caching(profile_name: str):
     """Start the job caching system."""
+    if not profile_name:
+        raise ValueError("Profile name is required")
     manager = get_cache_manager(profile_name)
     manager.start_caching()
 
@@ -193,4 +197,3 @@ def stop_job_caching():
     if _cache_manager:
         _cache_manager.stop_caching()
         _cache_manager = None
-

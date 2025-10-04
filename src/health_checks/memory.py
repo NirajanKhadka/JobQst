@@ -12,4 +12,3 @@ def check_memory_usage(config: Dict) -> Dict:
     """Alias for check_memory to maintain backward compatibility."""
     result = _check_memory_usage(config)
     return result.to_dict()
-

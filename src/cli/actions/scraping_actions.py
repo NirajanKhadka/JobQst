@@ -31,7 +31,9 @@ class ScrapingActions:
 
         # Show system capabilities
         console.print("[green]🚀 MULTI-LOCATION: Global job search across regions[/green]")
-        console.print(f"[cyan]📋 Keywords: {len(self.profile.get('keywords', []))} loaded from profile[/cyan]")
+        console.print(
+            f"[cyan]📋 Keywords: {len(self.profile.get('keywords', []))} loaded from profile[/cyan]"
+        )
         console.print("[cyan]⚡ Sites: Indeed, LinkedIn, Glassdoor, Eluta, Job Bank[/cyan]")
         console.print("[green]🎯 Performance: 2+ jobs/second[/green]")
 
@@ -39,19 +41,21 @@ class ScrapingActions:
         console.print("\n[bold]🌍 Select Target Location:[/bold]")
         location_options = {
             "1": "🇨🇦 Canada (All provinces)",
-            "2": "🇺🇸 United States (All states)", 
+            "2": "🇺🇸 United States (All states)",
             "3": "🇬🇧 United Kingdom",
             "4": "🇦🇺 Australia",
             "5": "🇩🇪 Germany",
             "6": "🌍 Global (All locations)",
-            "7": "📍 Custom Location"
+            "7": "📍 Custom Location",
         }
 
         for key, value in location_options.items():
             console.print(f"  [bold cyan]{key}[/bold cyan]: {value}")
 
-        location_choice = Prompt.ask("Select location", choices=list(location_options.keys()), default="1")
-        
+        location_choice = Prompt.ask(
+            "Select location", choices=list(location_options.keys()), default="1"
+        )
+
         # Get specific location if custom
         target_location = self._get_target_location(location_choice)
 
@@ -61,7 +65,7 @@ class ScrapingActions:
             "1": "🚀 Multi-Site Standard (Recommended)",
             "2": "⚡ Multi-Site High Performance (Maximum speed)",
             "3": "🎯 Site-Specific Scraping",
-            "4": "🔄 Backup: Eluta Only (Canada focus)"
+            "4": "🔄 Backup: Eluta Only (Canada focus)",
         }
 
         for key, value in mode_options.items():
@@ -69,7 +73,9 @@ class ScrapingActions:
 
         console.print()
         console.print("[green]💡 Options 1-2 search multiple sites simultaneously![/green]")
-        mode_choice = Prompt.ask("Select scraping option", choices=list(mode_options.keys()), default="1")
+        mode_choice = Prompt.ask(
+            "Select scraping option", choices=list(mode_options.keys()), default="1"
+        )
 
         if mode_choice in ["1", "2"]:
             self._execute_multi_site_scraping(mode_choice, target_location)
@@ -109,7 +115,9 @@ class ScrapingActions:
             console.print(f"  [bold cyan]{key}[/bold cyan]: {value}")
 
         console.print()
-        console.print("[green]💡 Both options use the NEW Fast 3-Phase Pipeline (4.6x faster)[/green]")
+        console.print(
+            "[green]💡 Both options use the NEW Fast 3-Phase Pipeline (4.6x faster)[/green]"
+        )
         bot_choice = Prompt.ask(
             "Select pipeline mode", choices=list(bot_methods.keys()), default="1"
         )
@@ -121,13 +129,17 @@ class ScrapingActions:
         """Handle multi-site scraping using Fast 3-Phase Pipeline (High Performance)."""
         console.print(Panel("⚡ Fast 3-Phase Pipeline (Multi-Site Mode)", style="bold blue"))
         console.print("[cyan]🚀 Running Fast 3-Phase Pipeline in high-performance mode...[/cyan]")
-        console.print("[yellow]📝 Currently optimized for Eluta with plans for multi-site expansion[/yellow]")
+        console.print(
+            "[yellow]📝 Currently optimized for Eluta with plans for multi-site expansion[/yellow]"
+        )
 
         # Use the fast pipeline multi-worker method
         success = self.scraping_handler.run_scraping(mode="multi_worker")
 
         if success:
-            console.print("[green]✅ Fast pipeline (multi-site mode) completed successfully![/green]")
+            console.print(
+                "[green]✅ Fast pipeline (multi-site mode) completed successfully![/green]"
+            )
             console.print("[cyan]💡 Jobs automatically processed and saved to database![/cyan]")
         else:
             console.print("[yellow]⚠️ Fast pipeline completed with limited results[/yellow]")
@@ -137,7 +149,7 @@ class ScrapingActions:
         """Execute JobSpy scraping with parallel processing."""
         try:
             from src.scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper
-            
+
             if method_choice == "1":
                 # Standard JobSpy
                 console.print("[cyan]🚀 Using JobSpy Standard Mode...[/cyan]")
@@ -150,42 +162,51 @@ class ScrapingActions:
                 max_jobs = 100
 
             # Initialize JobSpy scraper
-            scraper = JobSpyImprovedScraper(self.profile.get('profile_name', 'default'))
-            
+            scraper = JobSpyImprovedScraper(self.profile.get("profile_name", "default"))
+
             # Run async scraping
             import asyncio
+
             jobs = asyncio.run(scraper.scrape_jobs_Improved(max_jobs=max_jobs))
-            
+
             if jobs and len(jobs) > 0:
                 console.print(f"[green]✅ JobSpy scraping completed successfully![/green]")
                 console.print(f"[cyan]📊 Jobs found: {len(jobs)}[/cyan]")
                 console.print(f"[cyan]💾 Jobs saved to database automatically[/cyan]")
-                
+
                 # Show sample jobs
                 for i, job in enumerate(jobs[:3], 1):
-                    title = job.get('title', 'Unknown')[:40]
-                    company = job.get('company', 'Unknown')[:20]
-                    location = job.get('location', 'Unknown')[:15]
+                    title = job.get("title", "Unknown")[:40]
+                    company = job.get("company", "Unknown")[:20]
+                    location = job.get("location", "Unknown")[:15]
                     console.print(f"  {i}. {title}... at {company} ({location})")
-                
+
                 if len(jobs) > 3:
                     console.print(f"  ... and {len(jobs) - 3} more jobs")
             else:
                 console.print("[yellow]⚠️ JobSpy completed with limited results[/yellow]")
-                console.print("[cyan]💡 Try adjusting your profile keywords or location settings[/cyan]")
-                
+                console.print(
+                    "[cyan]💡 Try adjusting your profile keywords or location settings[/cyan]"
+                )
+
         except ImportError:
-            console.print("[red]❌ JobSpy not available. Install with: pip install python-jobspy[/red]")
+            console.print(
+                "[red]❌ JobSpy not available. Install with: pip install python-jobspy[/red]"
+            )
             console.print("[cyan]💡 Falling back to Eluta scraper...[/cyan]")
             # Fallback to existing scraping
-            success = self.scraping_handler.run_scraping(mode="simple" if method_choice == "1" else "multi_worker")
+            success = self.scraping_handler.run_scraping(
+                mode="simple" if method_choice == "1" else "multi_worker"
+            )
             if success:
                 console.print("[green]✅ Fallback scraping completed![/green]")
         except Exception as e:
             console.print(f"[red]❌ JobSpy error: {e}[/red]")
             console.print("[cyan]💡 Falling back to Eluta scraper...[/cyan]")
             # Fallback to existing scraping
-            success = self.scraping_handler.run_scraping(mode="simple" if method_choice == "1" else "multi_worker")
+            success = self.scraping_handler.run_scraping(
+                mode="simple" if method_choice == "1" else "multi_worker"
+            )
             if success:
                 console.print("[green]✅ Fallback scraping completed![/green]")
 
@@ -197,24 +218,24 @@ class ScrapingActions:
         elif choice == "7":
             custom_location = Prompt.ask("Enter custom location (city, country)")
             return custom_location
-        
+
         location_map = {
-            "2": "United States", 
+            "2": "United States",
             "3": "United Kingdom",
             "4": "Australia",
             "5": "Germany",
-            "6": "Global"
+            "6": "Global",
         }
-        
+
         return location_map.get(choice, "Canada")
 
     def _select_canadian_city(self) -> str:
         """Select specific Canadian city for targeted job search."""
         console.print("\n[bold]🇨🇦 Select Canadian City:[/bold]")
-        
+
         city_options = {
             "1": "🏙️ Toronto, ON",
-            "2": "🌊 Vancouver, BC", 
+            "2": "🌊 Vancouver, BC",
             "3": "🍁 Montreal, QC",
             "4": "🏔️ Calgary, AB",
             "5": "🌾 Edmonton, AB",
@@ -225,18 +246,18 @@ class ScrapingActions:
             "10": "⚡ Kitchener-Waterloo, ON",
             "11": "🏒 Quebec City, QC",
             "12": "🦬 Saskatoon, SK",
-            "13": "🇨🇦 All Major Cities"
+            "13": "🇨🇦 All Major Cities",
         }
 
         for key, value in city_options.items():
             console.print(f"  [bold cyan]{key}[/bold cyan]: {value}")
 
         city_choice = Prompt.ask("Select city", choices=list(city_options.keys()), default="13")
-        
+
         city_map = {
             "1": "Toronto, Ontario",
             "2": "Vancouver, British Columbia",
-            "3": "Montreal, Quebec", 
+            "3": "Montreal, Quebec",
             "4": "Calgary, Alberta",
             "5": "Edmonton, Alberta",
             "6": "Halifax, Nova Scotia",
@@ -246,9 +267,9 @@ class ScrapingActions:
             "10": "Kitchener, Ontario",
             "11": "Quebec City, Quebec",
             "12": "Saskatoon, Saskatchewan",
-            "13": "Canada"
+            "13": "Canada",
         }
-        
+
         selected_city = city_map.get(city_choice, "Canada")
         console.print(f"[green]✅ Selected: {selected_city}[/green]")
         return selected_city
@@ -256,14 +277,14 @@ class ScrapingActions:
     def _show_site_specific_menu(self, location: str) -> None:
         """Show site-specific scraping options."""
         console.print(f"\n[bold]🎯 Site-Specific Scraping for {location}:[/bold]")
-        
+
         site_options = {
             "1": "🔍 Indeed Only",
-            "2": "💼 LinkedIn Only", 
+            "2": "💼 LinkedIn Only",
             "3": "🏢 Glassdoor Only",
             "4": "🇨🇦 Eluta (Canada)",
             "5": "🏛️ Job Bank (Canada Government)",
-            "6": "🔄 All Sites Sequential"
+            "6": "🔄 All Sites Sequential",
         }
 
         for key, value in site_options.items():
@@ -275,11 +296,11 @@ class ScrapingActions:
     def _execute_multi_site_scraping(self, mode: str, location: str) -> None:
         """Execute multi-site scraping with location targeting."""
         console.print(Panel(f"🌍 Multi-Site Scraping: {location}", style="bold blue"))
-        
+
         max_jobs = 50 if mode == "1" else 100
         console.print(f"[cyan]🚀 Searching {location} across multiple job sites...[/cyan]")
         console.print(f"[cyan]📋 Target: {max_jobs} jobs per site[/cyan]")
-        
+
         try:
             # Try JobSpy first for international sites
             if location != "Canada":
@@ -289,7 +310,7 @@ class ScrapingActions:
                 # For Canada, use both JobSpy and local scrapers
                 console.print("[cyan]🇨🇦 Using enhanced Canada-specific scraping...[/cyan]")
                 self._execute_canada_enhanced_scraping(mode)
-                
+
         except Exception as e:
             console.print(f"[red]❌ Multi-site scraping error: {e}[/red]")
             console.print("[cyan]💡 Falling back to single-site scraping...[/cyan]")
@@ -299,16 +320,16 @@ class ScrapingActions:
         """Execute scraping for a specific site."""
         site_map = {
             "1": "indeed",
-            "2": "linkedin", 
+            "2": "linkedin",
             "3": "glassdoor",
             "4": "eluta",
             "5": "jobbank",
-            "6": "all_sequential"
+            "6": "all_sequential",
         }
-        
+
         selected_site = site_map.get(site_choice, "indeed")
         console.print(f"[cyan]🎯 Scraping {selected_site.title()} for {location}...[/cyan]")
-        
+
         if selected_site == "all_sequential":
             self._execute_sequential_site_scraping(location)
         else:
@@ -318,27 +339,27 @@ class ScrapingActions:
         """Execute JobSpy scraping with specific location targeting."""
         try:
             from src.scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper
-            
+
             console.print(f"[cyan]🌍 JobSpy scraping for {location}...[/cyan]")
             max_jobs = 50 if mode == "1" else 100
-            
+
             # Initialize JobSpy scraper with location
-            scraper = JobSpyImprovedScraper(self.profile.get('profile_name', 'default'))
-            
+            scraper = JobSpyImprovedScraper(self.profile.get("profile_name", "default"))
+
             # Run async scraping with location
             import asyncio
-            jobs = asyncio.run(scraper.scrape_jobs_with_location(
-                location=location, 
-                max_jobs=max_jobs
-            ))
-            
+
+            jobs = asyncio.run(
+                scraper.scrape_jobs_with_location(location=location, max_jobs=max_jobs)
+            )
+
             if jobs and len(jobs) > 0:
                 console.print(f"[green]✅ JobSpy scraping completed for {location}![/green]")
                 console.print(f"[cyan]📊 Jobs found: {len(jobs)}[/cyan]")
                 self._display_job_sample(jobs)
             else:
                 console.print(f"[yellow]⚠️ Limited results for {location}[/yellow]")
-                
+
         except ImportError:
             console.print("[red]❌ JobSpy not available[/red]")
             self._execute_eluta_only_scraping()
@@ -349,21 +370,21 @@ class ScrapingActions:
     def _execute_canada_enhanced_scraping(self, mode: str) -> None:
         """Execute enhanced scraping specifically for Canada."""
         console.print("[cyan]🇨🇦 Enhanced Canada scraping: JobSpy + Eluta + Job Bank...[/cyan]")
-        
+
         try:
             # First run JobSpy for Indeed/LinkedIn/Glassdoor in Canada
             self._execute_jobspy_scraping_with_location(mode, "Canada")
-            
+
             # Then run Eluta for Canadian-specific jobs
             console.print("[cyan]🔄 Adding Eluta.ca jobs...[/cyan]")
             success = self.scraping_handler.run_scraping(mode="eluta_only")
-            
+
             # Finally try Job Bank (government jobs)
             console.print("[cyan]🏛️ Adding Job Bank (government) jobs...[/cyan]")
             self._execute_jobbank_scraping()
-            
+
             console.print("[green]✅ Enhanced Canada scraping completed![/green]")
-            
+
         except Exception as e:
             console.print(f"[red]❌ Enhanced Canada scraping error: {e}[/red]")
 
@@ -372,9 +393,9 @@ class ScrapingActions:
         sites = ["indeed", "linkedin", "glassdoor"]
         if location == "Canada":
             sites.extend(["eluta", "jobbank"])
-        
+
         console.print(f"[cyan]🔄 Sequential scraping across {len(sites)} sites...[/cyan]")
-        
+
         for i, site in enumerate(sites, 1):
             console.print(f"[cyan]Step {i}/{len(sites)}: Scraping {site.title()}...[/cyan]")
             try:
@@ -382,6 +403,7 @@ class ScrapingActions:
                 if i < len(sites):
                     console.print("[dim]Waiting 3 seconds before next site...[/dim]")
                     import time
+
                     time.sleep(3)
             except Exception as e:
                 console.print(f"[yellow]⚠️ {site.title()} scraping failed: {e}[/yellow]")
@@ -397,8 +419,10 @@ class ScrapingActions:
             # Use JobSpy for Indeed, LinkedIn, Glassdoor
             try:
                 from src.scrapers.jobspy_enhanced_scraper import JobSpyImprovedScraper
-                scraper = JobSpyImprovedScraper(self.profile.get('profile_name', 'default'))
+
+                scraper = JobSpyImprovedScraper(self.profile.get("profile_name", "default"))
                 import asyncio
+
                 jobs = asyncio.run(scraper.scrape_single_site(site, location, max_jobs=30))
                 if jobs:
                     console.print(f"[green]✅ {site.title()}: {len(jobs)} jobs found[/green]")
@@ -411,6 +435,7 @@ class ScrapingActions:
         """Execute Job Bank (Canada government) scraping."""
         try:
             from src.scrapers.jobbank_scraper import JobBankScraper
+
             scraper = JobBankScraper(self.profile)
             jobs = scraper.scrape_jobs()
             if jobs:
@@ -426,11 +451,11 @@ class ScrapingActions:
         """Display a sample of scraped jobs."""
         console.print("\n[bold]📋 Sample Jobs Found:[/bold]")
         for i, job in enumerate(jobs[:3], 1):
-            title = job.get('title', 'Unknown')[:40]
-            company = job.get('company', 'Unknown')[:20] 
-            location = job.get('location', 'Unknown')[:15]
+            title = job.get("title", "Unknown")[:40]
+            company = job.get("company", "Unknown")[:20]
+            location = job.get("location", "Unknown")[:15]
             console.print(f"  {i}. {title}... at {company} ({location})")
-        
+
         if len(jobs) > 3:
             console.print(f"  ... and {len(jobs) - 3} more jobs")
 
@@ -440,23 +465,33 @@ class ScrapingActions:
         console.print("[yellow]⚠️ BACKUP MODE: This is 32x slower than JobSpy![/yellow]")
         console.print("[yellow]⚠️ Performance: 0.06 jobs/second vs JobSpy's 2+ jobs/second[/yellow]")
         console.print("[yellow]💡 Consider using JobSpy instead for much faster results[/yellow]")
-        console.print("[cyan]🔍 Launching comprehensive backup data collection from Eluta.ca...[/cyan]")
-        
+        console.print(
+            "[cyan]🔍 Launching comprehensive backup data collection from Eluta.ca...[/cyan]"
+        )
+
         try:
             # Use the scraping handler with Eluta-specific settings
             success = self.scraping_handler.run_scraping(mode="eluta_only")
-            
+
             if success:
                 console.print("[green]✅ Eluta backup scraping completed successfully![/green]")
                 console.print("[cyan]💾 Jobs saved to database automatically[/cyan]")
-                console.print("[green]💡 Next time, use JobSpy (option 1-2) for 32x faster results![/green]")
+                console.print(
+                    "[green]💡 Next time, use JobSpy (option 1-2) for 32x faster results![/green]"
+                )
             else:
-                console.print("[yellow]⚠️ Eluta backup scraping completed with limited results[/yellow]")
-                console.print("[cyan]💡 Try using fast JobSpy instead or check internet connection[/cyan]")
-                
+                console.print(
+                    "[yellow]⚠️ Eluta backup scraping completed with limited results[/yellow]"
+                )
+                console.print(
+                    "[cyan]💡 Try using fast JobSpy instead or check internet connection[/cyan]"
+                )
+
         except Exception as e:
             console.print(f"[red]❌ Eluta backup scraping error: {e}[/red]")
-            console.print("[green]💡 Consider using fast JobSpy instead (32x faster, more reliable)[/green]")
+            console.print(
+                "[green]💡 Consider using fast JobSpy instead (32x faster, more reliable)[/green]"
+            )
 
     # def _execute_combined_scraping(self) -> None:
     #     """Execute combined JobSpy + Eluta scraping."""
@@ -464,22 +499,22 @@ class ScrapingActions:
     #     console.print(Panel("🔄 Combined JobSpy + Eluta Scraping", style="bold blue"))
     #     console.print("[cyan]🚀 Running JobSpy first (fast)...[/cyan]")
     #     console.print("[yellow]🐌 Then Eluta for additional coverage (slower)...[/yellow]")
-    #     
+    #
     #     try:
     #         # First run JobSpy for speed
     #         console.print("[cyan]Step 1/2: JobSpy scraping...[/cyan]")
     #         self._execute_jobspy_scraping("1")  # Standard mode
-    #         
+    #
     #         # Then run Eluta for additional coverage
     #         console.print("[yellow]Step 2/2: Eluta scraping (slower)...[/yellow]")
     #         success = self.scraping_handler.run_scraping(mode="eluta_only")
-    #         
+    #
     #         if success:
     #             console.print("[green]✅ Combined scraping completed successfully![/green]")
     #             console.print("[cyan]💾 Maximum job coverage achieved![/cyan]")
     #         else:
     #             console.print("[yellow]⚠️ Combined scraping completed with partial results[/yellow]")
-    #             
+    #
     #     except Exception as e:
     #         console.print(f"[red]❌ Combined scraping error: {e}[/red]")
 
@@ -702,4 +737,3 @@ class ScrapingActions:
         except Exception as e:
             console.print(f"[red]Error scraping job details: {e}[/red]")
             return None
-

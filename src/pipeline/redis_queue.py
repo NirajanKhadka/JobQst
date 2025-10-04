@@ -21,7 +21,7 @@ class _InMemoryRedis:
         # end is inclusive in Redis
         if end == -1:
             end = len(data) - 1
-        return data[start:end + 1]
+        return data[start : end + 1]
 
     async def lindex(self, name: str, index: int):
         data = self._lists.get(name, [])
@@ -86,4 +86,3 @@ class RedisQueue:
     async def move_to_deadletter(self, item: dict):
         await self.connect()
         await self.redis.rpush(self.deadletter_name, json.dumps(item))
-

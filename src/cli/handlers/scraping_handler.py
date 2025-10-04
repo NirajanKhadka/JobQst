@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 scraping_logger = logging.getLogger("scraping_orchestrator")
 scraping_logger.setLevel(logging.INFO)
 s_handler = logging.FileHandler("logs/scraping_orchestrator.log")
-s_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+s_formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 s_handler.setFormatter(s_formatter)
 if not scraping_logger.hasHandlers():
     scraping_logger.addHandler(s_handler)
@@ -29,6 +29,7 @@ if not scraping_logger.hasHandlers():
 
 class ScrapingOrchestrator:
     """Orchestrates scraping sessions, wraps ScrapingHandler, and logs actions."""
+
     def __init__(self, profile: Dict):
         self.profile = profile
         self.handler = ScrapingHandler(profile)
@@ -47,7 +48,10 @@ class ScrapingOrchestrator:
             self.logger.info(message)
 
     def run_scraping(self, *args, **kwargs):
-        self.log(f"Starting scraping session for profile: {self.profile.get('profile_name', 'Unknown')}", "INFO")
+        self.log(
+            f"Starting scraping session for profile: {self.profile.get('profile_name', 'Unknown')}",
+            "INFO",
+        )
         try:
             result = self.handler.run_scraping(*args, **kwargs)
             self.log(f"Scraping session completed with result: {result}", "INFO")
@@ -126,7 +130,9 @@ class ScrapingHandler:
             bool: True if scraping was successful, False otherwise
         """
         console.print(f"[bold blue]🔍 Running {mode} job scraping...[/bold blue]")
-        console.print(f"[cyan]📅 Looking back {days} days, max {pages} pages, {jobs} jobs per keyword[/cyan]")
+        console.print(
+            f"[cyan]📅 Looking back {days} days, max {pages} pages, {jobs} jobs per keyword[/cyan]"
+        )
 
         # Set defaults
         if sites is None:
@@ -150,7 +156,9 @@ class ScrapingHandler:
             elif mode == "multi_worker":
                 return self._run_multi_worker_scraping(sites, keywords or [], days, pages, jobs)
             elif mode == "eluta_only":
-                console.print("[yellow]🐌 Running Eluta-only scraping (slower but comprehensive)[/yellow]")
+                console.print(
+                    "[yellow]🐌 Running Eluta-only scraping (slower but comprehensive)[/yellow]"
+                )
                 return self._run_eluta_scraping(jobs=jobs, pages=pages)
             else:
                 console.print(f"[red]❌ Unknown scraping mode: {mode}[/red]")
@@ -163,134 +171,104 @@ class ScrapingHandler:
             traceback.print_exc()
             return False
 
-    def _create_ultra_fast_config(self, mode: str, jobs: int):
-        """Create UltraFastConfig based on scraping mode."""
-        from src.pipeline.job_pipeline_legacy import UltraFastConfig
+    def _create_pipeline_config(self, mode: str, jobs: int):
+        """Create pipeline config based on scraping mode."""
+        return {
+            "enable_jobspy": True,
+            "enable_eluta": mode != "fast",  # Skip Eluta for fast mode
+            "enable_external_scraping": True,
+            "enable_processing": True,
+            "jobspy_preset": "quality" if mode == "simple" else "fast",
+            "jobspy_max_jobs": jobs,
+            "external_workers": 6 if mode == "simple" else 12,
+            "processing_method": "auto",
+            "save_to_database": True,
+            "enable_duplicate_check": True,
+            "hours_old": 72 if mode == "fast" else 168,  # Shorter for speed
+        }
 
-        # Base configuration - optimized for high-volume scraping
-        base_locations = [
-            "Toronto, ON", "Mississauga, ON", "Brampton, ON",
-            "Oakville, ON", "Markham, ON", "Richmond Hill, ON",
-            "Vaughan, ON", "North York, ON", "Scarborough, ON"
-        ]
-        keywords = self.profile.get("keywords", [
-            "python developer", "software engineer"
-        ])
-
-        if mode == "simple":
-            return UltraFastConfig(
-                jobspy_locations=base_locations[:6],  # More locations
-                jobspy_search_terms=keywords[:8],  # More keywords
-                jobspy_sites=["indeed", "linkedin", "glassdoor"],
-                max_jobs=jobs,
-                hours_old=336,  # 14 days - FRESH JOBS ONLY
-                enable_ai_processing=True,
-                processing_method="auto",
-                cpu_workers=8,  # Increased workers
-                concurrent_processors=3,  # More parallel processors
-                queue_size=200,  # Larger queue for high volume
-                batch_size=32,  # Larger batches
-                save_to_database=True,
-                enable_duplicate_check=True
-            )
-        else:  # multi_worker - optimized for maximum coverage in 14 days
-            return UltraFastConfig(
-                jobspy_locations=base_locations,  # ALL locations for max coverage
-                jobspy_search_terms=keywords[:15],  # MORE search terms for coverage
-                jobspy_sites=[
-                    "indeed", "linkedin", "glassdoor", "zip_recruiter"
-                ],
-                max_jobs=jobs,
-                hours_old=336,  # 14 days ONLY - NO OLDER JOBS
-                enable_ai_processing=True,
-                processing_method="auto",
-                cpu_workers=12,  # Maximum workers
-                concurrent_processors=6,  # Maximum parallel processors
-                queue_size=500,  # Large queue for high volume
-                batch_size=64,  # Large batches for efficiency
-                save_to_database=True,
-                enable_duplicate_check=True
-            )
-
-    def _display_pipeline_results(self, results: List[Dict], stats: Dict,
-                                  mode: str) -> None:
+    def _display_pipeline_results(self, results: List[Dict], stats: Dict, mode: str) -> None:
         """Display pipeline results with performance stats."""
         total_jobs = len(results)
-        total_time = stats['total_processing_time']
-        jobs_per_sec = stats['overall_jobs_per_sec']
-        
-        console.print(f"[bold green]✅ Ultra-Fast pipeline completed! "
-                     f"{total_jobs} jobs processed![/bold green]")
+        total_time = stats.get("total_processing_time", 0)
+        jobs_per_sec = stats.get("jobs_per_second", 0)
+
+        console.print(
+            f"[bold green]✅ {mode.title()} pipeline completed! "
+            f"{total_jobs} jobs processed![/bold green]"
+        )
         console.print(f"[cyan]⚡ Total time: {total_time:.1f}s[/cyan]")
         console.print(f"[cyan]🚀 Speed: {jobs_per_sec:.1f} jobs/sec[/cyan]")
 
-        if mode == "simple":
-            scraping_speed = stats['scraping_jobs_per_sec']
-            jobs_processed = stats['jobs_processed']
-            console.print(f"[cyan]🕷️ Scraping: {scraping_speed:.1f} "
-                         f"jobs/sec[/cyan]")
-            console.print(f"[cyan]🧠 AI Processing: {jobs_processed} "
-                         f"jobs analyzed[/cyan]")
+        # Display additional stats if available
+        if "jobspy_jobs_found" in stats:
+            console.print(f"[cyan]🚀 JobSpy jobs: {stats['jobspy_jobs_found']}[/cyan]")
+        if "descriptions_fetched" in stats:
+            console.print(f"[cyan]📄 Descriptions fetched: {stats['descriptions_fetched']}[/cyan]")
+
+        # Processing mode stats
+        if mode == "ai_processor":
+            jobs_processed = stats.get("jobs_processed", 0)
+            console.print(f"[cyan]🧠 AI Processing: {jobs_processed} " f"jobs analyzed[/cyan]")
         else:  # multi_worker
             console.print("[cyan]🚀 32x Performance Improvement![/cyan]")
-            workers = stats.get('cpu_workers', 12)
-            console.print(f"[cyan]👥 Workers: {workers} parallel "
-                         f"processors[/cyan]")
-            processing_method = stats.get('processing_method_used', 'auto')
+            workers = stats.get("cpu_workers", 12)
+            console.print(f"[cyan]👥 Workers: {workers} parallel " f"processors[/cyan]")
+            processing_method = stats.get("processing_method_used", "auto")
             console.print(f"[cyan]🧠 Processing: {processing_method}[/cyan]")
-            jobs_saved = stats.get('jobs_saved', total_jobs)
-            console.print(f"[cyan]💾 Saved: {jobs_saved} jobs to "
-                         f"database[/cyan]")
+            jobs_saved = stats.get("jobs_saved", total_jobs)
+            console.print(f"[cyan]💾 Saved: {jobs_saved} jobs to " f"database[/cyan]")
 
-        ready_jobs = stats['jobs_ready_to_apply']
+        ready_jobs = stats["jobs_ready_to_apply"]
         console.print(f"[cyan]🎯 Ready to Apply: {ready_jobs} jobs[/cyan]")
 
         # Show performance improvement
         old_time = total_jobs * 0.6  # Old system ~36s per job
-        speedup = (old_time / total_time 
-                  if total_time > 0 else 1)
-        console.print(f"[green]📈 Performance: {speedup:.1f}x faster "
-                     f"than old system![/green]")
+        speedup = old_time / total_time if total_time > 0 else 1
+        console.print(f"[green]📈 Performance: {speedup:.1f}x faster " f"than old system![/green]")
 
     def _run_ultra_fast_pipeline(self, mode: str, jobs: int) -> bool:
         """Run the ultra-fast pipeline with mode-specific configuration."""
         # Display mode-specific messages
         if mode == "simple":
-            console.print("[cyan]🚀 Using NEW Fast 3-Phase Pipeline (4.6x faster than old system)[/cyan]")
-            console.print("[yellow]📝 Phase 1: Eluta URLs → Phase 2: Parallel External Scraping → Phase 3: GPU Processing[/yellow]")
+            console.print(
+                "[cyan]🚀 Using NEW Fast 3-Phase Pipeline (4.6x faster than old system)[/cyan]"
+            )
+            console.print(
+                "[yellow]📝 Phase 1: Eluta URLs → Phase 2: Parallel External Scraping → Phase 3: GPU Processing[/yellow]"
+            )
         else:  # multi_worker
             console.print("[cyan]⚡ Using PARALLEL PIPELINE[/cyan]")
             console.print(
-                "[yellow]📝 JobSpy Scraping → Parallel AI Processing → "
-                "Batch Processing[/yellow]"
+                "[yellow]📝 JobSpy Scraping → Parallel AI Processing → " "Batch Processing[/yellow]"
             )
-            console.print(
-                "[green]🚀 Optimized for parallel processing efficiency[/green]"
-            )
+            console.print("[green]🚀 Optimized for parallel processing efficiency[/green]")
 
         try:
             import asyncio
-            from src.pipeline.job_pipeline_legacy import UltraFastJobPipeline
-            
+            from src.pipeline.enhanced_fast_job_pipeline import ImprovedFastJobPipeline
+
             profile_name = self.profile.get("profile_name", "default")
-            config = self._create_ultra_fast_config(mode, jobs)
-            pipeline = UltraFastJobPipeline(profile_name, config)
-            
-            # Run ultra-fast pipeline
-            results = asyncio.run(pipeline.run_ultra_fast_pipeline(jobs))
-            
+            config = self._create_pipeline_config(mode, jobs)
+            pipeline = ImprovedFastJobPipeline(profile_name, config)
+
+            # Run improved pipeline
+            results = asyncio.run(pipeline.run_complete_pipeline(jobs))
+
             if results:
-                stats = pipeline.get_performance_stats()
+                stats = pipeline.get_stats()
                 self._display_pipeline_results(results, stats, mode)
                 return True
             else:
                 console.print(f"[yellow]⚠️ {mode.title()} pipeline found no jobs[/yellow]")
                 return False
-                
+
         except Exception as e:
             console.print(f"[red]❌ Error in {mode} pipeline: {e}[/red]")
-            console.print("[yellow]💡 Tip: Try --processing-method rule_based if GPU processing fails[/yellow]")
-            
+            console.print(
+                "[yellow]💡 Tip: Try --processing-method rule_based if GPU processing fails[/yellow]"
+            )
+
             # Fallback strategies
             if mode == "multi_worker":
                 console.print("[cyan]🔄 Falling back to simple mode...[/cyan]")
@@ -299,15 +277,21 @@ class ScrapingHandler:
                 console.print("[cyan]🔄 Falling back to legacy scraper...[/cyan]")
                 return self._run_legacy_scraping(jobs)
 
-    def _run_simple_scraping(self, sites: List[str], keywords: List[str], days: int = 14, pages: int = 3, jobs: int = 20) -> bool:
+    def _run_simple_scraping(
+        self, sites: List[str], keywords: List[str], days: int = 14, pages: int = 3, jobs: int = 20
+    ) -> bool:
         """Run simple scraping using NEW Fast 3-Phase Pipeline (4.6x faster)."""
         return self._run_ultra_fast_pipeline("simple", jobs)
 
-    def _run_multi_worker_scraping(self, sites: List[str], keywords: List[str], days: int = 14, pages: int = 3, jobs: int = 20) -> bool:
+    def _run_multi_worker_scraping(
+        self, sites: List[str], keywords: List[str], days: int = 14, pages: int = 3, jobs: int = 20
+    ) -> bool:
         """Run multi-worker scraping using NEW Fast 3-Phase Pipeline (HIGH PERFORMANCE)."""
         return self._run_ultra_fast_pipeline("multi_worker", jobs)
 
-    def _run_eluta_scraping(self, jobs: int = 20, headless: bool = True, pages: int = 3, workers: int = 2) -> bool:
+    def _run_eluta_scraping(
+        self, jobs: int = 20, headless: bool = True, pages: int = 3, workers: int = 2
+    ) -> bool:
         """Run Eluta scraping with configurable parameters."""
         import asyncio
         from src.scrapers.unified_eluta_scraper import run_unified_eluta_scraper
@@ -316,22 +300,20 @@ class ScrapingHandler:
 
         try:
             profile_name = self.profile.get("profile_name", "default")
-            config = {
-                "jobs": jobs,
-                "headless": headless,
-                "pages": pages,
-                "workers": workers
-            }
-            
+            config = {"jobs": jobs, "headless": headless, "pages": pages, "workers": workers}
+
             results = asyncio.run(run_unified_eluta_scraper(profile_name, config))
             success = len(results) > 0 if results else False
 
             if success:
                 from src.core.job_database import get_job_db
+
                 db = get_job_db(profile_name)
                 job_count = len(db.get_jobs())
-                
-                console.print(f"[bold green]✅ Eluta scraping completed! {job_count} jobs in database![/bold green]")
+
+                console.print(
+                    f"[bold green]✅ Eluta scraping completed! {job_count} jobs in database![/bold green]"
+                )
                 return True
             else:
                 console.print("[yellow]⚠️ Eluta scraping found no jobs[/yellow]")
@@ -355,7 +337,9 @@ class ScrapingHandler:
 
     def _run_Improved_scraping(self, days: int, pages: int, jobs: int) -> bool:
         """Run Improved scraping with custom parameters using unified scraper."""
-        console.print(f"[yellow]📅 {days} days back, {pages} pages per keyword, {jobs} jobs per keyword[/yellow]")
+        console.print(
+            f"[yellow]📅 {days} days back, {pages} pages per keyword, {jobs} jobs per keyword[/yellow]"
+        )
         return self._run_eluta_scraping(jobs, headless=True, pages=pages, workers=2)
 
     def eluta_Improved_click_popup_scrape(self) -> bool:
@@ -378,7 +362,9 @@ class ScrapingHandler:
         normalized_mode = valid_modes.get(mode.lower(), mode.lower())
 
         if normalized_mode not in ["simple", "multi_worker", "eluta_only"]:
-            raise ValueError(f"Invalid scraping mode: {mode}. Valid modes: simple, multi_worker, eluta_only")
+            raise ValueError(
+                f"Invalid scraping mode: {mode}. Valid modes: simple, multi_worker, eluta_only"
+            )
 
         return normalized_mode
 
@@ -438,4 +424,3 @@ class ScrapingHandler:
             "avg_quality": avg_quality,
             "top_companies": top_company_names,
         }
-

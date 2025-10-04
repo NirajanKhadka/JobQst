@@ -11,11 +11,17 @@ from .types import OrchestratorConfig
 console = Console()
 
 
-async def _process_in_batches(jobs: List[Dict[str, Any]], cpu_workers: int, max_concurrent_stage2: int, batch_size: int) -> List[TwoStageResult]:
+async def _process_in_batches(
+    jobs: List[Dict[str, Any]], cpu_workers: int, max_concurrent_stage2: int, batch_size: int
+) -> List[TwoStageResult]:
     """Process jobs in bounded batches using the Two-Stage Processor."""
     from math import ceil
 
-    processor = get_two_stage_processor({"profile_name": "auto"}, cpu_workers=cpu_workers, max_concurrent_stage2=max_concurrent_stage2)
+    processor = get_two_stage_processor(
+        {"profile_name": "auto"},
+        cpu_workers=cpu_workers,
+        max_concurrent_stage2=max_concurrent_stage2,
+    )
 
     total = len(jobs)
     if total == 0:
@@ -33,8 +39,11 @@ async def _process_in_batches(jobs: List[Dict[str, Any]], cpu_workers: int, max_
     return all_results
 
 
-def run_processing_batches(jobs: List[Dict[str, Any]], cfg: OrchestratorConfig) -> List[TwoStageResult]:
+def run_processing_batches(
+    jobs: List[Dict[str, Any]], cfg: OrchestratorConfig
+) -> List[TwoStageResult]:
     """Synchronous facade to process jobs according to config."""
+
     async def _runner():
         return await _process_in_batches(
             jobs,
@@ -47,4 +56,3 @@ def run_processing_batches(jobs: List[Dict[str, Any]], cfg: OrchestratorConfig) 
         return asyncio.run(_runner())
     except RuntimeError:
         return asyncio.get_event_loop().run_until_complete(_runner())
-

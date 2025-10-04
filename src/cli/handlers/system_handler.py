@@ -27,13 +27,15 @@ console = Console()
 system_logger = logging.getLogger("system_orchestrator")
 system_logger.setLevel(logging.INFO)
 s_handler = logging.FileHandler("logs/system_orchestrator.log")
-s_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+s_formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 s_handler.setFormatter(s_formatter)
 if not system_logger.hasHandlers():
     system_logger.addHandler(s_handler)
 
+
 class SystemOrchestrator:
     """Orchestrates system sessions, wraps SystemHandler, and logs actions."""
+
     def __init__(self, profile: Dict):
         self.profile = profile
         self.handler = SystemHandler(profile)
@@ -52,7 +54,10 @@ class SystemOrchestrator:
             self.logger.info(message)
 
     def check_ollama_status(self):
-        self.log(f"Checking Ollama status for profile: {self.profile.get('profile_name', 'Unknown')}", "INFO")
+        self.log(
+            f"Checking Ollama status for profile: {self.profile.get('profile_name', 'Unknown')}",
+            "INFO",
+        )
         try:
             result = self.handler.check_ollama_status()
             self.log(f"Ollama status checked: {result}", "INFO")
@@ -389,4 +394,3 @@ def summarize_docs_command(args=None):
     else:
         print("[CLI] Documentation update failed:")
         print(result.stderr)
-

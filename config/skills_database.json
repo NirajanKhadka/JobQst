@@ -1,0 +1,255 @@
+{
+  "industries": {
+    "data_analytics": {
+      "name": "Data Analytics & Business Intelligence",
+      "skills": [
+        "Python", "SQL", "R", "SAS", "SPSS",
+        "Power BI", "Tableau", "Looker", "QlikView",
+        "Excel", "Pandas", "NumPy", "Scikit-learn",
+        "Data Analysis", "Data Visualization", "Statistical Analysis",
+        "A/B Testing", "Hypothesis Testing", "Regression Analysis",
+        "DAX", "Power Query", "VBA", "Macros",
+        "MySQL", "PostgreSQL", "MongoDB", "BigQuery",
+        "ETL", "Data Warehousing", "Data Modeling"
+      ],
+      "role_patterns": [
+        "data analyst", "business analyst", "analytics", "data science",
+        "bi analyst", "intelligence analyst", "insights analyst",
+        "reporting analyst", "quantitative analyst"
+      ],
+      "keywords": [
+        "Data Analyst", "Business Analyst", "Analytics Specialist",
+        "Data Science Analyst", "BI Analyst", "Reporting Analyst",
+        "Business Intelligence Analyst", "Junior Data Analyst",
+        "Senior Data Analyst", "Python Data Analyst", "SQL Analyst"
+      ]
+    },
+    "software_development": {
+      "name": "Software Development & Engineering",
+      "skills": [
+        "Python", "Java", "JavaScript", "TypeScript", "C++", "C#", "Go", "Rust",
+        "React", "Angular", "Vue.js", "Node.js", "Express", "Next.js",
+        "Django", "Flask", "FastAPI", "Spring Boot", "ASP.NET",
+        "Docker", "Kubernetes", "CI/CD", "Jenkins", "GitHub Actions",
+        "AWS", "Azure", "GCP", "Terraform", "Ansible",
+        "Git", "Agile", "Scrum", "REST API", "GraphQL",
+        "MongoDB", "PostgreSQL", "Redis", "Elasticsearch",
+        "Microservices", "System Design", "Object-Oriented Programming"
+      ],
+      "role_patterns": [
+        "software developer", "software engineer", "programmer",
+        "full stack", "backend", "frontend", "web developer",
+        "application developer", "systems engineer"
+      ],
+      "keywords": [
+        "Software Developer", "Software Engineer", "Full Stack Developer",
+        "Backend Developer", "Frontend Developer", "Python Developer",
+        "Java Developer", "JavaScript Developer", "Application Developer",
+        "Senior Software Engineer", "DevOps Engineer"
+      ]
+    },
+    "agriculture": {
+      "name": "Agriculture & Greenhouse Operations",
+      "skills": [
+        "Greenhouse Management", "Hydroponics", "Aquaponics",
+        "IPM", "Integrated Pest Management", "Pest Control",
+        "Fertigation", "Irrigation Systems", "Drip Irrigation",
+        "Climate Control", "Argus", "Priva", "Priva Pro",
+        "Crop Management", "Crop Planning", "Crop Scheduling",
+        "Horticulture", "Cultivation", "Propagation",
+        "Organic Farming", "Sustainable Farming", "Regenerative Agriculture",
+        "Leafy Greens", "Herbs", "Tomatoes", "Cucumbers",
+        "Plant Health", "Plant Nutrition", "Soil Management",
+        "Biological Control", "Beneficial Insects",
+        "pH Management", "EC Management", "Nutrient Management",
+        "Root-Zone Management", "Growing Media",
+        "Production Planning", "Harvest Management",
+        "Quality Control", "Food Safety", "GAP", "HACCP",
+        "Vertical Farming", "CEA", "Controlled Environment Agriculture"
+      ],
+      "role_patterns": [
+        "grower", "greenhouse", "cultivation", "horticulture",
+        "farming", "agriculture", "crop", "growing specialist",
+        "production manager", "farm manager", "greenhouse manager"
+      ],
+      "keywords": [
+        "Greenhouse Specialist", "Growing Specialist", "Greenhouse Grower",
+        "Cultivation Specialist", "Greenhouse Manager", "Grower",
+        "Horticulture Specialist", "Crop Production Specialist",
+        "IPM Specialist", "Agriculture Specialist",
+        "Hydroponics Specialist", "Greenhouse Technician",
+        "Production Manager", "Farm Manager", "Indoor Farming Specialist"
+      ]
+    },
+    "machine_learning": {
+      "name": "Machine Learning & AI",
+      "skills": [
+        "Machine Learning", "Deep Learning", "Neural Networks",
+        "TensorFlow", "PyTorch", "Keras", "Scikit-learn",
+        "NLP", "Natural Language Processing", "Computer Vision",
+        "CNN", "RNN", "LSTM", "Transformer", "BERT", "GPT",
+        "Python", "R", "Julia", "Scala",
+        "Pandas", "NumPy", "Matplotlib", "Seaborn",
+        "Model Deployment", "MLOps", "Model Monitoring",
+        "Feature Engineering", "Model Optimization",
+        "AWS SageMaker", "Azure ML", "Google AI Platform",
+        "Spark MLlib", "H2O.ai", "XGBoost", "LightGBM"
+      ],
+      "role_patterns": [
+        "machine learning", "ml engineer", "ai engineer",
+        "data scientist", "deep learning", "nlp", "computer vision"
+      ],
+      "keywords": [
+        "Machine Learning Engineer", "ML Engineer", "AI Engineer",
+        "Data Scientist", "Deep Learning Engineer",
+        "NLP Engineer", "Computer Vision Engineer",
+        "MLOps Engineer", "Research Scientist"
+      ]
+    },
+    "healthcare": {
+      "name": "Healthcare & Medical",
+      "skills": [
+        "Patient Care", "Clinical Assessment", "Medical Records",
+        "EMR", "EHR", "Epic", "Cerner", "Meditech",
+        "HIPAA Compliance", "Medical Coding", "ICD-10", "CPT",
+        "Nursing", "Clinical", "Diagnosis", "Treatment Planning",
+        "CPR", "BLS", "ACLS", "First Aid",
+        "Pharmacy", "Medication Administration",
+        "Laboratory", "Phlebotomy", "Vital Signs",
+        "Healthcare Administration", "Medical Billing"
+      ],
+      "role_patterns": [
+        "nurse", "doctor", "physician", "medical", "healthcare",
+        "clinical", "patient care", "hospital", "health"
+      ],
+      "keywords": [
+        "Registered Nurse", "Nurse Practitioner", "Clinical Nurse",
+        "Healthcare Professional", "Medical Assistant",
+        "Clinical Specialist", "Patient Care Coordinator",
+        "Healthcare Administrator", "Medical Records Specialist"
+      ]
+    },
+    "finance": {
+      "name": "Finance & Accounting",
+      "skills": [
+        "Financial Analysis", "Financial Modeling", "Valuation",
+        "Excel", "VBA", "Power BI", "Tableau",
+        "Bloomberg Terminal", "Reuters", "FactSet",
+        "SAP", "Oracle Financials", "QuickBooks",
+        "GAAP", "IFRS", "Financial Reporting",
+        "Budgeting", "Forecasting", "Cash Flow Analysis",
+        "Risk Management", "Portfolio Management",
+        "Investment Analysis", "Equity Research",
+        "SQL", "Python", "R", "VBA",
+        "CFA", "CPA", "Accounting", "Auditing"
+      ],
+      "role_patterns": [
+        "financial analyst", "accountant", "finance", "investment",
+        "portfolio", "risk analyst", "financial planning"
+      ],
+      "keywords": [
+        "Financial Analyst", "Investment Analyst", "Business Analyst",
+        "Accountant", "Financial Controller", "Budget Analyst",
+        "Risk Analyst", "Portfolio Analyst", "Equity Research Analyst"
+      ]
+    },
+    "marketing": {
+      "name": "Marketing & Digital Marketing",
+      "skills": [
+        "Digital Marketing", "SEO", "SEM", "Google Ads",
+        "Social Media Marketing", "Content Marketing",
+        "Email Marketing", "Marketing Automation",
+        "Google Analytics", "Adobe Analytics", "Mixpanel",
+        "A/B Testing", "Conversion Optimization",
+        "HubSpot", "Salesforce Marketing Cloud", "Marketo",
+        "Facebook Ads", "Instagram Marketing", "LinkedIn Marketing",
+        "Content Strategy", "Copywriting", "Brand Management",
+        "Market Research", "Customer Segmentation",
+        "CRM", "Marketing Strategy", "Campaign Management"
+      ],
+      "role_patterns": [
+        "marketing", "digital marketing", "seo", "sem",
+        "content", "social media", "brand", "campaign"
+      ],
+      "keywords": [
+        "Marketing Specialist", "Digital Marketing Manager",
+        "SEO Specialist", "Content Marketing Manager",
+        "Social Media Manager", "Marketing Analyst",
+        "Brand Manager", "Campaign Manager", "Growth Marketing Manager"
+      ]
+    },
+    "project_management": {
+      "name": "Project & Program Management",
+      "skills": [
+        "Project Management", "Program Management",
+        "Agile", "Scrum", "Kanban", "Waterfall",
+        "JIRA", "Asana", "Monday.com", "Trello",
+        "MS Project", "Smartsheet",
+        "PMP", "PMI", "Prince2", "Certified Scrum Master",
+        "Stakeholder Management", "Risk Management",
+        "Budget Management", "Resource Planning",
+        "Change Management", "Process Improvement",
+        "Six Sigma", "Lean", "Kaizen"
+      ],
+      "role_patterns": [
+        "project manager", "program manager", "scrum master",
+        "product owner", "agile", "delivery manager"
+      ],
+      "keywords": [
+        "Project Manager", "Program Manager", "Scrum Master",
+        "Product Owner", "Agile Coach", "Delivery Manager",
+        "Technical Project Manager", "PMO Manager"
+      ]
+    },
+    "cloud_devops": {
+      "name": "Cloud & DevOps Engineering",
+      "skills": [
+        "AWS", "Azure", "Google Cloud Platform", "GCP",
+        "Docker", "Kubernetes", "Helm", "Istio",
+        "Terraform", "Ansible", "Puppet", "Chef",
+        "CI/CD", "Jenkins", "GitLab CI", "GitHub Actions", "CircleCI",
+        "Linux", "Unix", "Shell Scripting", "Bash", "Python",
+        "Monitoring", "Prometheus", "Grafana", "ELK Stack",
+        "CloudFormation", "ARM Templates",
+        "Microservices", "Service Mesh", "API Gateway",
+        "Infrastructure as Code", "Configuration Management"
+      ],
+      "role_patterns": [
+        "devops", "cloud engineer", "infrastructure", "sre",
+        "site reliability", "platform engineer", "cloud architect"
+      ],
+      "keywords": [
+        "DevOps Engineer", "Cloud Engineer", "AWS Engineer",
+        "Azure Engineer", "Site Reliability Engineer", "SRE",
+        "Infrastructure Engineer", "Platform Engineer",
+        "Cloud Architect", "Kubernetes Engineer"
+      ]
+    }
+  },
+  
+  "skill_aliases": {
+    "IPM": "Integrated Pest Management",
+    "NLP": "Natural Language Processing",
+    "CNN": "Convolutional Neural Network",
+    "RNN": "Recurrent Neural Network",
+    "EMR": "Electronic Medical Records",
+    "EHR": "Electronic Health Records",
+    "CEA": "Controlled Environment Agriculture",
+    "GAP": "Good Agricultural Practices",
+    "GAAP": "Generally Accepted Accounting Principles",
+    "IFRS": "International Financial Reporting Standards"
+  },
+  
+  "capitalization_rules": {
+    "uppercase": [
+      "IPM", "NLP", "AWS", "GCP", "EMR", "EHR", "HIPAA", "CPR", "BLS", "ACLS",
+      "CRM", "SAP", "ERP", "PH", "EC", "SQL", "API", "ETL", "GAP", "HACCP",
+      "CEA", "GAAP", "IFRS", "ICD", "CPT", "PMP", "PMI", "SRE", "CI/CD"
+    ],
+    "preserve": [
+      "Power BI", "Node.js", "Scikit-learn", "ASP.NET", "Next.js", "Vue.js",
+      "Express.js", "GitHub", "GitLab", "LinkedIn", "FastAPI", "PyTorch",
+      "TensorFlow", "XGBoost", "LightGBM", "QuickBooks", "H2O.ai"
+    ]
+  }
+}

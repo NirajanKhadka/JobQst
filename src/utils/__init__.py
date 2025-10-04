@@ -6,6 +6,7 @@ Provides utility functions for job analysis, and other core functionality.
 # Import core utilities
 # from .job_analysis_engine import JobAnalysisEngine  # Not available
 from .error_tolerance import ErrorTracker, reliableOperations
+
 # from .scraping_coordinator import OptimizedScrapingCoordinator, ScrapingMetrics, ScrapingCoordinator  # Not available
 # from .resume_analyzer import ResumeAnalyzer  # Not available
 from .manual_review_manager import ManualReviewManager
@@ -45,4 +46,3 @@ __all__ = [
     "filter_entry_level_jobs",
     "remove_duplicates",
 ]
-

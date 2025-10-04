@@ -7,6 +7,7 @@ Replaces MockOrchestrationService with actual process monitoring.
 # Make psutil optional to prevent import-time failures in dashboard
 try:
     import psutil  # type: ignore
+
     HAS_PSUTIL = True
 except Exception:
     psutil = None  # type: ignore
@@ -18,28 +19,33 @@ from typing import Dict, Any
 # Try importing the real ProcessMonitor; fall back to a dummy implementation
 try:
     from .process_monitor import ProcessMonitor  # type: ignore
+
     HAS_PROCESS_MONITOR = True
 except Exception:
     HAS_PROCESS_MONITOR = False
-    
+
     class ProcessMonitor:  # type: ignore
         """Dummy process monitor used when psutil is unavailable."""
+
         def __init__(self):
             pass
+
         def register_process(self, service_name: str, pid: int, description: str = "") -> bool:
             return False
+
         def get_process_status(self, service_name: str) -> Dict[str, Any]:
             return {
-                'service_name': service_name,
-                'status': 'stopped',
-                'description': 'Process monitoring unavailable',
-                'pid': None,
-                'cpu_usage': 0.0,
-                'memory_usage': {'rss': 0, 'vms': 0, 'percent': 0.0},
-                'uptime': '00:00:00',
-                'uptime_seconds': 0,
-                'resource_usage': {'cpu': 0.0, 'memory': 0.0}
+                "service_name": service_name,
+                "status": "stopped",
+                "description": "Process monitoring unavailable",
+                "pid": None,
+                "cpu_usage": 0.0,
+                "memory_usage": {"rss": 0, "vms": 0, "percent": 0.0},
+                "uptime": "00:00:00",
+                "uptime_seconds": 0,
+                "resource_usage": {"cpu": 0.0, "memory": 0.0},
             }
+
 
 import subprocess
 
@@ -56,16 +62,16 @@ class RealWorkerMonitorService:
         """Initialize the real worker monitor service."""
         self.process_monitor = ProcessMonitor()
         self.auto_management_enabled = False
-        
+
         # Worker descriptions (meaningful instead of "No description")
         self.worker_descriptions = {
             "processor_worker_1": "Primary job processor - analyzes scraped jobs",
-            "processor_worker_2": "Secondary job processor - backup processing", 
+            "processor_worker_2": "Secondary job processor - backup processing",
             "processor_worker_3": "Tertiary job processor - high availability",
             "processor_worker_4": "Additional job processor - scale capacity",
-            "processor_worker_5": "Additional job processor - max throughput"
+            "processor_worker_5": "Additional job processor - max throughput",
         }
-        
+
         # Try to discover existing processes (only if psutil available)
         self._discover_existing_workers()
         self.worker_processes = {}  # Track running worker processes by name
@@ -88,7 +94,10 @@ class RealWorkerMonitorService:
     def start_service(self, service_name: str, profile_name: str) -> bool:
         """Start a service (launch worker process)."""
         logger.info(f"Start service requested: {service_name} for {profile_name}")
-        if service_name in self.worker_processes and self.worker_processes[service_name].poll() is None:
+        if (
+            service_name in self.worker_processes
+            and self.worker_processes[service_name].poll() is None
+        ):
             logger.warning(f"Service {service_name} is already running.")
             return False  # Already running
         # Map service_name to script/command
@@ -131,14 +140,14 @@ class RealWorkerMonitorService:
         """Get worker pool status with real data."""
         all_status = self.get_all_services_status()
         workers = {k: v for k, v in all_status.items() if k.startswith("processor_worker_")}
-        
+
         running_count = sum(1 for w in workers.values() if w.get("status") == "running")
-        
+
         return {
             "total_workers": len(workers),
             "running_workers": running_count,
             "available_workers": len(workers) - running_count,
-            "workers": workers
+            "workers": workers,
         }
 
     def _discover_existing_workers(self):
@@ -146,27 +155,28 @@ class RealWorkerMonitorService:
         if not HAS_PSUTIL:
             return
         try:
-            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+            for proc in psutil.process_iter(["pid", "name", "cmdline"]):
                 try:
-                    if proc.info['cmdline']:
-                        cmdline = ' '.join(proc.info['cmdline'])
-                        
+                    if proc.info["cmdline"]:
+                        cmdline = " ".join(proc.info["cmdline"])
+
                         # Look for job processor processes
-                        if ('python' in (proc.info['name'] or '').lower() and 
-                            ('job' in cmdline.lower() or 'processor' in cmdline.lower())):
-                            
+                        if "python" in (proc.info["name"] or "").lower() and (
+                            "job" in cmdline.lower() or "processor" in cmdline.lower()
+                        ):
+
                             # Register as a worker
                             service_name = f"discovered_worker_{proc.info['pid']}"
                             self.process_monitor.register_process(
-                                service_name, 
-                                proc.info['pid'], 
-                                f"Discovered job processor (PID: {proc.info['pid']})"
+                                service_name,
+                                proc.info["pid"],
+                                f"Discovered job processor (PID: {proc.info['pid']})",
                             )
                             logger.info(f"Discovered worker process: {service_name}")
-                            
+
                 except Exception:
                     continue
-                
+
         except Exception as e:
             logger.error(f"Error discovering workers: {e}")
 
@@ -174,20 +184,20 @@ class RealWorkerMonitorService:
         """Get status for a specific service with real or simulated data."""
         # Check if we have a real process registered
         real_status = self.process_monitor.get_process_status(service_name)
-        
-        if real_status.get('status') == 'running':
+
+        if real_status.get("status") == "running":
             # Use real process data
             return {
-                'status': 'running',
-                'description': self.worker_descriptions.get(service_name, 'Worker process'),
-                'processed_count': 0,  # Would be tracked in real implementation
-                'uptime': real_status.get('uptime', '00:00:00'),
-                'cpu_usage': real_status.get('cpu_usage', 0.0),
-                'memory_usage': real_status.get('memory_usage', {}).get('percent', 0.0),
-                'resource_usage': {
-                    'cpu': real_status.get('cpu_usage', 0.0),
-                    'memory': real_status.get('memory_usage', {}).get('percent', 0.0)
-                }
+                "status": "running",
+                "description": self.worker_descriptions.get(service_name, "Worker process"),
+                "processed_count": 0,  # Would be tracked in real implementation
+                "uptime": real_status.get("uptime", "00:00:00"),
+                "cpu_usage": real_status.get("cpu_usage", 0.0),
+                "memory_usage": real_status.get("memory_usage", {}).get("percent", 0.0),
+                "resource_usage": {
+                    "cpu": real_status.get("cpu_usage", 0.0),
+                    "memory": real_status.get("memory_usage", {}).get("percent", 0.0),
+                },
             }
         else:
             # Use system-wide stats as fallback (only if psutil available)
@@ -196,32 +206,33 @@ class RealWorkerMonitorService:
                     system_cpu = psutil.cpu_percent(interval=0.1)
                     system_memory = psutil.virtual_memory().percent
                     return {
-                        'status': 'stopped',
-                        'description': self.worker_descriptions.get(service_name, 'Worker process'),
-                        'processed_count': 0,
-                        'uptime': '00:00:00',
-                        'cpu_usage': round(system_cpu / 10, 1),  # Simulate some activity
-                        'memory_usage': round(system_memory / 20, 1),  # Simulate some usage
-                        'resource_usage': {
-                            'cpu': round(system_cpu / 10, 1),
-                            'memory': round(system_memory / 20, 1)
-                        }
+                        "status": "stopped",
+                        "description": self.worker_descriptions.get(service_name, "Worker process"),
+                        "processed_count": 0,
+                        "uptime": "00:00:00",
+                        "cpu_usage": round(system_cpu / 10, 1),  # Simulate some activity
+                        "memory_usage": round(system_memory / 20, 1),  # Simulate some usage
+                        "resource_usage": {
+                            "cpu": round(system_cpu / 10, 1),
+                            "memory": round(system_memory / 20, 1),
+                        },
                     }
             except Exception:
                 pass
             # Final fallback
             return {
-                'status': 'stopped',
-                'description': self.worker_descriptions.get(service_name, 'Worker process'),
-                'processed_count': 0,
-                'uptime': '00:00:00',
-                'cpu_usage': 0.0,
-                'memory_usage': 0.0,
-                'resource_usage': {'cpu': 0.0, 'memory': 0.0}
+                "status": "stopped",
+                "description": self.worker_descriptions.get(service_name, "Worker process"),
+                "processed_count": 0,
+                "uptime": "00:00:00",
+                "cpu_usage": 0.0,
+                "memory_usage": 0.0,
+                "resource_usage": {"cpu": 0.0, "memory": 0.0},
             }
 
     def _create_service_object(self, service_name: str):
         """Create a service object for compatibility."""
+
         class ServiceObject:
             def __init__(self, name, description, status="stopped"):
                 self.name = name
@@ -229,20 +240,18 @@ class RealWorkerMonitorService:
                 self.status = status
                 self.start_time = None
                 self.resource_usage = {"cpu": 0.0, "memory": 0.0}
-                
+
             def get_status(self):
                 return {
                     "status": self.status,
                     "processed_count": 0,
                     "uptime": "00:00:00",
                     "cpu_usage": self.resource_usage["cpu"],
-                    "memory_usage": self.resource_usage["memory"]
+                    "memory_usage": self.resource_usage["memory"],
                 }
-        
+
         return ServiceObject(
-            service_name,
-            self.worker_descriptions.get(service_name, "Worker process"),
-            "stopped"
+            service_name, self.worker_descriptions.get(service_name, "Worker process"), "stopped"
         )
 
     def get_system_status(self) -> Dict[str, Any]:
@@ -250,12 +259,13 @@ class RealWorkerMonitorService:
         try:
             # Get all services status
             services_status = self.get_all_services_status()
-            
+
             # Count running services
-            running_services = sum(1 for status in services_status.values() 
-                                 if status.get('status') == 'running')
+            running_services = sum(
+                1 for status in services_status.values() if status.get("status") == "running"
+            )
             total_services = len(services_status)
-            
+
             # Determine overall status
             if running_services == 0:
                 overall_status = "stopped"
@@ -263,30 +273,32 @@ class RealWorkerMonitorService:
                 overall_status = "healthy"
             else:
                 overall_status = "partial"
-            
+
             # Get system resources (guard when psutil missing)
             system_resources = {
                 "cpu_usage": 0,
                 "memory_usage": 0,
                 "disk_usage": 0,
                 "available_memory_gb": 0,
-                "total_memory_gb": 0
+                "total_memory_gb": 0,
             }
             try:
                 if HAS_PSUTIL:
                     cpu_usage = psutil.cpu_percent(interval=1)
                     memory = psutil.virtual_memory()
-                    disk = psutil.disk_usage('/' if hasattr(psutil, 'disk_usage') else 'C:\\')
-                    system_resources.update({
-                        "cpu_usage": round(cpu_usage, 1),
-                        "memory_usage": round(memory.percent, 1),
-                        "disk_usage": round(disk.percent, 1),
-                        "available_memory_gb": round(memory.available / (1024**3), 2),
-                        "total_memory_gb": round(memory.total / (1024**3), 2)
-                    })
+                    disk = psutil.disk_usage("/" if hasattr(psutil, "disk_usage") else "C:\\")
+                    system_resources.update(
+                        {
+                            "cpu_usage": round(cpu_usage, 1),
+                            "memory_usage": round(memory.percent, 1),
+                            "disk_usage": round(disk.percent, 1),
+                            "available_memory_gb": round(memory.available / (1024**3), 2),
+                            "total_memory_gb": round(memory.total / (1024**3), 2),
+                        }
+                    )
             except Exception as e:
                 logger.warning(f"Could not get system resources: {e}")
-            
+
             return {
                 "overall_status": overall_status,
                 "running_services": running_services,
@@ -294,9 +306,9 @@ class RealWorkerMonitorService:
                 "services": services_status,
                 "system_resources": system_resources,
                 "timestamp": datetime.now().isoformat(),
-                "auto_management_enabled": self.auto_management_enabled
+                "auto_management_enabled": self.auto_management_enabled,
             }
-            
+
         except Exception as e:
             logger.error(f"Error getting system status: {e}")
             return {
@@ -306,5 +318,5 @@ class RealWorkerMonitorService:
                 "total_services": 0,
                 "services": {},
                 "system_resources": {},
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }

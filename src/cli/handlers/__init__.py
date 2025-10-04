@@ -12,4 +12,3 @@ from .dashboard_handler import DashboardHandler
 from .system_handler import SystemHandler
 
 __all__ = ["ScrapingHandler", "DashboardHandler", "SystemHandler"]
-

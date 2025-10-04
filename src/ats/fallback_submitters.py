@@ -466,4 +466,3 @@ Attachments to include:
 class FallbackATSSubmitter:
     def __init__(self, *args, **kwargs):
         pass
-

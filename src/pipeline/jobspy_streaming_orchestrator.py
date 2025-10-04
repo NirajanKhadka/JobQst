@@ -41,6 +41,9 @@ from src.scrapers.multi_site_jobspy_workers import MultiSiteJobSpyWorkers
 from src.analysis.two_stage_processor import get_two_stage_processor, TwoStageResult
 from src.utils.profile_helpers import load_profile
 
+# Phase 2: Unified Deduplication
+from src.core.unified_deduplication import deduplicate_jobs_unified
+
 console = Console()
 
 
@@ -85,11 +88,17 @@ def _df_to_job_dicts(df: pd.DataFrame) -> List[Dict[str, Any]]:
     return records
 
 
-async def _process_in_batches(jobs: List[Dict[str, Any]], cpu_workers: int, max_concurrent_stage2: int, batch_size: int) -> List[TwoStageResult]:
+async def _process_in_batches(
+    jobs: List[Dict[str, Any]], cpu_workers: int, max_concurrent_stage2: int, batch_size: int
+) -> List[TwoStageResult]:
     """Process jobs in bounded batches to keep memory stable."""
     from math import ceil
 
-    processor = get_two_stage_processor({"profile_name": "auto"}, cpu_workers=cpu_workers, max_concurrent_stage2=max_concurrent_stage2)
+    processor = get_two_stage_processor(
+        {"profile_name": "auto"},
+        cpu_workers=cpu_workers,
+        max_concurrent_stage2=max_concurrent_stage2,
+    )
 
     total = len(jobs)
     if total == 0:
@@ -153,7 +162,9 @@ async def run_jobspy_to_two_stage(
     # Step 2: Optional enrichment
     if fetch_descriptions and isinstance(df, pd.DataFrame) and not df.empty:
         try:
-            df = await workers.run_optimized_description_fetching(df, max_concurrency=description_fetch_concurrency)
+            df = await workers.run_optimized_description_fetching(
+                df, max_concurrency=description_fetch_concurrency
+            )
         except Exception as e:
             console.print(f"[yellow]Description enrichment failed: {e}[/yellow]")
 
@@ -163,6 +174,10 @@ async def run_jobspy_to_two_stage(
 
     # Step 3: Stream to processor in batches
     jobs = _df_to_job_dicts(df)
-    results = await _process_in_batches(jobs, cpu_workers=cpu_workers, max_concurrent_stage2=max_concurrent_stage2, batch_size=batch_size)
+    results = await _process_in_batches(
+        jobs,
+        cpu_workers=cpu_workers,
+        max_concurrent_stage2=max_concurrent_stage2,
+        batch_size=batch_size,
+    )
     return results
-

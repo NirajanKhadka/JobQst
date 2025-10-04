@@ -26,6 +26,7 @@ from rich.prompt import Prompt
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from src.utils.job_helpers import generate_job_hash
+
 # DashboardManager removed - using direct streamlit commands
 import psutil
 
@@ -35,13 +36,15 @@ console = Console()
 dash_logger = logging.getLogger("dashboard_orchestrator")
 dash_logger.setLevel(logging.INFO)
 d_handler = logging.FileHandler("logs/dashboard_orchestrator.log")
-d_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+d_formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 d_handler.setFormatter(d_formatter)
 if not dash_logger.hasHandlers():
     dash_logger.addHandler(d_handler)
 
+
 class DashboardOrchestrator:
     """Orchestrates dashboard sessions, wraps DashboardHandler, and logs actions."""
+
     def __init__(self, profile: Dict):
         self.profile = profile
         self.handler = DashboardHandler(profile)
@@ -60,7 +63,10 @@ class DashboardOrchestrator:
             self.logger.info(message)
 
     def show_status_and_dashboard(self):
-        self.log(f"Showing status and dashboard for profile: {self.profile.get('profile_name', 'Unknown')}", "INFO")
+        self.log(
+            f"Showing status and dashboard for profile: {self.profile.get('profile_name', 'Unknown')}",
+            "INFO",
+        )
         try:
             self.handler.show_status_and_dashboard()
             self.log("Status and dashboard displayed.", "INFO")
@@ -127,9 +133,10 @@ class DashboardHandler:
         """Check if dashboard is running on the port."""
         try:
             import requests
+
             response = requests.get(f"http://localhost:{self.port}", timeout=2)
             return response.status_code == 200
-        except:
+        except (requests.RequestException, OSError, TimeoutError):
             return False
 
     def auto_start_dashboard(self) -> bool:
@@ -146,32 +153,25 @@ class DashboardHandler:
 
             # Check for available dashboard types
             dash_app_path = Path("src/dashboard/dash_app/app.py")
-            
+
             if dash_app_path.exists():
                 # Use Dash dashboard (port 8050 default for Dash)
                 self.port = 8050  # Update port for Dash
                 python_path = r"C:\Users\Niraj\miniconda3\envs\auto_job\python.exe"
-                cmd = [
-                    python_path, str(dash_app_path)
-                ]
+                cmd = [python_path, str(dash_app_path)]
                 console.print("[cyan]🚀 Starting Dash Dashboard on port 8050...[/cyan]")
             else:
-                console.print(
-                    "[red]❌ No dashboard found at:[/red]"
-                )
+                console.print("[red]❌ No dashboard found at:[/red]")
                 console.print(f"  - {dash_app_path}")
                 return False
-            
+
             process = subprocess.Popen(
-                cmd, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.PIPE,
-                cwd=os.getcwd()
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=os.getcwd()
             )
-            
+
             # Wait a moment for startup
             time.sleep(3)
-            
+
             # Check if it started successfully
             if self._is_dashboard_running():
                 console.print("[green]✅ Clean Dashboard started successfully![/green]")
@@ -193,17 +193,17 @@ class DashboardHandler:
         """Stop the running Clean Dashboard process."""
         try:
             # Find and kill streamlit processes on our port
-            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+            for proc in psutil.process_iter(["pid", "name", "cmdline"]):
                 try:
-                    if 'streamlit' in proc.info['name'].lower():
-                        cmdline = ' '.join(proc.info['cmdline'])
+                    if "streamlit" in proc.info["name"].lower():
+                        cmdline = " ".join(proc.info["cmdline"])
                         if str(self.port) in cmdline:
                             proc.kill()
                             console.print("[green]✅ Clean Dashboard stopped successfully[/green]")
                             return True
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
-            
+
             console.print("[yellow]⚠️ No dashboard process found to stop[/yellow]")
             return False
         except Exception as e:
@@ -263,4 +263,3 @@ class DashboardHandler:
 
 # Note: DashboardActions class is defined in src/cli/actions/dashboard_actions.py
 # This prevents duplicate class definitions and initialization issues
-

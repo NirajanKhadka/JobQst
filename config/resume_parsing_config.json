@@ -1,0 +1,86 @@
+{
+  "location_patterns": {
+    "canada": {
+      "provinces": [
+        "ON", "BC", "AB", "QC", "MB", "SK", "NS", "NB", "PE", "NL", "NT", "YT", "NU"
+      ],
+      "province_names": {
+        "ON": "Ontario",
+        "BC": "British Columbia",
+        "AB": "Alberta",
+        "QC": "Quebec",
+        "MB": "Manitoba",
+        "SK": "Saskatchewan",
+        "NS": "Nova Scotia",
+        "NB": "New Brunswick",
+        "PE": "Prince Edward Island",
+        "NL": "Newfoundland and Labrador",
+        "NT": "Northwest Territories",
+        "YT": "Yukon",
+        "NU": "Nunavut"
+      }
+    },
+    "usa": {
+      "states_abbr": [
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+      ],
+      "states_full": [
+        "New York", "California", "Texas", "Florida", "Illinois", "Pennsylvania",
+        "Ohio", "Georgia", "North Carolina", "Michigan", "New Jersey",
+        "Virginia", "Washington", "Massachusetts", "Arizona", "Indiana",
+        "Tennessee", "Missouri", "Maryland", "Wisconsin", "Minnesota",
+        "Colorado", "Alabama", "South Carolina", "Louisiana", "Kentucky"
+      ]
+    }
+  },
+  
+  "phone_patterns": [
+    {"pattern": "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b", "name": "123-456-7890"},
+    {"pattern": "\\(\\d{3}\\)\\s*\\d{3}[-.]?\\d{4}", "name": "(123) 456-7890"},
+    {"pattern": "\\+1\\s*\\d{3}[-.]?\\d{3}[-.]?\\d{4}", "name": "+1 123-456-7890"}
+  ],
+  
+  "email_pattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+  
+  "section_headers": {
+    "experience": [
+      "work experience", "professional experience", "employment history",
+      "experience", "work history", "career history"
+    ],
+    "education": [
+      "education", "academic background", "qualifications",
+      "educational background", "academic qualifications"
+    ],
+    "skills": [
+      "skills", "technical skills", "core competencies",
+      "areas of expertise", "proficiencies", "capabilities"
+    ],
+    "projects": [
+      "projects", "key projects", "notable projects",
+      "portfolio", "project experience"
+    ],
+    "certifications": [
+      "certifications", "licenses", "credentials",
+      "professional certifications", "certificates"
+    ]
+  },
+  
+  "experience_level_rules": {
+    "patterns": [
+      {"pattern": "(\\d+)\\+?\\s*years?\\s+of\\s+experience", "group": 1},
+      {"pattern": "experience\\s*:\\s*(\\d+)\\+?\\s*years?", "group": 1},
+      {"pattern": "(\\d+)\\+?\\s*years?\\s+in", "group": 1}
+    ],
+    "classification": {
+      "entry": {"min": 0, "max": 1, "label": "Entry Level"},
+      "junior": {"min": 1, "max": 3, "label": "Junior"},
+      "mid": {"min": 3, "max": 6, "label": "Mid Level"},
+      "senior": {"min": 6, "max": 10, "label": "Senior"},
+      "lead": {"min": 10, "max": 999, "label": "Lead/Principal"}
+    }
+  }
+}

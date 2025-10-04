@@ -6,4 +6,3 @@ def check_dependencies(config: Dict) -> Dict:
     """Check critical Python dependencies using shared utilities."""
     result = _check_dependencies(config)
     return result.to_dict()
-

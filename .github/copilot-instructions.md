@@ -2,6 +2,41 @@
 
 This document provides essential guidance for AI coding agents working on the JobLens codebase. Following these instructions will help you be more effective and align with the project's architecture and conventions.
 
+## 0. CRITICAL ENVIRONMENT RULE (MUST FOLLOW FIRST)
+
+**🔴 RULE #1: ALWAYS USE THE `auto_job` CONDA ENVIRONMENT 🔴**
+
+This is the absolute top priority for every interaction with this project:
+
+- ✅ **CORRECT**: Direct Python execution (environment is pre-activated)
+
+  ```bash
+  python main.py Nirajan --action jobspy-pipeline
+  python -m pytest tests/
+  python test_all_sites.py
+  ```
+
+- ❌ **NEVER USE**: `conda run -n auto_job python ...`
+  - This causes issues with multi-line commands
+  - Breaks complex argument parsing
+  - Creates subprocess complications
+
+- 🎯 **Environment Verification**: Every test script should verify:
+
+  ```python
+  import sys
+  print(f"Python: {sys.executable}")
+  # Expected: C:\Users\Niraj\miniconda3\envs\auto_job\python.exe
+  ```
+
+- 📋 **VS Code Tasks**: Already configured for `auto_job` environment
+  - Use `Ctrl+Shift+P` → "Tasks: Run Task" for standard operations
+  - All tasks use direct Python execution patterns
+
+**This rule supersedes all other instructions. When in doubt, use direct Python commands.**
+
+---
+
 ## 1. Core Architecture & "Big Picture"
 
 JobLens is a modern, profile-driven automated job discovery and analysis platform built with clean Python architecture. The system follows a layered microservices-like design with clear separation of concerns.
@@ -10,7 +45,7 @@ JobLens is a modern, profile-driven automated job discovery and analysis platfor
 
 - **Profile-Centric Design**: Everything revolves around user profiles in `profiles/` directory. Each profile has its own DuckDB database and settings. `src/core/user_profile_manager.py` is the single source of truth for profile management.
 
-- **Modern Database Architecture**: 
+- **Modern Database Architecture**:
   - **Primary**: DuckDB for analytics performance (`src/core/duckdb_database.py`)
   - **Legacy Support**: SQLite fallback via unified interface (`src/core/job_database.py`)
   - **Profile-Specific**: Each profile gets its own database instance
@@ -33,7 +68,7 @@ JobLens is a modern, profile-driven automated job discovery and analysis platfor
 
 ### Data Flow & Component Integration
 
-```
+```text
 CLI (main.py) → Command Dispatcher → Orchestration Controllers → Services → Database
                                                                       ↓
 Dashboard ← Dashboard Services ← Service Registry ← Core Services ← Processing Pipeline
@@ -46,17 +81,28 @@ Dashboard ← Dashboard Services ← Service Registry ← Core Services ← Proc
 
 ## 2. Critical Developer Workflows
 
-**CRITICAL: Always work in the `auto_job` conda environment. The system will automatically attempt to relaunch under this environment if not detected.**
+**CRITICAL: Always work in the `auto_job` conda environment.**
 
 ### Terminal & Environment Management
 
-- **Environment Enforcement**: The system automatically checks for `auto_job` environment and attempts relaunch via `conda run -n auto_job`
+- **✅ PRIMARY RULE**: Always use **direct Python execution** - the environment is pre-activated
+- **❌ NEVER use `conda run -n auto_job python ...`** - this causes issues with multi-line commands and complex arguments
+- **Correct Pattern**: `python script.py` or `python -m pytest` (direct execution)
 - **VS Code Tasks**: Use `Ctrl+Shift+P` → "Tasks: Run Task" for standard operations
 - **Available VS Code Tasks**:
   - `Run all tests (pytest)` - Execute full test suite with proper environment
   - `Start Dash Dashboard` - Launch Dash analytics interface
   - `Start Dashboard Backend` - FastAPI server (legacy, now integrated)
   - `Install Frontend Dependencies` - Dashboard dependency management
+
+### Environment Verification
+
+```python
+# Always verify environment in test scripts
+import sys
+print(f"Python: {sys.executable}")
+# Expected: C:\Users\Niraj\miniconda3\envs\auto_job\python.exe
+```
 
 ### Core CLI Commands & Workflows
 

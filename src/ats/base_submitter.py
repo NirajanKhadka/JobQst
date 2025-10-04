@@ -18,6 +18,7 @@ from rich.console import Console
 from src.utils.file_operations import save_jobs_to_json, load_jobs_from_json
 from src.utils.job_helpers import generate_job_hash, is_duplicate_job
 from src.core.browser_utils import FormUtils
+
 # Document customization removed
 
 console = Console()
@@ -290,4 +291,3 @@ class BaseSubmitter(ABC):
 class TestBaseSubmitter(BaseSubmitter):
     def submit(self, job_data):
         return True
-

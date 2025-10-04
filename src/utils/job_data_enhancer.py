@@ -11,9 +11,24 @@ import re
 class JobDataEnhancer:
     """Enhances job data with additional information and analysis."""
 
-    def __init__(self, profile: Dict[str, Any]):
+    def __init__(self, profile: Dict[str, Any], enable_rcip: bool = True):
         self.profile = profile
         self.console = Console()
+        self.enable_rcip = enable_rcip
+
+        # Initialize RCIP service if enabled
+        if self.enable_rcip:
+            try:
+                from src.services.rcip_enrichment_service import get_rcip_service
+
+                self.rcip_service = get_rcip_service()
+            except Exception as e:
+                self.console.print(
+                    f"[yellow]Warning: Could not initialize RCIP service: {e}[/yellow]"
+                )
+                self.rcip_service = None
+        else:
+            self.rcip_service = None
 
     def enhance_job(self, job: Dict[str, Any]) -> Dict[str, Any]:
         """Enhance a single job with additional data."""
@@ -36,6 +51,13 @@ class JobDataEnhancer:
 
         # Add company analysis
         Improved_job["company_analysis"] = self.analyze_company(job)
+
+        # Apply RCIP enrichment if enabled
+        if self.rcip_service:
+            try:
+                Improved_job = self.rcip_service.enrich_job(Improved_job)
+            except Exception as e:
+                self.console.print(f"[yellow]Warning: RCIP enrichment failed for job: {e}[/yellow]")
 
         return Improved_job
 
@@ -299,4 +321,3 @@ class JobDataEnhancer:
             analysis["size"] = "medium"
 
         return analysis
-

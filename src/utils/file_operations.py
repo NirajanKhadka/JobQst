@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 from datetime import datetime
 import logging
+
 # Removed self-import: from src.utils.file_operations import save_jobs_to_json
 
 logger = logging.getLogger(__name__)
@@ -62,4 +63,3 @@ def backup_file(file_path: str, backup_dir: str = "backups") -> bool:
 
     shutil.copy2(source_path, backup_file)
     return True
-

@@ -372,4 +372,3 @@ def check_for_login_requirement(page: Page) -> bool:
             continue
 
     return False
-

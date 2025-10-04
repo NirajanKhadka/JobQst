@@ -5,6 +5,7 @@ from enum import Enum
 
 class JobStatus(Enum):
     """Enum representing different job processing states."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     ANALYZED = "analyzed"
@@ -53,6 +54,5 @@ class JobData:
             "confidence_score": self.confidence_score,
             "needs_detail_scraping": self.needs_detail_scraping,
             "status": self.status.value if self.status else "pending",
-            "analysis_data": self.analysis_data
+            "analysis_data": self.analysis_data,
         }
-

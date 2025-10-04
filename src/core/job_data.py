@@ -39,4 +39,3 @@ class JobData:
         """Generate hash for duplicate detection."""
         content = f"{self.title.lower()}{self.company.lower()}{self.url}"
         return hashlib.md5(content.encode()).hexdigest()
-

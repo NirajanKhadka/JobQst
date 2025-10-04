@@ -1,0 +1,217 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Job Matching Configuration - Weights, thresholds, and skill mappings for job-profile matching",
+  "version": "1.0.0",
+  "last_updated": "2025-01-13",
+  
+  "matching_weights": {
+    "description": "Weighted scoring for different match components",
+    "skill_match": 0.40,
+    "experience_match": 0.25,
+    "location_match": 0.20,
+    "salary_match": 0.15
+  },
+  
+  "scoring_thresholds": {
+    "description": "Score thresholds for match quality classification",
+    "excellent": {
+      "min": 0.85,
+      "label": "🟢 Excellent Match",
+      "action": "Apply Now",
+      "priority": 1
+    },
+    "good": {
+      "min": 0.70,
+      "label": "🟢 Good Match",
+      "action": "Apply Soon",
+      "priority": 2
+    },
+    "moderate": {
+      "min": 0.55,
+      "label": "🟡 Moderate Match",
+      "action": "Consider",
+      "priority": 3
+    },
+    "weak": {
+      "min": 0.40,
+      "label": "🟡 Weak Match",
+      "action": "Review Carefully",
+      "priority": 4
+    },
+    "poor": {
+      "min": 0.0,
+      "label": "🔴 Poor Match",
+      "action": "Skip",
+      "priority": 5
+    }
+  },
+  
+  "readiness_criteria": {
+    "description": "Criteria for application readiness assessment",
+    "apply_now": {
+      "min_overall_score": 0.75,
+      "min_skill_match": 0.70,
+      "max_critical_missing": 1,
+      "label": "🟢 Apply Now"
+    },
+    "consider": {
+      "min_overall_score": 0.55,
+      "min_skill_match": 0.50,
+      "max_critical_missing": 3,
+      "label": "🟡 Consider"
+    },
+    "skip": {
+      "max_overall_score": 0.54,
+      "label": "🔴 Skip"
+    }
+  },
+  
+  "skill_synonyms": {
+    "description": "Skill variations and aliases for flexible matching",
+    "javascript": ["javascript", "js", "ecmascript", "es6", "es2015", "node"],
+    "typescript": ["typescript", "ts"],
+    "python": ["python", "py", "python3", "python 3"],
+    "react": ["react", "reactjs", "react.js"],
+    "angular": ["angular", "angularjs", "angular.js"],
+    "vue": ["vue", "vuejs", "vue.js"],
+    "node.js": ["node", "nodejs", "node.js"],
+    "aws": ["aws", "amazon web services", "amazon aws"],
+    "azure": ["azure", "microsoft azure", "ms azure"],
+    "gcp": ["gcp", "google cloud", "google cloud platform"],
+    "docker": ["docker", "containerization"],
+    "kubernetes": ["kubernetes", "k8s"],
+    "ci/cd": ["ci/cd", "cicd", "continuous integration", "continuous deployment"],
+    "machine learning": ["machine learning", "ml", "machinelearning"],
+    "deep learning": ["deep learning", "dl", "deeplearning"],
+    "artificial intelligence": ["artificial intelligence", "ai"],
+    "natural language processing": ["natural language processing", "nlp"],
+    "computer vision": ["computer vision", "cv"],
+    "sql": ["sql", "structured query language"],
+    "nosql": ["nosql", "no-sql"],
+    "postgresql": ["postgresql", "postgres", "psql"],
+    "mongodb": ["mongodb", "mongo"],
+    "redis": ["redis", "in-memory database"],
+    "elasticsearch": ["elasticsearch", "elastic"],
+    "git": ["git", "version control", "source control"],
+    "agile": ["agile", "scrum", "kanban"],
+    "rest api": ["rest api", "rest", "restful", "restful api"],
+    "graphql": ["graphql", "graph ql"],
+    "microservices": ["microservices", "micro-services", "microservice architecture"],
+    "data analysis": ["data analysis", "data analytics", "analytics"],
+    "data visualization": ["data visualization", "data viz", "dataviz"],
+    "tableau": ["tableau", "tableau desktop"],
+    "power bi": ["power bi", "powerbi", "microsoft power bi"],
+    "excel": ["excel", "microsoft excel", "ms excel", "spreadsheet"],
+    "pandas": ["pandas", "python pandas"],
+    "numpy": ["numpy", "python numpy"],
+    "scikit-learn": ["scikit-learn", "sklearn", "scikit learn"],
+    "tensorflow": ["tensorflow", "tf"],
+    "pytorch": ["pytorch", "torch"],
+    "html": ["html", "html5"],
+    "css": ["css", "css3", "cascading style sheets"],
+    "sass": ["sass", "scss"],
+    "linux": ["linux", "unix"],
+    "devops": ["devops", "dev ops"]
+  },
+  
+  "experience_level_patterns": {
+    "description": "Regex patterns for experience level detection in job descriptions",
+    "entry_level": {
+      "label": "Entry Level",
+      "years_range": [0, 2],
+      "patterns": [
+        "\\b(entry|junior|jr\\.?|graduate|intern|associate|trainee)\\b",
+        "\\b(0[-\\s]?2|1[-\\s]?3)\\s*years?\\b",
+        "\\bnew\\s*grad(uate)?\\b",
+        "\\bno\\s*experience\\s*required\\b",
+        "\\bfresh\\s*grad(uate)?\\b"
+      ]
+    },
+    "mid_level": {
+      "label": "Mid Level",
+      "years_range": [2, 5],
+      "patterns": [
+        "\\b(mid|intermediate|experienced)\\b",
+        "\\b(2[-\\s]?5|3[-\\s]?6|4[-\\s]?7)\\s*years?\\b",
+        "\\b2\\+\\s*years?\\b",
+        "\\b3\\+\\s*years?\\b"
+      ]
+    },
+    "senior_level": {
+      "label": "Senior Level",
+      "years_range": [5, 10],
+      "patterns": [
+        "\\b(senior|sr\\.?|lead|principal|staff)\\b",
+        "\\b(5\\+|6\\+|7\\+|8\\+)\\s*years?\\b",
+        "\\b(5[-\\s]?10|6[-\\s]?12)\\s*years?\\b",
+        "\\b5\\+\\s*years?\\b"
+      ]
+    },
+    "executive_level": {
+      "label": "Executive Level",
+      "years_range": [10, 100],
+      "patterns": [
+        "\\b(director|vp|vice\\s*president|cto|chief|head\\s*of|manager)\\b",
+        "\\b(10\\+|12\\+|15\\+|20\\+)\\s*years?\\b",
+        "\\b10\\+\\s*years?\\b",
+        "\\bexecutive\\s*level\\b"
+      ]
+    }
+  },
+  
+  "location_preferences": {
+    "description": "Location matching patterns and preferences",
+    "remote": {
+      "keywords": ["remote", "work from home", "wfh", "telecommute", "virtual", "distributed"],
+      "score_boost": 1.0
+    },
+    "hybrid": {
+      "keywords": ["hybrid", "flexible", "occasional remote", "part remote", "semi-remote"],
+      "score_boost": 0.8
+    },
+    "canada": {
+      "keywords": ["canada", "canadian"],
+      "major_cities": ["toronto", "vancouver", "montreal", "calgary", "ottawa", "edmonton", "mississauga", "winnipeg", "quebec city", "hamilton"],
+      "provinces": ["ON", "BC", "AB", "QC", "MB", "SK", "NS", "NB", "NL", "PE", "NT", "YT", "NU"],
+      "score_boost": 1.0
+    },
+    "usa": {
+      "keywords": ["united states", "usa", "us", "america"],
+      "major_cities": ["new york", "san francisco", "seattle", "austin", "boston", "chicago", "los angeles", "denver", "portland", "atlanta"],
+      "states": ["NY", "CA", "WA", "TX", "MA", "IL", "CO", "OR", "GA", "FL"],
+      "score_boost": 0.9
+    },
+    "international": {
+      "keywords": ["international", "global", "worldwide"],
+      "score_boost": 0.7
+    }
+  },
+  
+  "confidence_factors": {
+    "description": "Factors affecting match confidence calculation",
+    "required_fields": {
+      "title": 0.20,
+      "description": 0.30,
+      "skills": 0.20,
+      "location": 0.15,
+      "salary": 0.15
+    },
+    "min_confidence_threshold": 0.50,
+    "high_confidence_threshold": 0.80
+  },
+  
+  "performance_targets": {
+    "description": "Performance benchmarks for matching operations",
+    "max_processing_time_ms": 50,
+    "target_processing_time_ms": 20,
+    "cache_ttl_seconds": 300,
+    "batch_size": 100
+  },
+  
+  "skill_categories": {
+    "description": "Categorized skills for weighted matching (imported from skills_database.json)",
+    "critical_skills_weight": 1.5,
+    "preferred_skills_weight": 1.0,
+    "nice_to_have_weight": 0.5
+  }
+}

@@ -84,13 +84,24 @@ def _load_profile_from_file(profile_name: str) -> Optional[Dict]:
         Profile dictionary or None if not found
     """
     try:
-        profile_path = Path(f"profiles/{profile_name}/{profile_name}.json")
-        if profile_path.exists():
-            with open(profile_path, "r", encoding="utf-8") as f:
+        # Try both naming conventions: profile.json (modern) and {profile_name}.json (legacy)
+        profile_dir = Path(f"profiles/{profile_name}")
+        
+        # Try modern naming first (profile.json)
+        modern_path = profile_dir / "profile.json"
+        if modern_path.exists():
+            with open(modern_path, "r", encoding="utf-8") as f:
                 profile_data = json.load(f)
             return profile_data
-        else:
-            return None
+        
+        # Fall back to legacy naming ({profile_name}.json)
+        legacy_path = profile_dir / f"{profile_name}.json"
+        if legacy_path.exists():
+            with open(legacy_path, "r", encoding="utf-8") as f:
+                profile_data = json.load(f)
+            return profile_data
+        
+        return None
     except Exception as e:
         print(f"❌ Error loading profile {profile_name}: {e}")
         return None
@@ -112,4 +123,3 @@ def ensure_profile_files(profile: Dict) -> bool:
             return False
 
     return True
-

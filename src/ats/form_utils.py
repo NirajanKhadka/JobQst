@@ -85,7 +85,9 @@ async def fill_form_fields(page: Page, profile: Dict) -> int:
         # Location fields
         "input[name*='location'], input[name*='address'], input[name*='city']": location,
         # Common text areas
-        "textarea[name*='cover'], textarea[name*='message'], textarea[name*='note']": generate_cover_letter_text(profile),
+        "textarea[name*='cover'], textarea[name*='message'], textarea[name*='note']": generate_cover_letter_text(
+            profile
+        ),
     }
 
     for selector, value in field_mappings.items():
@@ -302,4 +304,3 @@ Please find my resume attached for your review. I look forward to hearing from y
 
 Best regards,
 {name}"""
-

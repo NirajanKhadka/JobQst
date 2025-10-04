@@ -26,63 +26,18 @@ def ensure_auto_job_env() -> bool:
     try:
         if os.environ.get("AUTO_JOB_ENV_ENSURED") == "1":
             return True
-            
+
         current_env = (os.environ.get("CONDA_DEFAULT_ENV") or "").lower()
         if current_env == "auto_job":
             return True
-            
+
         console.print(
-            "[yellow]⚠️ Not in 'auto_job' environment. "
-            f"Current: {current_env}[/yellow]"
+            "[yellow]⚠️ Not in 'auto_job' environment. " f"Current: {current_env}[/yellow]"
         )
         return False
-        
+
     except Exception as e:
         console.print(f"[red]❌ Environment check failed: {e}[/red]")
-        return False
-
-
-def check_postgresql_running() -> bool:
-    """Check if PostgreSQL is running."""
-    try:
-        import psycopg2
-        
-        conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="postgres",
-            user="postgres",
-            password="postgres"
-        )
-        conn.close()
-        return True
-        
-    except Exception:
-        console.print("[yellow]⚠️ PostgreSQL not running[/yellow]")
-        return False
-
-
-def ensure_docker_infrastructure() -> bool:
-    """Ensure Docker infrastructure is running."""
-    try:
-        import subprocess
-        
-        # Check if Docker is running
-        result = subprocess.run(
-            ["docker", "ps"], 
-            capture_output=True, 
-            text=True, 
-            timeout=10
-        )
-        
-        if result.returncode != 0:
-            console.print("[red]❌ Docker not running[/red]")
-            return False
-            
-        return True
-        
-    except Exception as e:
-        console.print(f"[red]❌ Docker infrastructure error: {e}[/red]")
         return False
 
 
@@ -94,101 +49,76 @@ def _ensure_imports() -> None:
         from src.cli.actions.scraping_actions import ScrapingActions
         from src.cli.actions.dashboard_actions import DashboardActions
         from src.utils.profile_helpers import load_profile
+
         _HEAVY_IMPORTS_LOADED = True
 
 
-async def run_optimized_scraping(
-    profile: Dict[str, Any], 
-    args: Any
-) -> bool:
+async def run_optimized_scraping(profile: Dict[str, Any], args: Any) -> bool:
     """Run optimized scraping using Core Eluta scraper."""
     try:
-        _ensure_imports()
-        
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,
-        ) as progress:
-            task = progress.add_task("Initializing optimized scraper...", total=100)
-            
-            # Import and run scraper
-            from src.scrapers.optimized_eluta_scraper import OptimizedElutaScraper
-            
-            scraper = OptimizedElutaScraper(
-                profile_name=args.profile,
-                headless=args.headless,
-                max_workers=getattr(args, 'workers', 4)
-            )
-            
-            progress.update(task, advance=50, description="Starting scrape...")
-            
-            success = await scraper.run_comprehensive_scrape(
-                days_old=args.days,
-                max_pages=args.pages,
-                max_jobs_per_keyword=args.jobs
-            )
-            
-            progress.update(task, completed=100)
-            
-        return success
-        
+        console.print("[yellow]⚠️  Optimized Eluta scraper temporarily unavailable[/yellow]")
+        console.print("[cyan]💡 Use 'jobspy-pipeline' action for job scraping[/cyan]")
+        return False
+
     except Exception as e:
         console.print(f"[red]❌ Scraping failed: {e}[/red]")
         return False
 
 
-async def run_two_stage_processing(
-    profile: Dict[str, Any], 
-    args: Any
-) -> bool:
+async def run_two_stage_processing(profile: Dict[str, Any], args: Any) -> bool:
     """Run two-stage job processing (CPU + GPU)."""
     try:
         _ensure_imports()
-        
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
             task = progress.add_task("Starting two-stage processing...", total=100)
-            
+
             from src.analysis.two_stage_processor import TwoStageJobProcessor
-            
+
             processor = TwoStageJobProcessor(
                 user_profile=profile,
-                cpu_workers=getattr(args, 'workers', 10),
-                max_concurrent_stage2=getattr(args, 'gpu_workers', 2)
+                cpu_workers=getattr(args, "workers", 10),
+                max_concurrent_stage2=getattr(args, "gpu_workers", 2),
             )
-            
+
             progress.update(task, advance=25, description="Loading jobs...")
-            
+
             # Get jobs from database
             from src.core.job_database import get_job_db
+
             db = get_job_db(args.profile)
             jobs = db.get_jobs()
-            
+
             progress.update(task, advance=50, description="Two-stage processing...")
-            
+
             # Run two-stage processing
             final_results = await processor.process_jobs(jobs)
-            
+
             # Save results back to database
             progress.update(task, advance=75, description="Saving results...")
-            
+
             for result in final_results:
-                db.update_job_analysis(result.job_id, {
-                    'stage1_score': result.stage1.basic_compatibility,
-                    'stage2_score': result.stage2.semantic_compatibility if result.stage2 else None,
-                    'final_score': result.final_compatibility,
-                    'processing_time': result.total_processing_time
-                })
-            
+                db.update_job_analysis(
+                    result.job_id,
+                    {
+                        "stage1_score": result.stage1.basic_compatibility,
+                        "stage2_score": (
+                            result.stage2.semantic_compatibility if result.stage2 else None
+                        ),
+                        "final_score": result.final_compatibility,
+                        "processing_time": result.total_processing_time,
+                    },
+                )
+
             progress.update(task, completed=100)
-            
+
         console.print(f"[green]✅ Processed {len(final_results)} jobs[/green]")
         return True
-        
+
     except Exception as e:
         console.print(f"[red]❌ Processing failed: {e}[/red]")
         return False
@@ -199,21 +129,25 @@ def run_health_check(profile: Dict[str, Any]) -> bool:
     try:
         console.print("[bold blue]🔍 Running Health Check...[/bold blue]")
         
-        checks = [
-            ("Environment", ensure_auto_job_env),
-            ("PostgreSQL", check_postgresql_running),
-            ("Docker", ensure_docker_infrastructure),
-        ]
+        # Import the actual health checker
+        from src.health_checks.system_health_checker import SystemHealthChecker
         
-        all_passed = True
-        for check_name, check_func in checks:
-            result = check_func()
-            status = "✅ PASS" if result else "❌ FAIL"
-            console.print(f"{check_name}: {status}")
-            all_passed &= result
-            
-        return all_passed
+        # Run comprehensive health check
+        health_checker = SystemHealthChecker(profile)
+        results = health_checker.run_comprehensive_check()
         
+        # Check critical systems only (database, disk, memory, services)
+        critical_checks = ["database", "disk", "memory", "services"]
+        critical_passed = all(results.get(key, False) for key in critical_checks)
+        
+        console.print("\n[bold blue]📊 Final Status[/bold blue]")
+        if critical_passed:
+            console.print("[bold green]✅ System ready for job search operations![/bold green]")
+        else:
+            console.print("[bold red]❌ Critical issues detected - please review above[/bold red]")
+        
+        return critical_passed
+
     except Exception as e:
         console.print(f"[red]❌ Health check failed: {e}[/red]")
         return False
@@ -222,19 +156,218 @@ def run_health_check(profile: Dict[str, Any]) -> bool:
 async def run_interactive_mode(profile: Dict[str, Any]) -> bool:
     """Run interactive mode with menu."""
     try:
-        console.print("[bold green]🎯 Interactive Mode[/bold green]")
-        console.print("Available actions:")
-        console.print("1. Run scraping")
-        console.print("2. Process jobs")
-        console.print("3. Launch dashboard")
-        console.print("4. Health check")
-        console.print("5. Exit")
+        from src.orchestration.command_dispatcher import dispatch_command
+        import argparse
         
-        # This would connect to actual interactive logic
-        # For now, just return success
+        while True:
+            console.print("\n[bold cyan]" + "=" * 60 + "[/bold cyan]")
+            console.print("[bold green]🎯 JobLens Interactive Mode[/bold green]")
+            console.print(f"[dim]Profile: {profile.get('profile_name', 'Unknown')}[/dim]")
+            console.print("[bold cyan]" + "=" * 60 + "[/bold cyan]")
+            
+            console.print("\n[bold blue]📋 Main Menu:[/bold blue]")
+            console.print("  [bold]1.[/bold] 🔍 Job Search Pipeline [cyan](Comprehensive Options)[/cyan]")
+            console.print("  [bold]2.[/bold] ⚙️  Process Existing Jobs")
+            console.print("  [bold]3.[/bold] 📊 Launch Dashboard")
+            console.print("  [bold]4.[/bold] 🏥 System Health Check")
+            console.print("  [bold]5.[/bold] 🚪 Exit")
+            
+            choice = input("\n[bold yellow]→[/bold yellow] Enter your choice (1-5): ").strip()
+            
+            if choice == "5":
+                console.print("[yellow]👋 Exiting interactive mode...[/yellow]")
+                return True
+            
+            if choice == "1":
+                # Comprehensive JobSpy Pipeline sub-menu
+                await _run_jobspy_submenu(profile, dispatch_command)
+            elif choice in ["2", "3", "4"]:
+                # Create minimal args object for other commands
+                args = argparse.Namespace(
+                    profile=profile.get("profile_name", "Nirajan"),
+                    sites="indeed,linkedin,glassdoor",
+                    days=14,
+                    jobs=200,
+                    headless=True,
+                    jobspy_preset="quality",
+                    workers=4
+                )
+                
+                action_map = {
+                    "2": "process-jobs",
+                    "3": "dashboard",
+                    "4": "health-check"
+                }
+                
+                await dispatch_command(action_map[choice], profile, args)
+            else:
+                console.print("[red]❌ Invalid choice. Please enter 1-5.[/red]")
+
+    except KeyboardInterrupt:
+        console.print("\n[yellow]👋 Exiting interactive mode...[/yellow]")
         return True
-        
     except Exception as e:
         console.print(f"[red]❌ Interactive mode failed: {e}[/red]")
         return False
 
+
+async def _run_jobspy_submenu(profile: Dict[str, Any], dispatch_command) -> None:
+    """Show comprehensive JobSpy pipeline options with step-by-step configuration."""
+    import argparse
+    
+    console.print("\n[bold magenta]" + "=" * 60 + "[/bold magenta]")
+    console.print("[bold green]🔍 Job Search Pipeline - Configuration[/bold green]")
+    console.print("[bold magenta]" + "=" * 60 + "[/bold magenta]")
+    
+    console.print("\n[bold blue]Choose your search strategy:[/bold blue]")
+    console.print("\n  [bold]1.[/bold] ⚡ [green]Quick Search[/green] [dim](~5-10 min)[/dim]")
+    console.print("     • Best for: Testing, immediate results")
+    console.print("     • Sites: Indeed, LinkedIn")
+    console.print("     • Jobs: ~100 total")
+    console.print("     • Days back: 7")
+    console.print("     • Processing: Fast mode")
+    
+    console.print("\n  [bold]2.[/bold] 🏙️  [blue]Major Cities Only[/blue] [dim](~10-15 min)[/dim]")
+    console.print("     • Best for: Targeting Toronto, Vancouver, Montreal")
+    console.print("     • Sites: Indeed, LinkedIn, Glassdoor")
+    console.print("     • Jobs: ~250 total")
+    console.print("     • Days back: 14")
+    console.print("     • Processing: Quality mode, top 3 cities")
+    
+    console.print("\n  [bold]3.[/bold] 📅 [magenta]Last 7 Days Only[/magenta] [dim](~12-18 min)[/dim]")
+    console.print("     • Best for: Fresh opportunities only, recent postings")
+    console.print("     • Sites: Indeed, LinkedIn, Glassdoor")
+    console.print("     • Jobs: ~200 total")
+    console.print("     • Days back: 7 (recent jobs only)")
+    console.print("     • Processing: Quality mode, all locations")
+    
+    console.print("\n  [bold]4.[/bold] 🌲 [green]RNIP Cities[/green] [dim](~8-12 min)[/dim]")
+    console.print("     • Best for: Rural & Northern Immigration Program cities")
+    console.print("     • Sites: Indeed, LinkedIn, Glassdoor")
+    console.print("     • Jobs: ~200 total")
+    console.print("     • Days back: 14")
+    console.print("     • Processing: Quality mode, RNIP communities")
+    
+    console.print("\n  [bold]5.[/bold] ⚖️  [yellow]Balanced Search[/yellow] [dim](~15-25 min)[/dim]")
+    console.print("     • Best for: Regular job hunting, quality results")
+    console.print("     • Sites: Indeed, LinkedIn, Glassdoor")
+    console.print("     • Jobs: ~300 total")
+    console.print("     • Days back: 14")
+    console.print("     • Processing: Quality mode with full analysis")
+    
+    console.print("\n  [bold]6.[/bold] 🎯 [cyan]Deep Search[/cyan] [dim](~30-45 min)[/dim]")
+    console.print("     • Best for: Comprehensive search, finding hidden gems")
+    console.print("     • Sites: Indeed, LinkedIn, Glassdoor, ZipRecruiter")
+    console.print("     • Jobs: ~500 total")
+    console.print("     • Days back: 30")
+    console.print("     • Processing: Comprehensive with AI analysis")
+    
+    console.print("\n  [bold]7.[/bold] ⬅️  Back to Main Menu")
+    
+    search_choice = input("\n[bold yellow]→[/bold yellow] Choose search type (1-7): ").strip()
+    
+    if search_choice == "7":
+        return
+    
+    # Configuration presets based on choice
+    config_presets = {
+        "1": {
+            "name": "Quick Search",
+            "sites": "indeed,linkedin",
+            "days": 7,
+            "jobs": 100,
+            "preset": "fast",
+            "workers": 2,
+            "location_set": "tech_hubs_canada",
+            "description": "Fast turnaround, essential sites only"
+        },
+        "2": {
+            "name": "Major Cities Only",
+            "sites": "indeed,linkedin,glassdoor",
+            "days": 14,
+            "jobs": 250,
+            "preset": "quality",
+            "workers": 3,
+            "location_set": "top_3_cities",
+            "description": "Focused search in Toronto, Vancouver, Montreal"
+        },
+        "3": {
+            "name": "Last 7 Days Only",
+            "sites": "indeed,linkedin,glassdoor",
+            "days": 7,
+            "jobs": 200,
+            "preset": "quality",
+            "workers": 3,
+            "location_set": "canada_comprehensive",
+            "description": "Fresh opportunities across all locations, last week only"
+        },
+        "4": {
+            "name": "RNIP Cities",
+            "sites": "indeed,linkedin,glassdoor",
+            "days": 14,
+            "jobs": 200,
+            "preset": "quality",
+            "workers": 3,
+            "location_set": "rnip_cities",
+            "description": "Rural and Northern Immigration Program communities"
+        },
+        "5": {
+            "name": "Balanced Search",
+            "sites": "indeed,linkedin,glassdoor",
+            "days": 14,
+            "jobs": 300,
+            "preset": "quality",
+            "workers": 3,
+            "location_set": "canada_comprehensive",
+            "description": "Optimal balance of speed and coverage"
+        },
+        "6": {
+            "name": "Deep Search",
+            "sites": "indeed,linkedin,glassdoor,ziprecruiter",
+            "days": 30,
+            "jobs": 500,
+            "preset": "comprehensive",
+            "workers": 4,
+            "location_set": "canada_comprehensive",
+            "description": "Maximum coverage and depth"
+        }
+    }
+    
+    if search_choice not in config_presets:
+        console.print("[red]❌ Invalid choice. Returning to main menu.[/red]")
+        return
+    
+    config = config_presets[search_choice]
+    
+    # Display confirmation
+    console.print(f"\n[bold green]✓ Selected: {config['name']}[/bold green]")
+    console.print(f"[dim]{config['description']}[/dim]")
+    console.print("\n[bold blue]Configuration Summary:[/bold blue]")
+    console.print(f"  • Sites: {config['sites'].replace(',', ', ')}")
+    console.print(f"  • Max Jobs: {config['jobs']}")
+    console.print(f"  • Days Back: {config['days']}")
+    console.print(f"  • Preset: {config['preset']}")
+    console.print(f"  • Location Set: {config['location_set']}")
+    console.print(f"  • Workers: {config['workers']}")
+    
+    confirm = input("\n[bold yellow]→[/bold yellow] Start search? (yes/no): ").strip().lower()
+    
+    if confirm not in ["yes", "y"]:
+        console.print("[yellow]⚠️  Search cancelled.[/yellow]")
+        return
+    
+    # Create args object with selected configuration
+    args = argparse.Namespace(
+        profile=profile.get("profile_name", "Nirajan"),
+        sites=config["sites"],
+        days=config["days"],
+        jobs=config["jobs"],
+        headless=True,
+        jobspy_preset=config["preset"],
+        workers=config["workers"],
+        max_jobs_total=config["jobs"],
+        location_set=config["location_set"]
+    )
+    
+    console.print(f"\n[bold green]🚀 Starting {config['name']}...[/bold green]")
+    await dispatch_command("jobspy-pipeline", profile, args)

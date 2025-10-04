@@ -7,20 +7,80 @@ import re
 
 def extract_keywords_from_text(text: str, top_n: int = 15) -> List[str]:
     # Simple keyword extraction: most frequent nouns/words (improve with NLP if needed)
-    words = re.findall(r'\b\w{4,}\b', text.lower())
+    words = re.findall(r"\b\w{4,}\b", text.lower())
     freq = {}
     for w in words:
         freq[w] = freq.get(w, 0) + 1
     # Remove common stopwords (expand as needed)
-    stopwords = set([
-        'with', 'from', 'that', 'this', 'have', 'will', 'your', 'about', 'which', 'their', 'other',
-        'more', 'most', 'such', 'when', 'were', 'been', 'also', 'into', 'than', 'some', 'only',
-        'over', 'very', 'like', 'just', 'make', 'time', 'work', 'team', 'role', 'able', 'good',
-        'well', 'must', 'need', 'used', 'using', 'skills', 'experience', 'years', 'job', 'jobs',
-        'cover', 'letter', 'resume', 'summary', 'objective', 'responsible', 'responsibilities',
-        'requirements', 'required', 'preferred', 'excellent', 'strong', 'great', 'proven', 'ability',
-        'knowledge', 'including', 'etc', 'etc.', 'etcetera', 'etc', 'etc.'
-    ])
+    stopwords = set(
+        [
+            "with",
+            "from",
+            "that",
+            "this",
+            "have",
+            "will",
+            "your",
+            "about",
+            "which",
+            "their",
+            "other",
+            "more",
+            "most",
+            "such",
+            "when",
+            "were",
+            "been",
+            "also",
+            "into",
+            "than",
+            "some",
+            "only",
+            "over",
+            "very",
+            "like",
+            "just",
+            "make",
+            "time",
+            "work",
+            "team",
+            "role",
+            "able",
+            "good",
+            "well",
+            "must",
+            "need",
+            "used",
+            "using",
+            "skills",
+            "experience",
+            "years",
+            "job",
+            "jobs",
+            "cover",
+            "letter",
+            "resume",
+            "summary",
+            "objective",
+            "responsible",
+            "responsibilities",
+            "requirements",
+            "required",
+            "preferred",
+            "excellent",
+            "strong",
+            "great",
+            "proven",
+            "ability",
+            "knowledge",
+            "including",
+            "etc",
+            "etc.",
+            "etcetera",
+            "etc",
+            "etc.",
+        ]
+    )
     filtered = [w for w in words if w not in stopwords]
     sorted_words = sorted(set(filtered), key=lambda w: -freq[w])
     return sorted_words[:top_n]
@@ -49,7 +109,7 @@ def get_keywords_for_profile(profile_path: str) -> List[str]:
     for doc_path in [resume_path, cover_letter_path]:
         if doc_path and Path(doc_path).exists():
             results = parse(doc_path)
-            if results and hasattr(results[0], 'markdown'):
+            if results and hasattr(results[0], "markdown"):
                 extracted_texts.append(results[0].markdown)
     # Fallback to embedded text
     for text in [resume_text, cover_letter_text]:
@@ -65,4 +125,3 @@ def get_keywords_for_profile(profile_path: str) -> List[str]:
     with profile_file.open("w", encoding="utf-8") as f:
         json.dump(profile, f, indent=2, ensure_ascii=False)
     return keywords
-

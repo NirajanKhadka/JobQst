@@ -391,4 +391,3 @@ class ICIMSSubmitter(BaseSubmitter):
         except Exception as e:
             console.print(f"[yellow]Error handling screening questions: {e}[/yellow]")
             return False
-

@@ -14,6 +14,16 @@ logger = logging.getLogger(__name__)
 def get_job_db(profile: Optional[str] = None):
     """Get job database instance - DuckDB only"""
     from .duckdb_database import DuckDBJobDatabase
+    
+    # Handle in-memory database special case (for tests)
+    if profile == ":memory:":
+        # For in-memory, we'd need different handling - not fully supported yet
+        # For now, create a temp profile
+        import tempfile
+        import os
+        temp_profile = f"temp_{os.getpid()}"
+        return DuckDBJobDatabase(profile_name=temp_profile)
+    
     return DuckDBJobDatabase(profile_name=profile)
 
 

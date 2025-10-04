@@ -330,42 +330,46 @@ def extract_keywords_from_resume(resume_path: str, profile_name: str = None) -> 
     Returns:
         Dictionary with extracted keywords and generated job keywords
     """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     extractor = ResumeKeywordExtractor()
 
-    print(f"🔍 Extracting keywords from: {resume_path}")
+    logger.info("🔍 Extracting keywords from: %s", resume_path)
 
     # Extract keywords
     extracted = extractor.extract_from_file(resume_path)
 
     if "error" in extracted:
-        print(f"❌ Error: {extracted['error']}")
+        logger.error("❌ Error: %s", extracted["error"])
         return extracted
 
     # Generate job keywords
     job_keywords = extractor.generate_job_keywords(extracted)
 
-    # Print results
-    print("\n📊 Extracted Keywords:")
-    print("=" * 50)
+    # Log results
+    logger.info("\n📊 Extracted Keywords:")
+    logger.info("=" * 50)
 
     for category, keywords in extracted.items():
         if keywords:
-            print(f"\n{category.replace('_', ' ').title()}:")
-            print(", ".join(keywords[:10]))  # Show first 10
+            logger.info("\n%s:", category.replace("_", " ").title())
+            logger.info(", ".join(keywords[:10]))  # Show first 10
 
-    print(f"\n🎯 Generated Job Keywords ({len(job_keywords)}):")
-    print("=" * 50)
+    logger.info("\n🎯 Generated Job Keywords (%d):", len(job_keywords))
+    logger.info("=" * 50)
     for i, keyword in enumerate(job_keywords, 1):
-        print(f"{i:2d}. {keyword}")
+        logger.info("%2d. %s", i, keyword)
 
     # Save to profile if requested
     if profile_name:
-        print(f"\n💾 Saving keywords to profile: {profile_name}")
+        logger.info("\n💾 Saving keywords to profile: %s", profile_name)
         success = extractor.save_keywords_to_profile(profile_name, job_keywords)
         if success:
-            print("✅ Keywords saved successfully!")
+            logger.info("✅ Keywords saved successfully!")
         else:
-            print("❌ Failed to save keywords")
+            logger.error("❌ Failed to save keywords")
 
     return {
         "extracted": extracted,
@@ -376,4 +380,3 @@ def extract_keywords_from_resume(resume_path: str, profile_name: str = None) -> 
 
 # CLI usage moved to proper CLI module
 # To use: from src.utils.resume_keyword_extractor import extract_keywords_from_resume
-

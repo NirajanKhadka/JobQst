@@ -70,7 +70,9 @@ Examples:
 
     # Profile creation options
     parser.add_argument("--name", help="Name for new profile creation")
-    parser.add_argument("--watch", action="store_true", help="Watch folder for resume files after profile creation")
+    parser.add_argument(
+        "--watch", action="store_true", help="Watch folder for resume files after profile creation"
+    )
     parser.add_argument("--resume-path", help="Path to resume file for profile creation")
 
     # General options
@@ -113,4 +115,3 @@ def validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         validated["keywords"] = [keyword.strip() for keyword in args.keywords.split(",")]
 
     return validated
-

@@ -289,4 +289,3 @@ def create_tab_manager(context: BrowserContext) -> TabManager:
 def create_popup_handler(context: BrowserContext) -> PopupHandler:
     """Create a popup handler for the given context."""
     return PopupHandler(context)
-

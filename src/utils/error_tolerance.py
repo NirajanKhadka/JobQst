@@ -174,9 +174,8 @@ def display_error_dashboard():
                 f"  • {error['timestamp']}: {error['operation']} - {error['error_type']}: {error['error_message']}"
             )
 
-
-# Main functionality moved to CLI module or tests
-# Import and use the functions directly
+    # Main functionality moved to CLI module or tests
+    # Import and use the functions directly
 
     @with_retry(max_attempts=2)
     def test_retry_function():
@@ -198,4 +197,3 @@ def display_error_dashboard():
 
     # Save error report
     error_tracker.save_error_report()
-

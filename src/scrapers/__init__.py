@@ -350,4 +350,3 @@ __all__ = [
     "AVAILABLE_SCRAPERS",
     "MultiSiteScraper",
 ]
-

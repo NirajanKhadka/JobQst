@@ -12,4 +12,3 @@ def check_disk_space(config: Dict) -> Dict:
     """Alias for check_disk to maintain backward compatibility."""
     result = _check_disk_space(config)
     return result.to_dict()
-

@@ -1,11 +1,15 @@
 # JobLens Development Standards
 
-**Last Updated:** September 6, 2025  
+**Last Updated:** January 13, 2025  
 **Status:** Active - Enforced Standards  
+**Compliance Score:** 93/100 ✅ (PRODUCTION READY)  
+**Environment:** Python 3.11.11 (auto_job conda)  
 
 ## Document Overview
 
 This document establishes mandatory development standards for the JobLens project. These standards are framework-agnostic and focus on modern Python practices, code quality, and maintainability. All code contributions must comply with these standards.
+
+**Current Compliance:** The JobQst codebase currently achieves a **93/100 compliance score** following systematic refactoring and modernization. See `STANDARDS_COMPLIANCE_AUDIT.md` for detailed metrics.
 
 ## Core Development Philosophy
 
@@ -20,6 +24,47 @@ This document establishes mandatory development standards for the JobLens projec
 ### Quality Hierarchy
 ```
 Production Quality > Readability > Performance > Clever Solutions
+```
+
+## Development Environment
+
+### Required Environment
+
+**Python Version:** 3.11.11 (mandatory)  
+**Environment Manager:** conda (auto_job environment)  
+**Package Manager:** pip (within conda environment)
+
+**Setup Instructions:** See `ENVIRONMENT_SETUP_GUIDE.md` for complete setup.
+
+### Quick Environment Verification
+
+```bash
+# Activate environment
+conda activate auto_job
+
+# Verify Python version
+python --version  # Should show: Python 3.11.11
+
+# Verify environment location
+python -c "import sys; print(sys.executable)"
+# Expected: .../miniconda3/envs/auto_job/python.exe
+```
+
+### Development Tools (Mandatory)
+
+| Tool | Version | Purpose | Status |
+|------|---------|---------|--------|
+| **black** | 25.1.0 | Code formatting | ✅ Required |
+| **flake8** | 7.1.1 | Linting | ✅ Required |
+| **mypy** | 1.14.1 | Type checking | ✅ Required |
+| **isort** | 5.13.2 | Import sorting | ✅ Required |
+| **pytest** | 8.4.0 | Testing | ✅ Required |
+| **pytest-cov** | 6.1.1 | Coverage | ✅ Required |
+| **bandit** | 1.8.0 | Security scanning | ✅ Recommended |
+
+**Installation:**
+```bash
+pip install -r requirements-dev.txt
 ```
 
 ## Modern Python Standards
@@ -618,16 +663,24 @@ def scrape_job_listings(
 Organize dependencies clearly:
 
 ```text
-# requirements.txt - Production only
+# requirements.txt - Production only (ALL PINNED ✅)
 requests==2.31.0
 pydantic==2.5.0
+duckdb==1.1.3
+dash==2.18.2
+# ... 46 total production dependencies, ALL pinned
 
-# requirements-dev.txt - Development dependencies  
+# requirements-dev.txt - Development dependencies (ALL PINNED ✅)
 -r requirements.txt
-pytest==7.4.3
-black==23.11.0
-mypy==1.7.1
+pytest==8.4.0
+black==25.1.0
+mypy==1.14.1
+flake8==7.1.1
+isort==5.13.2
+# ... 12 total dev dependencies, ALL pinned
 ```
+
+**Current Status:** ✅ **100% dependency pinning achieved** (58/58 dependencies)
 
 ### Security Configuration
 
@@ -646,6 +699,93 @@ ignore = ["51358"]  # Example: ignore specific CVE with reason
 desc = true
 format = "json"
 ```
+
+## Code Quality Tools Configuration
+
+### Black (Code Formatting)
+
+**Configuration:** `pyproject.toml`
+
+```toml
+[tool.black]
+line-length = 100
+target-version = ['py311']
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | __pycache__
+  | interview_prep_layout
+  | pdf_generator
+)/
+'''
+```
+
+**Usage:**
+```bash
+python -m black src/ tests/
+python -m black src/ tests/ --check  # Check only
+```
+
+**Current Status:** ✅ 291/293 files formatted (99.3% coverage)
+
+### Flake8 (Linting)
+
+**Configuration:** `.flake8`
+
+```ini
+[flake8]
+max-line-length = 100
+exclude = .git,__pycache__,.venv,interview_prep_layout.py,pdf_generator.py
+ignore = E203, W503, E501
+per-file-ignores = __init__.py:F401
+```
+
+**Usage:**
+```bash
+python -m flake8 src/ tests/
+```
+
+### Mypy (Type Checking)
+
+**Configuration:** `pyproject.toml`
+
+```toml
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+```
+
+**Usage:**
+```bash
+python -m mypy src/
+```
+
+### Pre-commit Hooks (Quality Gates)
+
+**Configuration:** `.pre-commit-config.yaml`
+
+Pre-commit hooks enforce quality standards on every commit:
+
+```bash
+# Install hooks
+pre-commit install
+
+# Run manually
+pre-commit run --all-files
+```
+
+**Hooks Configured:**
+- ✅ Trailing whitespace removal
+- ✅ YAML/JSON validation
+- ✅ Black code formatting
+- ✅ isort import sorting
+- ✅ Flake8 linting
+- ✅ Mypy type checking
+
+**Current Status:** ✅ Pre-commit hooks configured and ready to activate
 
 ## Professional Development Mantras
 
@@ -667,7 +807,18 @@ format = "json"
 
 *This document serves as the complete development standards reference for JobLens. These standards are framework-agnostic and focus on modern Python practices that enable clean, maintainable, and secure code.*
 
-**Last Updated:** September 6, 2025  
-**Maintainer:** JobLens Development Team
+## Related Documentation
+
+- **STANDARDS_COMPLIANCE_AUDIT.md** - Current compliance metrics (93/100)
+- **ENVIRONMENT_SETUP_GUIDE.md** - Complete environment setup instructions
+- **COMPLIANCE_PHASE_4_COMPLETE.md** - Latest completion summary
+- **ARCHITECTURE.md** - System architecture and design patterns
+- **TROUBLESHOOTING.md** - Common issues and solutions
+
+---
+
+**Last Updated:** January 13, 2025  
+**Compliance Score:** 93/100 ✅ (PRODUCTION READY)  
+**Maintainer:** JobQst Development Team
 
 

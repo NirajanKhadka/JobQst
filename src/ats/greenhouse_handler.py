@@ -21,13 +21,14 @@ from .form_utils import (
 
 console = Console()
 
+
 async def apply_greenhouse(page: Page, job: Dict) -> str:
     """
     Apply to a job using Greenhouse ATS-specific logic.
     This function can be expanded with Greenhouse-specific steps.
     """
     console.print("[cyan]🌱 Using Greenhouse-specific application process...[/cyan]")
-    
+
     try:
         # Step 1: Find and click apply button
         if not await find_and_click_apply_button(page):
@@ -48,10 +49,10 @@ async def apply_greenhouse(page: Page, job: Dict) -> str:
                 return "login_required"
 
             # Get profile data from context
-            profile = getattr(page.context, '_profile', {})
-            resume_path = getattr(page.context, '_resume_path', '')
-            cover_letter_path = getattr(page.context, '_cover_letter_path', '')
-            
+            profile = getattr(page.context, "_profile", {})
+            resume_path = getattr(page.context, "_resume_path", "")
+            cover_letter_path = getattr(page.context, "_cover_letter_path", "")
+
             # Fill visible form fields
             fields_filled = await fill_form_fields(page, profile)
             console.print(f"[green]✅ Filled {fields_filled} Greenhouse form fields[/green]")
@@ -85,4 +86,3 @@ async def apply_greenhouse(page: Page, job: Dict) -> str:
     except Exception as e:
         console.print(f"[red]❌ Greenhouse application error: {e}[/red]")
         return f"error: {str(e)}"
-

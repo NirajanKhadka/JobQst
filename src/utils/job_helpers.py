@@ -2,6 +2,7 @@ import re
 import hashlib
 from typing import List, Dict
 from urllib.parse import urlparse
+
 # Removed self-import: from src.utils.job_helpers import generate_job_hash
 
 
@@ -102,4 +103,3 @@ def get_job_stats(jobs: List[Dict]) -> Dict:
         "job_types": job_types,
         "avg_salary": total_salary / salary_count if salary_count > 0 else 0,
     }
-

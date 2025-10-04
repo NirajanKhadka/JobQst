@@ -15,7 +15,7 @@ from .extractors import (
     RuleBasedExtractionResult,
     get_rule_based_extractor,
     IndustryStandardsDatabase,
-    WebValidator
+    WebValidator,
 )
 
 from .hybrid import (
@@ -23,7 +23,7 @@ from .hybrid import (
     ProcessingResult,
     ProcessingStrategy,
     create_coordinator,
-    process_single_job
+    process_single_job,
 )
 
 # AI processing (when available)
@@ -35,17 +35,15 @@ except ImportError:
 
 __all__ = [
     # Rule-based extraction
-    'RuleBasedExtractor',
-    'RuleBasedExtractionResult', 
-    'get_rule_based_extractor',
-    'IndustryStandardsDatabase',
-    'WebValidator',
-    
+    "RuleBasedExtractor",
+    "RuleBasedExtractionResult",
+    "get_rule_based_extractor",
+    "IndustryStandardsDatabase",
+    "WebValidator",
     # Hybrid coordination
-    'JobProcessingCoordinator',
-    'ProcessingResult',
-    'ProcessingStrategy',
-    'create_coordinator',
-    'process_single_job',
+    "JobProcessingCoordinator",
+    "ProcessingResult",
+    "ProcessingStrategy",
+    "create_coordinator",
+    "process_single_job",
 ]
-

@@ -13,21 +13,24 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def enhanced_stage2_processing(job_data: Dict[str, Any], stage1_result, user_profile: Dict[str, Any]) -> Stage2Result:
+
+def enhanced_stage2_processing(
+    job_data: Dict[str, Any], stage1_result, user_profile: Dict[str, Any]
+) -> Stage2Result:
     """
     Enhanced Stage 2 processing using transformer models
-    
+
     This replaces or enhances the existing Stage2GPUProcessor.process_job_semantic() method
     """
-    
+
     # Get transformer analyzer
     transformer_analyzer = get_transformer_analyzer(user_profile)
-    
+
     if transformer_analyzer:
         # Use transformer-based analysis
         print("🤖 Using Transformer-based analysis")
         transformer_result = transformer_analyzer.analyze_job(job_data)
-        
+
         # Convert to Stage2Result format
         return Stage2Result(
             semantic_skills=transformer_result.semantic_skills,
@@ -36,22 +39,19 @@ def enhanced_stage2_processing(job_data: Dict[str, Any], stage1_result, user_pro
             job_sentiment=transformer_result.job_sentiment,
             skill_embeddings=transformer_result.embeddings,
             contextual_understanding=f"Job category: {transformer_result.job_category}, "
-                                   f"Level: {transformer_result.seniority_level}",
+            f"Level: {transformer_result.seniority_level}",
             extracted_benefits=[],  # Could be enhanced with transformer-based extraction
-            company_culture="",     # Could be enhanced with transformer-based analysis
+            company_culture="",  # Could be enhanced with transformer-based analysis
             processing_time=transformer_result.processing_time,
             gpu_memory_used=transformer_result.gpu_memory_used,
-            model_confidence=transformer_result.confidence_score
+            model_confidence=transformer_result.confidence_score,
         )
     else:
         # Fallback to existing rule-based analysis
         print("📝 Falling back to rule-based analysis")
         # ... existing Stage2GPUProcessor logic here
-        return Stage2Result(
-            semantic_skills=[],
-            processing_time=0.1,
-            model_confidence=0.5
-        )
+        return Stage2Result(semantic_skills=[], processing_time=0.1, model_confidence=0.5)
+
 
 # Installation and setup guide
 SETUP_GUIDE = """
@@ -137,4 +137,3 @@ transformer_config = {
 """
 
 print(SETUP_GUIDE)
-
