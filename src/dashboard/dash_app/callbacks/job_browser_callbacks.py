@@ -18,7 +18,8 @@ from src.core.duckdb_database import DuckDBJobDatabase
 from src.core.user_profile_manager import ModernUserProfileManager
 from src.dashboard.dash_app.utils.job_intelligence import (
     enhance_job_with_intelligence,
-    find_similar_jobs
+    find_similar_jobs,
+    JobIntelligenceExtractor
 )
 from src.dashboard.dash_app.components.duplicate_detector import (
     enhance_job_with_duplicate_info,
@@ -50,44 +51,43 @@ def register_job_browser_callbacks(app, profile_name: str):
     def update_browser_stats(n_intervals):
         """Load job statistics for top stat cards"""
         try:
-            db = DuckDBJobDatabase(profile_name)
+            db = DuckDBJobDatabase(profile_name=profile_name)
             
             # Total jobs
-            total_result = db.execute_query("SELECT COUNT(*) as cnt FROM jobs")
-            total_jobs = total_result[0]['cnt'] if total_result else 0
+            total_jobs = db.get_job_count(profile_name)
             
             # High match jobs (>80%)
-            high_match_result = db.execute_query(
+            high_match_result = db.conn.execute(
                 "SELECT COUNT(*) as cnt FROM jobs WHERE fit_score >= 80"
-            )
-            high_match = high_match_result[0]['cnt'] if high_match_result else 0
+            ).fetchone()
+            high_match = high_match_result[0] if high_match_result else 0
             
             # RCIP city jobs
-            rcip_result = db.execute_query(
+            rcip_result = db.conn.execute(
                 "SELECT COUNT(*) as cnt FROM jobs WHERE is_rcip_city = TRUE"
-            )
-            rcip_jobs = rcip_result[0]['cnt'] if rcip_result else 0
+            ).fetchone()
+            rcip_jobs = rcip_result[0] if rcip_result else 0
             
             # Remote jobs
-            remote_result = db.execute_query(
+            remote_result = db.conn.execute(
                 """SELECT COUNT(*) as cnt FROM jobs 
                    WHERE LOWER(location_type) IN ('remote', 'hybrid')
                    OR LOWER(location) LIKE '%remote%'"""
-            )
-            remote_jobs = remote_result[0]['cnt'] if remote_result else 0
+            ).fetchone()
+            remote_jobs = remote_result[0] if remote_result else 0
             
             # Recent jobs (last 7 days)
             seven_days_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-            recent_result = db.execute_query(
+            recent_result = db.conn.execute(
                 f"SELECT COUNT(*) as cnt FROM jobs WHERE date_posted >= '{seven_days_ago}'"
-            )
-            recent_jobs = recent_result[0]['cnt'] if recent_result else 0
+            ).fetchone()
+            recent_jobs = recent_result[0] if recent_result else 0
             
             # Average match score
-            avg_match_result = db.execute_query(
+            avg_match_result = db.conn.execute(
                 "SELECT AVG(fit_score) as avg FROM jobs WHERE fit_score IS NOT NULL"
-            )
-            avg_match = avg_match_result[0]['avg'] if avg_match_result and avg_match_result[0]['avg'] else 0
+            ).fetchone()
+            avg_match = avg_match_result[0] if avg_match_result and avg_match_result[0] else 0
             
             return (
                 str(total_jobs),
@@ -110,14 +110,14 @@ def register_job_browser_callbacks(app, profile_name: str):
             Output("browser-duplicate-alert-container", "children")
         ],
         [
-            Input("browser-search-input", "value"),
-            Input("browser-sort-dropdown", "value"),
-            Input("browser-match-range", "value"),
-            Input("browser-salary-range", "value"),
-            Input("browser-location-checkboxes", "value"),
-            Input("browser-rcip-checkbox", "value"),
-            Input("browser-date-posted-dropdown", "value"),
-            Input("browser-clear-filters-btn", "n_clicks"),
+            Input("enhanced-search-input", "value"),
+            Input("enhanced-sort-dropdown", "value"),
+            Input("match-score-range-slider", "value"),
+            Input("salary-range-slider", "value"),
+            Input("location-type-checkboxes", "value"),
+            Input("rcip-filter-checkbox", "value"),
+            Input("date-posted-dropdown", "value"),
+            Input("clear-advanced-filters-btn", "n_clicks"),
             Input("browser-refresh-btn", "n_clicks")
         ]
     )
@@ -135,11 +135,11 @@ def register_job_browser_callbacks(app, profile_name: str):
         """Load and filter jobs with enhanced cards and duplicate detection"""
         try:
             # Check if clear button was clicked
-            if ctx.triggered_id == "browser-clear-filters-btn":
+            if ctx.triggered_id == "clear-advanced-filters-btn":
                 search_text = ""
                 sort_by = "match_desc"
                 match_range = [0, 100]
-                salary_range = [40, 150]
+                salary_range = [40000, 150000]
                 location_types = []
                 rcip_only = []
                 date_filter = "all"
@@ -158,10 +158,10 @@ def register_job_browser_callbacks(app, profile_name: str):
             if match_range:
                 query += f" AND (fit_score >= {match_range[0]} AND fit_score <= {match_range[1]})"
             
-            # Salary filter (convert K to actual amount)
+            # Salary filter (already in actual dollars from slider)
             if salary_range:
-                min_salary = salary_range[0] * 1000
-                max_salary = salary_range[1] * 1000
+                min_salary = salary_range[0]
+                max_salary = salary_range[1]
                 query += f" AND ((min_amount >= {min_salary} AND min_amount <= {max_salary}) OR (max_amount >= {min_salary} AND max_amount <= {max_salary}))"
             
             # Location type filter
@@ -198,7 +198,13 @@ def register_job_browser_callbacks(app, profile_name: str):
             order_by = sort_map.get(sort_by, "fit_score DESC, date_posted DESC")
             query += f" ORDER BY {order_by} LIMIT 50"
             
-            jobs = db.execute_query(query)
+            jobs = db.conn.execute(query).fetchall()
+            # Convert to list of dicts
+            if jobs:
+                columns = [desc[0] for desc in db.conn.description]
+                jobs = [dict(zip(columns, row)) for row in jobs]
+            else:
+                jobs = []
             
             if not jobs:
                 return (
@@ -279,7 +285,8 @@ def register_job_browser_callbacks(app, profile_name: str):
             Output("browser-job-modal-summary", "children"),
             Output("browser-job-modal-skill-gap", "children"),
             Output("browser-job-modal-description", "children"),
-            Output("browser-job-modal-similar-jobs", "children")
+            Output("browser-job-modal-similar-jobs", "children"),
+            Output("browser-current-job-id", "data")
         ],
         [
             Input({"type": "job-card", "index": ALL}, "n_clicks"),
@@ -292,15 +299,20 @@ def register_job_browser_callbacks(app, profile_name: str):
         """Open/close job details modal and populate with job data"""
         
         if ctx.triggered_id == "browser-job-modal-close":
-            return False, "", "", "", "", "", "", "", "", "", ""
+            return False, "", "", "", "", "", "", "", "", "", "", None
         
         # Check if a job card was clicked
         if isinstance(ctx.triggered_id, dict) and ctx.triggered_id.get("type") == "job-card":
             job_id = ctx.triggered_id.get("index")
             
             try:
-                db = DuckDBJobDatabase(profile_name)
-                jobs = db.execute_query(f"SELECT * FROM jobs WHERE id = '{job_id}'")
+                db = DuckDBJobDatabase(profile_name=profile_name)
+                result = db.conn.execute(f"SELECT * FROM jobs WHERE id = ?", [job_id]).fetchall()
+                if result:
+                    columns = [desc[0] for desc in db.conn.description]
+                    jobs = [dict(zip(columns, row)) for row in result]
+                else:
+                    jobs = []
                 
                 if not jobs:
                     return False, "", "", "", "", "", "", "", "", "", ""
@@ -314,23 +326,29 @@ def register_job_browser_callbacks(app, profile_name: str):
                 except:
                     profile = None
                 
-                # Enhance job
+                # Enhance job with intelligence
                 enhanced_job = enhance_job_with_intelligence(job, profile)
                 
                 # Find similar jobs
-                all_jobs_result = db.execute_query("SELECT * FROM jobs ORDER BY fit_score DESC LIMIT 100")
+                all_jobs_result = db.conn.execute("SELECT * FROM jobs ORDER BY fit_score DESC LIMIT 100").fetchall()
+                if all_jobs_result:
+                    columns = [desc[0] for desc in db.conn.description]
+                    all_jobs_result = [dict(zip(columns, row)) for row in all_jobs_result]
+                else:
+                    all_jobs_result = []
                 enhanced_all = []
                 for j in all_jobs_result:
                     try:
                         enhanced_all.append(enhance_job_with_intelligence(j, profile))
-                    except:
+                    except Exception as e:
+                        print(f"Error enhancing job: {e}")
                         enhanced_all.append(j)
                 
                 similar_jobs = find_similar_jobs(enhanced_job, enhanced_all, top_n=3)
                 
                 # Build modal content
-                title = enhanced_job.get("job_title", "Unknown Title")
-                company = enhanced_job.get("company_name", "Unknown Company")
+                title = enhanced_job.get("title", enhanced_job.get("job_title", "Unknown Title"))
+                company = enhanced_job.get("company", enhanced_job.get("company_name", "Unknown Company"))
                 location = f"{enhanced_job.get('location', 'Unknown')} • {enhanced_job.get('location_type', 'On-site')}"
                 
                 date_posted = enhanced_job.get("date_posted")
@@ -355,7 +373,7 @@ def register_job_browser_callbacks(app, profile_name: str):
                 summary = enhanced_job.get("ai_summary", "No summary available.")
                 
                 # Skill Gap Analysis
-                skill_gap = enhanced_job.get("skill_gap", {})
+                skill_gap = enhanced_job.get("skill_gap_analysis", {})
                 matched = skill_gap.get("matched_skills", [])
                 missing = skill_gap.get("missing_skills", [])
                 match_pct = skill_gap.get("match_percentage", 0)
@@ -379,7 +397,7 @@ def register_job_browser_callbacks(app, profile_name: str):
                 ])
                 
                 # Description
-                description = enhanced_job.get("job_description", "No description available.")
+                description = enhanced_job.get("description", enhanced_job.get("job_description", "No description available."))
                 
                 # Similar jobs
                 similar_cards = []
@@ -387,11 +405,14 @@ def register_job_browser_callbacks(app, profile_name: str):
                     sim_fit = sim_job.get("fit_score")
                     sim_badge_color = "success" if pd.notna(sim_fit) and sim_fit >= 80 else "secondary"
                     
+                    sim_title = sim_job.get("title", sim_job.get("job_title", "Unknown"))
+                    sim_company = sim_job.get("company", sim_job.get("company_name", ""))
+                    
                     sim_card = dbc.Card([
                         dbc.CardBody([
                             html.Div([
-                                html.H6(sim_job.get("job_title", "Unknown"), className="mb-1"),
-                                html.Small(sim_job.get("company_name", ""), className="text-muted")
+                                html.H6(sim_title, className="mb-1"),
+                                html.Small(sim_company, className="text-muted")
                             ], className="d-flex justify-content-between align-items-start"),
                             html.Div([
                                 dbc.Badge(f"{sim_fit:.0f}% Match" if pd.notna(sim_fit) else "Not Rated",
@@ -417,14 +438,88 @@ def register_job_browser_callbacks(app, profile_name: str):
                     summary,
                     skill_gap_content,
                     description,
-                    similar_content
+                    similar_content,
+                    job_id  # Store current job ID
                 )
                 
             except Exception as e:
                 print(f"Error loading job details: {e}")
-                return False, "", "", "", "", "", "", "", "", "", ""
+                return False, "", "", "", "", "", "", "", "", "", "", None
         
-        return False, "", "", "", "", "", "", "", "", "", ""
+        return False, "", "", "", "", "", "", "", "", "", "", None
+    
+    
+    @app.callback(
+        [
+            Output("browser-job-action-feedback", "children"),
+            Output("browser-add-to-tracker-btn", "disabled")
+        ],
+        [
+            Input("browser-add-to-tracker-btn", "n_clicks")
+        ],
+        [
+            State("browser-current-job-id", "data"),
+            State("browser-job-details-modal", "is_open")
+        ],
+        prevent_initial_call=True
+    )
+    def add_job_to_tracker(add_clicks, job_id, modal_open):
+        """Add job to application tracker"""
+        
+        if not add_clicks or not modal_open or not job_id:
+            return "", False
+        
+        try:
+            db = DuckDBJobDatabase(profile_name)
+            
+            # Update job status to 'interested' to add to tracker
+            update_query = """
+                UPDATE jobs 
+                SET application_status = 'interested',
+                    last_updated = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """
+            db.conn.execute(update_query, [job_id])
+            db.conn.commit()
+            
+            success_msg = dbc.Alert([
+                html.I(className="fas fa-check-circle me-2"),
+                "Job added to tracker! Check the Job Tracker tab."
+            ], color="success", dismissable=True, duration=3000)
+            
+            return success_msg, True
+            
+        except Exception as e:
+            print(f"Error adding job to tracker: {e}")
+            error_msg = dbc.Alert([
+                html.I(className="fas fa-exclamation-circle me-2"),
+                f"Error: {str(e)}"
+            ], color="danger", dismissable=True, duration=4000)
+            
+            return error_msg, False
+    
+    
+    @app.callback(
+        Output("job-modal-open-link", "href"),
+        Input("browser-current-job-id", "data"),
+        prevent_initial_call=True
+    )
+    def update_job_link(job_id):
+        """Update the job posting link when a job is selected"""
+        if not job_id:
+            return "#"
+        
+        try:
+            db = DuckDBJobDatabase(profile_name=profile_name)
+            result = db.conn.execute("SELECT url FROM jobs WHERE id = ?", [job_id]).fetchone()
+            
+            if result and result[0]:
+                return result[0]
+            
+            return "#"
+        except Exception as e:
+            print(f"Error getting job URL: {e}")
+            return "#"
 
 
 def create_enhanced_job_card(job: Dict) -> dbc.Card:
@@ -437,9 +532,9 @@ def create_enhanced_job_card(job: Dict) -> dbc.Card:
     Returns:
         Dash Bootstrap Card component
     """
-    # Extract key fields
-    title = job.get("job_title", "Unknown Title")
-    company = job.get("company_name", "Unknown Company")
+    # Extract key fields (handle both field name variations)
+    title = job.get("title", job.get("job_title", "Unknown Title"))
+    company = job.get("company", job.get("company_name", "Unknown Company"))
     location = job.get("location", "Unknown Location")
     location_type = job.get("location_type", "On-site")
     date_posted = job.get("date_posted", "")

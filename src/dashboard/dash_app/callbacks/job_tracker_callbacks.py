@@ -27,8 +27,13 @@ except ImportError as e:
     logger.warning(f"Import warning in job tracker callbacks: {e}")
 
 
-def register_job_tracker_callbacks(app):
-    """Register all job tracker related callbacks"""
+def register_job_tracker_callbacks(app, profile_name: str = None):
+    """Register all job tracker related callbacks
+    
+    Args:
+        app: Dash app instance
+        profile_name: Current user profile name
+    """
 
     @app.callback(
         [
@@ -47,13 +52,12 @@ def register_job_tracker_callbacks(app):
     def update_tracker_stats(n_intervals, refresh_clicks):
         """Update job tracker statistics"""
         try:
-            # Get current profile - MUST be set when dashboard launches
-            if not hasattr(app, "profile_name") or app.profile_name is None:
-                logger.error("No profile set on app instance")
-                return "--", "--", "--", "--", html.Div("Error: No profile configured")
+            # Get current profile
+            current_profile = profile_name or (app.profile_name if hasattr(app, "profile_name") else None)
             
-            profile_manager = UserProfileManager()
-            current_profile = app.profile_name
+            if not current_profile:
+                logger.error("No profile set")
+                return "--", "--", "--", "--", html.Div("Error: No profile configured")
 
             # Get database
             db = DuckDBJobDatabase(profile_name=current_profile)
@@ -154,12 +158,11 @@ def register_job_tracker_callbacks(app):
         """Update application pipeline columns with enhanced cards"""
         try:
             # Get current profile
-            # Get current profile - MUST be set when dashboard launches
-            if not hasattr(app, "profile_name") or app.profile_name is None:
-                logger.error("No profile set on app instance")
-                return []
+            current_profile = profile_name or (app.profile_name if hasattr(app, "profile_name") else None)
             
-            current_profile = app.profile_name
+            if not current_profile:
+                logger.error("No profile set")
+                return [[] for _ in range(5)]
             db = DuckDBJobDatabase(profile_name=current_profile)
 
             # Map pipeline statuses to database statuses
@@ -233,12 +236,12 @@ def register_job_tracker_callbacks(app):
     def update_activity_timeline(n_intervals):
         """Update recent activity timeline"""
         try:
-            # Get current profile - MUST be set when dashboard launches
-            if not hasattr(app, "profile_name") or app.profile_name is None:
-                logger.error("No profile set on app instance")
-                return []
+            # Get current profile
+            current_profile = profile_name or (app.profile_name if hasattr(app, "profile_name") else None)
             
-            current_profile = app.profile_name
+            if not current_profile:
+                logger.error("No profile set")
+                return []
             db = DuckDBJobDatabase(profile_name=current_profile)
 
             # Get recent activities (last 10)

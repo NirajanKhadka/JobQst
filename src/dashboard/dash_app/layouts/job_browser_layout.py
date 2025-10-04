@@ -185,6 +185,7 @@ def create_job_browser_layout():
 
         # Hidden stores
         dcc.Store(id="browser-selected-job", storage_type="memory"),
+        dcc.Store(id="browser-current-job-id", storage_type="memory"),
     ])
 
 
@@ -270,19 +271,27 @@ def create_job_details_modal():
             ])
         ]),
         dbc.ModalFooter([
+            html.Div(id="browser-job-action-feedback", className="me-auto"),
             dbc.ButtonGroup([
                 dbc.Button([
-                    html.I(className="fas fa-bookmark me-2"),
-                    "Save Job"
-                ], id="job-modal-save-btn", color="warning", outline=True),
-                dbc.Button([
                     html.I(className="fas fa-check me-2"),
-                    "Mark as Applied"
-                ], id="job-modal-apply-btn", color="success", outline=True),
+                    "Add to Tracker"
+                ], id="browser-add-to-tracker-btn", color="success", outline=True,
+                   title="Add this job to your application tracker"),
                 dbc.Button([
-                    html.I(className="fas fa-external-link-alt me-2"),
-                    "Open Job Posting"
-                ], id="job-modal-open-btn", color="primary"),
+                    html.I(className="fas fa-paper-plane me-2"),
+                    "Mark as Applied"
+                ], id="job-modal-apply-btn", color="primary", outline=True),
+                html.A(
+                    dbc.Button([
+                        html.I(className="fas fa-external-link-alt me-2"),
+                        "Open Posting"
+                    ], color="info", outline=True),
+                    id="job-modal-open-link",
+                    href="#",
+                    target="_blank",
+                    style={"textDecoration": "none"}
+                ),
                 dbc.Button("Close", id="browser-job-modal-close", color="secondary")
             ])
         ])

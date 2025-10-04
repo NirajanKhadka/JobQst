@@ -251,7 +251,7 @@ Dashboard (Dash)
 - **Unified Deduplication** (`src/core/unified_deduplication.py`) - Single dedup system
 - **Dashboard** (`src/dashboard/dash_app/app.py`) - Interactive UI
 
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
+See [Architecture Documentation](docs/ARCHITECTURE.md) for complete system design.
 
 ---
 
@@ -297,9 +297,7 @@ python test_complete_pipeline.py
 
 ## Development Standards
 
-JobQst follows strict development standards documented in [DEVELOPMENT_STANDARDS.md](docs/DEVELOPMENT_STANDARDS.md).
-
-**Current Compliance:** 93/100 ✅
+**Code Quality:** 93/100 ✅
 
 ### Quality Tools
 
@@ -334,8 +332,6 @@ pre-commit run --all-files
 
 ## Troubleshooting
 
-See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for common issues.
-
 ### Quick Fixes
 
 | Problem | Solution |
@@ -364,9 +360,7 @@ python -m mypy --version
 
 ## Documentation
 
-- **[DEVELOPMENT_STANDARDS.md](docs/DEVELOPMENT_STANDARDS.md)** - Coding standards (93/100 compliance)
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture and design
-- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+For detailed system architecture and design patterns, see [ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
@@ -374,7 +368,7 @@ python -m mypy --version
 
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Follow [DEVELOPMENT_STANDARDS.md](docs/DEVELOPMENT_STANDARDS.md)
+3. Write clean, tested code
 4. Run quality checks: `pre-commit run --all-files`
 5. Commit with conventional commits: `feat: add amazing feature`
 6. Push and create Pull Request

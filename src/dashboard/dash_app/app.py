@@ -366,8 +366,8 @@ try:
             register_job_tracker_callbacks,
         )
 
-        register_job_tracker_callbacks(dashboard)
-        logger.info("Job tracker callbacks registered")
+        register_job_tracker_callbacks(dashboard, profile_name)
+        logger.info(f"[OK] Job tracker callbacks registered for profile: {profile_name}")
     except ImportError as e:
         logger.warning(f"Job tracker callbacks not available: {e}")
 
@@ -381,6 +381,9 @@ try:
         logger.info("Ranked jobs callbacks registered")
     except ImportError as e:
         logger.warning(f"Ranked jobs callbacks not available: {e}")
+    
+    # NOTE: Market insights callbacks are registered later in set_dashboard_profile()
+    # because they require a profile to be set first
     
     # NOTE: Job browser callbacks are registered later in set_dashboard_profile()
     # because they require a profile to be set first
@@ -409,7 +412,7 @@ def set_dashboard_profile(profile_name: str):
     dashboard.profile_name = profile_name
     logger.info(f"[OK] Dashboard profile set to: {profile_name}")
     
-    # Now register profile-dependent callbacks (job browser)
+    # Now register profile-dependent callbacks (job browser, market insights)
     try:
         from src.dashboard.dash_app.callbacks.job_browser_callbacks import (
             register_job_browser_callbacks,
@@ -421,6 +424,18 @@ def set_dashboard_profile(profile_name: str):
         logger.warning(f"Job browser callbacks not available: {e}")
     except Exception as e:
         logger.error(f"Error registering job browser callbacks: {e}")
+    
+    try:
+        from src.dashboard.dash_app.callbacks.market_insights_callbacks import (
+            register_market_insights_callbacks,
+        )
+        
+        register_market_insights_callbacks(dashboard, profile_name)
+        logger.info(f"[OK] Market insights callbacks registered for profile: {profile_name}")
+    except ImportError as e:
+        logger.warning(f"Market insights callbacks not available: {e}")
+    except Exception as e:
+        logger.error(f"Error registering market insights callbacks: {e}")
 
 
 if __name__ == "__main__":

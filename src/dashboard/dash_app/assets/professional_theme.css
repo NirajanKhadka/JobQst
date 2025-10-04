@@ -105,15 +105,16 @@
 
 .stat-card-title {
     font-size: var(--font-size-sm);
-    color: var(--muted-text);
+    color: #495057;  /* Darker, more visible color */
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-semibold);  /* Bolder for better visibility */
 }
 
 .stat-card-trend {
     font-size: var(--font-size-sm);
     margin-top: var(--spacing-xs);
+    font-weight: var(--font-weight-medium);
 }
 
 /* Color Variants for Stat Cards */
@@ -609,3 +610,26 @@
 .font-weight-medium { font-weight: var(--font-weight-medium); }
 .font-weight-semibold { font-weight: var(--font-weight-semibold); }
 .font-weight-bold { font-weight: var(--font-weight-bold); }
+
+/* Fix text visibility issues - override Bootstrap's text-muted */
+.text-muted {
+    color: #495057 !important;  /* Darker, more visible than default #6c757d */
+}
+
+/* Ensure small text is still readable */
+small.text-muted, .small.text-muted {
+    color: #5a6268 !important;
+    font-weight: 500;
+}
+
+/* Make sure stat card elements are visible */
+.stat-card .text-muted,
+.stat-card small {
+    color: #495057 !important;
+    font-weight: 600;
+}
+
+/* Improve contrast for all muted text in cards */
+.card .text-muted {
+    color: #495057 !important;
+}
